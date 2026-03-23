@@ -85,7 +85,8 @@ jobs:
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
-          $bundleRoot = Join-Path $artifactRoot 'legacy-x64'
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          $bundleRoot = Join-Path $artifactRoot ("legacy-x64-$shortSha")
           New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 
           $exeCandidates = @(
@@ -94,17 +95,35 @@ jobs:
           )
           $exePath = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if ($exePath) {
-            Copy-Item $exePath -Destination (Join-Path $bundleRoot 'fHash.exe') -ErrorAction Stop
+            $packagedExe = Join-Path $bundleRoot 'fHash.exe'
+            Copy-Item $exePath -Destination $packagedExe -ErrorAction Stop
+            $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
             $readme = @"
           fHash legacy x64 build
 
+          Commit:
+          - $env:GITHUB_SHA
+
           Files:
           - fHash.exe: desktop application
+          - SHA256.txt: executable checksum
+          - BUILD_INFO.txt: build metadata
 
           Usage:
           - Double-click fHash.exe to run the app.
           - Shell extension packaging is intentionally skipped in CI.
           "@
+
+            $buildInfo = @"
+          commit=$env:GITHUB_SHA
+          short_sha=$shortSha
+          source_exe=$exePath
+          packaged_exe=fHash.exe
+          sha256=$exeHash
+          "@
+
+            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  fHash.exe") -Encoding ASCII
+            Set-Content -Path (Join-Path $bundleRoot 'BUILD_INFO.txt') -Value $buildInfo -Encoding ASCII
           }
           else {
             $readme = @"
@@ -118,7 +137,7 @@ jobs:
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
           if ($exePath) {
-            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot 'fHash-legacy-x64.zip') -Force
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "fHash-legacy-x64-$shortSha.zip") -Force
           }
 
       - name: Upload legacy x64 artifacts
@@ -128,8 +147,8 @@ jobs:
           name: fHash-legacy-x64
           path: |
             artifacts/build-legacy-x64.log
-            artifacts/legacy-x64
-            artifacts/fHash-legacy-x64.zip
+            artifacts/legacy-x64-*
+            artifacts/fHash-legacy-x64-*.zip
           if-no-files-found: warn
 
   publish-release:
@@ -148,4 +167,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-assets/fHash-legacy-x64.zip
+            release-assets/fHash-legacy-x64-*.zip
