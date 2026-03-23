@@ -115,16 +115,32 @@ namespace WindowsUtils
 		HGLOBAL hMoveable;
 		LPTSTR pszArr;
 
+		if (!::OpenClipboard(NULL))
+			return;
+
 		size_t bytes = (cstrToCopy.GetLength() + 1)*sizeof(TCHAR);
 		hMoveable = GlobalAlloc(GMEM_MOVEABLE, bytes);
+		if (hMoveable == NULL)
+		{
+			::CloseClipboard();
+			return;
+		}
 		pszArr = (LPTSTR)GlobalLock(hMoveable);
+		if (pszArr == NULL)
+		{
+			GlobalFree(hMoveable);
+			::CloseClipboard();
+			return;
+		}
 		ZeroMemory(pszArr, bytes);
 		_tcscpy_s(pszArr, cstrToCopy.GetLength() + 1, cstrToCopy);
 		GlobalUnlock(hMoveable);
 
-		::OpenClipboard(NULL);
 		::EmptyClipboard();
-		::SetClipboardData(CF_UNICODETEXT, hMoveable);
+		if (::SetClipboardData(CF_UNICODETEXT, hMoveable) == NULL)
+		{
+			GlobalFree(hMoveable);
+		}
 		::CloseClipboard();
 	}
 
@@ -174,7 +190,9 @@ namespace WindowsUtils
 			fnDllRegSvr = (LPFN_DllRegisterServer) GetProcAddress(hModule, "DllRegisterServer");
 			if(fnDllRegSvr != NULL)
 			{
-				return (fnDllRegSvr() == S_OK);
+				bool bRet = (fnDllRegSvr() == S_OK);
+				FreeLibrary(hModule);
+				return bRet;
 			}
 
 			FreeLibrary(hModule);
@@ -192,7 +210,9 @@ namespace WindowsUtils
 			fnDllUnregSvr = (LPFN_DllUnregisterServer) GetProcAddress(hModule, "DllUnregisterServer");
 			if(fnDllUnregSvr != NULL)
 			{
-				return (fnDllUnregSvr() == S_OK);
+				bool bRet = (fnDllUnregSvr() == S_OK);
+				FreeLibrary(hModule);
+				return bRet;
 			}
 
 			FreeLibrary(hModule);

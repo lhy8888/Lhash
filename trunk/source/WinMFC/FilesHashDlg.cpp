@@ -3,6 +3,9 @@
 #include "stdafx.h"
 
 #include <string>
+#include <vector>
+
+#include <shellapi.h>
 
 #include "Common/strhelper.h"
 
@@ -21,6 +24,53 @@
 using namespace std;
 using namespace sunjwbase;
 using namespace WindowsStrings;
+
+namespace
+{
+	bool CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath)
+	{
+		UINT cchPath = DragQueryFile(hDropInfo, index, NULL, 0);
+		if (cchPath == 0)
+		{
+			return false;
+		}
+
+		std::vector<TCHAR> pathBuffer(cchPath + 1, 0);
+		if (DragQueryFile(hDropInfo, index, pathBuffer.data(), cchPath + 1) == 0)
+		{
+			return false;
+		}
+
+		tstrPath.assign(pathBuffer.data());
+		return true;
+	}
+
+	bool IsValidCopyDataString(const COPYDATASTRUCT* pCopyDataStruct)
+	{
+		if (pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL)
+		{
+			return false;
+		}
+
+		if (pCopyDataStruct->cbData < sizeof(TCHAR) ||
+			(pCopyDataStruct->cbData % sizeof(TCHAR)) != 0)
+		{
+			return false;
+		}
+
+		size_t charCount = pCopyDataStruct->cbData / sizeof(TCHAR);
+		const TCHAR* szData = static_cast<const TCHAR*>(pCopyDataStruct->lpData);
+		for (size_t i = 0; i < charCount; ++i)
+		{
+			if (szData[i] == _T('\0'))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -212,7 +262,6 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 	if(!m_thrdData.threadWorking)
 	{
 		unsigned int i;
-		TCHAR tszDragFilename[MAX_PATH];
 		DragAcceptFiles(FALSE);
 
 		ClearFilePaths();
@@ -220,15 +269,21 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 
 		for(i = 0; i < m_thrdData.nFiles; i++)
 		{
-			DragQueryFile(hDropInfo, i, tszDragFilename, sizeof(tszDragFilename));
-			tstring tmp = tszDragFilename;
-			m_thrdData.fullPaths.push_back(tmp);
+			tstring tstrDragFilename;
+			if (CopyDraggedPath(hDropInfo, i, tstrDragFilename))
+			{
+				m_thrdData.fullPaths.push_back(tstrDragFilename);
+			}
 		}
 
+		m_thrdData.nFiles = (uint32_t)m_thrdData.fullPaths.size();
 		DragFinish(hDropInfo);
 		DragAcceptFiles(TRUE);
 
-		DoMD5();
+		if (m_thrdData.nFiles > 0)
+		{
+			DoMD5();
+		}
 	}
 }
 
@@ -238,10 +293,12 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 	if (pCopyDataStruct->dwData == 0)
 		SetForegroundWindow();
 
-	if (pCopyDataStruct->dwData == 0 && !m_thrdData.threadWorking)
+	if (pCopyDataStruct->dwData == 0 &&
+		!m_thrdData.threadWorking &&
+		IsValidCopyDataString(pCopyDataStruct))
 	{
-		TCHAR *szFiles = (TCHAR *)(pCopyDataStruct->lpData);
-		TStrVector Paras = ParseFilesCmdLine(szFiles);
+		const TCHAR *szFiles = static_cast<const TCHAR *>(pCopyDataStruct->lpData);
+		TStrVector Paras = ParseFilesCmdLine(const_cast<TCHAR *>(szFiles));
 		ClearFilePaths();
 		for(TStrVector::iterator ite = Paras.begin(); ite != Paras.end(); ++ite)
 		{
@@ -267,37 +324,47 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 
 TStrVector CFilesHashDlg::ParseFilesCmdLine(LPTSTR filesCmdLine)
 {
-	// Parse files from string like 'xxx "yy zz" ...'
 	TStrVector parameters;
+	if (filesCmdLine == NULL || filesCmdLine[0] == _T('\0'))
+	{
+		return parameters;
+	}
 
 #if defined(UNICODE) || defined(_UNICODE)
-	size_t cmdLen = wcslen(filesCmdLine);
-#else
-	size_t cmdLen = strlen(filesCmdLine);
-#endif
-
-	if(cmdLen > 0)
+	int argc = 0;
+	LPWSTR* argv = CommandLineToArgvW(filesCmdLine, &argc);
+	if (argv == NULL)
 	{
-		for(size_t i = 0; i < cmdLen; ++i)
+		return parameters;
+	}
+
+	for (int i = 0; i < argc; ++i)
+	{
+		if (argv[i] != NULL && argv[i][0] != L'\0')
 		{
-			tstring tstrPara(_T(""));
-			if(filesCmdLine[i] == '"')
-			{
-				++i;
-				for(; filesCmdLine[i] != '"'; ++i)
-					tstrPara += filesCmdLine[i];
-				parameters.push_back(tstrPara);
-				++i;
-			}
-			else
-			{
-				for(; filesCmdLine[i] != ' '; ++i)
-					tstrPara += filesCmdLine[i];
-				parameters.push_back(tstrPara);
-			}
+			parameters.push_back(argv[i]);
 		}
 	}
-	// 从命令行获取文件路径结束
+	LocalFree(argv);
+#else
+	std::wstring wstrCmdLine = strtowstr(std::string(filesCmdLine));
+	int argc = 0;
+	LPWSTR* argv = CommandLineToArgvW(wstrCmdLine.c_str(), &argc);
+	if (argv == NULL)
+	{
+		return parameters;
+	}
+
+	for (int i = 0; i < argc; ++i)
+	{
+		if (argv[i] != NULL && argv[i][0] != L'\0')
+		{
+			parameters.push_back(wstrtostr(argv[i]));
+		}
+	}
+	LocalFree(argv);
+#endif
+
 	return parameters;
 }
 

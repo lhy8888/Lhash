@@ -501,7 +501,10 @@ int64_t OsFile::read(void *readBuffer, uint32_t bytes)
 {
 	// Open first, we don't check here.
 	DWORD dwNumberOfBytesRead = 0;
-	ReadFile(_osfileData, readBuffer, bytes, &dwNumberOfBytesRead, NULL);
+	if (!ReadFile(_osfileData, readBuffer, bytes, &dwNumberOfBytesRead, NULL))
+	{
+		return -1;
+	}
 
 	return dwNumberOfBytesRead;
 }
@@ -510,7 +513,10 @@ int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
 {
 	// Open first, we don't check here.
 	DWORD lpNumberOfBytesWritten = 0;
-	WriteFile(_osfileData, writeBuffer, bytes, &lpNumberOfBytesWritten, NULL);
+	if (!WriteFile(_osfileData, writeBuffer, bytes, &lpNumberOfBytesWritten, NULL))
+	{
+		return -1;
+	}
 
 	return lpNumberOfBytesWritten;
 }

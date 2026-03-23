@@ -236,6 +236,8 @@ int WINAPI HashThreadFunc(void *param)
 		OsFile osFile(path);
 		if (osFile.openReadScan((void *)&fExc))
 		{
+			bool readFailed = false;
+
 			MD5Init(&mdContext, 0); // MD5 init
 			sha1.Reset(); // SHA1 init
 			sha256_init(&sha256Ctx); // SHA256 init
@@ -359,12 +361,18 @@ int WINAPI HashThreadFunc(void *param)
 				unique_ptr<DataBuffer> ptrDataBufFile = make_unique<DataBuffer>();
 				int64_t readRet = osFile.read(ptrDataBufFile->data, DataBuffer::preflen);
 				if (readRet >= 0)
+				{
 					ptrDataBufFile->datalen = (unsigned int)readRet;
+				}
 				else
+				{
 					ptrDataBufFile->datalen = 0;
+					readFailed = true;
+				}
 
 				isFileFinished = (ptrDataBufFile->datalen < DataBuffer::preflen);
 
+				if (!readFailed)
 				{
 					unique_lock<mutex> lock(mtxQueue);
 					cvFile.wait(lock, [&]
@@ -384,22 +392,26 @@ int WINAPI HashThreadFunc(void *param)
 				else
 				{
 					databuf.datalen = 0;
+					readFailed = true;
 				}
 
-				// single thread
-				MD5UpdateWrapper(&mdContext, databuf.data, databuf.datalen); // MD5 update
-				SHA1UpdateWrapper(&sha1, databuf.data, databuf.datalen); // SHA1 update
-				SHA256UpdateWrapper(&sha256Ctx, databuf.data, databuf.datalen); // SHA256 update
-				SHA512UpdateWrapper(&sha512Ctx, databuf.data, databuf.datalen); // SHA512 update
+				if (!readFailed)
+				{
+					// single thread
+					MD5UpdateWrapper(&mdContext, databuf.data, databuf.datalen); // MD5 update
+					SHA1UpdateWrapper(&sha1, databuf.data, databuf.datalen); // SHA1 update
+					SHA256UpdateWrapper(&sha256Ctx, databuf.data, databuf.datalen); // SHA256 update
+					SHA512UpdateWrapper(&sha512Ctx, databuf.data, databuf.datalen); // SHA512 update
 
-				// update progress
-				UpdateProgressWrapper(fsize, thrdData->totalSize, isSizeCaled, databuf.datalen,
-					uiBridge, &finishedSize, &finishedSizeWhole, &position, &positionWhole);
+					// update progress
+					UpdateProgressWrapper(fsize, thrdData->totalSize, isSizeCaled, databuf.datalen,
+						uiBridge, &finishedSize, &finishedSizeWhole, &position, &positionWhole);
+				}
 
 				isFileFinished = (databuf.datalen < DataBuffer::preflen);
 #endif
 			}
-			while (!isFileFinished);
+			while (!isFileFinished && !readFailed);
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 			isFileFinished = true;
@@ -416,34 +428,43 @@ int WINAPI HashThreadFunc(void *param)
 				return 0;
 			}
 
-			uiBridge->fileCalcFinish();
-
-			MD5Final(&mdContext); // MD5 final
-			sha1.Final(); // SHA1 final
-			sha256_final(&sha256Ctx); // SHA256 final
-			SHA512_Final(digestSHA512, &sha512Ctx); // SHA256 final
-
-			if (!isSizeCaled)
+			if (readFailed)
 			{
-				if (thrdData->nFiles == 0)
-				{
-					uiBridge->updateProgWhole(0);
-				}
-				else
-				{
-					int progressMax = uiBridge->getProgMax();
-					uiBridge->updateProgWhole((i + 1) * progressMax / (thrdData->nFiles));
-				}
+				osFile.close();
+				result.tstrError = strtotstr(string("Failed to read file while hashing."));
+				result.enumState = RESULT_ERROR;
+				uiBridge->showFileErr(result);
 			}
+			else
+			{
+				uiBridge->fileCalcFinish();
 
-			osFile.close();
-			//Calculating ends
+				MD5Final(&mdContext); // MD5 final
+				sha1.Final(); // SHA1 final
+				sha256_final(&sha256Ctx); // SHA256 final
+				SHA512_Final(digestSHA512, &sha512Ctx); // SHA256 final
 
-			char chHashBuff[1024] = {0};
+				if (!isSizeCaled)
+				{
+					if (thrdData->nFiles == 0)
+					{
+						uiBridge->updateProgWhole(0);
+					}
+					else
+					{
+						int progressMax = uiBridge->getProgMax();
+						uiBridge->updateProgWhole((i + 1) * progressMax / (thrdData->nFiles));
+					}
+				}
 
-			// MD5
+				osFile.close();
+				//Calculating ends
+
+				char chHashBuff[1024] = {0};
+
+				// MD5
 #if defined (_WIN32)
-			sprintf_s(chHashBuff, 1024,
+				sprintf_s(chHashBuff, 1024,
 								"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 								mdContext.digest[0],
 								mdContext.digest[1],
@@ -462,7 +483,7 @@ int WINAPI HashThreadFunc(void *param)
 								mdContext.digest[14],
 								mdContext.digest[15]);
 #else
-			snprintf(chHashBuff, 1024,
+				snprintf(chHashBuff, 1024,
 					  "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 					  mdContext.digest[0],
 					  mdContext.digest[1],
@@ -481,38 +502,39 @@ int WINAPI HashThreadFunc(void *param)
 					  mdContext.digest[14],
 					  mdContext.digest[15]);
 #endif
-			tstrFileMD5 = strtotstr(string(chHashBuff));
+				tstrFileMD5 = strtotstr(string(chHashBuff));
 
-			// SHA1
-			sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
-			tstrFileSHA1 = strtotstr(string(strSHA1));
+				// SHA1
+				sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
+				tstrFileSHA1 = strtotstr(string(strSHA1));
 
-			// SHA256
-			sha256_digest(&sha256Ctx, &strSHA256);
-			tstrFileSHA256 = strtotstr(strSHA256);
+				// SHA256
+				sha256_digest(&sha256Ctx, &strSHA256);
+				tstrFileSHA256 = strtotstr(strSHA256);
 
-			// SHA512
-			for (int p = 0; p < SHA512_DIGEST_LENGTH; p++)
-			{
-				char buf[8] = { 0 };
+				// SHA512
+				for (int p = 0; p < SHA512_DIGEST_LENGTH; p++)
+				{
+					char buf[8] = { 0 };
 #if defined (_WIN32)
-				sprintf_s(buf, 8, "%02X", digestSHA512[p]);
+					sprintf_s(buf, 8, "%02X", digestSHA512[p]);
 #else
-				snprintf(buf, 8, "%02X", digestSHA512[p]);
+					snprintf(buf, 8, "%02X", digestSHA512[p]);
 #endif
-				strSHA512.append(std::string(buf));
+					strSHA512.append(std::string(buf));
+				}
+				tstrFileSHA512 = strtotstr(strSHA512);
+
+				// all upper case
+				result.tstrMD5 = tstrFileMD5;
+				result.tstrSHA1 = tstrFileSHA1;
+				result.tstrSHA256 = tstrFileSHA256;
+				result.tstrSHA512 = tstrFileSHA512;
+
+				result.enumState = RESULT_ALL;
+
+				uiBridge->showFileHash(result, thrdData->uppercase);
 			}
-			tstrFileSHA512 = strtotstr(strSHA512);
-
-			// all upper case
-			result.tstrMD5 = tstrFileMD5;
-			result.tstrSHA1 = tstrFileSHA1;
-			result.tstrSHA256 = tstrFileSHA256;
-			result.tstrSHA512 = tstrFileSHA512;
-
-			result.enumState = RESULT_ALL;
-
-			uiBridge->showFileHash(result, thrdData->uppercase);
 		} // end if(File.Open(path, CFile::modeRead|CFile::shareDenyWrite, &ex))
 		else
 		{

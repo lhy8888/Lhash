@@ -177,10 +177,8 @@ __inline HRESULT ResolveWindowsAppExePath(LPCWSTR pszExecName, LPWSTR pszPath)
         return hr;
     }
 
-    StringCchPrintf(pszPath, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\WindowsApps\\%s",
+    return StringCchPrintf(pszPath, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\WindowsApps\\%s",
         szUserPath, pszExecName);
-
-    return 0;
 }
 
 DWORD CExplorerCommandVerb::_ThreadProc()
@@ -232,12 +230,17 @@ DWORD CExplorerCommandVerb::_ThreadProc()
             sInfo.cb = sizeof(sInfo);
             PROCESS_INFORMATION pInfo = { 0 };
 
-            CreateProcess(tstrExecPath.c_str(), pszCmd,
+            BOOL bCreated = CreateProcess(tstrExecPath.c_str(), pszCmd,
                 0, 0, TRUE,
                 NORMAL_PRIORITY_CLASS,
                 0, 0, &sInfo, &pInfo);
 
             delete[] pszCmd;
+            if (bCreated)
+            {
+                CloseHandle(pInfo.hThread);
+                CloseHandle(pInfo.hProcess);
+            }
 
             /*WCHAR szMsg[128];
             StringCchPrintf(szMsg, ARRAYSIZE(szMsg), L"%d item(s), first item is [%s]", count, pszPath);
