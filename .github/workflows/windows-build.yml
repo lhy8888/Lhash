@@ -1,0 +1,97 @@
+name: Windows Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/security-hardening
+    tags:
+      - v*
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  security-regression:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build security regression harness
+        run: dotnet build security-tests/SecurityRegression/SecurityRegression.csproj --configuration Release
+
+      - name: Run security regression harness
+        run: dotnet security-tests/SecurityRegression/bin/Release/net10.0/SecurityRegression.dll
+
+  build-legacy-x64:
+    needs: security-regression
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build legacy Windows solution
+        run: msbuild trunk/fileshash15.sln /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Package legacy x64 build
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $bundleRoot = Join-Path $artifactRoot 'legacy-x64'
+          New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
+
+          Copy-Item 'trunk\x64\Release\fHash.exe' -Destination $bundleRoot -ErrorAction Stop
+          Copy-Item 'trunk\x64\Release\fHashShlExt64.dll' -Destination $bundleRoot -ErrorAction Stop
+
+          $readme = @"
+          fHash legacy x64 build
+
+          Files:
+          - fHash.exe: desktop application
+          - fHashShlExt64.dll: optional shell extension module
+
+          Usage:
+          - Double-click fHash.exe to run the app.
+          - The shell extension DLL is not registered automatically in CI artifacts.
+          "@
+          Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
+
+          Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot 'fHash-legacy-x64.zip') -Force
+
+      - name: Upload legacy x64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fHash-legacy-x64
+          path: |
+            artifacts/legacy-x64
+            artifacts/fHash-legacy-x64.zip
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-legacy-x64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download legacy x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fHash-legacy-x64
+          path: release-assets
+
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/fHash-legacy-x64.zip
