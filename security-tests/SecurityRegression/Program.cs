@@ -11,12 +11,19 @@ internal static partial class Program
         var failures = new List<string>();
 
         Run("CommandLine parser handles quoted file lists safely", TestCommandLineParsing, failures);
+        Run("CommandLine parser covers empty, invalid, boundary, and compatibility cases", TestCommandLineEdgeCases, failures);
         Run("WinMFC copy-data validation guard exists", () =>
         {
             string content = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             AssertContains(content, "IsValidCopyDataString", "Missing WM_COPYDATA input validation helper.");
             AssertContains(content, "CommandLineToArgvW", "Missing hardened Windows command-line parsing.");
             AssertContains(content, "CopyDraggedPath", "Missing long-path-safe drag/drop path extraction.");
+            AssertContains(content, "pCopyDataStruct->dwData == 0 &&", "WM_COPYDATA handler no longer gates parsing on the expected payload type.");
+            AssertContains(content, "cbData < sizeof(TCHAR)", "WM_COPYDATA validation no longer rejects undersized payloads.");
+            AssertContains(content, "% sizeof(TCHAR)", "WM_COPYDATA validation no longer checks character alignment.");
+            AssertContains(content, "pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL", "WM_COPYDATA validation no longer rejects null buffers.");
+            AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
+            AssertContains(content, "!m_thrdData.threadWorking", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("Win32 read failures propagate as errors", () =>
         {
@@ -36,16 +43,22 @@ internal static partial class Program
             string wuiShell = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
             string uwpShell = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
+            string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
 
             AssertContains(legacyShell, "PROCESS_QUERY_LIMITED_INFORMATION", "Legacy shell extension still asks for excessive process rights.");
             AssertContains(legacyShell, "CloseHandle(pInfo.hThread);", "Legacy shell extension does not close thread handles after CreateProcess.");
             AssertContains(legacyShell, "CloseHandle(pInfo.hProcess);", "Legacy shell extension does not close process handles after CreateProcess.");
             AssertContains(legacyShell, "CopyDraggedPath", "Legacy shell extension still relies on fixed-size drag/drop buffers.");
+            AssertContains(legacyShell, "DragQueryFile(hDrop, index, NULL, 0)", "Legacy shell extension no longer queries drag/drop path lengths before copying.");
             AssertContains(wuiShell, "BOOL bCreated = CreateProcess", "WinUI shell extension launch hardening is missing.");
             AssertContains(wuiShell, "CloseHandle(pInfo.hThread);", "WinUI shell extension does not close thread handles.");
+            AssertContains(wuiShell, "CloseHandle(pInfo.hProcess);", "WinUI shell extension does not close process handles.");
             AssertContains(uwpShell, "BOOL bCreated = CreateProcess", "UWP shell extension launch hardening is missing.");
+            AssertContains(uwpShell, "CloseHandle(pInfo.hThread);", "UWP shell extension does not close thread handles.");
             AssertContains(uwpShell, "CloseHandle(pInfo.hProcess);", "UWP shell extension does not close process handles.");
+            AssertContains(mfcDialog, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
             AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
+            AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);
 
         if (failures.Count > 0)
@@ -84,6 +97,38 @@ internal static partial class Program
         }
 
         _ = SplitCommandLine("\"C:\\unterminated");
+    }
+
+    private static void TestCommandLineEdgeCases()
+    {
+        string[] simpleArgs = SplitCommandLine(" C:\\hash\\plain.txt ");
+        string[] simpleFiltered = simpleArgs.Where(static arg => !string.IsNullOrEmpty(arg)).ToArray();
+        if (simpleFiltered.Length != 1 || simpleFiltered[0] != @"C:\hash\plain.txt")
+        {
+            throw new InvalidOperationException("Simple unquoted path parsing regressed.");
+        }
+
+        string[] emptyAndValidArgs = SplitCommandLine(" \"\" \"D:\\hash.txt\"");
+        string[] emptyAndValidFiltered = emptyAndValidArgs.Where(static arg => !string.IsNullOrEmpty(arg)).ToArray();
+        if (emptyAndValidFiltered.Length != 1 || emptyAndValidFiltered[0] != @"D:\hash.txt")
+        {
+            throw new InvalidOperationException("Empty command-line arguments are no longer filtered safely.");
+        }
+
+        string longLeaf = new('a', 280);
+        string expectedLongPath = $@"C:\long path\{longLeaf}.bin";
+        string[] longArgs = SplitCommandLine($" \"{expectedLongPath}\"");
+        string[] longFiltered = longArgs.Where(static arg => !string.IsNullOrEmpty(arg)).ToArray();
+        if (longFiltered.Length != 1 || longFiltered[0] != expectedLongPath)
+        {
+            throw new InvalidOperationException("Long path parsing no longer preserves boundary-length inputs.");
+        }
+
+        string[] malformedArgs = SplitCommandLine("\"C:\\unterminated");
+        if (malformedArgs.Length == 0 || string.IsNullOrEmpty(malformedArgs[0]))
+        {
+            throw new InvalidOperationException("Malformed command lines no longer return a recoverable argument array.");
+        }
     }
 
     private static string ReadRepoFile(string repoRoot, string relativePath)
