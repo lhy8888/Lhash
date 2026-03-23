@@ -117,11 +117,7 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 	ON_MESSAGE(WM_THREAD_INFO, OnThreadMsg)
 	ON_MESSAGE(WM_CUSTOM_MSG, OnCustomMsg)
 	ON_COMMAND(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnHypereditmenuCopyhash)
-	ON_COMMAND(ID_HYPEREDITMENU_SEARCHGOOGLE, &CFilesHashDlg::OnHypereditmenuSearchgoogle)
-	ON_COMMAND(ID_HYPEREDITMENU_SEARCHVIRUSTOTAL, &CFilesHashDlg::OnHypereditmenuSearchvirustotal)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnUpdateHypereditmenuCopyhash)
-	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHGOOGLE, &CFilesHashDlg::OnUpdateHypereditmenuSearchgoogle)
-	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHVIRUSTOTAL, &CFilesHashDlg::OnUpdateHypereditmenuSearchvirustotal)
 	ON_WM_COPYDATA()
 END_MESSAGE_MAP()
 
@@ -185,7 +181,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 		m_editMain.ShowTextBuffer();
 	}
 	m_mainMtx.unlock();
-	
+
 	pTl = NULL;
 
 	if(WindowsUtils::ContextMenuExisted())
@@ -211,7 +207,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 		++m_thrdData.nFiles;
 	}
 	// 从命令行获取文件路径结束
-	
+
 	m_thrdData.threadWorking = false;
 	m_progWhole.SetRange(0, 99);
 	m_chkUppercase.SetCheck(0);
@@ -226,7 +222,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 //  来绘制该图标。对于使用文档/视图模型的 MFC 应用程序，
 //  这将由框架自动完成。
 
-void CFilesHashDlg::OnPaint() 
+void CFilesHashDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -622,7 +618,7 @@ void CFilesHashDlg::DoMD5()
 	{
 		CloseHandle(m_hWorkThread);
 	}
-	
+
 	m_bFind = FALSE;
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
@@ -644,11 +640,11 @@ void CFilesHashDlg::DoMD5()
 	DWORD thredID;
 
 	m_thrdData.stop = false;
-	m_hWorkThread = (HANDLE)_beginthreadex(NULL, 
-											0, 
-											(unsigned int (WINAPI *)(void *))HashThreadFunc, 
-											&m_thrdData, 
-											0, 
+	m_hWorkThread = (HANDLE)_beginthreadex(NULL,
+											0,
+											(unsigned int (WINAPI *)(void *))HashThreadFunc,
+											&m_thrdData,
+											0,
 											(unsigned int *)&thredID);
 
 }
@@ -795,7 +791,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 
 		// 界面设置 - 开始
 		SetCtrls(FALSE);
-		// 界面设置 - 结束	
+		// 界面设置 - 结束
 
 		SetWholeProgPos(99);
 		break;
@@ -809,7 +805,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		//界面设置 - 开始
 		SetCtrls(FALSE);
 		//界面设置 - 结束
-		
+
 		m_mainMtx.lock();
 		{
 			m_editMain.AppendTextToBuffer(_T("\r\n"));
@@ -822,7 +818,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		m_mainMtx.unlock();
 
 		SetWholeProgPos(0);
-		
+
 		if(m_waitingExit)
 		{
 			PostMessage(WM_CLOSE);
@@ -843,14 +839,14 @@ LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 
 			CMenu menuHyperEdit;
 			menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);
-			CMenu *pmSubMenu = menuHyperEdit.GetSubMenu(0); 
+			CMenu *pmSubMenu = menuHyperEdit.GetSubMenu(0);
 			ASSERT(pmSubMenu);
-			pmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, 
+			pmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON,
 				cpPoint.x, cpPoint.y, this);
 		}
 		break;
 	}
-	
+
 	return 0;
 }
 
@@ -941,37 +937,9 @@ void CFilesHashDlg::OnHypereditmenuCopyhash()
 	WindowsUtils::CopyCString(cstrHyperlink);
 }
 
-void CFilesHashDlg::OnHypereditmenuSearchgoogle()
-{
-	CString cstrHyperlink = m_editMain.GetLastHyperlink();
-	CString cstrGoogleLink;
-	cstrGoogleLink.Format(_T("https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8"),
-		cstrHyperlink.GetString());
-	WindowsUtils::OpenURL(cstrGoogleLink);
-}
-
-void CFilesHashDlg::OnHypereditmenuSearchvirustotal()
-{
-	CString cstrHyperlink = m_editMain.GetLastHyperlink();
-	CString cstrVtLink;
-	cstrVtLink.Format(_T("https://www.virustotal.com/#/search/%s"),
-		cstrHyperlink.GetString());
-	WindowsUtils::OpenURL(cstrVtLink);
-}
-
 void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI)
 {
 	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
-}
-
-void CFilesHashDlg::OnUpdateHypereditmenuSearchgoogle(CCmdUI *pCmdUI)
-{
-	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_SERACHGOOGLE));
-}
-
-void CFilesHashDlg::OnUpdateHypereditmenuSearchvirustotal(CCmdUI *pCmdUI)
-{
-	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_SERACHVIRUSTOTAL));
 }
 
 void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
@@ -995,7 +963,7 @@ void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
 	{
 		strPathLower = CString(itr->tstrPath.c_str());
 		strPathLower.MakeLower();
-		if(strPathLower.Find(strFile) >= 0 && 
+		if(strPathLower.Find(strFile) >= 0 &&
 			(itr->tstrMD5.find(strHash.GetString()) != tstring::npos ||
 			itr->tstrSHA1.find(strHash.GetString()) != tstring::npos ||
 			itr->tstrSHA256.find(strHash.GetString()) != tstring::npos ||

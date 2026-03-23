@@ -130,17 +130,8 @@ namespace FilesHashWUI
             MenuFlyoutItem menuItemCopy = new();
             menuItemCopy.Text = m_resourceLoaderMain.GetString("MenuItemCopy");
             menuItemCopy.Click += MenuItemCopy_Click;
-            MenuFlyoutItem menuItemGoogle = new();
-            menuItemGoogle.Text = m_resourceLoaderMain.GetString("MenuItemGoogle");
-            menuItemGoogle.Click += MenuItemGoogle_Click;
-            MenuFlyoutItem menuItemVirusTotal = new();
-            menuItemVirusTotal.Text = m_resourceLoaderMain.GetString("MenuItemVirusTotal");
-            menuItemVirusTotal.Click += MenuItemVirusTotal_Click;
 
             m_menuFlyoutTextMain.Items.Add(menuItemCopy);
-            m_menuFlyoutTextMain.Items.Add(new MenuFlyoutSeparator());
-            m_menuFlyoutTextMain.Items.Add(menuItemGoogle);
-            m_menuFlyoutTextMain.Items.Add(menuItemVirusTotal);
         }
 
         private void ShowAboutPage()
@@ -702,26 +693,6 @@ namespace FilesHashWUI
             string strHash = WinUIHelper.GetTextFromHyperlink(m_hyperlinkClicked);
             NativeHelper nativeHelper = new();
             nativeHelper.SetClipboardText(strHash);
-        }
-
-        private void MenuItemGoogle_Click(object sender, RoutedEventArgs e)
-        {
-            if (m_hyperlinkClicked == null)
-                return;
-
-            string strHash = WinUIHelper.GetTextFromHyperlink(m_hyperlinkClicked);
-            string strUrl = string.Format("https://www.google.com/search?q={0}&ie=utf-8&oe=utf-8", strHash);
-            WinUIHelper.OpenUrl(strUrl);
-        }
-
-        private void MenuItemVirusTotal_Click(object sender, RoutedEventArgs e)
-        {
-            if (m_hyperlinkClicked == null)
-                return;
-
-            string strHash = WinUIHelper.GetTextFromHyperlink(m_hyperlinkClicked);
-            string strUrl = string.Format("https://www.virustotal.com/gui/search/{0}", strHash);
-            WinUIHelper.OpenUrl(strUrl);
         }
 
         private void HandleRichTextSelectionScroll(ScrollViewer scrollViewerWrapper)

@@ -25,18 +25,18 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
     "#define _AFX_NO_OLE_RESOURCES\r\n"
@@ -162,9 +162,6 @@ BEGIN
     POPUP "HyperEditMenu"
     BEGIN
         MENUITEM "[Copy hash]",                 ID_HYPEREDITMENU_COPYHASH
-        MENUITEM SEPARATOR
-        MENUITEM "[Search Google]",             ID_HYPEREDITMENU_SEARCHGOOGLE
-        MENUITEM "[Search VirusTotal]",         ID_HYPEREDITMENU_SEARCHVIRUSTOTAL
     END
 END
 
@@ -203,4 +200,3 @@ LANGUAGE 4, 2
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

@@ -252,17 +252,8 @@ namespace FilesHashUwp
             MenuFlyoutItem menuItemCopy = new MenuFlyoutItem();
             menuItemCopy.Text = m_resourceLoaderMain.GetString("MenuItemCopy");
             menuItemCopy.Click += MenuItemCopy_Click;
-            MenuFlyoutItem menuItemGoogle = new MenuFlyoutItem();
-            menuItemGoogle.Text = m_resourceLoaderMain.GetString("MenuItemGoogle");
-            menuItemGoogle.Click += MenuItemGoogle_Click;
-            MenuFlyoutItem menuItemVirusTotal = new MenuFlyoutItem();
-            menuItemVirusTotal.Text = m_resourceLoaderMain.GetString("MenuItemVirusTotal");
-            menuItemVirusTotal.Click += MenuItemVirusTotal_Click;
 
             m_menuFlyoutTextMain.Items.Add(menuItemCopy);
-            m_menuFlyoutTextMain.Items.Add(new MenuFlyoutSeparator());
-            m_menuFlyoutTextMain.Items.Add(menuItemGoogle);
-            m_menuFlyoutTextMain.Items.Add(menuItemVirusTotal);
         }
 
         private void ScrollTextMainToBottom()
@@ -909,30 +900,6 @@ namespace FilesHashUwp
             }
             string strHash = UwpHelper.GetTextFromHyperlink(m_hyperlinkClicked);
             UwpHelper.CopyStringToClipboard(strHash);
-        }
-
-        private void MenuItemGoogle_Click(object sender, RoutedEventArgs e)
-        {
-            if (m_hyperlinkClicked == null)
-            {
-                return;
-            }
-
-            string strHash = UwpHelper.GetTextFromHyperlink(m_hyperlinkClicked);
-            string strUrl = string.Format("https://www.google.com/search?q={0}&ie=utf-8&oe=utf-8", strHash);
-            UwpHelper.OpenUrl(strUrl);
-        }
-
-        private void MenuItemVirusTotal_Click(object sender, RoutedEventArgs e)
-        {
-            if (m_hyperlinkClicked == null)
-            {
-                return;
-            }
-
-            string strHash = UwpHelper.GetTextFromHyperlink(m_hyperlinkClicked);
-            string strUrl = string.Format("https://www.virustotal.com/#/search/{0}", strHash);
-            UwpHelper.OpenUrl(strUrl);
         }
 
         private void GridRoot_DragOver(object sender, DragEventArgs e)

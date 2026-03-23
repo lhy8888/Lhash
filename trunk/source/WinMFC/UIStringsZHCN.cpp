@@ -45,8 +45,6 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("关于(&A)");
 	m_stringsMap[_T("MAINDLG_EXIT")] = _T("退出(&X)");
 	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("复制哈希值");
-	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_SERACHGOOGLE")] = _T("搜索 Google");
-	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_SERACHVIRUSTOTAL")] = _T("搜索 VirusTotal");
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("验证");

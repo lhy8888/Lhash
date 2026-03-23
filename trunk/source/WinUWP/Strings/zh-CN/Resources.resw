@@ -135,9 +135,6 @@
   <data name="MenuItemCopy" xml:space="preserve">
     <value>复制哈希值</value>
   </data>
-  <data name="MenuItemGoogle" xml:space="preserve">
-    <value>搜索 Google</value>
-  </data>
   <data name="ButtonClear.Content" xml:space="preserve">
     <value>清除</value>
   </data>
@@ -158,9 +155,6 @@
   </data>
   <data name="ResultFileVersion" xml:space="preserve">
     <value>版本:</value>
-  </data>
-  <data name="MenuItemVirusTotal" xml:space="preserve">
-    <value>搜索 VirusTotal</value>
   </data>
   <data name="AboutInfoMD5" xml:space="preserve">
     <value>MD5 实现 copyright (C) RSA Data Security, Inc.</value>

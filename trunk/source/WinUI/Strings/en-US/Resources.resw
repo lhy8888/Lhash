@@ -138,9 +138,6 @@
   <data name="MenuItemCopy" xml:space="preserve">
     <value>Copy hash value</value>
   </data>
-  <data name="MenuItemGoogle" xml:space="preserve">
-    <value>Search Google</value>
-  </data>
   <data name="ButtonClear.Content" xml:space="preserve">
     <value>Clear</value>
   </data>
@@ -161,9 +158,6 @@
   </data>
   <data name="ResultFileVersion" xml:space="preserve">
     <value>Version:</value>
-  </data>
-  <data name="MenuItemVirusTotal" xml:space="preserve">
-    <value>Search VirusTotal</value>
   </data>
   <data name="AboutInfoMD5" xml:space="preserve">
     <value>MD5 implementation copyright (C) RSA Data Security, Inc.</value>

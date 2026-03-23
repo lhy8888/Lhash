@@ -60,6 +60,50 @@ internal static partial class Program
             AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);
+        Run("UWP and WinUI attack surface stays minimal", () =>
+        {
+            string uwpManifest = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package.appxmanifest");
+            string uwpHelper = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\UwpHelper.cs");
+            string uwpMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+            string uwpEn = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string uwpZh = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
+            string winUiProject = ReadRepoFile(repoRoot, @"trunk\source\WinUI\fHashWUI.csproj");
+            string winUiHelper = ReadRepoFile(repoRoot, @"trunk\source\WinUI\WinUIHelper.cs");
+            string winUiMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
+            string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
+            string winMfcDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string winMfcRes = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string winMfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
+            string winMfcZhStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp");
+
+            AssertDoesNotContain(uwpManifest, "internetClient", "UWP manifest still requests Internet client capability.");
+            AssertDoesNotContain(uwpManifest, "privateNetworkClientServer", "UWP manifest still requests private network capability.");
+            AssertContains(uwpHelper, "Launcher.LaunchUriAsync", "UWP URL launching path is missing.");
+            AssertDoesNotContain(uwpHelper, "HttpClient", "UWP helper unexpectedly added an in-app HTTP client.");
+            AssertDoesNotContain(winUiProject, "Microsoft.Web.WebView2", "WinUI project still carries an explicit WebView2 package reference.");
+            AssertContains(winUiHelper, "Launcher.LaunchUriAsync", "WinUI URL launching path is missing.");
+            AssertDoesNotContain(uwpMainPage, "MenuItemGoogle", "UWP UI still exposes a Google hash-search action.");
+            AssertDoesNotContain(uwpMainPage, "MenuItemVirusTotal", "UWP UI still exposes a VirusTotal hash-search action.");
+            AssertDoesNotContain(uwpEn, "Search Google", "UWP English resources still advertise Google hash search.");
+            AssertDoesNotContain(uwpEn, "Search VirusTotal", "UWP English resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(uwpZh, "搜索 Google", "UWP Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(uwpZh, "搜索 VirusTotal", "UWP Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winUiMainPage, "MenuItemGoogle", "WinUI UI still exposes a Google hash-search action.");
+            AssertDoesNotContain(winUiMainPage, "MenuItemVirusTotal", "WinUI UI still exposes a VirusTotal hash-search action.");
+            AssertDoesNotContain(winUiEn, "Search Google", "WinUI English resources still advertise Google hash search.");
+            AssertDoesNotContain(winUiEn, "Search VirusTotal", "WinUI English resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winUiZh, "搜索 Google", "WinUI Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(winUiZh, "搜索 VirusTotal", "WinUI Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winMfcDlg, "Searchgoogle", "WinMFC dialog still exposes a Google hash-search command.");
+            AssertDoesNotContain(winMfcDlg, "Searchvirustotal", "WinMFC dialog still exposes a VirusTotal hash-search command.");
+            AssertDoesNotContain(winMfcRes, "[Search Google]", "WinMFC menu resources still expose Google hash search.");
+            AssertDoesNotContain(winMfcRes, "[Search VirusTotal]", "WinMFC menu resources still expose VirusTotal hash search.");
+            AssertDoesNotContain(winMfcBaseStrings, "Search Google", "WinMFC English strings still advertise Google hash search.");
+            AssertDoesNotContain(winMfcBaseStrings, "Search VirusTotal", "WinMFC English strings still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "搜索 Google", "WinMFC Chinese strings still advertise Google hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "搜索 VirusTotal", "WinMFC Chinese strings still advertise VirusTotal hash search.");
+        }, failures);
 
         if (failures.Count > 0)
         {
@@ -184,6 +228,14 @@ internal static partial class Program
     private static void AssertContains(string content, string expected, string message)
     {
         if (!content.Contains(expected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(message);
+        }
+    }
+
+    private static void AssertDoesNotContain(string content, string unexpected, string message)
+    {
+        if (content.Contains(unexpected, StringComparison.Ordinal))
         {
             throw new InvalidOperationException(message);
         }

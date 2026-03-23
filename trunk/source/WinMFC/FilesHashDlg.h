@@ -48,11 +48,7 @@ public:
 	afx_msg LRESULT OnCustomMsg(WPARAM, LPARAM);
 	afx_msg void OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnHypereditmenuCopyhash();
-	afx_msg void OnHypereditmenuSearchgoogle();
-	afx_msg void OnHypereditmenuSearchvirustotal();
 	afx_msg void OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateHypereditmenuSearchgoogle(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateHypereditmenuSearchvirustotal(CCmdUI *pCmdUI);
 
 // 实现
 protected:
@@ -94,7 +90,7 @@ protected:
 
 	void DoMD5();
 	void StopWorkingThread();
-	
+
 	// 下面的为计算时使用，一般不要用
 	void SetCtrls(BOOL working);
 	void SetWholeProgPos(UINT pos);
