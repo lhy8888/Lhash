@@ -12,16 +12,19 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   security-regression:
     runs-on: windows-2022
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -37,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -54,41 +57,67 @@ jobs:
           & $vswhere -latest -products * -format json
           Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022' -ErrorAction SilentlyContinue
 
-      - name: Build legacy Windows solution
-        run: msbuild trunk/fileshash15.sln /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
+      - name: Build legacy Windows app
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $logPath = Join-Path $artifactRoot 'build-legacy-x64.log'
+
+          & msbuild trunk/fileshash.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $logPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed with exit code $LASTEXITCODE. See artifacts/build-legacy-x64.log for details."
+          }
 
       - name: Package legacy x64 build
+        if: always()
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           $bundleRoot = Join-Path $artifactRoot 'legacy-x64'
           New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 
-          Copy-Item 'trunk\x64\Release\fHash.exe' -Destination $bundleRoot -ErrorAction Stop
-          Copy-Item 'trunk\x64\Release\fHashShlExt64.dll' -Destination $bundleRoot -ErrorAction Stop
-
-          $readme = @"
+          $exePath = 'trunk\x64\Release\fHash.exe'
+          if (Test-Path $exePath) {
+            Copy-Item $exePath -Destination $bundleRoot -ErrorAction Stop
+            $readme = @"
           fHash legacy x64 build
 
           Files:
           - fHash.exe: desktop application
-          - fHashShlExt64.dll: optional shell extension module
 
           Usage:
           - Double-click fHash.exe to run the app.
-          - The shell extension DLL is not registered automatically in CI artifacts.
+          - Shell extension packaging is intentionally skipped in CI.
           "@
+          }
+          else {
+            $readme = @"
+          fHash legacy x64 build
+
+          The executable was not produced in this CI run.
+          See build-legacy-x64.log in the artifact root for the full MSBuild output.
+          "@
+          }
+
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
-          Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot 'fHash-legacy-x64.zip') -Force
+          if (Test-Path $exePath) {
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot 'fHash-legacy-x64.zip') -Force
+          }
 
       - name: Upload legacy x64 artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: fHash-legacy-x64
           path: |
+            artifacts/build-legacy-x64.log
             artifacts/legacy-x64
             artifacts/fHash-legacy-x64.zip
+          if-no-files-found: warn
 
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
