@@ -42,6 +42,31 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Ensure VS 2017 toolset and MFC/ATL components
+        shell: powershell
+        run: |
+          $installerRoot = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer'
+          $vswhere = Join-Path $installerRoot 'vswhere.exe'
+          $setup = Join-Path $installerRoot 'setup.exe'
+          $installPath = & $vswhere -latest -products * -property installationPath
+
+          if ([string]::IsNullOrWhiteSpace($installPath)) {
+            throw 'Unable to locate Visual Studio installation on the runner.'
+          }
+
+          & $setup modify `
+            --installPath $installPath `
+            --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 `
+            --add Microsoft.VisualStudio.Component.VC.v141.MFC `
+            --add Microsoft.VisualStudio.Component.VC.v141.ATL `
+            --passive `
+            --norestart `
+            --wait
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Visual Studio component install failed with exit code $LASTEXITCODE."
+          }
+
       - name: Build legacy Windows solution
         run: msbuild trunk/fileshash15.sln /m /p:Configuration=Release /p:Platform=x64
 
