@@ -71,6 +71,15 @@ jobs:
             throw "MSBuild failed with exit code $LASTEXITCODE. See artifacts/build-legacy-x64.log for details."
           }
 
+          $exeCandidates = @(
+            'trunk\x64\Release\fHash64.exe',
+            'trunk\x64\Release\fHash.exe'
+          )
+          $builtExe = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $builtExe) {
+            throw 'MSBuild succeeded, but no executable was found in trunk\\x64\\Release.'
+          }
+
       - name: Package legacy x64 build
         if: always()
         shell: powershell
@@ -79,9 +88,13 @@ jobs:
           $bundleRoot = Join-Path $artifactRoot 'legacy-x64'
           New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 
-          $exePath = 'trunk\x64\Release\fHash.exe'
-          if (Test-Path $exePath) {
-            Copy-Item $exePath -Destination $bundleRoot -ErrorAction Stop
+          $exeCandidates = @(
+            'trunk\x64\Release\fHash64.exe',
+            'trunk\x64\Release\fHash.exe'
+          )
+          $exePath = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if ($exePath) {
+            Copy-Item $exePath -Destination (Join-Path $bundleRoot 'fHash.exe') -ErrorAction Stop
             $readme = @"
           fHash legacy x64 build
 
@@ -104,7 +117,7 @@ jobs:
 
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
-          if (Test-Path $exePath) {
+          if ($exePath) {
             Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot 'fHash-legacy-x64.zip') -Force
           }
 
