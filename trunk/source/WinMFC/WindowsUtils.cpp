@@ -33,12 +33,12 @@ namespace WindowsUtils
 
 		if(lResEnv != ERROR_SUCCESS)
 			return false;
-		
+
 		TCHAR tszArch[100] = { L'0' };
 		ULONG nChars = 100;
 		key.QueryStringValue(lpszArchKeyName, tszArch, &nChars);
 		key.Close();
-		
+
 		string strArch(tstrtostr(tszArch));
 		strArch = str_upper(strArch);
 		strArch = strtrim(strArch);
@@ -52,8 +52,8 @@ namespace WindowsUtils
 		HANDLE hToken = NULL;
 		TOKEN_ELEVATION_TYPE tet;
 
-		if (!OpenProcessToken(GetCurrentProcess(), 
-							TOKEN_QUERY, 
+		if (!OpenProcessToken(GetCurrentProcess(),
+							TOKEN_QUERY,
 							&hToken))
 		{
 			return TRUE;
@@ -82,7 +82,7 @@ namespace WindowsUtils
 		{
 			return TRUE;
 		}
-		else if(tet == TokenElevationTypeDefault && 
+		else if(tet == TokenElevationTypeDefault &&
 				!IsUserAnAdmin())
 		{
 			return TRUE;
@@ -146,7 +146,7 @@ namespace WindowsUtils
 
 	HINSTANCE OpenURL(const TCHAR *pszURL)
 	{
-		return ShellExecute(NULL, _T("open"), pszURL, 
+		return ShellExecute(NULL, _T("open"), pszURL,
 			NULL, NULL, SW_SHOW);
 	}
 
@@ -197,7 +197,7 @@ namespace WindowsUtils
 
 			FreeLibrary(hModule);
 		}
-		
+
 		return false;
 	}
 
@@ -217,7 +217,7 @@ namespace WindowsUtils
 
 			FreeLibrary(hModule);
 		}
-		
+
 		return false;
 	}
 
@@ -252,7 +252,7 @@ namespace WindowsUtils
 		strcpy_s(pszCommand, MAX_PATH + 10, pszExeFullPath);
 		strcat_s(pszCommand, MAX_PATH + 10, _T(" \"%1\""));
 #endif
-		
+
 		lResult = key.SetStringValue(NULL, pszCommand);
 		key.Close();
 
@@ -281,7 +281,7 @@ namespace WindowsUtils
 		// 成功打开
 		LPCTSTR pszUuid = SHELL_EXT_UUID;
 		LPCTSTR pszExePath = pszExeFullPath;
-		
+
 		lResult = key.SetStringValue(NULL, pszUuid);
 		lResult |= key.SetStringValue(SHELL_EXT_EXEPATH, pszExePath);
 		key.Close();
@@ -298,7 +298,7 @@ namespace WindowsUtils
 		TCHAR pszShlDllPath[MAX_PATH + 10] = { L'0' };
 
 		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // 得到程序模块名称，全路径
-		
+
 		if(FindShlExtDll(pszExeFullPath, pszShlDllPath))
 		{
 			// We found shell extension dll
@@ -334,7 +334,7 @@ namespace WindowsUtils
 		// 打开
 		lResShell = keyShell.Open(HKEY_CLASSES_ROOT, lpszKeyShellName, KEY_ALL_ACCESS);
 		lResShellEx = keyShellEx.Open(HKEY_CLASSES_ROOT, lpszKeyShellExName, KEY_ALL_ACCESS);
-		if(lResShell != ERROR_SUCCESS && 
+		if(lResShell != ERROR_SUCCESS &&
 			lResShellEx != ERROR_SUCCESS)
 			return false;
 
@@ -351,6 +351,7 @@ namespace WindowsUtils
 		// Try to delete shell extension
 		if(lResShellEx == ERROR_SUCCESS)
 		{
+			lResult &= keyShellEx.RecurseDeleteKey(_T("LHashShellExt"));
 			lResult &= keyShellEx.RecurseDeleteKey(_T("fHashShellExt"));
 			keyShellEx.Close();
 		}
@@ -378,11 +379,11 @@ namespace WindowsUtils
 		lResCtxMenuZh = keyCtxMenuZh.Open(HKEY_CLASSES_ROOT, lpszCtxMenuKeyNameZh, KEY_READ);
 		lResShlExt = keyShlExt.Open(HKEY_CLASSES_ROOT, lpszShlExtKeyName, KEY_READ);
 
-		if(lResCtxMenuBase != ERROR_SUCCESS && 
-			lResCtxMenuZh != ERROR_SUCCESS && 
+		if(lResCtxMenuBase != ERROR_SUCCESS &&
+			lResCtxMenuZh != ERROR_SUCCESS &&
 			lResShlExt != ERROR_SUCCESS)
 			return false;
-		
+
 		if(lResCtxMenuBase == ERROR_SUCCESS)
 			keyCtxMenuBase.Close();
 		if(lResCtxMenuZh == ERROR_SUCCESS)
@@ -394,4 +395,5 @@ namespace WindowsUtils
 	}
 
 }
+
 

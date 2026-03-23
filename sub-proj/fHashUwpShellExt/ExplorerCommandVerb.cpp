@@ -22,7 +22,7 @@
 #include "UwpShellExtStringsBase.h"
 #include "UwpShellExtStringsZHCN.h"
 
-static WCHAR const c_szVerbDisplayNameBack[] = L"Hash with fHash UWP";
+static WCHAR const c_szVerbDisplayNameBack[] = L"Hash with LHash UWP";
 static WCHAR const c_szProgID[] = L"*";
 static WCHAR const c_szVerbName[] = L"fHashUwpShellExt";
 #if defined (_DEBUG)
@@ -310,3 +310,4 @@ HRESULT CExplorerCommandVerb_CreateInstance(REFIID riid, void **ppv)
     }
     return hr;
 }
+

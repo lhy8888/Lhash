@@ -5,16 +5,16 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("fHashUwp")]
+[assembly: AssemblyTitle("LHashUwp")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SUN Junwen")]
-[assembly: AssemblyProduct("fHashUwp")]
-[assembly: AssemblyCopyright("Copyright © SUN Junwen 2022-")]
+[assembly: AssemblyCompany("LHY")]
+[assembly: AssemblyProduct("LHashUwp")]
+[assembly: AssemblyCopyright("Copyright (C) 2026- LHY.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-// 程序集的版本信息由下列四个值组成: 
+// 程序集的版本信息由下列四个值组成:
 //
 //      主版本
 //      次版本
@@ -27,3 +27,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("3.3.4.0")]
 [assembly: AssemblyFileVersion("3.3.4.0")]
 [assembly: ComVisible(false)]
+

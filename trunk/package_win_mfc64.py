@@ -26,7 +26,7 @@ logging.basicConfig(
 
 VERSION_FILE_H = './source/WinMFC/version.h'
 RELEASED_FILES_DIR = './x64/Release'
-EXE_FILE_NAME = 'fHash64.exe'
+EXE_FILE_NAME = 'LHash.exe'
 DLL_FILE_NAME = 'fHashShlExt64.dll'
 
 version = 0
@@ -69,7 +69,7 @@ def package_release():
 
     logger.info('Package...')
     os.chdir(released_files_dir_full)
-    win64_zip_full = os.path.join(released_files_dir_full, 'fHash64-%s-win64.zip' % (version))
+    win64_zip_full = os.path.join(released_files_dir_full, 'LHash-%s-win64.zip' % (version))
     #logger.info(win64_zip_full)
     exe_win64_version = read_version_exe(EXE_FILE_NAME)
     #logger.info(exe_win64_version)
@@ -104,3 +104,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

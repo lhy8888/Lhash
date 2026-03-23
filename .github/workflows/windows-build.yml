@@ -72,8 +72,7 @@ jobs:
           }
 
           $exeCandidates = @(
-            'trunk\x64\Release\fHash64.exe',
-            'trunk\x64\Release\fHash.exe'
+            'trunk\x64\Release\LHash.exe'
           )
           $builtExe = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $builtExe) {
@@ -90,27 +89,26 @@ jobs:
           New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 
           $exeCandidates = @(
-            'trunk\x64\Release\fHash64.exe',
-            'trunk\x64\Release\fHash.exe'
+            'trunk\x64\Release\LHash.exe'
           )
           $exePath = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if ($exePath) {
-            $packagedExe = Join-Path $bundleRoot 'fHash.exe'
+            $packagedExe = Join-Path $bundleRoot 'LHash.exe'
             Copy-Item $exePath -Destination $packagedExe -ErrorAction Stop
             $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
             $readme = @"
-          fHash legacy x64 build
+          LHash legacy x64 build
 
           Commit:
           - $env:GITHUB_SHA
 
           Files:
-          - fHash.exe: desktop application
+          - LHash.exe: desktop application
           - SHA256.txt: executable checksum
           - BUILD_INFO.txt: build metadata
 
           Usage:
-          - Double-click fHash.exe to run the app.
+          - Double-click LHash.exe to run the app.
           - Shell extension packaging is intentionally skipped in CI.
           "@
 
@@ -118,16 +116,16 @@ jobs:
           commit=$env:GITHUB_SHA
           short_sha=$shortSha
           source_exe=$exePath
-          packaged_exe=fHash.exe
+          packaged_exe=LHash.exe
           sha256=$exeHash
           "@
 
-            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  fHash.exe") -Encoding ASCII
+            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
             Set-Content -Path (Join-Path $bundleRoot 'BUILD_INFO.txt') -Value $buildInfo -Encoding ASCII
           }
           else {
             $readme = @"
-          fHash legacy x64 build
+          LHash legacy x64 build
 
           The executable was not produced in this CI run.
           See build-legacy-x64.log in the artifact root for the full MSBuild output.
@@ -137,18 +135,18 @@ jobs:
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
           if ($exePath) {
-            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "fHash-legacy-x64-$shortSha.zip") -Force
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-legacy-x64-$shortSha.zip") -Force
           }
 
       - name: Upload legacy x64 artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fHash-legacy-x64
+          name: LHash-legacy-x64
           path: |
             artifacts/build-legacy-x64.log
             artifacts/legacy-x64-*
-            artifacts/fHash-legacy-x64-*.zip
+            artifacts/LHash-legacy-x64-*.zip
           if-no-files-found: warn
 
   publish-release:
@@ -160,11 +158,12 @@ jobs:
       - name: Download legacy x64 artifact
         uses: actions/download-artifact@v4
         with:
-          name: fHash-legacy-x64
+          name: LHash-legacy-x64
           path: release-assets
 
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-assets/fHash-legacy-x64-*.zip
+            release-assets/LHash-legacy-x64-*.zip
+

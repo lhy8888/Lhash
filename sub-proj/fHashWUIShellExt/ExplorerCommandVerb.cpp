@@ -22,7 +22,7 @@
 #include "AppxShellExtStringsBase.h"
 #include "AppxShellExtStringsZHCN.h"
 
-static WCHAR const c_szVerbDisplayNameBack[] = L"Hash with fHash";
+static WCHAR const c_szVerbDisplayNameBack[] = L"Hash with LHash";
 static WCHAR const c_szProgID[] = L"*";
 static WCHAR const c_szExecName[] = L"fHashWUI.exe";
 #if defined (_DEBUG)
@@ -343,3 +343,4 @@ HRESULT CExplorerCommandVerb_CreateInstance(REFIID riid, void **ppv)
     }
     return hr;
 }
+

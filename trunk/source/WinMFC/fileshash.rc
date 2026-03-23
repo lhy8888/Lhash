@@ -73,7 +73,7 @@ IDI_ICON1               ICON                    "res\\icon1.ico"
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 333, 213
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_ACCEPTFILES | WS_EX_APPWINDOW
-CAPTION "fHash"
+CAPTION "LHash"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "BUTTON_OPEN",IDC_OPEN,276,144,50,16
@@ -200,3 +200,4 @@ LANGUAGE 4, 2
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

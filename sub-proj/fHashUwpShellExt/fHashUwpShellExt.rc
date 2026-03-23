@@ -26,18 +26,18 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -68,13 +68,13 @@ BEGIN
     BEGIN
         BLOCK "080404b0"
         BEGIN
-            VALUE "CompanyName", "SUN Junwen"
-            VALUE "FileDescription", "fHashUwpShellExt"
+            VALUE "CompanyName", "LHY"
+            VALUE "FileDescription", "LHashUwpShellExt"
             VALUE "FileVersion", STR_VERSION_UWP
             VALUE "InternalName", "fHashUwpShellExt.dll"
-            VALUE "LegalCopyright", "Copyright (C) SUN Junwen 2022-"
+            VALUE "LegalCopyright", "Copyright (C) 2026- LHY."
             VALUE "OriginalFilename", "fHashUwpShellExt.dll"
-            VALUE "ProductName", "fHashUwpShellExt"
+            VALUE "ProductName", "LHashUwpShellExt"
             VALUE "ProductVersion", STR_VERSION_UWP
         END
     END
@@ -98,4 +98,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

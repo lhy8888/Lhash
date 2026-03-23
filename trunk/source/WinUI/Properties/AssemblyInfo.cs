@@ -5,18 +5,18 @@ using System.Runtime.Versioning;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("fHashWUI")]
+[assembly: AssemblyTitle("LHashWUI")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SUN Junwen")]
-[assembly: AssemblyProduct("fHashWUI")]
-[assembly: AssemblyCopyright("Copyright © SUN Junwen 2024-")]
+[assembly: AssemblyCompany("LHY")]
+[assembly: AssemblyProduct("LHashWUI")]
+[assembly: AssemblyCopyright("Copyright (C) 2026- LHY.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: TargetPlatformAttribute("Windows10.0.22621.0")]
 [assembly: SupportedOSPlatformAttribute("Windows10.0.18362.0")]
 
-// 程序集的版本信息由下列四个值组成: 
+// 程序集的版本信息由下列四个值组成:
 //
 //      主版本
 //      次版本
@@ -29,4 +29,5 @@ using System.Runtime.Versioning;
 [assembly: AssemblyVersion("26.2.38.0")]
 [assembly: AssemblyFileVersion("26.2.38.0")]
 [assembly: ComVisible(false)]
+
 

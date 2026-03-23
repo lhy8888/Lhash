@@ -16,8 +16,8 @@
     Version="26.2.38.0" />
 
   <Properties>
-    <DisplayName>fHash</DisplayName>
-    <PublisherDisplayName>Sun Junwen</PublisherDisplayName>
+    <DisplayName>LHash</DisplayName>
+    <PublisherDisplayName>LHY</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
@@ -37,8 +37,8 @@
       EntryPoint="$targetentrypoint$">
 
       <uap:VisualElements
-        DisplayName="fHash"
-        Description="fHash"
+        DisplayName="LHash"
+        Description="LHash"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
@@ -89,3 +89,4 @@
     <rescap:Capability Name="confirmAppClose"/>
   </Capabilities>
 </Package>
+

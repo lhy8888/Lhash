@@ -10,7 +10,7 @@ namespace FilesHashWUI
 {
     public static class Program
     {
-        private const string AppInstanceKey = "FilesHashWUI";
+        private const string AppInstanceKey = "LHashWUI";
 
         [STAThread]
         static void Main(string[] args)
@@ -72,3 +72,4 @@ namespace FilesHashWUI
         }
     }
 }
+

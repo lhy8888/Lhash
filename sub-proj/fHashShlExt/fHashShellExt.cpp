@@ -155,7 +155,7 @@ HRESULT CfHashShellExt::GetCommandString(
 	// supplied buffer.
 	if(uFlags & GCS_HELPTEXT)
     {
-		LPCTSTR szText = _T("Using fHash to hash selected file(s).");
+		LPCTSTR szText = _T("Using LHash to hash selected file(s).");
 
 		if(uFlags & GCS_UNICODE)
 		{
@@ -267,7 +267,7 @@ HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 HWND CfHashShellExt::FindfHashWindow()
 {
 	HWND hWndfHash = NULL;
-	hWndfHash = FindWindow(_T("#32770"), _T("fHash"));
+	hWndfHash = FindWindow(_T("#32770"), _T("LHash"));
 	if (hWndfHash == NULL)
 		return NULL;
 
@@ -330,3 +330,4 @@ void CfHashShellExt::SendFilesTofHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndf
 				(WPARAM)pCmdInfo->hwnd,
 				(LPARAM)&cdFiles);
 }
+

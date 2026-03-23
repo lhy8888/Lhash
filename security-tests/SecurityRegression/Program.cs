@@ -12,6 +12,111 @@ internal static partial class Program
 
         Run("CommandLine parser handles quoted file lists safely", TestCommandLineParsing, failures);
         Run("CommandLine parser covers empty, invalid, boundary, and compatibility cases", TestCommandLineEdgeCases, failures);
+        Run("LHash branding, package metadata, and logo assets are consistent", () =>
+        {
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string mfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
+            string mfcZhStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp");
+            string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
+            string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string legacyPackScript = ReadRepoFile(repoRoot, @"trunk\package_win_mfc64.py");
+            string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
+            string winUiAssembly = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Properties\AssemblyInfo.cs");
+            string winUiWap = ReadRepoFile(repoRoot, @"trunk\fHashWUIWap\Package.appxmanifest");
+            string winUiWapDev = ReadRepoFile(repoRoot, @"trunk\fHashWUIWap\Package-DEV.appxmanifest");
+            string uwpEn = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string uwpZh = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
+            string uwpAssembly = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Properties\AssemblyInfo.cs");
+            string uwpManifest = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package.appxmanifest");
+            string uwpManifestDev = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package-DEBUG.appxmanifest");
+            string uwpWap = ReadRepoFile(repoRoot, @"trunk\fHashUwpWap\Package.appxmanifest");
+            string uwpWapDev = ReadRepoFile(repoRoot, @"trunk\fHashUwpWap\Package-DEBUG.appxmanifest");
+            string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsBase.cpp");
+            string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsZHCN.cpp");
+            string wuiShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            string wuiShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\AppxShellExtStringsBase.cpp");
+            string wuiShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\AppxShellExtStringsZHCN.cpp");
+            string uwpShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string uwpShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\UwpShellExtStringsBase.cpp");
+            string uwpShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\UwpShellExtStringsZHCN.cpp");
+
+            AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
+            AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
+            AssertContains(legacyPackScript, "EXE_FILE_NAME = 'LHash.exe'", "Legacy packaging script still packages the old executable name.");
+            AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
+            AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");
+            AssertContains(workflow, "LHash-legacy-x64", "CI artifact naming no longer uses the LHash bundle name.");
+            AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
+            AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
+
+            AssertContains(mfcRc, "CAPTION \"LHash\"", "Legacy MFC dialog caption still shows the old app name.");
+            AssertContains(mfcBaseStrings, "About LHash", "Legacy MFC About dialog title still shows the old app name.");
+            AssertContains(mfcBaseStrings, "LHash: Files Hash Calculator", "Legacy MFC English About text still shows the old product name.");
+            AssertContains(mfcBaseStrings, "Copyright (C) 2026- LHY.", "Legacy MFC English About text still shows the old copyright.");
+            AssertContains(mfcBaseStrings, "https://github.com/lhy8888/fhash", "Legacy MFC English About link still points to the old GitHub repo.");
+            AssertContains(mfcZhStrings, "关于 LHash", "Legacy MFC Chinese About title still shows the old app name.");
+            AssertContains(mfcZhStrings, "LHash: 文件 Hash 计算器", "Legacy MFC Chinese About text still shows the old product name.");
+            AssertContains(mfcRc2, "VALUE \"FileDescription\", \"LHash: Files Hash Calculator\"", "Legacy MFC version resources still expose the old product description.");
+            AssertContains(mfcRc2, "VALUE \"InternalName\", \"LHash.exe\"", "Legacy MFC version resources still expose the old executable name.");
+            AssertContains(mfcRc2, "VALUE \"OriginalFilename\", \"LHash.exe\"", "Legacy MFC version resources still expose the old original filename.");
+            AssertContains(mfcRc2, "VALUE \"LegalCopyright\", \"(C) 2026- LHY.\"", "Legacy MFC version resources still expose the old copyright.");
+
+            AssertContains(winUiEn, "<value>LHash</value>", "WinUI English title still shows the old app name.");
+            AssertContains(winUiEn, "<value>About LHash</value>", "WinUI English About title still shows the old app name.");
+            AssertContains(winUiEn, "<value>LHash: Files Hash Calculator</value>", "WinUI English About text still shows the old product name.");
+            AssertContains(winUiEn, "<value>Copyright (C) 2026- LHY.</value>", "WinUI English About text still shows the old copyright.");
+            AssertContains(winUiEn, "https://github.com/lhy8888/fhash", "WinUI English About link still points to the old GitHub repo.");
+            AssertContains(winUiZh, "<value>关于 LHash</value>", "WinUI Chinese About title still shows the old app name.");
+            AssertContains(winUiZh, "<value>LHash: 文件 Hash 计算器</value>", "WinUI Chinese About text still shows the old product name.");
+            AssertContains(winUiAssembly, "AssemblyTitle(\"LHashWUI\")", "WinUI assembly title still shows the old product name.");
+            AssertContains(winUiAssembly, "AssemblyCompany(\"LHY\")", "WinUI assembly company still shows the old publisher.");
+            AssertContains(winUiAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "WinUI assembly copyright still shows the old owner.");
+            AssertContains(winUiWap, "<DisplayName>LHash</DisplayName>", "WinUI package display name still shows the old app name.");
+            AssertContains(winUiWap, "Description=\"LHash\"", "WinUI package description still shows the old app name.");
+            AssertContains(winUiWap, "<PublisherDisplayName>LHY</PublisherDisplayName>", "WinUI package publisher display name still shows the old owner.");
+            AssertContains(winUiWapDev, "<DisplayName>LHash Dev</DisplayName>", "WinUI dev package display name still shows the old app name.");
+            AssertContains(winUiWapDev, "Description=\"LHash Dev\"", "WinUI dev package description still shows the old app name.");
+            AssertContains(winUiWapDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "WinUI dev package publisher display name still shows the old owner.");
+
+            AssertContains(uwpEn, "<value>LHash UWP</value>", "UWP English title still shows the old app name.");
+            AssertContains(uwpEn, "<value>About LHash UWP</value>", "UWP English About title still shows the old app name.");
+            AssertContains(uwpEn, "<value>LHash UWP: Files Hash Calculator</value>", "UWP English About text still shows the old product name.");
+            AssertContains(uwpEn, "<value>Copyright (C) 2026- LHY.</value>", "UWP English About text still shows the old copyright.");
+            AssertContains(uwpEn, "https://github.com/lhy8888/fhash", "UWP English About link still points to the old GitHub repo.");
+            AssertContains(uwpZh, "<value>关于 LHash UWP</value>", "UWP Chinese About title still shows the old app name.");
+            AssertContains(uwpZh, "<value>LHash UWP: 文件 Hash 计算器</value>", "UWP Chinese About text still shows the old product name.");
+            AssertContains(uwpAssembly, "AssemblyTitle(\"LHashUwp\")", "UWP assembly title still shows the old product name.");
+            AssertContains(uwpAssembly, "AssemblyCompany(\"LHY\")", "UWP assembly company still shows the old publisher.");
+            AssertContains(uwpAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "UWP assembly copyright still shows the old owner.");
+            AssertContains(uwpManifest, "<DisplayName>LHash UWP</DisplayName>", "UWP manifest display name still shows the old app name.");
+            AssertContains(uwpManifest, "Description=\"LHash UWP\"", "UWP manifest description still shows the old app name.");
+            AssertContains(uwpManifest, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP manifest publisher display name still shows the old owner.");
+            AssertContains(uwpManifestDev, "<DisplayName>LHash UWP Dev</DisplayName>", "UWP debug manifest display name still shows the old app name.");
+            AssertContains(uwpManifestDev, "Description=\"LHash UWP Dev\"", "UWP debug manifest description still shows the old app name.");
+            AssertContains(uwpManifestDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP debug manifest publisher display name still shows the old owner.");
+            AssertContains(uwpWap, "<DisplayName>LHash UWP</DisplayName>", "UWP WAP package display name still shows the old app name.");
+            AssertContains(uwpWap, "Description=\"LHash UWP\"", "UWP WAP package description still shows the old app name.");
+            AssertContains(uwpWap, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP WAP package publisher display name still shows the old owner.");
+            AssertContains(uwpWapDev, "<DisplayName>LHash UWP Dev</DisplayName>", "UWP WAP debug package display name still shows the old app name.");
+            AssertContains(uwpWapDev, "Description=\"LHash UWP Dev\"", "UWP WAP debug package description still shows the old app name.");
+            AssertContains(uwpWapDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP WAP debug package publisher display name still shows the old owner.");
+
+            AssertContains(legacyShellStrings, "Hash with LHash", "Legacy shell extension menu text still shows the old app name.");
+            AssertContains(legacyShellStringsZh, "使用 LHash 计算哈希", "Legacy shell extension Chinese menu text still shows the old app name.");
+            AssertContains(wuiShellVerb, "Hash with LHash", "WinUI shell extension verb display name still shows the old app name.");
+            AssertContains(wuiShellStrings, "Hash with LHash", "WinUI shell extension English menu text still shows the old app name.");
+            AssertContains(wuiShellStringsZh, "使用 LHash", "WinUI shell extension Chinese menu text still shows the old app name.");
+            AssertContains(uwpShellVerb, "Hash with LHash UWP", "UWP shell extension verb display name still shows the old app name.");
+            AssertContains(uwpShellStrings, "Hash with LHash UWP", "UWP shell extension English menu text still shows the old app name.");
+            AssertContains(uwpShellStringsZh, "使用 LHash UWP", "UWP shell extension Chinese menu text still shows the old app name.");
+
+            AssertPngAsset(repoRoot, @"trunk\source\WinUI\Assets\AboutLogo.large.png", 200, 200, 512);
+            AssertPngAsset(repoRoot, @"trunk\source\WinUWP\Assets\AboutLogo.large.png", 200, 200, 512);
+            AssertNonEmptyFile(repoRoot, @"trunk\source\WinMFC\res\icon1.ico");
+            AssertNonEmptyFile(repoRoot, @"trunk\source\WinUI\Assets\fHashWUI.ico");
+        }, failures);
         Run("WinMFC copy-data validation guard exists", () =>
         {
             string content = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
@@ -275,4 +380,51 @@ internal static partial class Program
 
     [LibraryImport("kernel32.dll", SetLastError = false)]
     private static partial IntPtr LocalFree(IntPtr hMem);
+
+    private static void AssertPngAsset(string repoRoot, string relativePath, int expectedWidth, int expectedHeight, int minBytes)
+    {
+        string path = Path.Combine(repoRoot, relativePath);
+        byte[] bytes = File.ReadAllBytes(path);
+        if (bytes.Length < minBytes)
+        {
+            throw new InvalidOperationException($"PNG asset {relativePath} is unexpectedly small.");
+        }
+
+        byte[] pngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        if (!bytes.Take(pngSignature.Length).SequenceEqual(pngSignature))
+        {
+            throw new InvalidOperationException($"PNG asset {relativePath} has an invalid PNG signature.");
+        }
+
+        int width = ReadBigEndianInt32(bytes, 16);
+        int height = ReadBigEndianInt32(bytes, 20);
+        if (width != expectedWidth || height != expectedHeight)
+        {
+            throw new InvalidOperationException($"PNG asset {relativePath} has unexpected dimensions {width}x{height}.");
+        }
+
+        if (!Encoding.ASCII.GetString(bytes).Contains("IDAT", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"PNG asset {relativePath} is missing image data.");
+        }
+    }
+
+    private static void AssertNonEmptyFile(string repoRoot, string relativePath)
+    {
+        string path = Path.Combine(repoRoot, relativePath);
+        var info = new FileInfo(path);
+        if (!info.Exists || info.Length <= 0)
+        {
+            throw new InvalidOperationException($"Required file {relativePath} is missing or empty.");
+        }
+    }
+
+    private static int ReadBigEndianInt32(byte[] bytes, int offset)
+    {
+        return (bytes[offset] << 24) |
+               (bytes[offset + 1] << 16) |
+               (bytes[offset + 2] << 8) |
+               bytes[offset + 3];
+    }
 }
+
