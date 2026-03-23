@@ -42,33 +42,20 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Ensure VS 2017 toolset and MFC/ATL components
+      - name: Show Visual Studio toolchain info
         shell: powershell
         run: |
           $installerRoot = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer'
           $vswhere = Join-Path $installerRoot 'vswhere.exe'
-          $setup = Join-Path $installerRoot 'setup.exe'
-          $installPath = & $vswhere -latest -products * -property installationPath
-
-          if ([string]::IsNullOrWhiteSpace($installPath)) {
-            throw 'Unable to locate Visual Studio installation on the runner.'
+          if (-not (Test-Path $vswhere)) {
+            throw 'Unable to locate vswhere.exe on the runner.'
           }
 
-          & $setup modify `
-            --installPath $installPath `
-            --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 `
-            --add Microsoft.VisualStudio.Component.VC.v141.MFC `
-            --add Microsoft.VisualStudio.Component.VC.v141.ATL `
-            --passive `
-            --norestart `
-            --wait
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "Visual Studio component install failed with exit code $LASTEXITCODE."
-          }
+          & $vswhere -latest -products * -format json
+          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022' -ErrorAction SilentlyContinue
 
       - name: Build legacy Windows solution
-        run: msbuild trunk/fileshash15.sln /m /p:Configuration=Release /p:Platform=x64
+        run: msbuild trunk/fileshash15.sln /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
 
       - name: Package legacy x64 build
         shell: powershell
