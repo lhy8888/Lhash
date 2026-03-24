@@ -50,22 +50,6 @@ This fork focuses on Windows security hardening, robustness fixes, safer desktop
 - Real-file hash smoke tests with empty, text, Unicode, and binary samples
 - GitHub Actions Windows build workflow with packaged desktop artifacts
 
-## Download
-
-Current Windows builds are produced by GitHub Actions.
-
-1. Open the [Actions page](https://github.com/lhy8888/fhash/actions)
-2. Open the latest successful `Windows Build`
-3. Download the artifact named `LHash-legacy-x64`
-4. Extract and run `LHash.exe`
-
-## Why LHash
-
-- Safer Windows input handling
-- Better shell integration hardening
-- Cleaner Windows package consistency and delivery chain
-- Tested fork workflow with cloud packaging
-- Clear secondary-development positioning for continued maintenance
 
 ## Secondary Development Statement
 
@@ -115,34 +99,12 @@ LHash 是基于 [fHash](https://github.com/sunjw/fhash) 持续维护的 Windows 
 - 修复打包脚本路径识别问题，确保输出的就是可运行的 `LHash.exe`
 - 统一云端产物命名，避免旧包和新包混淆
 
-#### 3. 工程化与可交付能力
-
-- 新增 GitHub Actions Windows 构建流程
-- 新增可下载的云端打包产物 `LHash-legacy-x64`
-- 新增安全回归测试工程，覆盖输入校验、错误传播和 Shell 硬化检查
-
 ### 已完成的验证
 
 - 安全回归测试已实际执行并通过
 - 真实文件 Hash 样本测试已实际执行并通过
 - GitHub Actions Windows 打包链路已打通，可直接下载构建产物
 
-### 下载方式
-
-当前 Windows 版本可从 GitHub Actions 下载：
-
-1. 打开 [Actions](https://github.com/lhy8888/fhash/actions)
-2. 进入最新成功的 `Windows Build`
-3. 下载产物 `LHash-legacy-x64`
-4. 解压后运行 `LHash.exe`
-
-### 为什么是 LHash
-
-- 更安全的 Windows 输入处理
-- 更稳健的右键菜单和 Shell 集成
-- 更一致的包输出和交付链路
-- 已打通云端构建与产物下载
-- 更适合继续维护、分发和二次迭代
 
 ### 维护方向说明
 
