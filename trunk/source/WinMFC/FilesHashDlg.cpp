@@ -71,7 +71,16 @@ namespace
 		return false;
 	}
 
-	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTEREX)(HWND, UINT, DWORD, PCHANGEFILTERSTRUCT);
+	struct WindowMessageFilterStatus
+	{
+		DWORD cbSize;
+		DWORD extStatus;
+	};
+
+	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTEREX)(HWND, UINT, DWORD, void*);
+	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTER)(UINT, DWORD);
+
+	const DWORD WINDOW_MESSAGE_FILTER_ACTION_ALLOW = 1;
 
 	void AllowMessageForWindow(HWND hWnd, UINT message)
 	{
@@ -90,8 +99,16 @@ namespace
 			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTEREX>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
 		if (pChangeWindowMessageFilterEx != NULL)
 		{
-			CHANGEFILTERSTRUCT cfs = { sizeof(cfs) };
-			pChangeWindowMessageFilterEx(hWnd, message, MSGFLT_ALLOW, &cfs);
+			WindowMessageFilterStatus cfs = { sizeof(WindowMessageFilterStatus), 0 };
+			pChangeWindowMessageFilterEx(hWnd, message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW, &cfs);
+			return;
+		}
+
+		LPFN_CHANGEWINDOWMESSAGEFILTER pChangeWindowMessageFilter =
+			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTER>(GetProcAddress(hUser32, "ChangeWindowMessageFilter"));
+		if (pChangeWindowMessageFilter != NULL)
+		{
+			pChangeWindowMessageFilter(message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW);
 		}
 	}
 
@@ -100,6 +117,15 @@ namespace
 		if (pWnd == NULL || !::IsWindow(pWnd->GetSafeHwnd()))
 		{
 			return;
+		}
+
+		if (bAccept)
+		{
+			pWnd->ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);
+		}
+		else
+		{
+			pWnd->ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);
 		}
 
 		pWnd->DragAcceptFiles(bAccept);
