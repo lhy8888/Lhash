@@ -39,6 +39,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 
 	virtual inline void EnableRedraw(BOOL bEnable)
 	{ SendMessage(WM_SETREDRAW, bEnable, 0); }

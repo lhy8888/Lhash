@@ -165,6 +165,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));
 
 	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
+	m_editMain.DragAcceptFiles(TRUE);
 
 	m_mainMtx.lock();
 	{
@@ -678,6 +679,7 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 	if(working)
 	{
 		DragAcceptFiles(FALSE);
+		m_editMain.DragAcceptFiles(FALSE);
 		// Make open button to be stop button
 		m_btnOpen.EnableWindow(TRUE);
 		m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_STOP));
@@ -710,7 +712,8 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 		m_btnContext.EnableWindow(TRUE);
 		m_chkUppercase.EnableWindow(TRUE);
 		GotoDlgCtrl(&m_btnOpen);
-		DragAcceptFiles();
+		DragAcceptFiles(TRUE);
+		m_editMain.DragAcceptFiles(TRUE);
 	}
 }
 

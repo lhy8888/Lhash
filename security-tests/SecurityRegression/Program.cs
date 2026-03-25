@@ -134,6 +134,18 @@ internal static partial class Program
             AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
             AssertContains(content, "!m_thrdData.threadWorking", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
+        Run("WinMFC drag and drop still works across the enlarged result area", () =>
+        {
+            string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string hyperEditHashHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.h");
+            string hyperEditHashSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.cpp");
+
+            AssertContains(dialogContent, "m_editMain.DragAcceptFiles(TRUE);", "Main result edit control no longer opts into file drag and drop.");
+            AssertContains(dialogContent, "m_editMain.DragAcceptFiles(FALSE);", "Main result edit control is not disabled while hashing is active.");
+            AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
+            AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
+            AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");
+        }, failures);
         Run("Win32 read failures propagate as errors", () =>
         {
             string winApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");

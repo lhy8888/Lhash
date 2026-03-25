@@ -25,6 +25,7 @@ CHyperEditHash::~CHyperEditHash()
 
 
 BEGIN_MESSAGE_MAP(CHyperEditHash, CHyperEditHash_BASE_CLASS)
+	ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 
@@ -169,5 +170,17 @@ HINSTANCE CHyperEditHash::OpenHyperlink(const CString& hyperlink, CPoint point)
 	}
 
 	return 0;
+}
+
+void CHyperEditHash::OnDropFiles(HDROP hDropInfo)
+{
+	CWnd* parentWnd = GetParent();
+	if (parentWnd != NULL)
+	{
+		parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);
+		return;
+	}
+
+	DragFinish(hDropInfo);
 }
 
