@@ -140,8 +140,13 @@ internal static partial class Program
             string hyperEditHashHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.h");
             string hyperEditHashSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.cpp");
 
-            AssertContains(dialogContent, "m_editMain.DragAcceptFiles(TRUE);", "Main result edit control no longer opts into file drag and drop.");
-            AssertContains(dialogContent, "m_editMain.DragAcceptFiles(FALSE);", "Main result edit control is not disabled while hashing is active.");
+            AssertContains(dialogContent, "pWnd->DragAcceptFiles(bAccept);", "Shared drop-target helper no longer toggles file-drop acceptance.");
+            AssertContains(dialogContent, "PrepareDropTarget(this, TRUE);", "Main dialog no longer restores drag-and-drop handling through the shared helper.");
+            AssertContains(dialogContent, "PrepareDropTarget(&m_editMain, TRUE);", "Main result edit control no longer restores drag-and-drop handling through the shared helper.");
+            AssertContains(dialogContent, "ChangeWindowMessageFilterEx", "Elevated drag-and-drop compatibility handling is missing.");
+            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);", "WM_DROPFILES is no longer allowed through the window message filter.");
+            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA is no longer allowed through the window message filter.");
+            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
             AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");

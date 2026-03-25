@@ -70,6 +70,46 @@ namespace
 
 		return false;
 	}
+
+	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTEREX)(HWND, UINT, DWORD, PCHANGEFILTERSTRUCT);
+
+	void AllowMessageForWindow(HWND hWnd, UINT message)
+	{
+		if (hWnd == NULL)
+		{
+			return;
+		}
+
+		HMODULE hUser32 = GetModuleHandle(_T("user32.dll"));
+		if (hUser32 == NULL)
+		{
+			return;
+		}
+
+		LPFN_CHANGEWINDOWMESSAGEFILTEREX pChangeWindowMessageFilterEx =
+			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTEREX>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
+		if (pChangeWindowMessageFilterEx != NULL)
+		{
+			CHANGEFILTERSTRUCT cfs = { sizeof(cfs) };
+			pChangeWindowMessageFilterEx(hWnd, message, MSGFLT_ALLOW, &cfs);
+		}
+	}
+
+	void PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
+	{
+		if (pWnd == NULL || !::IsWindow(pWnd->GetSafeHwnd()))
+		{
+			return;
+		}
+
+		pWnd->DragAcceptFiles(bAccept);
+		if (bAccept)
+		{
+			AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);
+			AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);
+			AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);
+		}
+	}
 }
 
 #ifdef _DEBUG
@@ -165,7 +205,8 @@ BOOL CFilesHashDlg::OnInitDialog()
 	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));
 
 	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
-	m_editMain.DragAcceptFiles(TRUE);
+	PrepareDropTarget(this, TRUE);
+	PrepareDropTarget(&m_editMain, TRUE);
 
 	m_mainMtx.lock();
 	{
@@ -678,8 +719,8 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 {
 	if(working)
 	{
-		DragAcceptFiles(FALSE);
-		m_editMain.DragAcceptFiles(FALSE);
+		PrepareDropTarget(this, FALSE);
+		PrepareDropTarget(&m_editMain, FALSE);
 		// Make open button to be stop button
 		m_btnOpen.EnableWindow(TRUE);
 		m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_STOP));
@@ -712,8 +753,8 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 		m_btnContext.EnableWindow(TRUE);
 		m_chkUppercase.EnableWindow(TRUE);
 		GotoDlgCtrl(&m_btnOpen);
-		DragAcceptFiles(TRUE);
-		m_editMain.DragAcceptFiles(TRUE);
+		PrepareDropTarget(this, TRUE);
+		PrepareDropTarget(&m_editMain, TRUE);
 	}
 }
 
