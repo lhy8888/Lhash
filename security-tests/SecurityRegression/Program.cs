@@ -51,10 +51,12 @@ internal static partial class Program
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 
-            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 555, 355", "Legacy MFC main dialog is no longer using the trimmed default size.");
-            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,7,8,541,252", "Legacy MFC result text area no longer matches the trimmed SHA512-friendly layout.");
-            AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,442,264,106,18", "Legacy MFC open button no longer matches the trimmed main window layout.");
-            AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_CLEAN\",IDC_CLEAN,327,299,106,18", "Legacy MFC clear button no longer matches the trimmed main window layout.");
+            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 624, 399", "Legacy MFC main dialog is no longer using the requested larger default size.");
+            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,7,8,610,283", "Legacy MFC result text area no longer matches the current SHA512-friendly layout.");
+            AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,511,295,106,18", "Legacy MFC open button no longer matches the latest main window layout.");
+            AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_CLEAN\",IDC_CLEAN,511,333,106,18", "Legacy MFC clear button is no longer aligned with the open and exit buttons.");
+            AssertContains(mfcRc, "LTEXT           \"UPPER_HASH\",IDC_STATIC_UPPER,8,315,70,8,SS_NOTIFY", "Legacy MFC uppercase hash label no longer matches the tightened checkbox layout.");
+            AssertContains(mfcRc, "CONTROL         \"\",IDC_CHECKUP,\"Button\",BS_AUTOCHECKBOX | WS_TABSTOP,80,314,11,10", "Legacy MFC uppercase checkbox is no longer positioned close to its label.");
 
             AssertContains(mfcRc, "CAPTION \"LHash\"", "Legacy MFC dialog caption still shows the old app name.");
             AssertContains(mfcBaseStrings, "About LHash", "Legacy MFC About dialog title still shows the old app name.");
