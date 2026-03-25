@@ -226,6 +226,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_OPEN));
 	m_btnFind.SetWindowText(GetStringByKey(MAINDLG_VERIFY));
+	m_btnFind.ShowWindow(SW_HIDE);
 	m_btnExit.SetWindowText(GetStringByKey(MAINDLG_EXIT));
 	pWnd = GetDlgItem(IDC_ABOUT);
 	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));

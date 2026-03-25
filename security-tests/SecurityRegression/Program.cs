@@ -51,9 +51,10 @@ internal static partial class Program
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 
-            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 666, 426", "Legacy MFC main dialog is no longer using the enlarged default size.");
-            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,7,8,652,302", "Legacy MFC result text area is no longer wide and tall enough for SHA512 output.");
-            AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,553,314,106,18", "Legacy MFC action area no longer matches the enlarged main window layout.");
+            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 555, 355", "Legacy MFC main dialog is no longer using the trimmed default size.");
+            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,7,8,541,252", "Legacy MFC result text area no longer matches the trimmed SHA512-friendly layout.");
+            AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,442,264,106,18", "Legacy MFC open button no longer matches the trimmed main window layout.");
+            AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_CLEAN\",IDC_CLEAN,327,299,106,18", "Legacy MFC clear button no longer matches the trimmed main window layout.");
 
             AssertContains(mfcRc, "CAPTION \"LHash\"", "Legacy MFC dialog caption still shows the old app name.");
             AssertContains(mfcBaseStrings, "About LHash", "Legacy MFC About dialog title still shows the old app name.");
@@ -134,23 +135,26 @@ internal static partial class Program
             AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
             AssertContains(content, "!m_thrdData.threadWorking", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
-        Run("WinMFC drag and drop still works across the enlarged result area", () =>
+        Run("WinMFC drag and drop still works across the resized result area", () =>
         {
             string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string hyperEditHashHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.h");
             string hyperEditHashSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.cpp");
+            string dialogResource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
 
             AssertContains(dialogContent, "ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);", "Shared drop-target helper no longer advertises file-drop support on the receiving windows.");
             AssertContains(dialogContent, "ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);", "Shared drop-target helper no longer removes file-drop style while hashing is in progress.");
             AssertContains(dialogContent, "pWnd->DragAcceptFiles(bAccept);", "Shared drop-target helper no longer toggles file-drop acceptance.");
             AssertContains(dialogContent, "PrepareDropTarget(this, TRUE);", "Main dialog no longer restores drag-and-drop handling through the shared helper.");
             AssertContains(dialogContent, "PrepareDropTarget(&m_editMain, TRUE);", "Main result edit control no longer restores drag-and-drop handling through the shared helper.");
+            AssertContains(dialogContent, "m_btnFind.ShowWindow(SW_HIDE);", "Legacy MFC verify button is still visible in the main dialog.");
             AssertContains(dialogContent, "ChangeWindowMessageFilterEx", "Elevated drag-and-drop compatibility handling is missing.");
             AssertContains(dialogContent, "ChangeWindowMessageFilter", "Legacy message-filter compatibility fallback is missing.");
             AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);", "WM_DROPFILES is no longer allowed through the window message filter.");
             AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA is no longer allowed through the window message filter.");
             AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertDoesNotContain(dialogContent, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
+            AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,0,0,0,0", "Legacy MFC verify button still consumes visible layout space.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
             AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");
