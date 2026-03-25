@@ -51,6 +51,10 @@ internal static partial class Program
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 
+            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 666, 426", "Legacy MFC main dialog is no longer using the enlarged default size.");
+            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,7,8,652,302", "Legacy MFC result text area is no longer wide and tall enough for SHA512 output.");
+            AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,553,314,106,18", "Legacy MFC action area no longer matches the enlarged main window layout.");
+
             AssertContains(mfcRc, "CAPTION \"LHash\"", "Legacy MFC dialog caption still shows the old app name.");
             AssertContains(mfcBaseStrings, "About LHash", "Legacy MFC About dialog title still shows the old app name.");
             AssertContains(mfcBaseStrings, "LHash: Files Hash Calculator", "Legacy MFC English About text still shows the old product name.");
