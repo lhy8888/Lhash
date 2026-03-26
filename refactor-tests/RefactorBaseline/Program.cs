@@ -543,8 +543,7 @@ internal static class Program
 
             AssertContains(engine, "#include \"Common/ResultDigestAccess.h\"", "HashEngine.cpp is not yet using the neutral digest-access seam.");
             AssertContains(engine, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine does not yet centralize finalized digest strings through the finalized digest bundle.");
-            AssertContains(engine, "for (int index = 0; index < GetResultDigestCount(); index++)", "HashEngine no longer routes digest publishing through the neutral digest iteration helper.");
-            AssertContains(engine, "ResultDigestType digestType = GetResultDigestTypeAt(index);", "HashEngine no longer routes digest publishing through the neutral digest order helper.");
+            AssertContains(engine, "VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)", "HashEngine no longer routes digest publishing through the neutral digest iteration helper.");
             AssertContains(engine, "GetFinalizedDigestValue(digestBundle, digestType)", "HashEngine does not yet read finalized digest strings through the finalized digest seam.");
             AssertContains(engine, "SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));", "HashEngine no longer writes finalized digests through the neutral seam.");
             AssertDoesNotContain(engine, "SetResultDigest(result, RESULT_DIGEST_MD5, tstrFileMD5);", "HashEngine still hardcodes the MD5 digest slot instead of iterating through the neutral seam.");
@@ -579,7 +578,7 @@ internal static class Program
             AssertContains(resultAccess, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataAccess does not yet route managed digest projection through the centralized digest loop.");
             AssertContains(resultAccess, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataAccess does not yet resolve digest projection order through the centralized digest metadata seam.");
             AssertContains(resultAccess, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataAccess does not yet read digest projection values through the centralized digest access seam.");
-            AssertContains(resultAccess, "AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));", "ResultDataAccess does not yet compose digest projection through the centralized digest-assignment seam.");
+            AssertContains(resultAccess, "resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));", "ResultDataAccess does not yet compose digest projection through the centralized digest-assignment seam.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the centralized projection helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeWui, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "WinUI bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
@@ -1877,6 +1876,42 @@ internal static class Program
             AssertContains(bridgeMacHeader, "class UIBridgeMacSwift: public HashEngineBridge", "macOS bridge does not yet inherit HashEngineBridge directly.");
             AssertDoesNotContain(bridgeMacHeader, "#include \"Common/UIBridgeBase.h\"", "macOS bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeMacHeader, "class UIBridgeMacSwift: public UIBridgeBase", "macOS bridge still inherits the compatibility shim instead of HashEngineBridge.");
+        }, failures);
+
+        Run("Phase 8 introduces thread-scoped hash algorithm selection while keeping the current four algorithms enabled by default", () =>
+        {
+            string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
+
+            AssertContains(global, "struct HashAlgorithmSelectionState", "Global.h does not yet expose the grouped hash-algorithm selection state introduced in phase 8.");
+            AssertContains(global, "bool enabled[RESULT_DIGEST_STORAGE_COUNT];", "Hash-algorithm selection state does not yet store the current enabled flags.");
+            AssertContains(global, "HashAlgorithmSelectionState hashAlgorithms;", "ThreadData execution state does not yet carry the hash-algorithm selection state.");
+
+            AssertContains(threadAccess, "#include \"Common/ResultDigestAccess.h\"", "ThreadDataAccess does not yet include the digest-type seam needed for algorithm selection.");
+            AssertContains(threadAccess, "GetThreadDataHashAlgorithmSelectionState(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the const hash-algorithm selection helper.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashAlgorithmSelectionState(ThreadData& threadData)", "ThreadDataAccess does not yet expose the mutable hash-algorithm selection helper.");
+            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "ThreadDataAccess does not yet expose the hash-algorithm enable/disable helper.");
+            AssertContains(threadAccess, "IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)", "ThreadDataAccess does not yet expose the hash-algorithm enabled-state helper.");
+            AssertContains(threadAccess, "VisitEnabledThreadDataHashAlgorithms(const ThreadData& threadData, THashAlgorithmVisitor visitor)", "ThreadDataAccess does not yet expose the enabled-hash-algorithm visitor seam.");
+            AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(ThreadData& threadData)", "ThreadDataAccess does not yet expose the default hash-algorithm reset helper.");
+            AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(threadData);", "New ThreadData sessions do not yet reset hash algorithms to the default enabled set.");
+            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);", "ThreadDataAccess does not yet default the current algorithms to enabled.");
+
+            AssertContains(engine, "InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
+            AssertContains(engine, "VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the enabled-algorithm visitor seam.");
+            AssertContains(engine, "FinalizeDigestStrings(*thrdData, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the thread-scoped algorithm-selection seam.");
+            AssertContains(engine, "PopulateDigestResult(*thrdData, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the thread-scoped algorithm-selection seam.");
+            AssertContains(engine, "IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5)", "HashEngine does not yet gate MD5 updates through the algorithm-selection seam.");
+            AssertContains(engine, "IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1)", "HashEngine does not yet gate SHA1 updates through the algorithm-selection seam.");
+            AssertContains(engine, "IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256)", "HashEngine does not yet gate SHA256 updates through the algorithm-selection seam.");
+            AssertContains(engine, "IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512)", "HashEngine does not yet gate SHA512 updates through the algorithm-selection seam.");
+            AssertContains(engine, "if (HasAnyResultDigests(result))", "HashEngine does not yet suppress hash-result publication when no algorithms are enabled.");
+
+            AssertContains(digestAccess, "HasResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the result-digest presence helper needed for selective rendering.");
+            AssertContains(digestAccess, "HasAnyResultDigests(const ResultData& result)", "ResultDigestAccess does not yet expose the grouped result-digest presence helper.");
+            AssertContains(digestAccess, "if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))", "ResultDigestAccess formatted display visitor does not yet skip disabled or absent digest values.");
         }, failures);
 
         if (failures.Count > 0)

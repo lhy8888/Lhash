@@ -279,12 +279,28 @@ static uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *
 	return fsize;
 }
 
-static void InitializeFileHashing(HashEngineObserver *observer, FileHashContexts *hashContexts)
+static void InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts)
 {
-	MD5Init(&hashContexts->mdContext, 0); // MD5 init
-	hashContexts->sha1.Reset(); // SHA1 init
-	sha256_init(&hashContexts->sha256Ctx); // SHA256 init
-	SHA512_Init(&hashContexts->sha512Ctx); // SHA512 init
+	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+	{
+		switch (digestType)
+		{
+		case RESULT_DIGEST_MD5:
+			MD5Init(&hashContexts->mdContext, 0); // MD5 init
+			break;
+		case RESULT_DIGEST_SHA1:
+			hashContexts->sha1.Reset(); // SHA1 init
+			break;
+		case RESULT_DIGEST_SHA256:
+			sha256_init(&hashContexts->sha256Ctx); // SHA256 init
+			break;
+		case RESULT_DIGEST_SHA512:
+			SHA512_Init(&hashContexts->sha512Ctx); // SHA512 init
+			break;
+		}
+
+		return true;
+	});
 
 	observer->onFileProgress(0);
 }
@@ -325,89 +341,98 @@ static void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultD
 	SetDigestStorageValue(digestBundle, digestType, digestValue);
 }
 
-static void PopulateDigestResult(ResultData& result, const FinalizedDigestBundle& digestBundle)
+static void PopulateDigestResult(const ThreadData& threadData, ResultData& result, const FinalizedDigestBundle& digestBundle)
 {
-	for (int index = 0; index < GetResultDigestCount(); index++)
+	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
 	{
-		ResultDigestType digestType = GetResultDigestTypeAt(index);
 		SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));
-	}
+		return true;
+	});
 }
 
-static void FinalizeDigestStrings(FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle)
+static void FinalizeDigestStrings(const ThreadData& threadData, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle)
 {
-	MD5Final(&hashContexts.mdContext); // MD5 final
-	hashContexts.sha1.Final(); // SHA1 final
-	sha256_final(&hashContexts.sha256Ctx); // SHA256 final
-	SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx); // SHA256 final
-
 	char chHashBuff[1024] = {0};
 	char strSHA1[256] = {0};
 	string strSHA256;
 	string strSHA512;
 
-	// MD5
-#if defined (_WIN32)
-	sprintf_s(chHashBuff, 1024,
-					"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-					hashContexts.mdContext.digest[0],
-					hashContexts.mdContext.digest[1],
-					hashContexts.mdContext.digest[2],
-					hashContexts.mdContext.digest[3],
-					hashContexts.mdContext.digest[4],
-					hashContexts.mdContext.digest[5],
-					hashContexts.mdContext.digest[6],
-					hashContexts.mdContext.digest[7],
-					hashContexts.mdContext.digest[8],
-					hashContexts.mdContext.digest[9],
-					hashContexts.mdContext.digest[10],
-					hashContexts.mdContext.digest[11],
-					hashContexts.mdContext.digest[12],
-					hashContexts.mdContext.digest[13],
-					hashContexts.mdContext.digest[14],
-					hashContexts.mdContext.digest[15]);
-#else
-	snprintf(chHashBuff, 1024,
-		  "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-		  hashContexts.mdContext.digest[0],
-		  hashContexts.mdContext.digest[1],
-		  hashContexts.mdContext.digest[2],
-		  hashContexts.mdContext.digest[3],
-		  hashContexts.mdContext.digest[4],
-		  hashContexts.mdContext.digest[5],
-		  hashContexts.mdContext.digest[6],
-		  hashContexts.mdContext.digest[7],
-		  hashContexts.mdContext.digest[8],
-		  hashContexts.mdContext.digest[9],
-		  hashContexts.mdContext.digest[10],
-		  hashContexts.mdContext.digest[11],
-		  hashContexts.mdContext.digest[12],
-		  hashContexts.mdContext.digest[13],
-		  hashContexts.mdContext.digest[14],
-		  hashContexts.mdContext.digest[15]);
-#endif
-	SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_MD5, strtotstr(string(chHashBuff)));
-
-	// SHA1
-	hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
-	SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA1, strtotstr(string(strSHA1)));
-
-	// SHA256
-	sha256_digest(&hashContexts.sha256Ctx, &strSHA256);
-	SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA256, strtotstr(strSHA256));
-
-	// SHA512
-	for (int p = 0; p < SHA512_DIGEST_LENGTH; p++)
+	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
 	{
-		char buf[8] = { 0 };
+		switch (digestType)
+		{
+		case RESULT_DIGEST_MD5:
+			MD5Final(&hashContexts.mdContext); // MD5 final
 #if defined (_WIN32)
-		sprintf_s(buf, 8, "%02X", hashContexts.digestSHA512[p]);
+			sprintf_s(chHashBuff, 1024,
+						"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+						hashContexts.mdContext.digest[0],
+						hashContexts.mdContext.digest[1],
+						hashContexts.mdContext.digest[2],
+						hashContexts.mdContext.digest[3],
+						hashContexts.mdContext.digest[4],
+						hashContexts.mdContext.digest[5],
+						hashContexts.mdContext.digest[6],
+						hashContexts.mdContext.digest[7],
+						hashContexts.mdContext.digest[8],
+						hashContexts.mdContext.digest[9],
+						hashContexts.mdContext.digest[10],
+						hashContexts.mdContext.digest[11],
+						hashContexts.mdContext.digest[12],
+						hashContexts.mdContext.digest[13],
+						hashContexts.mdContext.digest[14],
+						hashContexts.mdContext.digest[15]);
 #else
-		snprintf(buf, 8, "%02X", hashContexts.digestSHA512[p]);
+			snprintf(chHashBuff, 1024,
+				  "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				  hashContexts.mdContext.digest[0],
+				  hashContexts.mdContext.digest[1],
+				  hashContexts.mdContext.digest[2],
+				  hashContexts.mdContext.digest[3],
+				  hashContexts.mdContext.digest[4],
+				  hashContexts.mdContext.digest[5],
+				  hashContexts.mdContext.digest[6],
+				  hashContexts.mdContext.digest[7],
+				  hashContexts.mdContext.digest[8],
+				  hashContexts.mdContext.digest[9],
+				  hashContexts.mdContext.digest[10],
+				  hashContexts.mdContext.digest[11],
+				  hashContexts.mdContext.digest[12],
+				  hashContexts.mdContext.digest[13],
+				  hashContexts.mdContext.digest[14],
+				  hashContexts.mdContext.digest[15]);
 #endif
-		strSHA512.append(std::string(buf));
-	}
-	SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA512, strtotstr(strSHA512));
+			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_MD5, strtotstr(string(chHashBuff)));
+			break;
+		case RESULT_DIGEST_SHA1:
+			hashContexts.sha1.Final(); // SHA1 final
+			hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
+			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA1, strtotstr(string(strSHA1)));
+			break;
+		case RESULT_DIGEST_SHA256:
+			sha256_final(&hashContexts.sha256Ctx); // SHA256 final
+			sha256_digest(&hashContexts.sha256Ctx, &strSHA256);
+			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA256, strtotstr(strSHA256));
+			break;
+		case RESULT_DIGEST_SHA512:
+			SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx); // SHA512 final
+			strSHA512.clear();
+			for (int p = 0; p < SHA512_DIGEST_LENGTH; p++)
+			{
+				char buf[8] = { 0 };
+#if defined (_WIN32)
+				sprintf_s(buf, 8, "%02X", hashContexts.digestSHA512[p]);
+#else
+				snprintf(buf, 8, "%02X", hashContexts.digestSHA512[p]);
+#endif
+				strSHA512.append(std::string(buf));
+			}
+			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA512, strtotstr(strSHA512));
+			break;
+		}
+
+		return true;
+	});
 }
 
 static void FinishFileProcessing(HashEngineObserver *observer);
@@ -417,14 +442,17 @@ static void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadDa
 {
 	observer->onFileCalculated();
 
-	FinalizeDigestStrings(executionState.hashContexts, executionState.digestBundle);
+	FinalizeDigestStrings(*thrdData, executionState.hashContexts, executionState.digestBundle);
 	UpdateWholeProgressAfterFile(observer, thrdData, isSizeCaled, fileIndex);
 
 	executionState.fileAttemptState.osFile->close();
 	//Calculating ends
 
-	PopulateDigestResult(result, executionState.digestBundle);
-	EmitHashResult(observer, result, uppercase);
+	PopulateDigestResult(*thrdData, result, executionState.digestBundle);
+	if (HasAnyResultDigests(result))
+	{
+		EmitHashResult(observer, result, uppercase);
+	}
 }
 
 static void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
@@ -531,7 +559,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 #endif
 )
 {
-	InitializeFileHashing(observer, &executionState->hashContexts);
+	InitializeFileHashing(*thrdData, observer, &executionState->hashContexts);
 
 	uint64_t fsize = PrepareFileMetaResult(thrdData, observer, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path, isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
 	uint64_t times = CalculateFileChunkIterations(fsize);
@@ -579,15 +607,48 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 				continue; // no data
 
 			// multi threads
-			future<void> taskSHA512Update = threadPool->enqueue(SHA512UpdateWrapper, &executionState->hashContexts.sha512Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-			future<void> taskSHA256Update = threadPool->enqueue(SHA256UpdateWrapper, &executionState->hashContexts.sha256Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-			future<void> taskSHA1Update = threadPool->enqueue(SHA1UpdateWrapper, &executionState->hashContexts.sha1, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-			future<void> taskMD5Update = threadPool->enqueue(MD5UpdateWrapper, &executionState->hashContexts.mdContext, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
+			bool isSha512Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512);
+			bool isSha256Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256);
+			bool isSha1Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1);
+			bool isMd5Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5);
+			future<void> taskSHA512Update;
+			future<void> taskSHA256Update;
+			future<void> taskSHA1Update;
+			future<void> taskMD5Update;
 
-			taskSHA512Update.wait();
-			taskSHA256Update.wait();
-			taskSHA1Update.wait();
-			taskMD5Update.wait();
+			if (isSha512Enabled)
+			{
+				taskSHA512Update = threadPool->enqueue(SHA512UpdateWrapper, &executionState->hashContexts.sha512Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
+			}
+			if (isSha256Enabled)
+			{
+				taskSHA256Update = threadPool->enqueue(SHA256UpdateWrapper, &executionState->hashContexts.sha256Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
+			}
+			if (isSha1Enabled)
+			{
+				taskSHA1Update = threadPool->enqueue(SHA1UpdateWrapper, &executionState->hashContexts.sha1, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
+			}
+			if (isMd5Enabled)
+			{
+				taskMD5Update = threadPool->enqueue(MD5UpdateWrapper, &executionState->hashContexts.mdContext, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
+			}
+
+			if (isSha512Enabled)
+			{
+				taskSHA512Update.wait();
+			}
+			if (isSha256Enabled)
+			{
+				taskSHA256Update.wait();
+			}
+			if (isSha1Enabled)
+			{
+				taskSHA1Update.wait();
+			}
+			if (isMd5Enabled)
+			{
+				taskMD5Update.wait();
+			}
 
 			// update progress
 			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, ptrDataBufCalc->datalen,
@@ -646,10 +707,22 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 		if (!executionState->fileAttemptState.readFailed)
 		{
 			// single thread
-			MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen); // MD5 update
-			SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen); // SHA1 update
-			SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen); // SHA256 update
-			SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen); // SHA512 update
+			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5))
+			{
+				MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen); // MD5 update
+			}
+			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1))
+			{
+				SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen); // SHA1 update
+			}
+			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256))
+			{
+				SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen); // SHA256 update
+			}
+			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512))
+			{
+				SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen); // SHA512 update
+			}
 
 			// update progress
 			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, databuf.datalen,

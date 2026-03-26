@@ -48,6 +48,7 @@ static inline int GetResultDigestIndex(ResultDigestType digestType);
 static inline ResultDigestType GetResultDigestTypeAt(int index);
 static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index);
 static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result, ResultDigestType digestType);
+static inline bool HasResultDigest(const ResultData& result, ResultDigestType digestType);
 static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata& digestMetadata);
 
 static inline sunjwbase::tstring FormatResultDigestForDisplay(const sunjwbase::tstring& digestValue, bool uppercase)
@@ -115,6 +116,11 @@ static inline bool VisitResultDigestDisplayValues(const ResultData& result, bool
 {
 	return VisitResultDigestMetadataValues(result, [&](int index, const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValueTstr)
 	{
+		if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))
+		{
+			return true;
+		}
+
 		ResultDigestDisplayInfo digestDisplayInfo = GetResultDigestDisplayInfo(digestMetadata, digestValueTstr, uppercase);
 		return visitor(index, digestMetadata, digestDisplayInfo);
 	});
@@ -294,6 +300,29 @@ static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result
 static inline sunjwbase::tstring& GetMutableResultDigest(ResultData& result, ResultDigestType digestType)
 {
 	return GetMutableStoredResultDigest(result, digestType);
+}
+
+static inline bool HasResultDigest(const ResultData& result, ResultDigestType digestType)
+{
+	return !GetResultDigest(result, digestType).empty();
+}
+
+static inline bool HasAnyResultDigests(const ResultData& result)
+{
+	bool hasDigests = false;
+
+	VisitResultDigests([&](ResultDigestType digestType)
+	{
+		if (HasResultDigest(result, digestType))
+		{
+			hasDigests = true;
+			return false;
+		}
+
+		return true;
+	});
+
+	return hasDigests;
 }
 
 static inline void SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)

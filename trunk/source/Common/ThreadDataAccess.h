@@ -2,6 +2,7 @@
 #define _THREAD_DATA_ACCESS_H_
 
 #include "Common/Global.h"
+#include "Common/ResultDigestAccess.h"
 
 static inline void SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)
 {
@@ -33,6 +34,16 @@ static inline ThreadDataExecutionState& GetMutableThreadDataExecutionState(Threa
 	return threadData.executionState;
 }
 
+static inline const HashAlgorithmSelectionState& GetThreadDataHashAlgorithmSelectionState(const ThreadData& threadData)
+{
+	return GetThreadDataExecutionState(threadData).hashAlgorithms;
+}
+
+static inline HashAlgorithmSelectionState& GetMutableThreadDataHashAlgorithmSelectionState(ThreadData& threadData)
+{
+	return GetMutableThreadDataExecutionState(threadData).hashAlgorithms;
+}
+
 static inline const TStrVector& GetThreadDataInputFiles(const ThreadData& threadData)
 {
 	return GetThreadDataInputState(threadData).inputFiles;
@@ -53,6 +64,8 @@ static inline uint32_t GetThreadDataFileCount(const ThreadData& threadData);
 static inline void SetThreadDataWorking(ThreadData& threadData, bool working);
 static inline void SetThreadDataStop(ThreadData& threadData, bool stopValue);
 static inline void SetThreadDataUppercase(ThreadData& threadData, bool uppercase);
+static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData);
+static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled);
 static inline void ResetThreadDataTotalSize(ThreadData& threadData);
 static inline const ResultList& GetThreadDataResults(const ThreadData& threadData);
 
@@ -141,6 +154,7 @@ static inline void ResetThreadDataForNewSession(ThreadData& threadData)
 	SetThreadDataWorking(threadData, false);
 	SetThreadDataStop(threadData, false);
 	SetThreadDataUppercase(threadData, false);
+	ResetThreadDataHashAlgorithms(threadData);
 	ResetThreadDataTotalSize(threadData);
 
 	ResetThreadDataInputFiles(threadData);
@@ -175,6 +189,39 @@ static inline void SetThreadDataUppercase(ThreadData& threadData, bool uppercase
 static inline bool GetThreadDataUppercase(const ThreadData& threadData)
 {
 	return GetThreadDataExecutionState(threadData).uppercaseDigest;
+}
+
+static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
+{
+	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[GetResultDigestIndex(digestType)] = enabled;
+}
+
+static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
+{
+	return GetThreadDataHashAlgorithmSelectionState(threadData).enabled[GetResultDigestIndex(digestType)];
+}
+
+template<typename THashAlgorithmVisitor>
+static inline bool VisitEnabledThreadDataHashAlgorithms(const ThreadData& threadData, THashAlgorithmVisitor visitor)
+{
+	return VisitResultDigests([&](ResultDigestType digestType)
+	{
+		if (!IsThreadDataHashAlgorithmEnabled(threadData, digestType))
+		{
+			return true;
+		}
+
+		return visitor(digestType);
+	});
+}
+
+static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
+{
+	VisitResultDigests([&](ResultDigestType digestType)
+	{
+		SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);
+		return true;
+	});
 }
 
 static inline uint64_t GetThreadDataTotalSize(const ThreadData& threadData)

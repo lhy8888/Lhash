@@ -58,6 +58,11 @@ struct ResultDigestStorage
 	sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT]; // Internal digest storage
 };
 
+struct HashAlgorithmSelectionState
+{
+	bool enabled[RESULT_DIGEST_STORAGE_COUNT]; // Enabled hash algorithms for the current session
+};
+
 struct ResultDigestCompatibilityFields
 {
 	sunjwbase::tstring md5; // MD5
@@ -97,6 +102,7 @@ struct ThreadDataExecutionState
 	bool working; // Working flag
 	bool stopRequested; // Stop request flag
 	bool uppercaseDigest; // Uppercase digest output
+	HashAlgorithmSelectionState hashAlgorithms; // Enabled hash algorithms
 	uint64_t countedSize; // Counted total size
 	ResultList results;
 };
