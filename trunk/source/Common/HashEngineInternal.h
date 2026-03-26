@@ -27,7 +27,7 @@ namespace HashEngineInternal
 	struct FileAttemptState
 	{
 		const TCHAR *path;
-		OsFile *osFile;
+		sunjwbase::OsFile *osFile;
 		sunjwbase::tstring fileVersion;
 		bool readFailed;
 		bool isFileOpened;
@@ -57,7 +57,7 @@ namespace HashEngineInternal
 	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, ULLongVector& fSizes, bool *wasCancelled);
 	bool PrepareHashingWork(ThreadData *thrdData, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled);
 
-	void InitializeFileAttemptState(const TCHAR *path, OsFile *osFile, FileAttemptState *fileAttemptState);
+	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
 	void ResetFileProgressState(FileProgressState *progressState);
 
@@ -66,7 +66,7 @@ namespace HashEngineInternal
 	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashEngineObserver *observer, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);
 
 	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
-		OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
+		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
 	void InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts);
 	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, ThreadData *thrdData, bool isSizeCaled, uint32_t fileIndex);
 	const sunjwbase::tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType);
