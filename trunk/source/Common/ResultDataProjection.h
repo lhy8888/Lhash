@@ -128,11 +128,16 @@ template<typename TResultDataNet, typename TResultStateNet, typename TResultArra
 static inline TResultArray CreateProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)
 {
 	TResultArray projectedResults = createResultArray(CountMatchingResults(resultList, predicate));
-
-	VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, predicate, convertString, [&](size_t index, TResultDataNet resultDataNet)
+	size_t matchIndex = 0;
+	ResultList::const_iterator itr = resultList.begin();
+	for (; itr != resultList.end(); ++itr)
 	{
-		setProjectedResult(projectedResults, index, resultDataNet);
-	});
+		if (predicate(*itr))
+		{
+			setProjectedResult(projectedResults, matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(*itr, convertString));
+			++matchIndex;
+		}
+	}
 
 	return projectedResults;
 }
