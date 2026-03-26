@@ -19,6 +19,7 @@
 #include "Dll.h"
 #include "Common/strhelper.h"
 #include "WinCommon/WindowsStrings.h"
+#include "WinCommon/ShellExplorerCommandCore.h"
 #include "UwpShellExtStringsBase.h"
 #include "UwpShellExtStringsZHCN.h"
 
@@ -168,19 +169,6 @@ private:
     IStream *_pstmShellItemArray;
 };
 
-__inline HRESULT ResolveWindowsAppExePath(LPCWSTR pszExecName, LPWSTR pszPath)
-{
-    WCHAR szUserPath[MAX_PATH];
-    HRESULT hr = SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, szUserPath);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    return StringCchPrintf(pszPath, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\WindowsApps\\%s",
-        szUserPath, pszExecName);
-}
-
 DWORD CExplorerCommandVerb::_ThreadProc()
 {
     IShellItemArray *psia;
@@ -189,57 +177,15 @@ DWORD CExplorerCommandVerb::_ThreadProc()
     if (SUCCEEDED(hr))
     {
         WCHAR szExecPath[MAX_PATH];
-        hr = ResolveWindowsAppExePath(c_szExecPath, szExecPath);
+        hr = ResolveWindowsAppExePath(c_szExecPath, szExecPath, ARRAYSIZE(szExecPath));
         if (SUCCEEDED(hr))
         {
             sunjwbase::tstring tstrExecPath(szExecPath); // executable path
-            sunjwbase::tstring tstrExecCmd = L"\"" + tstrExecPath + L"\""; // full commandline
-
-            DWORD shellItemCount;
-            psia->GetCount(&shellItemCount);
-
-            for (DWORD i = 0; i < shellItemCount; i++)
+            sunjwbase::tstring tstrExecCmd;
+            hr = BuildShellItemCommandLine(psia, tstrExecPath, NULL, &tstrExecCmd);
+            if (SUCCEEDED(hr))
             {
-                IShellItem2* psi;
-                hr = GetItemAt(psia, i, IID_PPV_ARGS(&psi));
-                if (SUCCEEDED(hr))
-                {
-                    PWSTR pszPath;
-                    hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
-                    if (SUCCEEDED(hr))
-                    {
-                        sunjwbase::tstring tstrItemPath(pszPath);
-                        CoTaskMemFree(pszPath);
-
-                        tstrExecCmd.append(L" \"");
-                        tstrExecCmd.append(tstrItemPath);
-                        tstrExecCmd.append(L"\"");
-                    }
-                    psi->Release();
-                }
-            }
-
-            size_t sizeExecCmdLen = tstrExecCmd.length() + 1;
-            WCHAR* pszCmd = new WCHAR[sizeExecCmdLen];
-            memset(pszCmd, 0, sizeof(WCHAR) * sizeExecCmdLen);
-            wcscpy_s(pszCmd, sizeExecCmdLen, tstrExecCmd.c_str());
-
-            // MessageBox(_hwnd, tstrExecCmd.c_str(), tstrExecPath.c_str(), MB_OK);
-
-            STARTUPINFO sInfo = { 0 };
-            sInfo.cb = sizeof(sInfo);
-            PROCESS_INFORMATION pInfo = { 0 };
-
-            BOOL bCreated = CreateProcess(tstrExecPath.c_str(), pszCmd,
-                0, 0, TRUE,
-                NORMAL_PRIORITY_CLASS,
-                0, 0, &sInfo, &pInfo);
-
-            delete[] pszCmd;
-            if (bCreated)
-            {
-                CloseHandle(pInfo.hThread);
-                CloseHandle(pInfo.hProcess);
+                LaunchShellCommandLine(tstrExecPath, tstrExecCmd);
             }
 
             /*WCHAR szMsg[128];

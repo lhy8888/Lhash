@@ -2229,6 +2229,42 @@ internal static class Program
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashAlgorithmSelectionController.h", "fileshash.vcxproj.filters does not yet track the dedicated phase 13 controller header.");
         }, failures);
 
+        Run("Phase 14 extracts shell ExplorerCommand launch flow into a shared core seam and compiles shell extensions in CI", () =>
+        {
+            string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
+            string wuiShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            string uwpShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string wuiShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj");
+            string uwpShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj");
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+
+            AssertContains(shellCore, "ResolveWindowsAppExePath(PCWSTR pszExecName, LPWSTR pszPath, size_t cchPath)", "Phase 14 is missing the shared WindowsApps executable-path resolver.");
+            AssertContains(shellCore, "BuildShellItemCommandLine(IShellItemArray *psia", "Phase 14 is missing the shared shell-item command-line builder.");
+            AssertContains(shellCore, "LaunchShellCommandLine(const sunjwbase::tstring& tstrExecPath, const sunjwbase::tstring& tstrExecCmd)", "Phase 14 is missing the shared detached process launcher.");
+
+            AssertContains(wuiShellVerb, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "WinUI shell extension does not yet include the shared phase 14 shell-command core.");
+            AssertContains(wuiShellVerb, "BuildShellItemCommandLine(psia, tstrExecPath, L\"-paths\", &tstrExecCmd);", "WinUI shell extension does not yet route command-line construction through the shared phase 14 shell-command core.");
+            AssertContains(wuiShellVerb, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "WinUI shell extension does not yet route process launch through the shared phase 14 shell-command core.");
+            AssertDoesNotContain(wuiShellVerb, "__inline HRESULT ResolveWindowsAppExePath(", "WinUI shell extension still keeps a local WindowsApps path helper after phase 14.");
+            AssertDoesNotContain(wuiShellVerb, "BOOL bCreated = CreateProcess(", "WinUI shell extension still keeps an inline CreateProcess launch path after phase 14.");
+
+            AssertContains(uwpShellVerb, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "UWP shell extension does not yet include the shared phase 14 shell-command core.");
+            AssertContains(uwpShellVerb, "BuildShellItemCommandLine(psia, tstrExecPath, NULL, &tstrExecCmd);", "UWP shell extension does not yet route command-line construction through the shared phase 14 shell-command core.");
+            AssertContains(uwpShellVerb, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "UWP shell extension does not yet route process launch through the shared phase 14 shell-command core.");
+            AssertDoesNotContain(uwpShellVerb, "__inline HRESULT ResolveWindowsAppExePath(", "UWP shell extension still keeps a local WindowsApps path helper after phase 14.");
+            AssertDoesNotContain(uwpShellVerb, "BOOL bCreated = CreateProcess(", "UWP shell extension still keeps an inline CreateProcess launch path after phase 14.");
+
+            AssertContains(wuiShellProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "WinUI shell extension project does not yet define a standalone-build SolutionDir fallback for phase 14.");
+            AssertContains(uwpShellProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "UWP shell extension project does not yet define a standalone-build SolutionDir fallback for phase 14.");
+
+            AssertContains(workflow, "build-wui-shell-ext-x64:", "Windows workflow does not yet compile the WinUI shell extension in phase 14.");
+            AssertContains(workflow, "build-uwp-shell-ext-x64:", "Windows workflow does not yet compile the UWP shell extension in phase 14.");
+            AssertContains(workflow, "msbuild sub-proj/fHashWUIShellExt/fHashWUIShellExt.vcxproj", "Windows workflow does not yet build the WinUI shell extension project in phase 14.");
+            AssertContains(workflow, "msbuild sub-proj/fHashUwpShellExt/fHashUwpShellExt.vcxproj", "Windows workflow does not yet build the UWP shell extension project in phase 14.");
+            AssertContains(workflow, "build-wui-shell-ext-x64", "Release gating does not yet include the WinUI shell extension job in phase 14.");
+            AssertContains(workflow, "build-uwp-shell-ext-x64", "Release gating does not yet include the UWP shell extension job in phase 14.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

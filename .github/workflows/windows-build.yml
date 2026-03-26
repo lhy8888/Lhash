@@ -1,4 +1,4 @@
-﻿name: Windows Build
+name: Windows Build
 
 on:
   workflow_dispatch:
@@ -247,12 +247,82 @@ jobs:
             artifacts/build-uwp-bridge-x64.log
           if-no-files-found: warn
 
+  build-wui-shell-ext-x64:
+    needs: security-regression
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build WinUI shell extension
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $logPath = Join-Path $artifactRoot 'build-wui-shell-ext-x64.log'
+
+          & msbuild sub-proj/fHashWUIShellExt/fHashWUIShellExt.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $logPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashWUIShellExt. See artifacts/build-wui-shell-ext-x64.log for details."
+          }
+
+      - name: Upload WinUI shell extension artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-WinUI-shell-ext-x64
+          path: |
+            artifacts/build-wui-shell-ext-x64.log
+          if-no-files-found: warn
+
+  build-uwp-shell-ext-x64:
+    needs: security-regression
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build UWP shell extension
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $logPath = Join-Path $artifactRoot 'build-uwp-shell-ext-x64.log'
+
+          & msbuild sub-proj/fHashUwpShellExt/fHashUwpShellExt.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $logPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashUwpShellExt. See artifacts/build-uwp-shell-ext-x64.log for details."
+          }
+
+      - name: Upload UWP shell extension artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-UWP-shell-ext-x64
+          path: |
+            artifacts/build-uwp-shell-ext-x64.log
+          if-no-files-found: warn
+
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - build-legacy-x64
       - build-winui-bridge-x64
       - build-uwp-bridge-x64
+      - build-wui-shell-ext-x64
+      - build-uwp-shell-ext-x64
     runs-on: ubuntu-latest
 
     steps:

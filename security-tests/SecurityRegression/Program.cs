@@ -63,8 +63,8 @@ internal static partial class Program
             AssertContains(mfcBaseStrings, "LHash: Files Hash Calculator", "Legacy MFC English About text still shows the old product name.");
             AssertContains(mfcBaseStrings, "Copyright (C) 2026- LHY.", "Legacy MFC English About text still shows the old copyright.");
             AssertContains(mfcBaseStrings, "https://github.com/lhy8888/fhash", "Legacy MFC English About link still points to the old GitHub repo.");
-            AssertContains(mfcZhStrings, "关于 LHash", "Legacy MFC Chinese About title still shows the old app name.");
-            AssertContains(mfcZhStrings, "LHash: 文件 Hash 计算器", "Legacy MFC Chinese About text still shows the old product name.");
+            AssertContains(mfcZhStrings, "鍏充簬 LHash", "Legacy MFC Chinese About title still shows the old app name.");
+            AssertContains(mfcZhStrings, "LHash: 鏂囦欢 Hash 璁＄畻鍣?, "Legacy MFC Chinese About text still shows the old product name.");
             AssertContains(mfcRc2, "VALUE \"FileDescription\", \"LHash: Files Hash Calculator\"", "Legacy MFC version resources still expose the old product description.");
             AssertContains(mfcRc2, "VALUE \"InternalName\", \"LHash.exe\"", "Legacy MFC version resources still expose the old executable name.");
             AssertContains(mfcRc2, "VALUE \"OriginalFilename\", \"LHash.exe\"", "Legacy MFC version resources still expose the old original filename.");
@@ -75,8 +75,8 @@ internal static partial class Program
             AssertContains(winUiEn, "<value>LHash: Files Hash Calculator</value>", "WinUI English About text still shows the old product name.");
             AssertContains(winUiEn, "<value>Copyright (C) 2026- LHY.</value>", "WinUI English About text still shows the old copyright.");
             AssertContains(winUiEn, "https://github.com/lhy8888/fhash", "WinUI English About link still points to the old GitHub repo.");
-            AssertContains(winUiZh, "<value>关于 LHash</value>", "WinUI Chinese About title still shows the old app name.");
-            AssertContains(winUiZh, "<value>LHash: 文件 Hash 计算器</value>", "WinUI Chinese About text still shows the old product name.");
+            AssertContains(winUiZh, "<value>鍏充簬 LHash</value>", "WinUI Chinese About title still shows the old app name.");
+            AssertContains(winUiZh, "<value>LHash: 鏂囦欢 Hash 璁＄畻鍣?/value>", "WinUI Chinese About text still shows the old product name.");
             AssertContains(winUiAssembly, "AssemblyTitle(\"LHashWUI\")", "WinUI assembly title still shows the old product name.");
             AssertContains(winUiAssembly, "AssemblyCompany(\"LHY\")", "WinUI assembly company still shows the old publisher.");
             AssertContains(winUiAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "WinUI assembly copyright still shows the old owner.");
@@ -92,8 +92,8 @@ internal static partial class Program
             AssertContains(uwpEn, "<value>LHash UWP: Files Hash Calculator</value>", "UWP English About text still shows the old product name.");
             AssertContains(uwpEn, "<value>Copyright (C) 2026- LHY.</value>", "UWP English About text still shows the old copyright.");
             AssertContains(uwpEn, "https://github.com/lhy8888/fhash", "UWP English About link still points to the old GitHub repo.");
-            AssertContains(uwpZh, "<value>关于 LHash UWP</value>", "UWP Chinese About title still shows the old app name.");
-            AssertContains(uwpZh, "<value>LHash UWP: 文件 Hash 计算器</value>", "UWP Chinese About text still shows the old product name.");
+            AssertContains(uwpZh, "<value>鍏充簬 LHash UWP</value>", "UWP Chinese About title still shows the old app name.");
+            AssertContains(uwpZh, "<value>LHash UWP: 鏂囦欢 Hash 璁＄畻鍣?/value>", "UWP Chinese About text still shows the old product name.");
             AssertContains(uwpAssembly, "AssemblyTitle(\"LHashUwp\")", "UWP assembly title still shows the old product name.");
             AssertContains(uwpAssembly, "AssemblyCompany(\"LHY\")", "UWP assembly company still shows the old publisher.");
             AssertContains(uwpAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "UWP assembly copyright still shows the old owner.");
@@ -111,13 +111,13 @@ internal static partial class Program
             AssertContains(uwpWapDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP WAP debug package publisher display name still shows the old owner.");
 
             AssertContains(legacyShellStrings, "Hash with LHash", "Legacy shell extension menu text still shows the old app name.");
-            AssertContains(legacyShellStringsZh, "使用 LHash 计算哈希", "Legacy shell extension Chinese menu text still shows the old app name.");
+            AssertContains(legacyShellStringsZh, "浣跨敤 LHash 璁＄畻鍝堝笇", "Legacy shell extension Chinese menu text still shows the old app name.");
             AssertContains(wuiShellVerb, "Hash with LHash", "WinUI shell extension verb display name still shows the old app name.");
             AssertContains(wuiShellStrings, "Hash with LHash", "WinUI shell extension English menu text still shows the old app name.");
-            AssertContains(wuiShellStringsZh, "使用 LHash", "WinUI shell extension Chinese menu text still shows the old app name.");
+            AssertContains(wuiShellStringsZh, "浣跨敤 LHash", "WinUI shell extension Chinese menu text still shows the old app name.");
             AssertContains(uwpShellVerb, "Hash with LHash UWP", "UWP shell extension verb display name still shows the old app name.");
             AssertContains(uwpShellStrings, "Hash with LHash UWP", "UWP shell extension English menu text still shows the old app name.");
-            AssertContains(uwpShellStringsZh, "使用 LHash UWP", "UWP shell extension Chinese menu text still shows the old app name.");
+            AssertContains(uwpShellStringsZh, "浣跨敤 LHash UWP", "UWP shell extension Chinese menu text still shows the old app name.");
 
             AssertPngAsset(repoRoot, @"trunk\source\WinUI\Assets\AboutLogo.large.png", 200, 200, 512);
             AssertPngAsset(repoRoot, @"trunk\source\WinUWP\Assets\AboutLogo.large.png", 200, 200, 512);
@@ -178,6 +178,7 @@ internal static partial class Program
             string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShellExt.cpp");
             string wuiShell = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
             string uwpShell = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
 
@@ -186,12 +187,15 @@ internal static partial class Program
             AssertContains(legacyShell, "CloseHandle(pInfo.hProcess);", "Legacy shell extension does not close process handles after CreateProcess.");
             AssertContains(legacyShell, "CopyDraggedPath", "Legacy shell extension still relies on fixed-size drag/drop buffers.");
             AssertContains(legacyShell, "DragQueryFile(hDrop, index, NULL, 0)", "Legacy shell extension no longer queries drag/drop path lengths before copying.");
-            AssertContains(wuiShell, "BOOL bCreated = CreateProcess", "WinUI shell extension launch hardening is missing.");
-            AssertContains(wuiShell, "CloseHandle(pInfo.hThread);", "WinUI shell extension does not close thread handles.");
-            AssertContains(wuiShell, "CloseHandle(pInfo.hProcess);", "WinUI shell extension does not close process handles.");
-            AssertContains(uwpShell, "BOOL bCreated = CreateProcess", "UWP shell extension launch hardening is missing.");
-            AssertContains(uwpShell, "CloseHandle(pInfo.hThread);", "UWP shell extension does not close thread handles.");
-            AssertContains(uwpShell, "CloseHandle(pInfo.hProcess);", "UWP shell extension does not close process handles.");
+            AssertContains(shellCore, "BOOL bCreated = CreateProcess", "Shared shell-command core launch hardening is missing.");
+            AssertContains(shellCore, "CloseHandle(pInfo.hThread);", "Shared shell-command core does not close thread handles.");
+            AssertContains(shellCore, "CloseHandle(pInfo.hProcess);", "Shared shell-command core does not close process handles.");
+            AssertContains(shellCore, "if (pszExecName == NULL || pszPath == NULL || cchPath == 0)", "Shared shell-command core does not validate executable-path inputs.");
+            AssertContains(shellCore, "if (psia == NULL || ptstrExecCmd == NULL || tstrExecPath.empty())", "Shared shell-command core does not validate command-line inputs.");
+            AssertContains(wuiShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "WinUI shell extension does not consume the shared hardened shell-command core.");
+            AssertContains(wuiShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "WinUI shell extension no longer routes detached process launch through the hardened shared helper.");
+            AssertContains(uwpShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "UWP shell extension does not consume the shared hardened shell-command core.");
+            AssertContains(uwpShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "UWP shell extension no longer routes detached process launch through the hardened shared helper.");
             AssertContains(mfcDialog, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
             AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
@@ -223,22 +227,22 @@ internal static partial class Program
             AssertDoesNotContain(uwpMainPage, "MenuItemVirusTotal", "UWP UI still exposes a VirusTotal hash-search action.");
             AssertDoesNotContain(uwpEn, "Search Google", "UWP English resources still advertise Google hash search.");
             AssertDoesNotContain(uwpEn, "Search VirusTotal", "UWP English resources still advertise VirusTotal hash search.");
-            AssertDoesNotContain(uwpZh, "搜索 Google", "UWP Chinese resources still advertise Google hash search.");
-            AssertDoesNotContain(uwpZh, "搜索 VirusTotal", "UWP Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(uwpZh, "鎼滅储 Google", "UWP Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(uwpZh, "鎼滅储 VirusTotal", "UWP Chinese resources still advertise VirusTotal hash search.");
             AssertDoesNotContain(winUiMainPage, "MenuItemGoogle", "WinUI UI still exposes a Google hash-search action.");
             AssertDoesNotContain(winUiMainPage, "MenuItemVirusTotal", "WinUI UI still exposes a VirusTotal hash-search action.");
             AssertDoesNotContain(winUiEn, "Search Google", "WinUI English resources still advertise Google hash search.");
             AssertDoesNotContain(winUiEn, "Search VirusTotal", "WinUI English resources still advertise VirusTotal hash search.");
-            AssertDoesNotContain(winUiZh, "搜索 Google", "WinUI Chinese resources still advertise Google hash search.");
-            AssertDoesNotContain(winUiZh, "搜索 VirusTotal", "WinUI Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winUiZh, "鎼滅储 Google", "WinUI Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(winUiZh, "鎼滅储 VirusTotal", "WinUI Chinese resources still advertise VirusTotal hash search.");
             AssertDoesNotContain(winMfcDlg, "Searchgoogle", "WinMFC dialog still exposes a Google hash-search command.");
             AssertDoesNotContain(winMfcDlg, "Searchvirustotal", "WinMFC dialog still exposes a VirusTotal hash-search command.");
             AssertDoesNotContain(winMfcRes, "[Search Google]", "WinMFC menu resources still expose Google hash search.");
             AssertDoesNotContain(winMfcRes, "[Search VirusTotal]", "WinMFC menu resources still expose VirusTotal hash search.");
             AssertDoesNotContain(winMfcBaseStrings, "Search Google", "WinMFC English strings still advertise Google hash search.");
             AssertDoesNotContain(winMfcBaseStrings, "Search VirusTotal", "WinMFC English strings still advertise VirusTotal hash search.");
-            AssertDoesNotContain(winMfcZhStrings, "搜索 Google", "WinMFC Chinese strings still advertise Google hash search.");
-            AssertDoesNotContain(winMfcZhStrings, "搜索 VirusTotal", "WinMFC Chinese strings still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "鎼滅储 Google", "WinMFC Chinese strings still advertise Google hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "鎼滅储 VirusTotal", "WinMFC Chinese strings still advertise VirusTotal hash search.");
         }, failures);
 
         if (failures.Count > 0)
