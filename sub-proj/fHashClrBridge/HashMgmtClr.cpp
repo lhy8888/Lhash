@@ -43,6 +43,16 @@ static TStrVector ConvertSystemStringArrayToTStrVector(cli::array<String^>^ file
 	return fullPaths;
 }
 
+static cli::array<ResultDataNet>^ CreateProjectedResultDataNetArray(size_t resultCount)
+{
+	return gcnew cli::array<ResultDataNet>(static_cast<int>(resultCount));
+}
+
+static void SetProjectedResultDataNet(cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
+{
+	projectedResults[static_cast<int>(index)] = resultDataNet;
+}
+
 HashMgmtClr::HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates)
 	:m_pUiBridgeWUI(NULL), m_pThreadData(NULL), m_hWorkThread(NULL)
 {
@@ -143,13 +153,7 @@ cli::array<ResultDataNet>^ HashMgmtClr::FindResult(String^ sstrHashToFind)
 	tstring tstrHashToFind(ConvertSystemStringToTstr(sstrHashToFind));
 	tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);
 
-	return CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)
-	{
-		return gcnew cli::array<ResultDataNet>(static_cast<int>(resultCount));
-	}, ConvertTstrToSystemString, [&](cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
-	{
-		projectedResults[static_cast<int>(index)] = resultDataNet;
-	});
+	return CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);
 }
 
 UInt64 HashMgmtClr::GetResultCount()
