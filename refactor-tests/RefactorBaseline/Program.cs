@@ -2271,6 +2271,33 @@ internal static class Program
             AssertContains(workflow, "build-uwp-shell-ext-x64", "Release gating does not yet include the UWP shell extension job in phase 14.");
         }, failures);
 
+        Run("Phase 15 extracts shell registration flow into a shared core seam", () =>
+        {
+            string shellRegisterHeader = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellRegisterExtension.h");
+            string shellRegisterImpl = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellRegisterExtensionImpl.h");
+            string wuiRegisterHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\RegisterExtension.h");
+            string wuiRegisterCpp = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\RegisterExtension.cpp");
+            string uwpRegisterHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\RegisterExtension.h");
+            string uwpRegisterCpp = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\RegisterExtension.cpp");
+
+            AssertContains(shellRegisterHeader, "class CRegisterExtension", "Phase 15 is missing the shared shell registration class declaration.");
+            AssertContains(shellRegisterHeader, "HRESULT RegisterExplorerCommandVerb", "Phase 15 is missing the shared shell registration explorer-command contract.");
+            AssertContains(shellRegisterImpl, "#include \"ShellRegisterExtension.h\"", "Phase 15 shared shell registration implementation does not yet depend on the shared registration header.");
+            AssertContains(shellRegisterImpl, "HRESULT CRegisterExtension::RegisterAppAsLocalServer", "Phase 15 shared shell registration implementation is missing the common local-server registration flow.");
+            AssertContains(shellRegisterImpl, "HRESULT CRegisterExtension::RegisterExplorerCommandVerb", "Phase 15 shared shell registration implementation is missing the common explorer-command registration flow.");
+            AssertContains(shellRegisterImpl, "HRESULT CRegisterExtension::RegSetKeyValuePrintf", "Phase 15 shared shell registration implementation is missing the common registry write helper.");
+
+            AssertContains(wuiRegisterHeader, "#include \"WinCommon/ShellRegisterExtension.h\"", "WinUI shell extension does not yet route RegisterExtension declarations through the shared phase 15 core.");
+            AssertDoesNotContain(wuiRegisterHeader, "class CRegisterExtension", "WinUI shell extension still keeps a local CRegisterExtension declaration after phase 15.");
+            AssertContains(wuiRegisterCpp, "#include \"WinCommon/ShellRegisterExtensionImpl.h\"", "WinUI shell extension does not yet route RegisterExtension implementation through the shared phase 15 core.");
+            AssertDoesNotContain(wuiRegisterCpp, "HRESULT CRegisterExtension::RegisterAppAsLocalServer", "WinUI shell extension still keeps a local registration implementation after phase 15.");
+
+            AssertContains(uwpRegisterHeader, "#include \"WinCommon/ShellRegisterExtension.h\"", "UWP shell extension does not yet route RegisterExtension declarations through the shared phase 15 core.");
+            AssertDoesNotContain(uwpRegisterHeader, "class CRegisterExtension", "UWP shell extension still keeps a local CRegisterExtension declaration after phase 15.");
+            AssertContains(uwpRegisterCpp, "#include \"WinCommon/ShellRegisterExtensionImpl.h\"", "UWP shell extension does not yet route RegisterExtension implementation through the shared phase 15 core.");
+            AssertDoesNotContain(uwpRegisterCpp, "HRESULT CRegisterExtension::RegisterAppAsLocalServer", "UWP shell extension still keeps a local registration implementation after phase 15.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
