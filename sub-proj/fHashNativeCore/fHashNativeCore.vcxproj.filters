@@ -38,6 +38,12 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEngineResult.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\strhelper.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -74,6 +80,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashEngineInternal.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h">

@@ -16,29 +16,17 @@
 #include <sched.h>
 #endif
 
-#include "Common/strhelper.h"
 #include "Common/HashEngineObserver.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestAccess.h"
+#include "Common/HashEngineInternal.h"
 
-#if defined (_WIN32)
-#include "WinCommon/WindowsComm.h"
-#if (defined (FHASH_UWP_LIB) || defined(FHASH_WUI_LIB))
-#include "WinCommon/FileVersionHelper.h"
-#endif
-#endif
-
-#include "OsUtils/OsFile.h"
 #include "OsUtils/OsThread.h"
-
-#include "Algorithms/MD5.h"
-#include "Algorithms/SHA1.h"
-#include "Algorithms/sha256.h"
-#include "Algorithms/sha512.h"
 
 using namespace std;
 using namespace sunjwbase;
+using namespace HashEngineInternal;
 
 class DataBuffer
 {
@@ -59,46 +47,27 @@ unsigned int DataBuffer::preflen = 1048576; // 2^20
 
 static void MD5UpdateWrapper(MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen)
 {
-	MD5Update(mdContext, inBuf, inLen); // MD5 update
+	MD5Update(mdContext, inBuf, inLen);
 }
 
 static void SHA1UpdateWrapper(CSHA1 *sha1, unsigned char *data, unsigned int len)
 {
-	sha1->Update(data, len); // SHA1 update
+	sha1->Update(data, len);
 }
 
 static void SHA256UpdateWrapper(struct sha256_ctx *ctx, const unsigned char *buffer, uint32_t length)
 {
-	sha256_update(ctx, buffer, length); // SHA256 update
+	sha256_update(ctx, buffer, length);
 }
 
 static void SHA512UpdateWrapper(SHA512_CTX *context, void *datain, size_t len)
 {
-	SHA512_Update(context, datain, len); // SHA512 update
+	SHA512_Update(context, datain, len);
 }
-
-struct FileProgressState
-{
-	uint64_t finishedSize;
-	uint64_t finishedSizeWhole;
-	int position;
-	int positionWhole;
-};
-
-struct FileAttemptState
-{
-	const TCHAR *path;
-	OsFile *osFile;
-	tstring fileVersion;
-	bool readFailed;
-	bool isFileOpened;
-	const TCHAR *openErrorText;
-};
 
 static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSizeCaled, unsigned int dataBufLen,
 	HashEngineObserver *observer, FileProgressState *progressState)
 {
-	// update progress
 	progressState->finishedSize += dataBufLen;
 
 	int progressMax = observer->progressMax();
@@ -133,394 +102,6 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 	{
 		progressState->positionWhole = positionWholeNew;
 		observer->onTotalProgress(progressState->positionWhole);
-	}
-}
-
-static void AccumulatePreScannedFileSize(ThreadData *thrdData, ULLongVector& fSizes, uint32_t fileIndex)
-{
-	uint64_t fSize = 0;
-
-	const TCHAR *path;
-	path = GetThreadDataFullPath(*thrdData, fileIndex).c_str();
-	OsFile osFile(path);
-	if (osFile.openRead())
-	{
-		fSize = osFile.getLength();//fsize=status.m_size; // Fix 4GB file
-		osFile.close();
-	}
-
-	fSizes[fileIndex] = fSize;
-	AddThreadDataTotalSize(*thrdData, fSize);
-}
-
-static bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, ULLongVector& fSizes, bool *wasCancelled)
-{
-	if (GetThreadDataFileCount(*thrdData) < 200) // not too many
-	{
-		VisitThreadDataInputFiles(*thrdData, [&](uint32_t fileIndex, const tstring& fullPath)
-		{
-			(void)fullPath;
-			if (ShouldStopThreadData(*thrdData))
-			{
-				*wasCancelled = true;
-				return false;
-			}
-
-			AccumulatePreScannedFileSize(thrdData, fSizes, fileIndex);
-			return true;
-		});
-
-		return true;
-	}
-
-	return false;
-}
-
-static bool PrepareHashingWork(ThreadData *thrdData, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled)
-{
-	observer->onPreparing();
-	bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, fSizes, wasCancelled);
-	if (*wasCancelled)
-	{
-		return isSizeCaled;
-	}
-
-	observer->onPreparationFinished();
-	return isSizeCaled;
-}
-
-static void InitializeFileAttemptState(const TCHAR *path, OsFile *osFile, FileAttemptState *fileAttemptState)
-{
-	fileAttemptState->path = path;
-	fileAttemptState->osFile = osFile;
-	fileAttemptState->fileVersion.clear();
-	fileAttemptState->readFailed = false;
-	fileAttemptState->isFileOpened = false;
-	fileAttemptState->openErrorText = NULL;
-}
-
-static bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer)
-{
-	fileAttemptState->readFailed = false;
-	fileAttemptState->openErrorText = (const TCHAR *)openErrorBuffer;
-	fileAttemptState->isFileOpened = fileAttemptState->osFile->openReadScan(openErrorBuffer);
-	return fileAttemptState->isFileOpened;
-}
-
-static void ResetFileProgressState(FileProgressState *progressState)
-{
-	progressState->finishedSize = 0;
-	progressState->position = 0;
-}
-
-static void EmitPathResult(HashEngineObserver *observer, ResultData& result)
-{
-	SetResultState(result, RESULT_PATH);
-	observer->onFileStarted(result);
-}
-
-static ResultData& BeginFileResult(ThreadData *thrdData, HashEngineObserver *observer, const tstring& path)
-{
-	ResultData& result = AppendThreadDataResult(*thrdData);
-
-	ResetResultData(result);
-	SetResultState(result, RESULT_NONE);
-	SetResultPath(result, path);
-
-	EmitPathResult(observer, result);
-	return result;
-}
-
-static void EmitMetaResult(HashEngineObserver *observer, ResultData& result);
-static void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase);
-static void EmitReadFileError(HashEngineObserver *observer, ResultData& result);
-
-struct FileHashContexts
-{
-	MD5_CTX mdContext; // MD5 context
-	CSHA1 sha1; // SHA1 object
-	SHA256_CTX sha256Ctx; // SHA256 context
-	SHA512_CTX sha512Ctx; // SHA512 context
-	uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
-};
-
-static uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
-	OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, tstring& tstrFileVersion)
-{
-	SetResultModifiedDate(result, osFile.getModifiedTimeFormat());
-
-	uint64_t fsize = osFile.getLength(); // fix 4GB file
-	SetResultSize(result, fsize);
-
-	if (!isSizeCaled) // not calculated size
-	{
-		AddThreadDataTotalSize(*thrdData, fsize);
-	}
-	else
-	{
-		ReplaceThreadDataCountedFileSize(*thrdData, fSizes[fileIndex], fsize); // fix total size
-		fSizes[fileIndex] = fsize; // fix file size
-	}
-
-#if defined (_WIN32)
-	// get file version //
-#if (defined (FHASH_UWP_LIB) || defined(FHASH_WUI_LIB))
-	WindowsComm::FileVersionHelper fvHelper(osFile);
-	tstrFileVersion = fvHelper.Find();
-		SetResultVersion(result, tstrFileVersion);
-		osFile.seek(0, OsFile::OsFileSeekFrom::OF_SEEK_BEGIN); // reset offset
-#else
-		tstrFileVersion = WindowsComm::GetExeFileVersion((TCHAR *)path);
-		SetResultVersion(result, tstrFileVersion);
-#endif
-#endif
-
-	EmitMetaResult(observer, result);
-	return fsize;
-}
-
-static void InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts)
-{
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
-	{
-		switch (digestType)
-		{
-		case RESULT_DIGEST_MD5:
-			MD5Init(&hashContexts->mdContext, 0); // MD5 init
-			break;
-		case RESULT_DIGEST_SHA1:
-			hashContexts->sha1.Reset(); // SHA1 init
-			break;
-		case RESULT_DIGEST_SHA256:
-			sha256_init(&hashContexts->sha256Ctx); // SHA256 init
-			break;
-		case RESULT_DIGEST_SHA512:
-			SHA512_Init(&hashContexts->sha512Ctx); // SHA512 init
-			break;
-		}
-
-		return true;
-	});
-
-	observer->onFileProgress(0);
-}
-
-static void UpdateWholeProgressAfterFile(HashEngineObserver *observer, ThreadData *thrdData, bool isSizeCaled, uint32_t fileIndex)
-{
-	if (!isSizeCaled)
-	{
-		if (GetThreadDataFileCount(*thrdData) == 0)
-		{
-			observer->onTotalProgress(0);
-		}
-		else
-		{
-			int progressMax = observer->progressMax();
-			observer->onTotalProgress((fileIndex + 1) * progressMax / (GetThreadDataFileCount(*thrdData)));
-		}
-	}
-}
-
-typedef ResultDigestStorage FinalizedDigestBundle;
-
-struct FileExecutionState
-{
-	FileProgressState progressState;
-	FileAttemptState fileAttemptState;
-	FileHashContexts hashContexts;
-	FinalizedDigestBundle digestBundle;
-};
-
-static const tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType)
-{
-	return GetDigestStorageValue(digestBundle, digestType);
-}
-
-static void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultDigestType digestType, const tstring& digestValue)
-{
-	SetDigestStorageValue(digestBundle, digestType, digestValue);
-}
-
-static void PopulateDigestResult(const ThreadData& threadData, ResultData& result, const FinalizedDigestBundle& digestBundle)
-{
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
-	{
-		SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));
-		return true;
-	});
-}
-
-static void FinalizeDigestStrings(const ThreadData& threadData, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle)
-{
-	char chHashBuff[1024] = {0};
-	char strSHA1[256] = {0};
-	string strSHA256;
-	string strSHA512;
-
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
-	{
-		switch (digestType)
-		{
-		case RESULT_DIGEST_MD5:
-			MD5Final(&hashContexts.mdContext); // MD5 final
-#if defined (_WIN32)
-			sprintf_s(chHashBuff, 1024,
-						"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-						hashContexts.mdContext.digest[0],
-						hashContexts.mdContext.digest[1],
-						hashContexts.mdContext.digest[2],
-						hashContexts.mdContext.digest[3],
-						hashContexts.mdContext.digest[4],
-						hashContexts.mdContext.digest[5],
-						hashContexts.mdContext.digest[6],
-						hashContexts.mdContext.digest[7],
-						hashContexts.mdContext.digest[8],
-						hashContexts.mdContext.digest[9],
-						hashContexts.mdContext.digest[10],
-						hashContexts.mdContext.digest[11],
-						hashContexts.mdContext.digest[12],
-						hashContexts.mdContext.digest[13],
-						hashContexts.mdContext.digest[14],
-						hashContexts.mdContext.digest[15]);
-#else
-			snprintf(chHashBuff, 1024,
-				  "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-				  hashContexts.mdContext.digest[0],
-				  hashContexts.mdContext.digest[1],
-				  hashContexts.mdContext.digest[2],
-				  hashContexts.mdContext.digest[3],
-				  hashContexts.mdContext.digest[4],
-				  hashContexts.mdContext.digest[5],
-				  hashContexts.mdContext.digest[6],
-				  hashContexts.mdContext.digest[7],
-				  hashContexts.mdContext.digest[8],
-				  hashContexts.mdContext.digest[9],
-				  hashContexts.mdContext.digest[10],
-				  hashContexts.mdContext.digest[11],
-				  hashContexts.mdContext.digest[12],
-				  hashContexts.mdContext.digest[13],
-				  hashContexts.mdContext.digest[14],
-				  hashContexts.mdContext.digest[15]);
-#endif
-			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_MD5, strtotstr(string(chHashBuff)));
-			break;
-		case RESULT_DIGEST_SHA1:
-			hashContexts.sha1.Final(); // SHA1 final
-			hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
-			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA1, strtotstr(string(strSHA1)));
-			break;
-		case RESULT_DIGEST_SHA256:
-			sha256_final(&hashContexts.sha256Ctx); // SHA256 final
-			sha256_digest(&hashContexts.sha256Ctx, &strSHA256);
-			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA256, strtotstr(strSHA256));
-			break;
-		case RESULT_DIGEST_SHA512:
-			SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx); // SHA512 final
-			strSHA512.clear();
-			for (int p = 0; p < SHA512_DIGEST_LENGTH; p++)
-			{
-				char buf[8] = { 0 };
-#if defined (_WIN32)
-				sprintf_s(buf, 8, "%02X", hashContexts.digestSHA512[p]);
-#else
-				snprintf(buf, 8, "%02X", hashContexts.digestSHA512[p]);
-#endif
-				strSHA512.append(std::string(buf));
-			}
-			SetFinalizedDigestValue(digestBundle, RESULT_DIGEST_SHA512, strtotstr(strSHA512));
-			break;
-		}
-
-		return true;
-	});
-}
-
-static void FinishFileProcessing(HashEngineObserver *observer);
-
-static void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled, bool uppercase,
-	FileExecutionState& executionState)
-{
-	observer->onFileCalculated();
-
-	FinalizeDigestStrings(*thrdData, executionState.hashContexts, executionState.digestBundle);
-	UpdateWholeProgressAfterFile(observer, thrdData, isSizeCaled, fileIndex);
-
-	executionState.fileAttemptState.osFile->close();
-	//Calculating ends
-
-	PopulateDigestResult(*thrdData, result, executionState.digestBundle);
-	if (HasAnyResultDigests(result))
-	{
-		EmitHashResult(observer, result, uppercase);
-	}
-}
-
-static void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
-	FileExecutionState& executionState)
-{
-	if (executionState.fileAttemptState.readFailed)
-	{
-		executionState.fileAttemptState.osFile->close();
-		EmitReadFileError(observer, result);
-	}
-	else
-	{
-		CompleteSuccessfulFileHashing(observer, thrdData, result, fileIndex, isSizeCaled, GetThreadDataUppercase(*thrdData), executionState);
-	}
-
-	FinishFileProcessing(observer);
-}
-
-static void EmitMetaResult(HashEngineObserver *observer, ResultData& result)
-{
-	SetResultState(result, RESULT_META);
-	observer->onFileMetaReady(result);
-}
-
-static void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase)
-{
-	SetResultState(result, RESULT_ALL);
-	observer->onFileHashReady(result, uppercase);
-}
-
-static void EmitErrorResult(HashEngineObserver *observer, ResultData& result)
-{
-	SetResultState(result, RESULT_ERROR);
-	observer->onFileFailed(result);
-}
-
-static void EmitErrorMessageResult(HashEngineObserver *observer, ResultData& result, const tstring& errorText)
-{
-	SetResultError(result, errorText);
-	EmitErrorResult(observer, result);
-}
-
-static void EmitOpenFileError(HashEngineObserver *observer, ResultData& result, const TCHAR *errorText)
-{
-	EmitErrorMessageResult(observer, result, tstring(errorText));
-}
-
-static void EmitReadFileError(HashEngineObserver *observer, ResultData& result)
-{
-	EmitErrorMessageResult(observer, result, strtotstr(string("Failed to read file while hashing.")));
-}
-
-static void FinishFileProcessing(HashEngineObserver *observer)
-{
-	observer->onFileFinished();
-}
-
-static void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
-	FileExecutionState& executionState)
-{
-	if (executionState.fileAttemptState.isFileOpened)
-	{
-		CompleteOpenedFileAttempt(observer, thrdData, result, fileIndex, isSizeCaled, executionState);
-	}
-	else
-	{
-		EmitOpenFileError(observer, result, executionState.fileAttemptState.openErrorText);
-		FinishFileProcessing(observer);
 	}
 }
 
@@ -573,8 +154,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 	condition_variable cvFile;
 	condition_variable cvCalc;
 
-	// create hashWorker thread
-	future<void> taskHash = threadPool->enqueue([&] // capture by ref
+	future<void> taskHash = threadPool->enqueue([&]
 	{
 		while (true)
 		{
@@ -584,7 +164,6 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 				unique_lock<mutex> lock(mtxQueue);
 				cvCalc.wait(lock, [&]
 				{
-					// not to wait
 					return (!queueDataBuffer.empty() || isFileFinished || ShouldStopThreadData(*thrdData));
 				});
 
@@ -593,7 +172,6 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 
 				if (!queueDataBuffer.empty())
 				{
-					// pop one
 					ptrDataBufCalc = std::move(queueDataBuffer.front());
 					queueDataBuffer.pop();
 				}
@@ -604,9 +182,8 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 				break;
 
 			if (!ptrDataBufCalc)
-				continue; // no data
+				continue;
 
-			// multi threads
 			bool isSha512Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512);
 			bool isSha256Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256);
 			bool isSha1Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1);
@@ -650,11 +227,9 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 				taskMD5Update.wait();
 			}
 
-			// update progress
 			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, ptrDataBufCalc->datalen,
 				observer, &executionState->progressState);
 		}
-		// calc exit
 		cvFile.notify_all();
 	});
 #else
@@ -686,7 +261,6 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 			unique_lock<mutex> lock(mtxQueue);
 			cvFile.wait(lock, [&]
 			{
-				// limit to 4 DataBuffer
 				return (queueDataBuffer.size() < 4 || ShouldStopThreadData(*thrdData));
 			});
 			queueDataBuffer.push(std::move(ptrDataBufFile));
@@ -706,25 +280,23 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 
 		if (!executionState->fileAttemptState.readFailed)
 		{
-			// single thread
 			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5))
 			{
-				MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen); // MD5 update
+				MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen);
 			}
 			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1))
 			{
-				SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen); // SHA1 update
+				SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen);
 			}
 			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256))
 			{
-				SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen); // SHA256 update
+				SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen);
 			}
 			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512))
 			{
-				SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen); // SHA512 update
+				SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen);
 			}
 
-			// update progress
 			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, databuf.datalen,
 				observer, &executionState->progressState);
 		}
@@ -749,17 +321,6 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 	return false;
 }
 
-static ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashEngineObserver *observer, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
-{
-	YieldHashThread();
-	ResetFileProgressState(&executionState->progressState);
-
-	ResultData& result = BeginFileResult(thrdData, observer, path);
-	*resultPath = GetResultPath(result).c_str();
-	return result;
-}
-
-// working thread
 int WINAPI HashThreadFunc(void *param)
 {
 	ThreadData *thrdData = (ThreadData *)param;
@@ -772,7 +333,6 @@ int WINAPI HashThreadFunc(void *param)
 	ULLongVector fSizes(GetThreadDataFileCount(*thrdData));
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-	// Create thread pool with 5 threads
 	ThreadPool threadPool(5);
 #endif
 
@@ -785,7 +345,6 @@ int WINAPI HashThreadFunc(void *param)
 
 	FileExecutionState executionState = { 0 };
 
-	// loop all files
 	bool completedAllFiles = VisitThreadDataInputFiles(*thrdData, [&](uint32_t fileIndex, const tstring& fullPath)
 	{
 		if (ShouldStopThreadData(*thrdData))
@@ -793,15 +352,13 @@ int WINAPI HashThreadFunc(void *param)
 			return false;
 		}
 
-		// Declaration for calculator
+		YieldHashThread();
+
 		const TCHAR *path = fullPath.c_str();
-		// Declaration for calculator
 
 		ResultData& result = BeginFileHashAttempt(thrdData, observer, fullPath, &executionState, &path);
 
-		//Calculating begins
 #if defined (_WIN32)
-		// CFileException fExc;
 		TCHAR fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 #else
 		char fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
@@ -820,7 +377,7 @@ int WINAPI HashThreadFunc(void *param)
 			{
 				return false;
 			}
-		} // end if(File.Open(path, CFile::modeRead|CFile::shareDenyWrite, &ex))
+		}
 
 		CompleteFileAttempt(observer, thrdData, result, fileIndex, isSizeCaled, executionState);
 		return true;

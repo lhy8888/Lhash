@@ -165,7 +165,7 @@ internal static partial class Program
         {
             string winApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
             string winUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
-            string hashEngine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
+            string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(winApi, "return -1;", "OsFileWinApi.cpp no longer returns -1 on ReadFile/WriteFile failure.");
             AssertContains(winUwp, "return -1;", "OsFileWinUwp.cpp no longer returns -1 on ReadFile/WriteFile failure.");
@@ -456,6 +456,16 @@ internal static partial class Program
                (bytes[offset + 1] << 16) |
                (bytes[offset + 2] << 8) |
                bytes[offset + 3];
+    }
+
+    private static string ReadHashEngineImplementation(string repoRoot)
+    {
+        return string.Join(
+            "\r\n",
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"));
     }
 }
 
