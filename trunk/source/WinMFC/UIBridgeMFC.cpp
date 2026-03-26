@@ -9,6 +9,8 @@
 
 #include "Common/strhelper.h"
 #include "Common/Global.h"
+#include "Common/ResultDataAccess.h"
+#include "Common/ResultDigestAccess.h"
 #include "Common/Utils.h"
 #include "WindowsUtils.h"
 #include "WinCommon/WindowsStrings.h"
@@ -39,94 +41,60 @@ void UIBridgeMFC::unlockData()
 
 void UIBridgeMFC::preparingCalc()
 {
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_WORKING, 0);
-	
-	lockData();
+	PostThreadInfoMessage(WP_WORKING);
+
+	UpdateMainHyperEdit([&](CHyperEditHash *hyperEdit)
 	{
-		m_tstrNoPreparing = m_mainHyperEdit->GetTextBuffer().GetBuffer();
-		// Save link offsets
-		m_mainHyperEdit->CopyLinkOffsets(m_offsetsNoPreparing);
-		if (m_tstrNoPreparing == tstring(GetStringByKey(MAINDLG_INITINFO)))
+		m_preparingSnapshot = CaptureHyperEditSnapshot(hyperEdit);
+		if (m_preparingSnapshot.text == tstring(GetStringByKey(MAINDLG_INITINFO)))
 		{
 			// Initial state
-			m_tstrNoPreparing = _T("");
-			m_offsetsNoPreparing.clear();
-			m_mainHyperEdit->ClearTextBuffer();
+			m_preparingSnapshot.text = _T("");
+			m_preparingSnapshot.linkOffsets.clear();
+			hyperEdit->ClearTextBuffer();
 		}
 
-		m_mainHyperEdit->AppendTextToBuffer(GetStringByKey(MAINDLG_WAITING_START));
-		m_mainHyperEdit->AppendTextToBuffer(_T("\r\n"));
-	}
-	unlockData();
-	
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);
+		AppendTextLineToHyperEdit(GetStringByKey(MAINDLG_WAITING_START), hyperEdit);
+	}, true);
 }
 
 void UIBridgeMFC::removePreparingCalc()
 {
-	lockData();
+	UpdateMainHyperEdit([&](CHyperEditHash *hyperEdit)
 	{
 		// Restore and remove MAINDLG_WAITING_START
-		m_mainHyperEdit->ClearTextBuffer();
-		m_mainHyperEdit->AppendTextToBuffer(m_tstrNoPreparing.c_str());
-		// Reset link offsets
-		m_mainHyperEdit->SetLinkOffsets(m_offsetsNoPreparing);
-	}
-	unlockData();
+		RestoreHyperEditSnapshot(m_preparingSnapshot, hyperEdit);
+	});
 }
 
 void UIBridgeMFC::calcStop()
 {
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_STOPPED, 0);
+	PostThreadInfoMessage(WP_STOPPED);
 }
 
 void UIBridgeMFC::calcFinish()
 {
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_FINISHED, 0);
+	PostThreadInfoMessage(WP_FINISHED);
 }
 
 void UIBridgeMFC::showFileName(const ResultData& result)
 {
-	lockData();
-	{
-		AppendFileNameToHyperEdit(result, m_mainHyperEdit);
-	}
-	unlockData();
-
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
 }
 
 void UIBridgeMFC::showFileMeta(const ResultData& result)
 {
-	lockData();
-	{
-		AppendFileMetaToHyperEdit(result, m_mainHyperEdit);
-	}
-	unlockData();
-	
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
 }
 
 void UIBridgeMFC::showFileHash(const ResultData& result, bool uppercase)
 {
-	lockData();
-	{
-		AppendFileHashToHyperEdit(result, uppercase, m_mainHyperEdit);
-	}
-	unlockData();
-
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);
 }
 
 void UIBridgeMFC::showFileErr(const ResultData& result)
 {
-	lockData();
-	{
-		AppendFileErrToHyperEdit(result, m_mainHyperEdit);
-	}
-	unlockData();
-
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
 }
 
 int UIBridgeMFC::getProgMax()
@@ -141,7 +109,7 @@ void UIBridgeMFC::updateProg(int value)
 
 void UIBridgeMFC::updateProgWhole(int value)
 {
-	::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG_WHOLE, value);
+	PostThreadInfoMessage(WP_PROG_WHOLE, value);
 }
 
 void UIBridgeMFC::fileCalcFinish()
@@ -152,125 +120,201 @@ void UIBridgeMFC::fileFinish()
 {
 }
 
+void UIBridgeMFC::AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit)
+{
+	hyerEdit->AppendTextToBuffer(_T("\r\n"));
+}
+
+void UIBridgeMFC::AppendTextLineToHyperEdit(const tstring& text,
+											CHyperEditHash *hyerEdit)
+{
+	hyerEdit->AppendTextToBuffer(text.c_str());
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
+void UIBridgeMFC::AppendLabelValueToHyperEdit(const TCHAR *label,
+												const tstring& value,
+												CHyperEditHash *hyerEdit)
+{
+	hyerEdit->AppendTextToBuffer(label);
+	hyerEdit->AppendTextToBuffer(_T(" "));
+	hyerEdit->AppendTextToBuffer(value.c_str());
+}
+
+void UIBridgeMFC::AppendLabelValueLineToHyperEdit(const TCHAR *label,
+													const tstring& value,
+													CHyperEditHash *hyerEdit)
+{
+	AppendLabelValueToHyperEdit(label, value, hyerEdit);
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
+void UIBridgeMFC::AppendLabelLinkLineToHyperEdit(const TCHAR *label,
+												const tstring& value,
+												CHyperEditHash *hyerEdit)
+{
+	hyerEdit->AppendTextToBuffer(label);
+	hyerEdit->AppendTextToBuffer(_T(": "));
+	hyerEdit->AppendLinkToBuffer(value.c_str());
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
+UIBridgeMFC::MainHyperEditSnapshot UIBridgeMFC::CaptureHyperEditSnapshot(CHyperEditHash *hyperEdit)
+{
+	MainHyperEditSnapshot snapshot;
+	snapshot.text = hyperEdit->GetTextBuffer().GetBuffer();
+	hyperEdit->CopyLinkOffsets(snapshot.linkOffsets);
+	return snapshot;
+}
+
+void UIBridgeMFC::RestoreHyperEditSnapshot(const MainHyperEditSnapshot& snapshot,
+											CHyperEditHash *hyperEdit)
+{
+	hyperEdit->ClearTextBuffer();
+	hyperEdit->AppendTextToBuffer(snapshot.text.c_str());
+	hyperEdit->SetLinkOffsets(snapshot.linkOffsets);
+}
+
+UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetResultMetaLineDisplayInfo(const ResultData& result,
+																				ResultMetaLineType metaLine)
+{
+	ResultMetaLineDisplayInfo metaLineDisplayInfo;
+
+	DispatchResultMetaLineByType(metaLine, [&]()
+	{
+		ResultSizeDisplayInfo resultSizeDisplayInfo = GetResultSizeDisplayInfo(result);
+
+		metaLineDisplayInfo.label = GetStringByKey(FILESIZE_STRING);
+		metaLineDisplayInfo.value = resultSizeDisplayInfo.sizeText;
+		metaLineDisplayInfo.suffix = _T(" ");
+		metaLineDisplayInfo.suffix += GetStringByKey(BYTE_STRING);
+		if (resultSizeDisplayInfo.shortSizeText.length() > 0)
+		{
+			metaLineDisplayInfo.suffix += _T(" (");
+			metaLineDisplayInfo.suffix += resultSizeDisplayInfo.shortSizeText;
+			metaLineDisplayInfo.suffix += _T(")");
+		}
+	}, [&]()
+	{
+		metaLineDisplayInfo.label = GetStringByKey(MODIFYTIME_STRING);
+		metaLineDisplayInfo.value = GetResultModifiedDate(result);
+	}, [&]()
+	{
+		metaLineDisplayInfo.label = GetStringByKey(VERSION_STRING);
+		metaLineDisplayInfo.value = GetResultVersion(result);
+	});
+
+	return metaLineDisplayInfo;
+}
+
+void UIBridgeMFC::AppendResultMetaLineDisplayInfoToHyperEdit(const ResultMetaLineDisplayInfo& metaLineDisplayInfo,
+															CHyperEditHash *hyerEdit)
+{
+	AppendLabelValueToHyperEdit(metaLineDisplayInfo.label.c_str(),
+								metaLineDisplayInfo.value,
+								hyerEdit);
+	hyerEdit->AppendTextToBuffer(metaLineDisplayInfo.suffix.c_str());
+}
+
+void UIBridgeMFC::AppendResultDigestDisplayInfoToHyperEdit(const ResultDigestDisplayInfo& digestDisplayInfo,
+															CHyperEditHash *hyerEdit)
+{
+	AppendLabelLinkLineToHyperEdit(digestDisplayInfo.label.c_str(),
+									digestDisplayInfo.value,
+									hyerEdit);
+}
+
+void UIBridgeMFC::AppendResultMetaLineToHyperEdit(const ResultData& result,
+												ResultMetaLineType metaLine,
+												CHyperEditHash *hyerEdit)
+{
+	AppendResultMetaLineDisplayInfoToHyperEdit(GetResultMetaLineDisplayInfo(result, metaLine), hyerEdit);
+}
+
 void UIBridgeMFC::AppendFileNameToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit)
 {
-	hyerEdit->AppendTextToBuffer(GetStringByKey(FILENAME_STRING));
-	hyerEdit->AppendTextToBuffer(_T(" "));
-	hyerEdit->AppendTextToBuffer(result.tstrPath.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\n"));
+	AppendLabelValueLineToHyperEdit(GetStringByKey(FILENAME_STRING),
+									GetResultPath(result),
+									hyerEdit);
 }
 
 void UIBridgeMFC::AppendFileMetaToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit)
 {
-	char chSizeBuff[1024] = {0};
-	sprintf_s(chSizeBuff, 1024, "%I64u", result.ulSize);
-	tstring tstrFileSize = strtotstr(string(chSizeBuff));
-	tstring tstrShortSize = strtotstr(Utils::ConvertSizeToShortSizeStr(result.ulSize));
-
-	hyerEdit->AppendTextToBuffer(GetStringByKey(FILESIZE_STRING));
-	hyerEdit->AppendTextToBuffer(_T(" "));
-	hyerEdit->AppendTextToBuffer(tstrFileSize.c_str());
-	hyerEdit->AppendTextToBuffer(_T(" "));
-	hyerEdit->AppendTextToBuffer(GetStringByKey(BYTE_STRING));
-	if (tstrShortSize.length() > 0)
+	bool appendLineBreak = false;
+	VisitRenderableResultMetaLineDisplayInfos(result, [&](ResultMetaLineType metaLine, const ResultMetaLineDisplayInfo& metaLineDisplayInfo)
 	{
-		hyerEdit->AppendTextToBuffer(_T(" ("));
-		hyerEdit->AppendTextToBuffer(tstrShortSize.c_str());
-		hyerEdit->AppendTextToBuffer(_T(")"));
-	}
-	hyerEdit->AppendTextToBuffer(_T("\r\n"));
-	hyerEdit->AppendTextToBuffer(GetStringByKey(MODIFYTIME_STRING));
-	hyerEdit->AppendTextToBuffer(_T(" "));
-	hyerEdit->AppendTextToBuffer(result.tstrMDate.c_str());
+		(void)metaLine;
+		if (appendLineBreak)
+		{
+			AppendLineBreakToHyperEdit(hyerEdit);
+		}
 
-	if (result.tstrVersion != _T(""))
-	{
-		hyerEdit->AppendTextToBuffer(_T("\r\n"));
-		hyerEdit->AppendTextToBuffer(GetStringByKey(VERSION_STRING));
-		hyerEdit->AppendTextToBuffer(_T(" "));
-		hyerEdit->AppendTextToBuffer(result.tstrVersion.c_str());
-	}
-
-	hyerEdit->AppendTextToBuffer(_T("\r\n"));
-
+		AppendResultMetaLineDisplayInfoToHyperEdit(metaLineDisplayInfo, hyerEdit);
+		appendLineBreak = true;
+		return true;
+	});
+	AppendLineBreakToHyperEdit(hyerEdit);
 }
 
 void UIBridgeMFC::AppendFileHashToHyperEdit(const ResultData& result,
 											bool uppercase,
 											CHyperEditHash *hyerEdit)
 {
-	tstring tstrFileMD5, tstrFileSHA1, tstrFileSHA256, tstrFileSHA512;
-
-	if (uppercase)
+	VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)
 	{
-		tstrFileMD5 = strtotstr(str_upper(tstrtostr(result.tstrMD5)));
-		tstrFileSHA1 = strtotstr(str_upper(tstrtostr(result.tstrSHA1)));
-		tstrFileSHA256 = strtotstr(str_upper(tstrtostr(result.tstrSHA256)));
-		tstrFileSHA512 = strtotstr(str_upper(tstrtostr(result.tstrSHA512)));
-	}
-	else
-	{
-		tstrFileMD5 = strtotstr(str_lower(tstrtostr(result.tstrMD5)));
-		tstrFileSHA1 = strtotstr(str_lower(tstrtostr(result.tstrSHA1)));
-		tstrFileSHA256 = strtotstr(str_lower(tstrtostr(result.tstrSHA256)));
-		tstrFileSHA512 = strtotstr(str_lower(tstrtostr(result.tstrSHA512)));
-	}
-
-	hyerEdit->AppendTextToBuffer(_T("MD5: "));
-	hyerEdit->AppendLinkToBuffer(tstrFileMD5.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\nSHA1: "));
-	hyerEdit->AppendLinkToBuffer(tstrFileSHA1.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\nSHA256: "));
-	hyerEdit->AppendLinkToBuffer(tstrFileSHA256.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\nSHA512: "));
-	hyerEdit->AppendLinkToBuffer(tstrFileSHA512.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\n\r\n"));
+		(void)index;
+		(void)digestMetadata;
+		AppendResultDigestDisplayInfoToHyperEdit(digestDisplayInfo, hyerEdit);
+		return true;
+	});
+	AppendLineBreakToHyperEdit(hyerEdit);
 }
 
 void UIBridgeMFC::AppendFileErrToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit)
 {
-	hyerEdit->AppendTextToBuffer(result.tstrError.c_str());
-	hyerEdit->AppendTextToBuffer(_T("\r\n\r\n"));
+	AppendTextLineToHyperEdit(GetResultError(result), hyerEdit);
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
+void UIBridgeMFC::AppendResultRenderSectionToHyperEdit(const ResultData& result,
+													ResultRenderSectionType renderSection,
+													bool uppercase,
+													CHyperEditHash *hyerEdit)
+{
+	DispatchResultRenderSectionByType(renderSection, [&]()
+	{
+		AppendFileNameToHyperEdit(result, hyerEdit);
+	}, [&]()
+	{
+		AppendFileMetaToHyperEdit(result, hyerEdit);
+	}, [&]()
+	{
+		AppendFileHashToHyperEdit(result, uppercase, hyerEdit);
+	}, [&]()
+	{
+		AppendFileErrToHyperEdit(result, hyerEdit);
+	});
 }
 
 void UIBridgeMFC::AppendResultToHyperEdit(const ResultData& result,
 											bool uppercase,
 											CHyperEditHash *hyerEdit)
 {
-	if (result.enumState == RESULT_NONE)
+	ResultState resultState = GetResultState(result);
+	if (IsResultStateNone(resultState))
 		return;
 
-	if (result.enumState == RESULT_ALL ||
-		result.enumState == RESULT_META ||
-		result.enumState == RESULT_ERROR ||
-		result.enumState == RESULT_PATH) 
+	VisitRenderableResultSections(resultState, [&](ResultRenderSectionType renderSection)
 	{
-		AppendFileNameToHyperEdit(result, hyerEdit);
-	}
+		AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyerEdit);
+		return true;
+	});
 
-	if (result.enumState == RESULT_ALL ||
-		result.enumState == RESULT_META) 
+	if (ShouldAppendResultTrailingLineBreak(resultState))
 	{
-		AppendFileMetaToHyperEdit(result, hyerEdit);
-	}
-
-	if (result.enumState == RESULT_ALL) 
-	{
-		AppendFileHashToHyperEdit(result, uppercase, hyerEdit);
-	}
-
-	if (result.enumState == RESULT_ERROR) 
-	{
-		AppendFileErrToHyperEdit(result, hyerEdit);
-	}
-
-	if (result.enumState != RESULT_ALL &&
-		result.enumState != RESULT_ERROR) 
-	{
-		tstring tstrAppend = _T("\r\n");
-		hyerEdit->AppendTextToBuffer(tstrAppend.c_str());
+		AppendLineBreakToHyperEdit(hyerEdit);
 	}
 }

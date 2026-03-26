@@ -60,31 +60,7 @@
     <ClCompile Include="source\WinMFC\WindowsUtils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="source\Algorithms\MD5.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Algorithms\SHA1.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Algorithms\sha256.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="source\OsUtils\OsThreadWinApi.cpp">
-      <Filter>OsUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Common\HashEngine.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Common\strhelper.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="source\Common\Utils.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Algorithms\sha512.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="source\WinCommon\WindowsComm.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="source\WinCommon\WindowsStrings.cpp">
@@ -92,9 +68,6 @@
     </ClCompile>
     <ClCompile Include="source\WinCommon\WindowsStringsInternal.cpp">
       <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="source\OsUtils\OsFileWinApi.cpp">
-      <Filter>OsUtils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -2,8 +2,9 @@
 
 #include "UIBridgeUwp.h"
 #include "Common/Global.h"
+#include "Common/ResultDataAccess.h"
+#include "Common/ResultDigestAccess.h"
 #include "CxHelper.h"
-
 using namespace Platform;
 using namespace FilesHashUwp;
 using namespace sunjwbase;
@@ -27,53 +28,102 @@ void UIBridgeUwp::unlockData()
 	// No need here.
 }
 
+String^ UIBridgeUwp::ConvertManagedResultText(const TCHAR* resultText)
+{
+	return ConvertToPlatStr(resultText);
+}
+
+void UIBridgeUwp::DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase)
+{
+	DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)
+	{
+		return ConvertManagedResultText(resultText);
+	}, [&](ResultDataNet resultDataNet)
+	{
+		m_uiBridgeDelegate->ShowFileName(resultDataNet);
+	}, [&](ResultDataNet resultDataNet)
+	{
+		m_uiBridgeDelegate->ShowFileMeta(resultDataNet);
+	}, [&](ResultDataNet resultDataNet, bool hashUppercase)
+	{
+		m_uiBridgeDelegate->ShowFileHash(resultDataNet, hashUppercase);
+	}, [&](ResultDataNet resultDataNet)
+	{
+		m_uiBridgeDelegate->ShowFileErr(resultDataNet);
+	});
+}
+
+void UIBridgeUwp::DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value)
+{
+	DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()
+	{
+		m_uiBridgeDelegate->PreparingCalc();
+	}, [&]()
+	{
+		m_uiBridgeDelegate->RemovePreparingCalc();
+	}, [&]()
+	{
+		m_uiBridgeDelegate->CalcStop();
+	}, [&]()
+	{
+		m_uiBridgeDelegate->CalcFinish();
+	}, [&](int progressValue)
+	{
+		m_uiBridgeDelegate->UpdateProgWhole(progressValue);
+	});
+}
+
+int UIBridgeUwp::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)
+{
+	return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()
+	{
+		return m_uiBridgeDelegate->GetProgMax();
+	});
+}
+
 void UIBridgeUwp::preparingCalc()
 {
-	m_uiBridgeDelegate->PreparingCalc();
+	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);
 }
 
 void UIBridgeUwp::removePreparingCalc()
 {
-	m_uiBridgeDelegate->RemovePreparingCalc();
+	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);
 }
 
 void UIBridgeUwp::calcStop()
 {
-	m_uiBridgeDelegate->CalcStop();
+	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);
 }
 
 void UIBridgeUwp::calcFinish()
 {
-	m_uiBridgeDelegate->CalcFinish();
+	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
 }
 
 void UIBridgeUwp::showFileName(const ResultData& result)
 {
-	ResultDataNet resultDataNet = ConvertResultDataToNet(result);
-	m_uiBridgeDelegate->ShowFileName(resultDataNet);
+	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);
 }
 
 void UIBridgeUwp::showFileMeta(const ResultData& result)
 {
-	ResultDataNet resultDataNet = ConvertResultDataToNet(result);
-	m_uiBridgeDelegate->ShowFileMeta(resultDataNet);
+	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);
 }
 
 void UIBridgeUwp::showFileHash(const ResultData& result, bool uppercase)
 {
-	ResultDataNet resultDataNet = ConvertResultDataToNet(result);
-	m_uiBridgeDelegate->ShowFileHash(resultDataNet, uppercase);
+	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_HASH, uppercase);
 }
 
 void UIBridgeUwp::showFileErr(const ResultData& result)
 {
-	ResultDataNet resultDataNet = ConvertResultDataToNet(result);
-	m_uiBridgeDelegate->ShowFileErr(resultDataNet);
+	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_ERROR);
 }
 
 int UIBridgeUwp::getProgMax()
 {
-	return m_uiBridgeDelegate->GetProgMax();
+	return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);
 }
 
 void UIBridgeUwp::updateProg(int value)
@@ -82,7 +132,7 @@ void UIBridgeUwp::updateProg(int value)
 
 void UIBridgeUwp::updateProgWhole(int value)
 {
-	m_uiBridgeDelegate->UpdateProgWhole(value);
+	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);
 }
 
 void UIBridgeUwp::fileCalcFinish()
@@ -91,38 +141,4 @@ void UIBridgeUwp::fileCalcFinish()
 
 void UIBridgeUwp::fileFinish()
 {
-}
-
-ResultDataNet UIBridgeUwp::ConvertResultDataToNet(const ResultData& result)
-{
-	ResultDataNet resultDataNet;
-	switch (result.enumState)
-	{
-	case ResultState::RESULT_NONE:
-		resultDataNet.EnumState = ResultStateNet::ResultNone;
-		break;
-	case ResultState::RESULT_PATH:
-		resultDataNet.EnumState = ResultStateNet::ResultPath;
-		break;
-	case ResultState::RESULT_META:
-		resultDataNet.EnumState = ResultStateNet::ResultMeta;
-		break;
-	case ResultState::RESULT_ALL:
-		resultDataNet.EnumState = ResultStateNet::ResultAll;
-		break;
-	case ResultState::RESULT_ERROR:
-		resultDataNet.EnumState = ResultStateNet::ResultError;
-		break;
-	}
-	resultDataNet.Path = ConvertToPlatStr(result.tstrPath.c_str());
-	resultDataNet.Size = result.ulSize;
-	resultDataNet.ModifiedDate = ConvertToPlatStr(result.tstrMDate.c_str());
-	resultDataNet.Version = ConvertToPlatStr(result.tstrVersion.c_str());
-	resultDataNet.MD5 = ConvertToPlatStr(result.tstrMD5.c_str());
-	resultDataNet.SHA1 = ConvertToPlatStr(result.tstrSHA1.c_str());
-	resultDataNet.SHA256 = ConvertToPlatStr(result.tstrSHA256.c_str());
-	resultDataNet.SHA512 = ConvertToPlatStr(result.tstrSHA512.c_str());
-	resultDataNet.Error = ConvertToPlatStr(result.tstrError.c_str());
-
-	return resultDataNet;
 }

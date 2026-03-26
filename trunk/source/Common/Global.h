@@ -32,13 +32,15 @@
 
 #include "Common/strhelper.h"
 
-class UIBridgeBase;
+class HashEngineObserver;
 
 struct ResultData;
 
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 typedef std::list<ResultData> ResultList;
+
+enum { RESULT_DIGEST_STORAGE_COUNT = 4 };
 
 #define MAX_FILES_NUM 8192
 
@@ -51,34 +53,59 @@ enum ResultState
 	RESULT_ERROR
 };
 
-struct ResultData // 计算结果
+struct ResultDigestStorage
 {
-	ResultState enumState; // State
-	sunjwbase::tstring tstrPath; // 路径
-	uint64_t ulSize; // 大小
-	sunjwbase::tstring tstrMDate; // 修改日期
-	sunjwbase::tstring tstrVersion; // 版本
-	sunjwbase::tstring tstrMD5; // MD5
-	sunjwbase::tstring tstrSHA1; // SHA1
-	sunjwbase::tstring tstrSHA256; // SHA256
-	sunjwbase::tstring tstrSHA512; // SHA512
-	sunjwbase::tstring tstrError; // Error string
+	sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT]; // Internal digest storage
 };
 
-struct ThreadData // 传向计算线程的信息
+struct ResultDigestCompatibilityFields
 {
-	UIBridgeBase *uiBridge;
+	sunjwbase::tstring md5; // MD5
+	sunjwbase::tstring sha1; // SHA1
+	sunjwbase::tstring sha256; // SHA256
+	sunjwbase::tstring sha512; // SHA512
+};
 
-	bool threadWorking; // 线程是否在工作
-	bool stop; // 主界面要求停止计算
+struct ResultDigestState
+{
+	ResultDigestStorage storage;
+	ResultDigestCompatibilityFields compatibilityFields;
+};
+struct ResultCoreState
+{
+	ResultState state; // State
+	sunjwbase::tstring path; // 路径
+	uint64_t size; // 大小
+	sunjwbase::tstring modifiedDate; // 修改日期
+	sunjwbase::tstring version; // 版本
+	sunjwbase::tstring error; // Error string
+};
 
-	bool uppercase; // 是否大写
-	uint64_t totalSize; // 所有文件大小
+struct ResultData // 计算结果
+{
+	ResultCoreState coreState;
+	ResultDigestState digestState;
+};
+struct ThreadDataInputState
+{
+	uint32_t fileCount; // File count
+	TStrVector inputFiles; // Input file paths
+};
 
-	uint32_t nFiles; // 文件个数
-	TStrVector fullPaths; // 待计算的所有文件路径
+struct ThreadDataExecutionState
+{
+	bool working; // Working flag
+	bool stopRequested; // Stop request flag
+	bool uppercaseDigest; // Uppercase digest output
+	uint64_t countedSize; // Counted total size
+	ResultList results;
+};
 
-	ResultList resultList;
+struct ThreadData // Thread execution context
+{
+	HashEngineObserver *observer;
+	ThreadDataInputState inputState;
+	ThreadDataExecutionState executionState;
 };
 
 #endif

@@ -10,14 +10,14 @@
 #define _UI_BRIDGE_MAC_SWIFT_
 
 #include "OsUtils/OsThread.h"
-#include "Common/UIBridgeBase.h"
+#include "Common/HashEngineBridge.h"
 
 #import "MacUtils.h"
 
 @class MainViewController;
 @class ResultDataSwift;
 
-class UIBridgeMacSwift: public UIBridgeBase
+class UIBridgeMacSwift: public HashEngineBridge
 {
 public:
     UIBridgeMacSwift(MainViewController *mainViewController);

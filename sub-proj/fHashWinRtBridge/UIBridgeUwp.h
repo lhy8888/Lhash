@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Common/UIBridgeBase.h"
+#include "Common/HashEngineBridge.h"
 #include "Common/Global.h"
+#include "Common/ManagedBridgeDispatch.h"
 
 #include "UIBridgeDelegate.h"
 #include "ResultDataNet.h"
 
 namespace FilesHashUwp
 {
-	class UIBridgeUwp : public UIBridgeBase
+	class UIBridgeUwp : public HashEngineBridge
 	{
 	public:
 		UIBridgeUwp(UIBridgeDelegate^ uiBridgeDelegate);
@@ -29,14 +30,17 @@ namespace FilesHashUwp
 
 		virtual int getProgMax();
 		virtual void updateProg(int value);
-		virtual void updateProgWhole(int value);
+	virtual void updateProgWhole(int value);
 
-		virtual void fileCalcFinish();
-		virtual void fileFinish();
-
-		static ResultDataNet ConvertResultDataToNet(const ResultData& result);
+	virtual void fileCalcFinish();
+	virtual void fileFinish();
 
 	private:
+		static Platform::String^ ConvertManagedResultText(const TCHAR* resultText);
+		void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
+		void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);
+		int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);
+
 		UIBridgeDelegate^ m_uiBridgeDelegate;
 	};
 }

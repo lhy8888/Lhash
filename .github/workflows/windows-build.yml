@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - codex/security-hardening
+      - future-winui-was2
+      - codex/**
     tags:
       - v*
   pull_request:
@@ -33,6 +34,12 @@ jobs:
 
       - name: Run security regression harness
         run: dotnet security-tests/SecurityRegression/bin/Release/net10.0/SecurityRegression.dll
+
+      - name: Build refactor baseline harness
+        run: dotnet build refactor-tests/RefactorBaseline/RefactorBaseline.csproj --configuration Release
+
+      - name: Run refactor baseline harness
+        run: dotnet refactor-tests/RefactorBaseline/bin/Release/net10.0/RefactorBaseline.dll
 
   build-legacy-x64:
     needs: security-regression
@@ -64,7 +71,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
           $logPath = Join-Path $artifactRoot 'build-legacy-x64.log'
 
-          & msbuild trunk/fileshash.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild trunk/fileshash15.sln /m /t:fHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -149,9 +156,98 @@ jobs:
             artifacts/LHash-legacy-x64-*.zip
           if-no-files-found: warn
 
+  build-winui-bridge-x64:
+    needs: security-regression
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build WinUI native and CLR bridge
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
+          $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
+
+          & msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $nativeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashWUINative. See artifacts/build-winui-native-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $bridgeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashClrBridge. See artifacts/build-winui-bridge-x64.log for details."
+          }
+
+      - name: Upload WinUI bridge artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-WinUI-bridge-x64
+          path: |
+            artifacts/build-winui-native-x64.log
+            artifacts/build-winui-bridge-x64.log
+          if-no-files-found: warn
+
+  build-uwp-bridge-x64:
+    needs: security-regression
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build UWP native and WinRT bridge
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $nativeLogPath = Join-Path $artifactRoot 'build-uwp-native-x64.log'
+          $bridgeLogPath = Join-Path $artifactRoot 'build-uwp-bridge-x64.log'
+
+          & msbuild sub-proj/fHashUwpNative/fHashUwpNative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $nativeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashUwpNative. See artifacts/build-uwp-native-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashWinRtBridge/fHashWinRtBridge.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $bridgeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashWinRtBridge. See artifacts/build-uwp-bridge-x64.log for details."
+          }
+
+      - name: Upload UWP bridge artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-UWP-bridge-x64
+          path: |
+            artifacts/build-uwp-native-x64.log
+            artifacts/build-uwp-bridge-x64.log
+          if-no-files-found: warn
+
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build-legacy-x64
+    needs:
+      - build-legacy-x64
+      - build-winui-bridge-x64
+      - build-uwp-bridge-x64
     runs-on: ubuntu-latest
 
     steps:

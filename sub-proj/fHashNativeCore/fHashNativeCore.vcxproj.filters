@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="算法">
+      <UniqueIdentifier>{D30D1E8B-EF7A-4D9F-8E25-4A0D74D9D688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{4F7BEF83-6B5D-4D60-98DD-6E1E68F475D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OsUtils">
+      <UniqueIdentifier>{868815FB-B43B-41E4-8E31-7E8D83B4AC12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinCommon">
+      <UniqueIdentifier>{7F9EF8EF-F95E-470A-A9FB-9A1085699D17}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\strhelper.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\OsUtils\OsFileWinApi.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\OsUtils\OsThreadWinApi.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\WinCommon\WindowsComm.cpp">
+      <Filter>WinCommon</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\trunk\source\Algorithms\endianness.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\MD5.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\sha256.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\Global.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashEngine.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\strhelper.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\UIBridgeBase.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\OsUtils\OsFile.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\OsUtils\OsThread.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h">
+      <Filter>WinCommon</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

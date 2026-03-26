@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28307.1300
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHash", "fileshash.vcxproj", "{6644A084-A7A3-40C1-9DDD-3312944FED03}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashNativeCore", "..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "{E500D56F-3EE3-403C-A24C-034822AE3DF5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashShlExt", "..\sub-proj\fHashShlExt\fHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
 EndProject
@@ -22,6 +27,14 @@ Global
 		{6644A084-A7A3-40C1-9DDD-3312944FED03}.Release|Win32.Build.0 = Release|Win32
 		{6644A084-A7A3-40C1-9DDD-3312944FED03}.Release|x64.ActiveCfg = Release|x64
 		{6644A084-A7A3-40C1-9DDD-3312944FED03}.Release|x64.Build.0 = Release|x64
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.Build.0 = Debug|Win32
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|x64.ActiveCfg = Debug|x64
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|x64.Build.0 = Debug|x64
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|Win32.ActiveCfg = Release|Win32
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|Win32.Build.0 = Release|Win32
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.ActiveCfg = Release|x64
+		{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.Build.0 = Release|x64
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Debug|Win32.ActiveCfg = Debug|Win32
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Debug|Win32.Build.0 = Debug|Win32
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Debug|x64.ActiveCfg = Debug|x64

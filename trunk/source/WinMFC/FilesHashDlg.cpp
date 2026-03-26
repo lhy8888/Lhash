@@ -14,6 +14,9 @@
 #include "FindDlg.h"
 #include "AboutDlg.h"
 #include "Common/Global.h"
+#include "Common/ResultDataAccess.h"
+#include "Common/ResultDigestAccess.h"
+#include "Common/ThreadDataAccess.h"
 #include "Common/Utils.h"
 #include "Common/HashEngine.h"
 #include "WindowsUtils.h"
@@ -237,12 +240,9 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	m_mainMtx.lock();
 	{
-		m_thrdData.uiBridge = m_uiBridgeMFC;
-		m_thrdData.uppercase = false;
+		SetThreadDataObserver(m_thrdData, m_uiBridgeMFC);
+		ResetThreadDataForNewSession(m_thrdData);
 
-		m_thrdData.nFiles = 0;
-
-		m_thrdData.resultList.clear();
 
 		m_editMain.SetLimitText(UINT_MAX);
 		m_editMain.ClearTextBuffer();
@@ -270,18 +270,14 @@ BOOL CFilesHashDlg::OnInitDialog()
 	// 从命令行获取文件路径
 	TStrVector Paras = ParseFilesCmdLine(theApp.m_lpCmdLine);
 	ClearFilePaths();
-	for(TStrVector::iterator ite = Paras.begin(); ite != Paras.end(); ++ite)
-	{
-		m_thrdData.fullPaths.push_back(*ite);
-		++m_thrdData.nFiles;
-	}
+	ReplaceThreadDataInputFiles(m_thrdData, Paras);
 	// 从命令行获取文件路径结束
 
-	m_thrdData.threadWorking = false;
+	SetThreadDataWorking(m_thrdData, false);
 	m_progWhole.SetRange(0, 99);
 	m_chkUppercase.SetCheck(0);
 
-	if(m_thrdData.nFiles > 0)
+	if(HasThreadDataInputFiles(m_thrdData))
 		SetTimer(4, 50, NULL); // 使 DoMD5() 在 OnInitDialog() 之后执行
 
 	return TRUE;  // 除非设置了控件的焦点，否则返回 TRUE
@@ -324,28 +320,27 @@ HCURSOR CFilesHashDlg::OnQueryDragIcon()
 
 void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 {
-	if(!m_thrdData.threadWorking)
+	if(!IsThreadDataWorking(m_thrdData))
 	{
 		unsigned int i;
 		DragAcceptFiles(FALSE);
 
 		ClearFilePaths();
-		m_thrdData.nFiles = DragQueryFile(hDropInfo, -1, NULL, 0);
+		uint32_t droppedFileCount = DragQueryFile(hDropInfo, -1, NULL, 0);
 
-		for(i = 0; i < m_thrdData.nFiles; i++)
+		for(i = 0; i < droppedFileCount; i++)
 		{
 			tstring tstrDragFilename;
 			if (CopyDraggedPath(hDropInfo, i, tstrDragFilename))
 			{
-				m_thrdData.fullPaths.push_back(tstrDragFilename);
+				AppendThreadDataInputFile(m_thrdData, tstrDragFilename);
 			}
 		}
 
-		m_thrdData.nFiles = (uint32_t)m_thrdData.fullPaths.size();
 		DragFinish(hDropInfo);
 		DragAcceptFiles(TRUE);
 
-		if (m_thrdData.nFiles > 0)
+		if (HasThreadDataInputFiles(m_thrdData))
 		{
 			DoMD5();
 		}
@@ -359,24 +354,15 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 		SetForegroundWindow();
 
 	if (pCopyDataStruct->dwData == 0 &&
-		!m_thrdData.threadWorking &&
+		!IsThreadDataWorking(m_thrdData) &&
 		IsValidCopyDataString(pCopyDataStruct))
 	{
 		const TCHAR *szFiles = static_cast<const TCHAR *>(pCopyDataStruct->lpData);
 		TStrVector Paras = ParseFilesCmdLine(const_cast<TCHAR *>(szFiles));
 		ClearFilePaths();
-		for(TStrVector::iterator ite = Paras.begin(); ite != Paras.end(); ++ite)
-		{
-			tstring tstrFile(*ite);
-			tstrFile = strtrim(tstrFile);
-			if (tstrFile.length() > 0)
-			{
-				m_thrdData.fullPaths.push_back(*ite);
-				++m_thrdData.nFiles;
-			}
-		}
+		ReplaceTrimmedThreadDataInputFiles(m_thrdData, Paras);
 
-		if (m_thrdData.nFiles > 0)
+		if (HasThreadDataInputFiles(m_thrdData))
 		{
 			DoMD5();
 		}
@@ -450,7 +436,7 @@ void CFilesHashDlg::PrepareAdvTaskbar()
 void CFilesHashDlg::OnClose()
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	if(m_thrdData.threadWorking)
+	if(IsThreadDataWorking(m_thrdData))
 	{
 		m_waitingExit = TRUE;
 		StopWorkingThread();
@@ -469,7 +455,7 @@ void CFilesHashDlg::OnClose()
 
 void CFilesHashDlg::OnBnClickedOpen()
 {
-	if(!m_thrdData.threadWorking)
+	if(!IsThreadDataWorking(m_thrdData))
 	{
 		CString filter;
 		TCHAR* nameBuffer;
@@ -485,8 +471,8 @@ void CFilesHashDlg::OnBnClickedOpen()
 		{
 			pos = dlgOpen.GetStartPosition();
 			ClearFilePaths();
-			for(m_thrdData.nFiles = 0; pos != NULL; m_thrdData.nFiles++)
-				m_thrdData.fullPaths.push_back(dlgOpen.GetNextPathName(pos).GetString());
+			for(; pos != NULL;)
+				AppendThreadDataInputFile(m_thrdData, dlgOpen.GetNextPathName(pos).GetString());
 
 			DoMD5();
 		}
@@ -512,7 +498,7 @@ void CFilesHashDlg::OnBnClickedAbout()
 
 void CFilesHashDlg::OnBnClickedClean()
 {
-	if (!m_thrdData.threadWorking)
+	if (!IsThreadDataWorking(m_thrdData))
 	{
 		CString strBtnText;
 		m_btnClr.GetWindowText(strBtnText);
@@ -521,7 +507,7 @@ void CFilesHashDlg::OnBnClickedClean()
 			m_mainMtx.lock();
 			{
 				m_editMain.ClearTextBuffer();
-				m_thrdData.resultList.clear();
+				ClearThreadDataResults(m_thrdData);
 				m_editMain.ShowTextBuffer();
 			}
 			m_mainMtx.unlock();
@@ -695,7 +681,7 @@ void CFilesHashDlg::DoMD5()
 
 	SetWholeProgPos(0);
 
-	m_thrdData.uppercase = (m_chkUppercase.GetCheck() != FALSE);
+	SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));
 
 	m_calculateTime = 0.0;
 	m_timer = SetTimer(1, 100, NULL);
@@ -708,7 +694,7 @@ void CFilesHashDlg::DoMD5()
 
 	DWORD thredID;
 
-	m_thrdData.stop = false;
+	SetThreadDataStop(m_thrdData, false);
 	m_hWorkThread = (HANDLE)_beginthreadex(NULL,
 											0,
 											(unsigned int (WINAPI *)(void *))HashThreadFunc,
@@ -720,9 +706,9 @@ void CFilesHashDlg::DoMD5()
 
 void CFilesHashDlg::StopWorkingThread()
 {
-	if(m_thrdData.threadWorking)
+	if(IsThreadDataWorking(m_thrdData))
 	{
-		m_thrdData.stop = true;
+		SetThreadDataStop(m_thrdData, true);
 	}
 }
 
@@ -738,8 +724,7 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void CFilesHashDlg::ClearFilePaths()
 {
-	m_thrdData.nFiles = 0;
-	m_thrdData.fullPaths.clear();
+	ResetThreadDataInputFiles(m_thrdData);
 }
 
 void CFilesHashDlg::SetCtrls(BOOL working)
@@ -788,11 +773,10 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 void CFilesHashDlg::RefreshResult()
 {
 	m_editMain.ClearTextBuffer();
-	ResultList::iterator itr = m_thrdData.resultList.begin();
-	for(; itr != m_thrdData.resultList.end(); ++itr)
+	VisitThreadDataResults(m_thrdData, [&](const ResultData& result)
 	{
-		AppendResult(*itr);
-	}
+		AppendResult(result);
+	});
 }
 
 void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
@@ -857,7 +841,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		break;
 	case WP_FINISHED:
 		// 停止主界面计时器 计算读取速度
-		CalcSpeed(m_thrdData.totalSize);
+		CalcSpeed(GetThreadDataTotalSize(m_thrdData));
 		// 停止主界面计时器 计算读取速度
 
 		// 界面设置 - 开始
@@ -1024,27 +1008,13 @@ void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
 	m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_RESULT));
 	m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
 
-	strHash.MakeUpper();
-	strFile.MakeLower();
+		tstring tstrFileToFind = NormalizeResultPathSearchText(strFile.GetString());
+	tstring tstrHashToFind = NormalizeDigestSearchText(strHash.GetString());
 
-	size_t count = 0;
-	CString strPathLower;
-	ResultList::iterator itr = m_thrdData.resultList.begin();
-	for(; itr != m_thrdData.resultList.end(); ++itr)
+	size_t count = VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)
 	{
-		strPathLower = CString(itr->tstrPath.c_str());
-		strPathLower.MakeLower();
-		if(strPathLower.Find(strFile) >= 0 &&
-			(itr->tstrMD5.find(strHash.GetString()) != tstring::npos ||
-			itr->tstrSHA1.find(strHash.GetString()) != tstring::npos ||
-			itr->tstrSHA256.find(strHash.GetString()) != tstring::npos ||
-			itr->tstrSHA512.find(strHash.GetString()) != tstring::npos))
-		{
-			++count;
-
-			AppendResult(*itr);
-		}
-	}
+		AppendResult(result);
+	});
 
 	if(count == 0)
 		m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_NORESULT));
@@ -1052,8 +1022,8 @@ void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
 
 void CFilesHashDlg::AppendResult(const ResultData& result)
 {
-	m_thrdData.uppercase = (m_chkUppercase.GetCheck() != FALSE);
-	UIBridgeMFC::AppendResultToHyperEdit(result, m_thrdData.uppercase, &m_editMain);
+	SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));
+	UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(m_thrdData), &m_editMain);
 }
 
 void CFilesHashDlg::ClearFind()

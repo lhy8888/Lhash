@@ -135,7 +135,7 @@ internal static partial class Program
             AssertContains(content, "% sizeof(TCHAR)", "WM_COPYDATA validation no longer checks character alignment.");
             AssertContains(content, "pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL", "WM_COPYDATA validation no longer rejects null buffers.");
             AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
-            AssertContains(content, "!m_thrdData.threadWorking", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
+            AssertContains(content, "!IsThreadDataWorking(m_thrdData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>
         {
@@ -169,7 +169,7 @@ internal static partial class Program
 
             AssertContains(winApi, "return -1;", "OsFileWinApi.cpp no longer returns -1 on ReadFile/WriteFile failure.");
             AssertContains(winUwp, "return -1;", "OsFileWinUwp.cpp no longer returns -1 on ReadFile/WriteFile failure.");
-            AssertContains(hashEngine, "bool readFailed = false;", "HashEngine.cpp is missing explicit read failure tracking.");
+            AssertContains(hashEngine, "fileAttemptState->readFailed = false;", "HashEngine.cpp is missing explicit read failure tracking.");
             AssertContains(hashEngine, "RESULT_ERROR", "HashEngine.cpp is missing the read-failure error path.");
             AssertContains(hashEngine, "Failed to read file while hashing.", "HashEngine.cpp is missing the user-visible read failure message.");
         }, failures);

@@ -2,17 +2,16 @@
 
 #include <msclr\auto_gcroot.h>
 
-#include "Common/UIBridgeBase.h"
+#include "Common/HashEngineBridge.h"
 #include "Common/Global.h"
+#include "Common/ManagedBridgeDispatch.h"
 
 #include "UIBridgeDelegates.h"
 #include "ResultDataNet.h"
 
 namespace FilesHashWUI
 {
-	ResultDataNet ConvertResultDataToNet(const ResultData& result);
-
-	class UIBridgeWUI : public UIBridgeBase
+	class UIBridgeWUI : public HashEngineBridge
 	{
 	public:
 		UIBridgeWUI(UIBridgeDelegates^ uiBridgeDelegates);
@@ -33,12 +32,17 @@ namespace FilesHashWUI
 
 		virtual int getProgMax();
 		virtual void updateProg(int value);
-		virtual void updateProgWhole(int value);
+	virtual void updateProgWhole(int value);
 
-		virtual void fileCalcFinish();
-		virtual void fileFinish();
+	virtual void fileCalcFinish();
+	virtual void fileFinish();
 
 	private:
+		static System::String^ ConvertManagedResultText(const TCHAR* resultText);
+		void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
+		void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);
+		int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);
+
 		msclr::auto_gcroot<UIBridgeDelegates^> m_uiBridgeDelegates;
 	};
 }
