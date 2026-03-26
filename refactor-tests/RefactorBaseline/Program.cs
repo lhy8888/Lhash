@@ -555,7 +555,7 @@ internal static class Program
             AssertDoesNotContain(engine, "result.tstrSHA256 = tstrFileSHA256;", "HashEngine still writes SHA256 directly instead of going through the digest seam.");
             AssertDoesNotContain(engine, "result.tstrSHA512 = tstrFileSHA512;", "HashEngine still writes SHA512 directly instead of going through the digest seam.");
 
-            AssertContains(bridgeMfc, "#include \"Common/ResultDigestAccess.h\"", "UIBridgeMFC.cpp is not yet using the neutral digest-access seam.");
+            AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "UIBridgeMFC.cpp is not yet using the split digest-render seam.");
             AssertContains(bridgeMfc, "VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)", "UIBridgeMFC no longer iterates formatted digest display values through the neutral visitor seam.");
             AssertDoesNotContain(bridgeMfc, "result.tstrMD5", "UIBridgeMFC still reads MD5 directly instead of using the digest seam.");
             AssertDoesNotContain(bridgeMfc, "result.tstrSHA1", "UIBridgeMFC still reads SHA1 directly instead of using the digest seam.");
@@ -566,19 +566,18 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "AppendTextToBuffer(_T(\"\\r\\nSHA512: \"))", "UIBridgeMFC still hardcodes digest label emission instead of using the digest seam.");
 
             AssertContains(mfcDialog, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC dialog no longer routes digest search through the neutral digest seam.");
-            AssertContains(clrMgmt, "CountDigestMatchingResults(resultList, tstrHashToFind)", "CLR bridge search no longer routes digest-match counting through the neutral digest seam.");
-            AssertContains(clrMgmt, "ResultMatchesDigestText(*itr, tstrHashToFind)", "CLR bridge search no longer routes per-result digest matching through the neutral digest seam.");
-            AssertContains(clrMgmt, "ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString)", "CLR bridge search no longer routes projected result creation through the centralized projection seam.");
+            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge search no longer routes through the centralized digest-match projection seam.");
             AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge search no longer routes through the neutral digest seam.");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultString>", "ResultDataAccess does not yet expose the centralized ResultDataNet digest-assignment template.");
-            AssertContains(resultAccess, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "ResultDataAccess does not yet expose the centralized ResultDataNet digest-assignment helper.");
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>", "ResultDataAccess does not yet expose the centralized ResultDataNet projection template.");
-            AssertContains(resultAccess, "static inline TResultDataNet ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataAccess does not yet expose the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataAccess does not yet route managed digest projection through the centralized digest loop.");
-            AssertContains(resultAccess, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataAccess does not yet resolve digest projection order through the centralized digest metadata seam.");
-            AssertContains(resultAccess, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataAccess does not yet read digest projection values through the centralized digest access seam.");
-            AssertContains(resultAccess, "resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));", "ResultDataAccess does not yet compose digest projection through the centralized digest-assignment seam.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultString>", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
+            AssertContains(resultProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment helper.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>", "ResultDataProjection does not yet expose the centralized ResultDataNet projection template.");
+            AssertContains(resultProjection, "static inline TResultDataNet ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataProjection does not yet route managed digest projection through the centralized digest loop.");
+            AssertContains(resultProjection, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataProjection does not yet resolve digest projection order through the centralized digest metadata seam.");
+            AssertContains(resultProjection, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataProjection does not yet read digest projection values through the centralized digest access seam.");
+            AssertContains(resultProjection, "resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));", "ResultDataProjection does not yet compose digest projection through the centralized digest-assignment seam.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the centralized projection helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeWui, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "WinUI bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
@@ -782,7 +781,7 @@ internal static class Program
         Run("Phase 3 routes digest-value iteration through a dedicated value visitor helper and reuses it in managed bridges", () =>
         {
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
@@ -791,10 +790,10 @@ internal static class Program
             AssertContains(digestAccess, "return VisitResultDigests([&](ResultDigestType digestType)", "ResultDigestAccess digest-value visitor helper does not yet route through the centralized digest visitor helper.");
             AssertContains(digestAccess, "return visitor(digestType, GetResultDigest(result, digestType));", "ResultDigestAccess digest-value visitor helper does not yet feed values through the neutral digest seam.");
 
-            AssertContains(resultAccess, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataAccess does not yet consume digest values through the centralized digest loop helper when projecting managed result data.");
-            AssertContains(resultAccess, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataAccess does not yet resolve digest order through the centralized digest metadata seam when projecting managed result data.");
-            AssertContains(resultAccess, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataAccess does not yet read digest values through the centralized digest access seam when projecting managed result data.");
-            AssertContains(resultAccess, "convertString(digestValueTstr.c_str())", "ResultDataAccess does not yet convert digest values from the digest-value visitor payload when projecting managed result data.");
+            AssertContains(resultProjection, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataProjection does not yet consume digest values through the centralized digest loop helper when projecting managed result data.");
+            AssertContains(resultProjection, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataProjection does not yet resolve digest order through the centralized digest metadata seam when projecting managed result data.");
+            AssertContains(resultProjection, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataProjection does not yet read digest values through the centralized digest access seam when projecting managed result data.");
+            AssertContains(resultProjection, "convertString(digestValueTstr.c_str())", "ResultDataProjection does not yet convert digest values from the digest-value visitor payload when projecting managed result data.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet consume digest values through the centralized ResultDataNet projection helper.");
             AssertDoesNotContain(bridgeWui, "String^ digestValue = ConvertTstrToSystemString(GetResultDigest(result, digestType).c_str());", "WinUI bridge still performs inline digest lookup instead of consuming the digest-value visitor payload.");
 
@@ -852,20 +851,21 @@ internal static class Program
         Run("Phase 3 routes digest metadata and values through a shared visitor seam for legacy MFC rendering", () =>
         {
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
             AssertContains(digestAccess, "template<typename TResultDigestMetadataValueVisitor>", "ResultDigestAccess does not yet expose the digest-metadata-value visitor template introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", "ResultDigestAccess does not yet expose the centralized digest-metadata-value visitor helper.");
             AssertContains(digestAccess, "return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess digest-metadata-value visitor does not yet route through centralized metadata iteration.");
             AssertContains(digestAccess, "return visitor(index, digestMetadata, GetResultDigest(result, GetResultDigestMetadataType(digestMetadata)));", "ResultDigestAccess digest-metadata-value visitor does not yet feed value lookups through the metadata type accessor.");
-            AssertContains(digestAccess, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestAccess does not yet expose the centralized formatted digest-display visitor helper.");
+            AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet expose the centralized formatted digest-display visitor helper.");
 
-            AssertContains(digestAccess, "struct ResultDigestDisplayInfo", "ResultDigestAccess does not yet expose the grouped digest display-info structure.");
-            AssertContains(digestAccess, "GetResultDigestDisplayInfo(const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestAccess does not yet expose the grouped digest display-info helper.");
-            AssertContains(digestAccess, "digestDisplayInfo.label = GetResultDigestLabel(digestMetadata);", "ResultDigestAccess digest display-info helper does not yet route labels through the metadata seam.");
-            AssertContains(digestAccess, "digestDisplayInfo.value = FormatResultDigestForDisplay(digestValue, uppercase);", "ResultDigestAccess digest display-info helper does not yet route formatting through the centralized display seam.");
-            AssertContains(digestAccess, "ResultDigestDisplayInfo digestDisplayInfo = GetResultDigestDisplayInfo(digestMetadata, digestValueTstr, uppercase);", "ResultDigestAccess formatted digest-display visitor does not yet route label/value assembly through the grouped digest display-info helper.");
-            AssertContains(digestAccess, "return visitor(index, digestMetadata, digestDisplayInfo);", "ResultDigestAccess formatted digest-display visitor does not yet pass grouped digest display-info to consumers.");
+            AssertContains(digestRender, "struct ResultDigestDisplayInfo", "ResultDigestRender does not yet expose the grouped digest display-info structure.");
+            AssertContains(digestRender, "GetResultDigestDisplayInfo(const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestRender does not yet expose the grouped digest display-info helper.");
+            AssertContains(digestRender, "digestDisplayInfo.label = GetResultDigestLabel(digestMetadata);", "ResultDigestRender digest display-info helper does not yet route labels through the metadata seam.");
+            AssertContains(digestRender, "digestDisplayInfo.value = FormatResultDigestForDisplay(digestValue, uppercase);", "ResultDigestRender digest display-info helper does not yet route formatting through the centralized display seam.");
+            AssertContains(digestRender, "ResultDigestDisplayInfo digestDisplayInfo = GetResultDigestDisplayInfo(digestMetadata, digestValueTstr, uppercase);", "ResultDigestRender formatted digest-display visitor does not yet route label/value assembly through the grouped digest display-info helper.");
+            AssertContains(digestRender, "return visitor(index, digestMetadata, digestDisplayInfo);", "ResultDigestRender formatted digest-display visitor does not yet pass grouped digest display-info to consumers.");
 
             AssertContains(bridgeMfc, "VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)", "Legacy MFC digest renderer does not yet consume formatted digest display values through the centralized visitor seam.");
             AssertDoesNotContain(bridgeMfc, "for (int index = 0; index < GetResultDigestCount(); index++)", "Legacy MFC digest renderer still performs manual index iteration instead of using the centralized metadata-value visitor seam.");
@@ -876,6 +876,7 @@ internal static class Program
         Run("Phase 4 introduces a neutral ResultData access seam for non-digest UI and bridge reads", () =>
         {
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
@@ -892,30 +893,28 @@ internal static class Program
             AssertContains(resultAccess, "return GetResultCoreState(result).version;", "ResultDataAccess version getter does not yet route through the current ResultData field.");
             AssertContains(resultAccess, "return GetResultCoreState(result).error;", "ResultDataAccess error getter does not yet route through the current ResultData field.");
 
-            AssertContains(bridgeMfc, "#include \"Common/ResultDataAccess.h\"", "Legacy MFC bridge does not yet consume the neutral result-data access seam.");
+            AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge does not yet consume the split result-data render seam.");
             AssertContains(bridgeMfc, "AppendLabelValueLineToHyperEdit(GetStringByKey(FILENAME_STRING),", "Legacy MFC bridge does not yet route the file path through the current ResultDataAccess-backed append helper.");
             AssertContains(bridgeMfc, "GetResultSizeDisplayInfo(result)", "Legacy MFC bridge does not yet read the file size through ResultDataAccess.");
             AssertContains(bridgeMfc, "GetResultModifiedDate(result)", "Legacy MFC bridge does not yet read the modified date through the current ResultDataAccess-backed metadata-display helper.");
             AssertContains(bridgeMfc, "GetResultVersion(result)", "Legacy MFC bridge does not yet read the version through ResultDataAccess.");
             AssertContains(bridgeMfc, "AppendTextLineToHyperEdit(GetResultError(result), hyerEdit);", "Legacy MFC bridge does not yet read the error text through the current ResultDataAccess-backed append helper.");
 
-            AssertContains(resultAccess, "resultDataNet.Path = convertString(GetResultPath(result).c_str());", "ResultDataAccess does not yet read the file path through the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "resultDataNet.Size = GetResultSize(result);", "ResultDataAccess does not yet read the file size through the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "resultDataNet.ModifiedDate = convertString(GetResultModifiedDate(result).c_str());", "ResultDataAccess does not yet read the modified date through the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "resultDataNet.Version = convertString(GetResultVersion(result).c_str());", "ResultDataAccess does not yet read the version through the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "resultDataNet.Error = convertString(GetResultError(result).c_str());", "ResultDataAccess does not yet read the error text through the centralized ResultDataNet projection helper.");
-            AssertContains(resultAccess, "AssignResultCoreToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)", "ResultDataAccess does not yet expose the centralized core-field ResultDataNet assignment helper.");
-            AssertContains(resultAccess, "AssignResultDigestsToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)", "ResultDataAccess does not yet expose the centralized digest ResultDataNet assignment helper.");
-            AssertContains(resultAccess, "TResultDataNet resultDataNet = AssignResultCoreToNet<TResultDataNet, TResultStateNet>(TResultDataNet(), result, convertString);", "ResultDataAccess does not yet route ResultDataNet projection through the centralized core assignment helper.");
-            AssertContains(resultAccess, "return AssignResultDigestsToNet(resultDataNet, result, convertString);", "ResultDataAccess does not yet route ResultDataNet projection through the centralized digest assignment helper.");
+            AssertContains(resultProjection, "resultDataNet.Path = convertString(GetResultPath(result).c_str());", "ResultDataProjection does not yet read the file path through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "resultDataNet.Size = GetResultSize(result);", "ResultDataProjection does not yet read the file size through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "resultDataNet.ModifiedDate = convertString(GetResultModifiedDate(result).c_str());", "ResultDataProjection does not yet read the modified date through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "resultDataNet.Version = convertString(GetResultVersion(result).c_str());", "ResultDataProjection does not yet read the version through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "resultDataNet.Error = convertString(GetResultError(result).c_str());", "ResultDataProjection does not yet read the error text through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "AssignResultCoreToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized core-field ResultDataNet assignment helper.");
+            AssertContains(resultProjection, "AssignResultDigestsToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized digest ResultDataNet assignment helper.");
+            AssertContains(resultProjection, "TResultDataNet resultDataNet = AssignResultCoreToNet<TResultDataNet, TResultStateNet>(TResultDataNet(), result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized core assignment helper.");
+            AssertContains(resultProjection, "return AssignResultDigestsToNet(resultDataNet, result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized digest assignment helper.");
 
-            AssertContains(bridgeWui, "#include \"Common/ResultDataAccess.h\"", "WinUI bridge does not yet consume the neutral result-data access seam.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route non-digest reads through the centralized ResultDataNet projection helper.");
 
-            AssertContains(bridgeUwp, "#include \"Common/ResultDataAccess.h\"", "UWP bridge does not yet consume the neutral result-data access seam.");
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized ResultDataNet projection helper.");
 
-            AssertContains(filesHashDlg, "#include \"Common/ResultDataAccess.h\"", "Legacy MFC search flow does not yet consume the neutral result-data access seam.");
+            AssertContains(filesHashDlg, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
             AssertContains(filesHashDlg, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet read result paths through the neutral ResultDataAccess path-match seam.");
         }, failures);
 
@@ -947,6 +946,7 @@ internal static class Program
         Run("Phase 4 routes ResultState reads and writes through the neutral ResultDataAccess seam", () =>
         {
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
@@ -966,29 +966,29 @@ internal static class Program
             AssertContains(bridgeMfc, "ResultState resultState = GetResultState(result);", "Legacy MFC renderer does not yet read ResultState through ResultDataAccess.");
             AssertDoesNotContain(bridgeMfc, "if (result.enumState == RESULT_NONE)", "Legacy MFC renderer still branches directly on ResultData::enumState.");
 
-            AssertContains(resultAccess, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataAccess does not yet route managed ResultState projection through the centralized ResultDataNet projection helper.");
+            AssertContains(resultProjection, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataProjection does not yet route managed ResultState projection through the centralized ResultDataNet projection helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet read ResultState through the centralized ResultDataNet projection helper.");
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet read ResultState through the centralized ResultDataNet projection helper.");
         }, failures);
 
         Run("Phase 5 routes MFC result-section rendering policy through dedicated ResultDataAccess helpers", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
-            AssertContains(resultAccess, "struct ResultRenderPolicy", "ResultDataAccess does not yet expose the grouped ResultState render-policy structure.");
-            AssertContains(resultAccess, "GetResultRenderPolicy(ResultState resultState)", "ResultDataAccess does not yet expose the grouped ResultState render-policy helper.");
-            AssertContains(resultAccess, "IsResultStateNone(ResultState resultState)", "ResultDataAccess does not yet expose the neutral ResultState-empty helper for MFC rendering.");
-            AssertContains(resultAccess, "ShouldRenderResultFileName(ResultState resultState)", "ResultDataAccess does not yet expose the file-name render-policy helper.");
-            AssertContains(resultAccess, "ShouldRenderResultMeta(ResultState resultState)", "ResultDataAccess does not yet expose the metadata render-policy helper.");
-            AssertContains(resultAccess, "ShouldRenderResultHash(ResultState resultState)", "ResultDataAccess does not yet expose the hash render-policy helper.");
-            AssertContains(resultAccess, "ShouldRenderResultError(ResultState resultState)", "ResultDataAccess does not yet expose the error render-policy helper.");
-            AssertContains(resultAccess, "ShouldAppendResultTrailingLineBreak(ResultState resultState)", "ResultDataAccess does not yet expose the trailing-line-break render-policy helper.");
-            AssertContains(resultAccess, "return GetResultRenderPolicy(resultState).renderFileName;", "ResultDataAccess file-name render-policy helper does not yet route through the grouped render policy.");
-            AssertContains(resultAccess, "return GetResultRenderPolicy(resultState).renderMeta;", "ResultDataAccess metadata render-policy helper does not yet route through the grouped render policy.");
-            AssertContains(resultAccess, "return GetResultRenderPolicy(resultState).renderHash;", "ResultDataAccess hash render-policy helper does not yet route through the grouped render policy.");
-            AssertContains(resultAccess, "return GetResultRenderPolicy(resultState).renderError;", "ResultDataAccess error render-policy helper does not yet route through the grouped render policy.");
-            AssertContains(resultAccess, "return GetResultRenderPolicy(resultState).appendTrailingLineBreak;", "ResultDataAccess trailing-line-break helper does not yet route through the grouped render policy.");
+            AssertContains(resultRender, "struct ResultRenderPolicy", "ResultDataRender does not yet expose the grouped ResultState render-policy structure.");
+            AssertContains(resultRender, "GetResultRenderPolicy(ResultState resultState)", "ResultDataRender does not yet expose the grouped ResultState render-policy helper.");
+            AssertContains(resultRender, "IsResultStateNone(ResultState resultState)", "ResultDataRender does not yet expose the neutral ResultState-empty helper for MFC rendering.");
+            AssertContains(resultRender, "ShouldRenderResultFileName(ResultState resultState)", "ResultDataRender does not yet expose the file-name render-policy helper.");
+            AssertContains(resultRender, "ShouldRenderResultMeta(ResultState resultState)", "ResultDataRender does not yet expose the metadata render-policy helper.");
+            AssertContains(resultRender, "ShouldRenderResultHash(ResultState resultState)", "ResultDataRender does not yet expose the hash render-policy helper.");
+            AssertContains(resultRender, "ShouldRenderResultError(ResultState resultState)", "ResultDataRender does not yet expose the error render-policy helper.");
+            AssertContains(resultRender, "ShouldAppendResultTrailingLineBreak(ResultState resultState)", "ResultDataRender does not yet expose the trailing-line-break render-policy helper.");
+            AssertContains(resultRender, "return GetResultRenderPolicy(resultState).renderFileName;", "ResultDataRender file-name render-policy helper does not yet route through the grouped render policy.");
+            AssertContains(resultRender, "return GetResultRenderPolicy(resultState).renderMeta;", "ResultDataRender metadata render-policy helper does not yet route through the grouped render policy.");
+            AssertContains(resultRender, "return GetResultRenderPolicy(resultState).renderHash;", "ResultDataRender hash render-policy helper does not yet route through the grouped render policy.");
+            AssertContains(resultRender, "return GetResultRenderPolicy(resultState).renderError;", "ResultDataRender error render-policy helper does not yet route through the grouped render policy.");
+            AssertContains(resultRender, "return GetResultRenderPolicy(resultState).appendTrailingLineBreak;", "ResultDataRender trailing-line-break helper does not yet route through the grouped render policy.");
 
             AssertContains(bridgeMfc, "if (IsResultStateNone(resultState))", "Legacy MFC renderer does not yet route empty-state checks through the ResultDataAccess render-policy helper.");
             AssertContains(bridgeMfc, "if (ShouldAppendResultTrailingLineBreak(resultState))", "Legacy MFC renderer does not yet route trailing-line-break checks through the ResultDataAccess render-policy helper.");
@@ -999,21 +999,21 @@ internal static class Program
 
         Run("Phase 5 routes MFC result-section iteration through a centralized ResultDataAccess visitor", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
-            AssertContains(resultAccess, "enum ResultRenderSectionType", "ResultDataAccess does not yet expose the result render-section enum introduced in phase 5.");
-            AssertContains(resultAccess, "RESULT_RENDER_SECTION_FILE_NAME", "ResultDataAccess is missing the file-name render section.");
-            AssertContains(resultAccess, "RESULT_RENDER_SECTION_META", "ResultDataAccess is missing the metadata render section.");
-            AssertContains(resultAccess, "RESULT_RENDER_SECTION_HASH", "ResultDataAccess is missing the hash render section.");
-            AssertContains(resultAccess, "RESULT_RENDER_SECTION_ERROR", "ResultDataAccess is missing the error render section.");
-            AssertContains(resultAccess, "template<typename TResultRenderSectionVisitor>", "ResultDataAccess does not yet expose the render-section visitor template.");
-            AssertContains(resultAccess, "VisitRenderableResultSections(ResultState resultState, TResultRenderSectionVisitor visitor)", "ResultDataAccess does not yet expose the centralized render-section visitor helper.");
-            AssertContains(resultAccess, "visitor(RESULT_RENDER_SECTION_FILE_NAME)", "ResultDataAccess render-section visitor does not yet route file-name rendering through the centralized visitor path.");
-            AssertContains(resultAccess, "visitor(RESULT_RENDER_SECTION_META)", "ResultDataAccess render-section visitor does not yet route metadata rendering through the centralized visitor path.");
-            AssertContains(resultAccess, "visitor(RESULT_RENDER_SECTION_HASH)", "ResultDataAccess render-section visitor does not yet route hash rendering through the centralized visitor path.");
-            AssertContains(resultAccess, "visitor(RESULT_RENDER_SECTION_ERROR)", "ResultDataAccess render-section visitor does not yet route error rendering through the centralized visitor path.");
-            AssertContains(resultAccess, "DispatchResultRenderSectionByType(ResultRenderSectionType renderSection, TFileNameAction onFileName, TMetaAction onMeta, THashAction onHash, TErrorAction onError)", "ResultDataAccess does not yet expose the centralized render-section dispatch helper.");
+            AssertContains(resultRender, "enum ResultRenderSectionType", "ResultDataRender does not yet expose the result render-section enum introduced in phase 5.");
+            AssertContains(resultRender, "RESULT_RENDER_SECTION_FILE_NAME", "ResultDataRender is missing the file-name render section.");
+            AssertContains(resultRender, "RESULT_RENDER_SECTION_META", "ResultDataRender is missing the metadata render section.");
+            AssertContains(resultRender, "RESULT_RENDER_SECTION_HASH", "ResultDataRender is missing the hash render section.");
+            AssertContains(resultRender, "RESULT_RENDER_SECTION_ERROR", "ResultDataRender is missing the error render section.");
+            AssertContains(resultRender, "template<typename TResultRenderSectionVisitor>", "ResultDataRender does not yet expose the render-section visitor template.");
+            AssertContains(resultRender, "VisitRenderableResultSections(ResultState resultState, TResultRenderSectionVisitor visitor)", "ResultDataRender does not yet expose the centralized render-section visitor helper.");
+            AssertContains(resultRender, "visitor(RESULT_RENDER_SECTION_FILE_NAME)", "ResultDataRender render-section visitor does not yet route file-name rendering through the centralized visitor path.");
+            AssertContains(resultRender, "visitor(RESULT_RENDER_SECTION_META)", "ResultDataRender render-section visitor does not yet route metadata rendering through the centralized visitor path.");
+            AssertContains(resultRender, "visitor(RESULT_RENDER_SECTION_HASH)", "ResultDataRender render-section visitor does not yet route hash rendering through the centralized visitor path.");
+            AssertContains(resultRender, "visitor(RESULT_RENDER_SECTION_ERROR)", "ResultDataRender render-section visitor does not yet route error rendering through the centralized visitor path.");
+            AssertContains(resultRender, "DispatchResultRenderSectionByType(ResultRenderSectionType renderSection, TFileNameAction onFileName, TMetaAction onMeta, THashAction onHash, TErrorAction onError)", "ResultDataRender does not yet expose the centralized render-section dispatch helper.");
 
             AssertContains(bridgeMfc, "VisitRenderableResultSections(resultState, [&](ResultRenderSectionType renderSection)", "UIBridgeMFC does not yet route result-section iteration through the centralized render-section visitor.");
             AssertContains(bridgeMfc, "DispatchResultRenderSectionByType(renderSection, [&]()", "UIBridgeMFC does not yet consume render sections through the centralized dispatch seam.");
@@ -1027,11 +1027,11 @@ internal static class Program
         {
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
 
             AssertContains(bridgeMfcHeader, "AppendResultRenderSectionToHyperEdit(const ResultData& result,", "UIBridgeMFC does not yet expose the dedicated render-section dispatch helper.");
             AssertContains(bridgeMfc, "void UIBridgeMFC::AppendResultRenderSectionToHyperEdit(const ResultData& result,", "UIBridgeMFC does not yet implement the dedicated render-section dispatch helper.");
-            AssertContains(resultAccess, "DispatchResultRenderSectionByType(ResultRenderSectionType renderSection, TFileNameAction onFileName, TMetaAction onMeta, THashAction onHash, TErrorAction onError)", "ResultDataAccess does not yet expose the centralized render-section dispatch helper.");
+            AssertContains(resultRender, "DispatchResultRenderSectionByType(ResultRenderSectionType renderSection, TFileNameAction onFileName, TMetaAction onMeta, THashAction onHash, TErrorAction onError)", "ResultDataRender does not yet expose the centralized render-section dispatch helper.");
             AssertContains(bridgeMfc, "DispatchResultRenderSectionByType(renderSection, [&]()", "UIBridgeMFC render-section dispatch helper does not yet route sections through the centralized dispatch seam.");
             AssertContains(bridgeMfc, "AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyerEdit);", "UIBridgeMFC does not yet route render-section dispatch through the dedicated helper.");
             AssertDoesNotContain(bridgeMfc, "switch (renderSection)\r\n\t\t{\r\n\t\tcase RESULT_RENDER_SECTION_FILE_NAME:", "UIBridgeMFC still keeps the render-section dispatch switch inline inside AppendResultToHyperEdit instead of using the dedicated helper.");
@@ -1087,11 +1087,11 @@ internal static class Program
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultHandler>", "ResultDataAccess does not yet expose the centralized project-and-dispatch helper template.");
-            AssertContains(resultAccess, "ProjectAndDispatchResult(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "ResultDataAccess does not yet expose the centralized project-and-dispatch helper.");
-            AssertContains(resultAccess, "resultHandler(ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataAccess project-and-dispatch helper does not yet compose projection and dispatch through the centralized projection seam.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultHandler>", "ResultDataProjection does not yet expose the centralized project-and-dispatch helper template.");
+            AssertContains(resultProjection, "ProjectAndDispatchResult(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "ResultDataProjection does not yet expose the centralized project-and-dispatch helper.");
+            AssertContains(resultProjection, "resultHandler(ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection project-and-dispatch helper does not yet compose projection and dispatch through the centralized projection seam.");
             AssertContains(managedDispatch, "TResultDataNet resultDataNet = ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString);", "Common managed-bridge dispatch header does not yet materialize projected managed results through the centralized projection seam.");
             AssertDoesNotContain(managedDispatch, "ProjectManagedBridgeResultAndDispatch(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "Common managed-bridge dispatch header still keeps the redundant managed projection-dispatch wrapper.");
 
@@ -1290,27 +1290,27 @@ internal static class Program
 
         Run("Phase 5 routes managed result-list projection through a centralized ResultDataAccess helper", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultVisitor>", "ResultDataAccess does not yet expose the centralized result-list projection visitor template.");
-            AssertContains(resultAccess, "VisitProjectedResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized result-list projection helper.");
-            AssertContains(resultAccess, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataAccess does not yet route full result-list projection through the centralized matching-projection seam.");
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TResultPredicate, typename TStringConverter, typename TResultVisitor>", "ResultDataAccess does not yet expose the centralized matching-result projection visitor template.");
-            AssertContains(resultAccess, "VisitProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized matching-result projection helper.");
-            AssertContains(resultAccess, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataAccess does not yet route matching-result projection through the centralized single-result projection helper.");
-            AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TResultPredicate, typename TResultArrayFactory, typename TStringConverter, typename TResultArraySetter>", "ResultDataAccess does not yet expose the centralized projected-match collection helper template.");
-            AssertContains(resultAccess, "CreateProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataAccess does not yet expose the centralized projected-match collection helper.");
-            AssertContains(resultAccess, "TResultArray projectedResults = createResultArray(CountMatchingResults(resultList, predicate));", "ResultDataAccess projected-match collection helper does not yet size the target collection through the centralized match-count seam.");
-            AssertContains(resultAccess, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, predicate, convertString, [&](size_t index, TResultDataNet resultDataNet)", "ResultDataAccess projected-match collection helper does not yet reuse the centralized projected-matching seam.");
-            AssertContains(resultAccess, "setProjectedResult(projectedResults, index, resultDataNet);", "ResultDataAccess projected-match collection helper does not yet route projected writes through the supplied collection setter.");
-            AssertContains(resultAccess, "CreateProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataAccess does not yet expose the centralized managed digest-match array projection helper.");
-            AssertContains(resultAccess, "return CreateProjectedMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, [&](const ResultData& result)", "ResultDataAccess managed digest-match array projection helper does not yet reuse the centralized projected-match collection helper.");
-            AssertContains(resultAccess, "return ResultMatchesDigestText(result, digestText);", "ResultDataAccess managed digest-match array projection helper does not yet reuse the centralized digest-match predicate seam.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultVisitor>", "ResultDataProjection does not yet expose the centralized result-list projection visitor template.");
+            AssertContains(resultProjection, "VisitProjectedResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized result-list projection helper.");
+            AssertContains(resultProjection, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataProjection does not yet route full result-list projection through the centralized matching-projection seam.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TResultPredicate, typename TStringConverter, typename TResultVisitor>", "ResultDataProjection does not yet expose the centralized matching-result projection visitor template.");
+            AssertContains(resultProjection, "VisitProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized matching-result projection helper.");
+            AssertContains(resultProjection, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection does not yet route matching-result projection through the centralized single-result projection helper.");
+            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TResultPredicate, typename TResultArrayFactory, typename TStringConverter, typename TResultArraySetter>", "ResultDataProjection does not yet expose the centralized projected-match collection helper template.");
+            AssertContains(resultProjection, "CreateProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataProjection does not yet expose the centralized projected-match collection helper.");
+            AssertContains(resultProjection, "TResultArray projectedResults = createResultArray(CountMatchingResults(resultList, predicate));", "ResultDataProjection projected-match collection helper does not yet size the target collection through the centralized match-count seam.");
+            AssertContains(resultProjection, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, predicate, convertString, [&](size_t index, TResultDataNet resultDataNet)", "ResultDataProjection projected-match collection helper does not yet reuse the centralized projected-matching seam.");
+            AssertContains(resultProjection, "setProjectedResult(projectedResults, index, resultDataNet);", "ResultDataProjection projected-match collection helper does not yet route projected writes through the supplied collection setter.");
+            AssertContains(resultProjection, "CreateProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataProjection does not yet expose the centralized managed digest-match array projection helper.");
+            AssertContains(resultProjection, "return CreateProjectedMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, [&](const ResultData& result)", "ResultDataProjection managed digest-match array projection helper does not yet reuse the centralized projected-match collection helper.");
+            AssertContains(resultProjection, "return ResultMatchesDigestText(result, digestText);", "ResultDataProjection managed digest-match array projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));", "CLR bridge management layer does not yet allocate projected managed results through the current compile-safe digest-match count seam.");
-            AssertContains(clrMgmt, "projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);", "CLR bridge management layer no longer writes projected results into the managed array through the current projection path.");
+            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge management layer does not yet allocate projected managed results through the centralized digest-match collection seam.");
+            AssertContains(clrMgmt, "projectedResults[static_cast<int>(index)] = resultDataNet;", "CLR bridge management layer no longer writes projected results into the managed array through the current projection path.");
             AssertDoesNotContain(clrMgmt, "ResultList findResultList;", "CLR bridge management layer still stages matching results in a temporary list instead of using the centralized matching-result projection helper.");
             AssertDoesNotContain(clrMgmt, "ResultDataNet resultDataNet = ConvertResultDataToNet(*itr);", "CLR bridge management layer still performs inline per-item projection instead of using the centralized result-list projection helper.");
 
@@ -1322,33 +1322,34 @@ internal static class Program
 
         Run("Phase 5 routes result-list matching through a centralized ResultDataAccess helper", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
             string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
-            AssertContains(resultAccess, "template<typename TResultPredicate, typename TResultVisitor>", "ResultDataAccess does not yet expose the centralized result-list matching visitor template.");
-            AssertContains(resultAccess, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized result-list matching helper.");
-            AssertContains(resultAccess, "CountMatchingResults(const ResultList& resultList, TResultPredicate predicate)", "ResultDataAccess does not yet expose the centralized result-list match-count helper.");
-            AssertContains(resultAccess, "CountDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText)", "ResultDataAccess does not yet expose the centralized digest-match count helper.");
-            AssertContains(resultAccess, "ResultMatchesDigestText(const ResultData& result, const sunjwbase::tstring& digestText)", "ResultDataAccess does not yet expose the centralized digest-match predicate helper.");
-            AssertContains(resultAccess, "NormalizeResultPathSearchText(const sunjwbase::tstring& pathText)", "ResultDataAccess does not yet expose the centralized path-search normalization helper.");
-            AssertContains(resultAccess, "ResultMatchesPathText(const ResultData& result, const sunjwbase::tstring& pathText)", "ResultDataAccess does not yet expose the centralized path-match predicate helper.");
-            AssertContains(resultAccess, "NormalizeDigestSearchText(const sunjwbase::tstring& digestText)", "ResultDataAccess does not yet expose the centralized digest-search normalization helper.");
-            AssertContains(resultAccess, "if (predicate(*itr))", "ResultDataAccess matching helper does not yet gate result visits through the supplied predicate.");
-            AssertContains(resultAccess, "visitor(*itr);", "ResultDataAccess matching helper does not yet forward matched results through the supplied visitor.");
-            AssertContains(resultAccess, "++matchCount;", "ResultDataAccess matching helper does not yet return the number of matched results.");
-            AssertContains(resultAccess, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataAccess match-count helper does not yet reuse the centralized matching visitor seam.");
-            AssertContains(resultAccess, "return digestText.size() > 0 &&", "ResultDataAccess digest-match predicate helper does not yet guard empty search text through the centralized seam.");
-            AssertContains(resultAccess, "ResultContainsDigest(result, digestText);", "ResultDataAccess digest-match predicate helper does not yet reuse the centralized digest seam.");
-            AssertContains(resultAccess, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));", "ResultDataAccess path-search normalization helper does not yet lowercase through the centralized seam.");
-            AssertContains(resultAccess, "return NormalizeResultPathSearchText(GetResultPath(result)).find(pathText) != sunjwbase::tstring::npos;", "ResultDataAccess path-match predicate helper does not yet reuse the centralized path-search normalization seam.");
-            AssertContains(resultAccess, "normalizedDigestText = sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(normalizedDigestText)));", "ResultDataAccess digest-search normalization helper does not yet uppercase through the centralized seam.");
-            AssertContains(resultAccess, "normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);", "ResultDataAccess digest-search normalization helper does not yet trim through the centralized seam.");
-            AssertContains(resultAccess, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataAccess digest-match count helper does not yet reuse the centralized digest-match visitor seam.");
+            AssertContains(resultSearch, "template<typename TResultPredicate, typename TResultVisitor>", "ResultDataSearch does not yet expose the centralized result-list matching visitor template.");
+            AssertContains(resultSearch, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized result-list matching helper.");
+            AssertContains(resultSearch, "CountMatchingResults(const ResultList& resultList, TResultPredicate predicate)", "ResultDataSearch does not yet expose the centralized result-list match-count helper.");
+            AssertContains(resultSearch, "CountDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-match count helper.");
+            AssertContains(resultSearch, "ResultMatchesDigestText(const ResultData& result, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-match predicate helper.");
+            AssertContains(resultSearch, "NormalizeResultPathSearchText(const sunjwbase::tstring& pathText)", "ResultDataSearch does not yet expose the centralized path-search normalization helper.");
+            AssertContains(resultSearch, "ResultMatchesPathText(const ResultData& result, const sunjwbase::tstring& pathText)", "ResultDataSearch does not yet expose the centralized path-match predicate helper.");
+            AssertContains(resultSearch, "NormalizeDigestSearchText(const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-search normalization helper.");
+            AssertContains(resultSearch, "if (predicate(*itr))", "ResultDataSearch matching helper does not yet gate result visits through the supplied predicate.");
+            AssertContains(resultSearch, "visitor(*itr);", "ResultDataSearch matching helper does not yet forward matched results through the supplied visitor.");
+            AssertContains(resultSearch, "++matchCount;", "ResultDataSearch matching helper does not yet return the number of matched results.");
+            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataSearch match-count helper does not yet reuse the centralized matching visitor seam.");
+            AssertContains(resultSearch, "return digestText.size() > 0 &&", "ResultDataSearch digest-match predicate helper does not yet guard empty search text through the centralized seam.");
+            AssertContains(resultSearch, "ResultContainsDigest(result, digestText);", "ResultDataSearch digest-match predicate helper does not yet reuse the centralized digest seam.");
+            AssertContains(resultSearch, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));", "ResultDataSearch path-search normalization helper does not yet lowercase through the centralized seam.");
+            AssertContains(resultSearch, "return NormalizeResultPathSearchText(GetResultPath(result)).find(pathText) != sunjwbase::tstring::npos;", "ResultDataSearch path-match predicate helper does not yet reuse the centralized path-search normalization seam.");
+            AssertContains(resultSearch, "normalizedDigestText = sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(normalizedDigestText)));", "ResultDataSearch digest-search normalization helper does not yet uppercase through the centralized seam.");
+            AssertContains(resultSearch, "normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);", "ResultDataSearch digest-search normalization helper does not yet trim through the centralized seam.");
+            AssertContains(resultSearch, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataSearch digest-match count helper does not yet reuse the centralized digest-match visitor seam.");
 
             AssertContains(clrMgmt, "tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);", "CLR bridge management layer does not yet route digest-search normalization through the centralized ResultDataAccess helper.");
-            AssertContains(clrMgmt, "cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));", "CLR bridge management layer does not yet route digest-match array allocation through the current compile-safe projection helper.");
+            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge management layer does not yet route digest-match array allocation through the centralized projection helper.");
             AssertDoesNotContain(clrMgmt, "for (; itr != m_pThreadData->resultList.end(); ++itr)", "CLR bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
+            AssertDoesNotContain(clrMgmt, "for (; itr != resultList.end(); ++itr)", "CLR bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtotstr(str_upper(tstrtostr(tstrHashToFind)));", "CLR bridge management layer still uppercases digest search text inline instead of using the centralized normalization helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtrim(tstrHashToFind);", "CLR bridge management layer still trims digest search text inline instead of using the centralized normalization helper.");
 
@@ -1361,15 +1362,15 @@ internal static class Program
 
         Run("Phase 5 routes managed digest-match projection through dedicated ResultDataAccess helpers", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
-            AssertContains(resultAccess, "VisitProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TStringConverter convertString, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized digest-match projection helper.");
-            AssertContains(resultAccess, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataAccess digest-match projection helper does not yet reuse the centralized matching-projection seam.");
-            AssertContains(resultAccess, "return ResultMatchesDigestText(result, digestText);", "ResultDataAccess digest-match projection helper does not yet reuse the centralized digest-match predicate seam.");
+            AssertContains(resultProjection, "VisitProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized digest-match projection helper.");
+            AssertContains(resultProjection, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataProjection digest-match projection helper does not yet reuse the centralized matching-projection seam.");
+            AssertContains(resultProjection, "return ResultMatchesDigestText(result, digestText);", "ResultDataProjection digest-match projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);", "CLR bridge management layer does not yet route digest-match projection through the current compile-safe ResultDataAccess helper.");
+            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge management layer does not yet route digest-match projection through the current compile-safe ResultDataProjection helper.");
             AssertDoesNotContain(clrMgmt, "VisitProjectedMatchingResults<ResultDataNet, ResultStateNet>(m_pThreadData->resultList, [&](const ResultData& result)", "CLR bridge management layer still keeps the inline digest-match projection lambda instead of using the dedicated helper.");
 
             AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge management layer does not yet route digest-match projection through the dedicated ResultDataAccess helper.");
@@ -1378,24 +1379,23 @@ internal static class Program
 
         Run("Phase 5 routes digest-match counting and projection through a dedicated matching visitor seam", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
 
-            AssertContains(resultAccess, "VisitDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized digest-match visitor helper.");
-            AssertContains(resultAccess, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataAccess digest-match count helper does not yet route through the centralized digest-match visitor seam.");
-            AssertContains(resultAccess, "VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataAccess digest-match projection helper does not yet route through the centralized digest-match visitor seam.");
+            AssertContains(resultSearch, "VisitDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized digest-match visitor helper.");
+            AssertContains(resultSearch, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataSearch digest-match count helper does not yet route through the centralized digest-match visitor seam.");
         }, failures);
 
         Run("Phase 5 routes MFC result search iteration through the centralized ResultDataAccess matching helper", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
             string filesHashDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
 
-            AssertContains(resultAccess, "ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", "ResultDataAccess does not yet expose the centralized path+digest-match predicate helper.");
-            AssertContains(resultAccess, "VisitPathAndDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataAccess does not yet expose the centralized path+digest matching visitor helper.");
-            AssertContains(resultAccess, "return ResultMatchesPathText(result, pathText) &&", "ResultDataAccess path+digest-match predicate helper does not yet compose through the shared path-match seam.");
-            AssertContains(resultAccess, "ResultMatchesDigestText(result, digestText);", "ResultDataAccess path+digest-match predicate helper does not yet compose through the shared digest-match seam.");
-            AssertContains(resultAccess, "return VisitMatchingResults(resultList, [&](const ResultData& result)", "ResultDataAccess path+digest matching helper does not yet reuse the centralized matching visitor seam.");
-            AssertContains(resultAccess, "return ResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataAccess path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
+            AssertContains(resultSearch, "ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized path+digest-match predicate helper.");
+            AssertContains(resultSearch, "VisitPathAndDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized path+digest matching visitor helper.");
+            AssertContains(resultSearch, "return ResultMatchesPathText(result, pathText) &&", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared path-match seam.");
+            AssertContains(resultSearch, "ResultMatchesDigestText(result, digestText);", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared digest-match seam.");
+            AssertContains(resultSearch, "return VisitMatchingResults(resultList, [&](const ResultData& result)", "ResultDataSearch path+digest matching helper does not yet reuse the centralized matching visitor seam.");
+            AssertContains(resultSearch, "return ResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataSearch path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
 
             AssertContains(filesHashDlg, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet route result iteration through the centralized path+digest matching helper.");
             AssertContains(filesHashDlg, "tstring tstrFileToFind = NormalizeResultPathSearchText(strFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized ResultDataAccess helper.");
@@ -1512,13 +1512,13 @@ internal static class Program
 
         Run("Phase 4 routes managed ResultStateNet conversion through dedicated bridge helpers", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(resultAccess, "template<typename TResultStateNet>", "ResultDataAccess does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
-            AssertContains(resultAccess, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultDataAccess does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
-            AssertContains(resultAccess, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataAccess does not yet route ResultStateNet assignment through the centralized helper.");
+            AssertContains(resultProjection, "template<typename TResultStateNet>", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
+            AssertContains(resultProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
+            AssertContains(resultProjection, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataProjection does not yet route ResultStateNet assignment through the centralized helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultStateNet assignment through the centralized ResultDataNet projection helper.");
             AssertDoesNotContain(bridgeWui, "switch (GetResultState(result))", "WinUI bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeWui, "static ResultStateNet ConvertResultStateToNet(ResultState resultState)", "WinUI bridge still keeps a local ResultStateNet conversion helper instead of using the centralized ResultDataAccess helper.");
@@ -1530,17 +1530,18 @@ internal static class Program
 
         Run("Phase 5 routes ResultState and digest-type projection through dedicated ResultDataAccess dispatch helpers", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
-            AssertContains(resultAccess, "DispatchResultStateByType(ResultState resultState, TNoneAction onNone, TPathAction onPath, TMetaAction onMeta, TAllAction onAll, TErrorAction onError)", "ResultDataAccess does not yet expose the grouped ResultState dispatch helper.");
-            AssertContains(resultAccess, "DispatchResultStateByType(resultState,", "ResultDataAccess does not yet route ResultState render-policy through the grouped dispatch helper.");
-            AssertContains(resultAccess, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultDataAccess does not yet expose the grouped digest-type dispatch helper.");
-            AssertContains(resultAccess, "switch (resultState)", "ResultDataAccess ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
-            AssertContains(resultAccess, "return TResultStateNet::ResultPath;", "ResultDataAccess ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
-            AssertContains(resultAccess, "switch (digestType)", "ResultDataAccess digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
-            AssertContains(resultAccess, "resultDataNet.MD5 = digestValue;", "ResultDataAccess digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
+            AssertContains(resultRender, "DispatchResultStateByType(ResultState resultState, TNoneAction onNone, TPathAction onPath, TMetaAction onMeta, TAllAction onAll, TErrorAction onError)", "ResultDataRender does not yet expose the grouped ResultState dispatch helper.");
+            AssertContains(resultRender, "DispatchResultStateByType(resultState,", "ResultDataRender does not yet route ResultState render-policy through the grouped dispatch helper.");
+            AssertContains(resultProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultDataProjection does not yet expose the grouped digest-type dispatch helper.");
+            AssertContains(resultProjection, "switch (resultState)", "ResultDataProjection ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
+            AssertContains(resultProjection, "return TResultStateNet::ResultPath;", "ResultDataProjection ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
+            AssertContains(resultProjection, "switch (digestType)", "ResultDataProjection digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
+            AssertContains(resultProjection, "resultDataNet.MD5 = digestValue;", "ResultDataProjection digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
 
-            AssertDoesNotContain(resultAccess, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataAccess render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
+            AssertDoesNotContain(resultRender, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataRender render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
         }, failures);
 
         Run("Phase 4 routes optional result-version checks through a dedicated ResultDataAccess helper", () =>
@@ -1697,6 +1698,7 @@ internal static class Program
         Run("Phase 5 neutralizes the internal ResultDigestMetadata field names behind the existing digest-access seam", () =>
         {
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
             AssertContains(digestAccess, "ResultDigestType type;", "ResultDigestMetadata does not yet expose the neutral digest type field name.");
@@ -1710,15 +1712,16 @@ internal static class Program
             AssertContains(digestAccess, "if (GetResultDigestMetadataType(digestMetadata) == digestType)", "ResultDigestAccess digest-index helper does not yet route through the neutral ResultDigestMetadata type accessor.");
             AssertContains(digestAccess, "return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));", "ResultDigestAccess compatibility field-selector helper does not yet route through the neutral ResultDigestMetadata compatibility-field accessor.");
 
-            AssertContains(digestAccess, "GetResultDigestLabel(digestMetadata)", "ResultDigestAccess does not yet route digest labels through the neutral ResultDigestMetadata seam.");
+            AssertContains(digestRender, "GetResultDigestLabel(digestMetadata)", "ResultDigestRender does not yet route digest labels through the neutral ResultDigestMetadata seam.");
         }, failures);
 
         Run("Phase 5 routes projected matching traversal through the existing matching-results seam", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
-            AssertContains(resultAccess, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataAccess does not yet route projected matching traversal through the existing matching-results seam.");
-            AssertContains(resultAccess, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataAccess projected matching traversal does not yet reuse the shared matching seam before projecting each result.");
+            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataSearch does not yet route projected matching traversal through the existing matching-results seam.");
+            AssertContains(resultProjection, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection projected matching traversal does not yet reuse the shared matching seam before projecting each result.");
         }, failures);
 
         Run("Phase 5 centralizes MFC label and text emission through dedicated hyperedit append helpers", () =>
@@ -1745,20 +1748,20 @@ internal static class Program
 
         Run("Phase 5 routes MFC metadata line rendering through dedicated ResultDataAccess and bridge helpers", () =>
         {
-            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
-            AssertContains(resultAccess, "struct ResultSizeDisplayInfo", "ResultDataAccess does not yet expose the grouped file-size display structure.");
-            AssertContains(resultAccess, "GetResultSizeDisplayInfo(const ResultData& result)", "ResultDataAccess does not yet expose the centralized file-size display helper.");
-            AssertContains(resultAccess, "sprintf_s(chSizeBuff, 1024, \"%I64u\", GetResultSize(result));", "ResultDataAccess file-size display helper does not yet centralize the byte-size formatting.");
-            AssertContains(resultAccess, "resultSizeDisplayInfo.shortSizeText = strtotstr(Utils::ConvertSizeToShortSizeStr(GetResultSize(result)));", "ResultDataAccess file-size display helper does not yet centralize the short-size formatting.");
-            AssertContains(resultAccess, "enum ResultMetaLineType", "ResultDataAccess does not yet expose the result-metadata line type enum.");
-            AssertContains(resultAccess, "DispatchResultMetaLineByType(ResultMetaLineType metaLine, TFileSizeAction onFileSize, TModifiedDateAction onModifiedDate, TVersionAction onVersion)", "ResultDataAccess does not yet expose the centralized metadata-line dispatch helper.");
-            AssertContains(resultAccess, "VisitRenderableResultMetaLines(const ResultData& result, TResultMetaLineVisitor visitor)", "ResultDataAccess does not yet expose the renderable metadata-line visitor helper.");
-            AssertContains(resultAccess, "if (!visitor(RESULT_META_LINE_FILE_SIZE))", "ResultDataAccess metadata-line visitor does not yet render file size through the shared seam.");
-            AssertContains(resultAccess, "if (!visitor(RESULT_META_LINE_MODIFIED_DATE))", "ResultDataAccess metadata-line visitor does not yet render modified date through the shared seam.");
-            AssertContains(resultAccess, "if (HasResultVersion(result) &&", "ResultDataAccess metadata-line visitor does not yet gate version rendering through the shared seam.");
+            AssertContains(resultRender, "struct ResultSizeDisplayInfo", "ResultDataRender does not yet expose the grouped file-size display structure.");
+            AssertContains(resultRender, "GetResultSizeDisplayInfo(const ResultData& result)", "ResultDataRender does not yet expose the centralized file-size display helper.");
+            AssertContains(resultRender, "sprintf_s(chSizeBuff, 1024, \"%I64u\", GetResultSize(result));", "ResultDataRender file-size display helper does not yet centralize the byte-size formatting.");
+            AssertContains(resultRender, "resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(GetResultSize(result)));", "ResultDataRender file-size display helper does not yet centralize the short-size formatting.");
+            AssertContains(resultRender, "enum ResultMetaLineType", "ResultDataRender does not yet expose the result-metadata line type enum.");
+            AssertContains(resultRender, "DispatchResultMetaLineByType(ResultMetaLineType metaLine, TFileSizeAction onFileSize, TModifiedDateAction onModifiedDate, TVersionAction onVersion)", "ResultDataRender does not yet expose the centralized metadata-line dispatch helper.");
+            AssertContains(resultRender, "VisitRenderableResultMetaLines(const ResultData& result, TResultMetaLineVisitor visitor)", "ResultDataRender does not yet expose the renderable metadata-line visitor helper.");
+            AssertContains(resultRender, "if (!visitor(RESULT_META_LINE_FILE_SIZE))", "ResultDataRender metadata-line visitor does not yet render file size through the shared seam.");
+            AssertContains(resultRender, "if (!visitor(RESULT_META_LINE_MODIFIED_DATE))", "ResultDataRender metadata-line visitor does not yet render modified date through the shared seam.");
+            AssertContains(resultRender, "if (HasResultVersion(result) &&", "ResultDataRender metadata-line visitor does not yet gate version rendering through the shared seam.");
 
             AssertContains(bridgeMfcHeader, "static void AppendResultMetaLineToHyperEdit", "UIBridgeMFC does not yet expose the metadata-line dispatch helper.");
             AssertContains(bridgeMfcHeader, "struct ResultMetaLineDisplayInfo", "UIBridgeMFC does not yet expose the grouped metadata-line display-info structure.");
@@ -1780,14 +1783,14 @@ internal static class Program
         Run("Legacy MFC renderer still depends on fixed digest fields and uppercase formatting rules", () =>
         {
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
 
             AssertContains(bridgeMfc, "AppendFileHashToHyperEdit", "Legacy MFC digest renderer is missing.");
-            AssertContains(digestAccess, "FormatResultDigestForDisplay(const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestAccess does not yet expose the centralized digest-display formatting helper.");
-            AssertContains(digestAccess, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestAccess does not yet expose the centralized formatted digest-display visitor helper.");
-            AssertContains(digestAccess, "GetResultDigestDisplayInfo(const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestAccess does not yet expose the grouped digest display-info helper.");
-            AssertContains(digestAccess, "return sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(digestValue)));", "ResultDigestAccess digest-display formatting helper does not yet uppercase digest values through the centralized seam.");
-            AssertContains(digestAccess, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(digestValue)));", "ResultDigestAccess digest-display formatting helper does not yet lowercase digest values through the centralized seam.");
+            AssertContains(digestRender, "FormatResultDigestForDisplay(const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestRender does not yet expose the centralized digest-display formatting helper.");
+            AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet expose the centralized formatted digest-display visitor helper.");
+            AssertContains(digestRender, "GetResultDigestDisplayInfo(const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValue, bool uppercase)", "ResultDigestRender does not yet expose the grouped digest display-info helper.");
+            AssertContains(digestRender, "return sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(digestValue)));", "ResultDigestRender digest-display formatting helper does not yet uppercase digest values through the centralized seam.");
+            AssertContains(digestRender, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(digestValue)));", "ResultDigestRender digest-display formatting helper does not yet lowercase digest values through the centralized seam.");
             AssertContains(bridgeMfc, "VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)", "Legacy MFC renderer does not yet route digest value formatting through the centralized digest-display visitor seam.");
             AssertDoesNotContain(bridgeMfc, "str_upper(tstrtostr(tstrFileDigest))", "Legacy MFC renderer still uppercases digest values inline instead of using the centralized digest-display seam.");
             AssertDoesNotContain(bridgeMfc, "str_lower(tstrtostr(tstrFileDigest))", "Legacy MFC renderer still lowercases digest values inline instead of using the centralized digest-display seam.");
@@ -1883,6 +1886,7 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
 
             AssertContains(global, "struct HashAlgorithmSelectionState", "Global.h does not yet expose the grouped hash-algorithm selection state introduced in phase 8.");
@@ -1911,7 +1915,7 @@ internal static class Program
 
             AssertContains(digestAccess, "HasResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the result-digest presence helper needed for selective rendering.");
             AssertContains(digestAccess, "HasAnyResultDigests(const ResultData& result)", "ResultDigestAccess does not yet expose the grouped result-digest presence helper.");
-            AssertContains(digestAccess, "if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))", "ResultDigestAccess formatted display visitor does not yet skip disabled or absent digest values.");
+            AssertContains(digestRender, "if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))", "ResultDigestRender formatted display visitor does not yet skip disabled or absent digest values.");
         }, failures);
 
         Run("Phase 8 exposes algorithm selection through managed and UI entry points", () =>
@@ -1995,6 +1999,55 @@ internal static class Program
             AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet include the SHA512 checkbox.");
             AssertContains(mfcStringsBase, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC English strings do not yet include the algorithm-selection warning.");
             AssertContains(mfcStringsZh, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC Chinese strings do not yet include the algorithm-selection warning.");
+        }, failures);
+
+        Run("Phase 9 splits mixed result access responsibilities into dedicated search, projection, and render seams", () =>
+        {
+            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
+            string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
+            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
+            string managedBridgeDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
+            string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
+            string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+            string filesHashDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+
+            AssertDoesNotContain(resultAccess, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataAccess still owns result-list search traversal after the phase 9 seam split.");
+            AssertDoesNotContain(resultAccess, "ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataAccess still owns managed projection after the phase 9 seam split.");
+            AssertDoesNotContain(resultAccess, "struct ResultRenderPolicy", "ResultDataAccess still owns render policy state after the phase 9 seam split.");
+
+            AssertContains(resultSearch, "#include \"Common/ResultDataAccess.h\"", "ResultDataSearch does not yet layer on top of the core ResultData access seam.");
+            AssertContains(resultSearch, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataSearch does not yet own result-list traversal.");
+            AssertContains(resultSearch, "VisitDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet own digest-match traversal.");
+
+            AssertContains(resultProjection, "#include \"Common/ResultDataSearch.h\"", "ResultDataProjection does not yet layer on top of ResultDataSearch.");
+            AssertContains(resultProjection, "ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet own managed result projection.");
+            AssertContains(resultProjection, "CreateProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataProjection does not yet own projected digest-match materialization.");
+
+            AssertContains(resultRender, "#include \"Common/ResultDataAccess.h\"", "ResultDataRender does not yet layer on top of the core ResultData access seam.");
+            AssertContains(resultRender, "struct ResultRenderPolicy", "ResultDataRender does not yet own render policy state.");
+            AssertContains(resultRender, "VisitRenderableResultMetaLines(const ResultData& result, TResultMetaLineVisitor visitor)", "ResultDataRender does not yet own result metadata rendering traversal.");
+
+            AssertDoesNotContain(digestAccess, "struct ResultDigestDisplayInfo", "ResultDigestAccess still owns digest display grouping after the phase 9 seam split.");
+            AssertDoesNotContain(digestAccess, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestAccess still owns digest display traversal after the phase 9 seam split.");
+            AssertContains(digestRender, "#include \"Common/ResultDigestAccess.h\"", "ResultDigestRender does not yet layer on top of the digest core seam.");
+            AssertContains(digestRender, "struct ResultDigestDisplayInfo", "ResultDigestRender does not yet own grouped digest display information.");
+            AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet own digest display traversal.");
+
+            AssertContains(managedBridgeDispatch, "#include \"Common/ResultDataProjection.h\"", "ManagedBridgeDispatch does not yet consume the split result-data projection seam.");
+            AssertContains(bridgeMfcHeader, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge header does not yet consume the split result-data render seam.");
+            AssertContains(bridgeMfcHeader, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge header does not yet consume the split digest render seam.");
+            AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge implementation does not yet consume the split result-data render seam.");
+            AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
+            AssertContains(filesHashDlg, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
+            AssertContains(hashMgmtClr, "#include \"Common/ResultDataProjection.h\"", "CLR search bridge does not yet consume the split result-data projection seam.");
+            AssertContains(hashMgmtClr, "#include \"Common/ResultDataSearch.h\"", "CLR search bridge does not yet consume the split result-data search seam.");
+            AssertContains(hashMgmtUwp, "#include \"Common/ResultDataProjection.h\"", "UWP search bridge does not yet consume the split result-data projection seam.");
+            AssertContains(hashMgmtUwp, "#include \"Common/ResultDataSearch.h\"", "UWP search bridge does not yet consume the split result-data search seam.");
         }, failures);
 
         if (failures.Count > 0)

@@ -2,8 +2,6 @@
 
 #include "UIBridgeUwp.h"
 #include "Common/Global.h"
-#include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
 #include "CxHelper.h"
 using namespace Platform;
 using namespace FilesHashUwp;

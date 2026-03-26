@@ -18,12 +18,6 @@ struct ResultDigestMetadata
 	sunjwbase::tstring ResultDigestCompatibilityFields::*compatibilityValueField;
 };
 
-struct ResultDigestDisplayInfo
-{
-	sunjwbase::tstring label;
-	sunjwbase::tstring value;
-};
-
 static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
 {
 	return digestMetadata.type;
@@ -50,24 +44,6 @@ static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index);
 static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result, ResultDigestType digestType);
 static inline bool HasResultDigest(const ResultData& result, ResultDigestType digestType);
 static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata& digestMetadata);
-
-static inline sunjwbase::tstring FormatResultDigestForDisplay(const sunjwbase::tstring& digestValue, bool uppercase)
-{
-	if (uppercase)
-	{
-		return sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(digestValue)));
-	}
-
-	return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(digestValue)));
-}
-
-static inline ResultDigestDisplayInfo GetResultDigestDisplayInfo(const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValue, bool uppercase)
-{
-	ResultDigestDisplayInfo digestDisplayInfo;
-	digestDisplayInfo.label = GetResultDigestLabel(digestMetadata);
-	digestDisplayInfo.value = FormatResultDigestForDisplay(digestValue, uppercase);
-	return digestDisplayInfo;
-}
 
 template<typename TResultDigestMetadataVisitor>
 static inline bool VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)
@@ -108,21 +84,6 @@ static inline bool VisitResultDigestMetadataValues(const ResultData& result, TRe
 	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
 	{
 		return visitor(index, digestMetadata, GetResultDigest(result, GetResultDigestMetadataType(digestMetadata)));
-	});
-}
-
-template<typename TResultDigestDisplayVisitor>
-static inline bool VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)
-{
-	return VisitResultDigestMetadataValues(result, [&](int index, const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValueTstr)
-	{
-		if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))
-		{
-			return true;
-		}
-
-		ResultDigestDisplayInfo digestDisplayInfo = GetResultDigestDisplayInfo(digestMetadata, digestValueTstr, uppercase);
-		return visitor(index, digestMetadata, digestDisplayInfo);
 	});
 }
 

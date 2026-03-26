@@ -1,7 +1,7 @@
 #ifndef _MANAGED_BRIDGE_DISPATCH_H_
 #define _MANAGED_BRIDGE_DISPATCH_H_
 
-#include "Common/ResultDataAccess.h"
+#include "Common/ResultDataProjection.h"
 
 enum ManagedResultDispatchType
 {

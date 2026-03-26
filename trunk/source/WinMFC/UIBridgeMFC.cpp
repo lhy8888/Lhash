@@ -9,8 +9,8 @@
 
 #include "Common/strhelper.h"
 #include "Common/Global.h"
-#include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDataRender.h"
+#include "Common/ResultDigestRender.h"
 #include "Common/Utils.h"
 #include "WindowsUtils.h"
 #include "WinCommon/WindowsStrings.h"

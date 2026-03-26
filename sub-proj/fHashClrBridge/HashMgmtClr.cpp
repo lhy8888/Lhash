@@ -3,8 +3,8 @@
 #include "HashMgmtClr.h"
 #include "ClrHelper.h"
 #include "Common/strhelper.h"
-#include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDataSearch.h"
+#include "Common/ResultDataProjection.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/HashEngine.h"
 using namespace std;
@@ -143,19 +143,13 @@ cli::array<ResultDataNet>^ HashMgmtClr::FindResult(String^ sstrHashToFind)
 	tstring tstrHashToFind(ConvertSystemStringToTstr(sstrHashToFind));
 	tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);
 
-	const ResultList& resultList = GetThreadDataResults(*m_pThreadData);
-	cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));
-	int projectedIndex = 0;
-	ResultList::const_iterator itr = resultList.begin();
-	for (; itr != resultList.end(); ++itr)
+	return CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)
 	{
-		if (ResultMatchesDigestText(*itr, tstrHashToFind))
-		{
-			projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);
-			++projectedIndex;
-		}
-	}
-	return projectedResults;
+		return gcnew cli::array<ResultDataNet>(static_cast<int>(resultCount));
+	}, ConvertTstrToSystemString, [&](cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
+	{
+		projectedResults[static_cast<int>(index)] = resultDataNet;
+	});
 }
 
 UInt64 HashMgmtClr::GetResultCount()

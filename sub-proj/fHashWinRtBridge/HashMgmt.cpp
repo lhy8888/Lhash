@@ -3,8 +3,8 @@
 #include "HashMgmt.h"
 #include "CxHelper.h"
 #include "Common/strhelper.h"
-#include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDataSearch.h"
+#include "Common/ResultDataProjection.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/HashEngine.h"
 using namespace std;

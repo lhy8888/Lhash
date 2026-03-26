@@ -3,8 +3,6 @@
 #include "UIBridgeWUI.h"
 
 #include "Common/Global.h"
-#include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
 #include "ClrHelper.h"
 using namespace System;
 using namespace FilesHashWUI;
