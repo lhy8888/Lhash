@@ -1,41 +1,28 @@
 #ifndef _RESULT_DIGEST_ACCESS_H_
 #define _RESULT_DIGEST_ACCESS_H_
 
-#include "Common/Global.h"
+#include "Common/HashAlgorithmRegistry.h"
 
-enum ResultDigestType
-{
-	RESULT_DIGEST_MD5 = 0,
-	RESULT_DIGEST_SHA1,
-	RESULT_DIGEST_SHA256,
-	RESULT_DIGEST_SHA512
-};
-
-struct ResultDigestMetadata
-{
-	ResultDigestType type;
-	const char *displayLabel;
-	sunjwbase::tstring ResultDigestCompatibilityFields::*compatibilityValueField;
-};
+typedef HashAlgorithmDescriptor ResultDigestMetadata;
 
 static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
 {
-	return digestMetadata.type;
+	return GetHashAlgorithmDescriptorType(digestMetadata);
 }
 
 static inline sunjwbase::tstring GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)
 {
-	return sunjwbase::strtotstr(std::string(digestMetadata.displayLabel));
+	return GetHashAlgorithmDescriptorDisplayLabel(digestMetadata);
 }
 
 static inline sunjwbase::tstring ResultDigestCompatibilityFields::*GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)
 {
-	return digestMetadata.compatibilityValueField;
+	return GetHashAlgorithmDescriptorCompatibilityValueField(digestMetadata);
 }
 
 static inline int GetResultDigestCount()
 {
-	return RESULT_DIGEST_STORAGE_COUNT;
+	return GetRegisteredHashAlgorithmCount();
 }
 
 static inline int GetResultDigestIndex(ResultDigestType digestType);
@@ -89,30 +76,17 @@ static inline bool VisitResultDigestMetadataValues(const ResultData& result, TRe
 
 static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index)
 {
-	static const ResultDigestMetadata digestMetadata[RESULT_DIGEST_STORAGE_COUNT] =
-	{
-		{ RESULT_DIGEST_MD5, "MD5", &ResultDigestCompatibilityFields::md5 },
-		{ RESULT_DIGEST_SHA1, "SHA1", &ResultDigestCompatibilityFields::sha1 },
-		{ RESULT_DIGEST_SHA256, "SHA256", &ResultDigestCompatibilityFields::sha256 },
-		{ RESULT_DIGEST_SHA512, "SHA512", &ResultDigestCompatibilityFields::sha512 }
-	};
-
-	if (index < 0 || index >= RESULT_DIGEST_STORAGE_COUNT)
-	{
-		return digestMetadata[0];
-	}
-
-	return digestMetadata[index];
+	return GetHashAlgorithmDescriptorAt(index);
 }
 
 static inline const ResultDigestMetadata& GetResultDigestMetadata(ResultDigestType digestType)
 {
-	return GetResultDigestMetadataAt(GetResultDigestIndex(digestType));
+	return GetHashAlgorithmDescriptor(digestType);
 }
 
 static inline ResultDigestType GetResultDigestTypeAt(int index)
 {
-	return GetResultDigestMetadataType(GetResultDigestMetadataAt(index));
+	return GetHashAlgorithmTypeAt(index);
 }
 
 static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata& digestMetadata)
@@ -127,20 +101,7 @@ static inline sunjwbase::tstring GetResultDigestLabel(ResultDigestType digestTyp
 
 static inline int GetResultDigestIndex(ResultDigestType digestType)
 {
-	int digestIndex = 0;
-
-	VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
-	{
-		if (GetResultDigestMetadataType(digestMetadata) == digestType)
-		{
-			digestIndex = index;
-			return false;
-		}
-
-		return true;
-	});
-
-	return digestIndex;
+	return GetHashAlgorithmIndex(digestType);
 }
 
 static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)

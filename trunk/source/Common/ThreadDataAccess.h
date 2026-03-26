@@ -2,7 +2,7 @@
 #define _THREAD_DATA_ACCESS_H_
 
 #include "Common/Global.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/HashAlgorithmRegistry.h"
 
 static inline void SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)
 {
@@ -193,19 +193,21 @@ static inline bool GetThreadDataUppercase(const ThreadData& threadData)
 
 static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
 {
-	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[GetResultDigestIndex(digestType)] = enabled;
+	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[GetHashAlgorithmIndex(digestType)] = enabled;
 }
 
 static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
 {
-	return GetThreadDataHashAlgorithmSelectionState(threadData).enabled[GetResultDigestIndex(digestType)];
+	return GetThreadDataHashAlgorithmSelectionState(threadData).enabled[GetHashAlgorithmIndex(digestType)];
 }
 
 template<typename THashAlgorithmVisitor>
 static inline bool VisitEnabledThreadDataHashAlgorithms(const ThreadData& threadData, THashAlgorithmVisitor visitor)
 {
-	return VisitResultDigests([&](ResultDigestType digestType)
+	return VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
+		(void)index;
+		ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
 		if (!IsThreadDataHashAlgorithmEnabled(threadData, digestType))
 		{
 			return true;
@@ -236,8 +238,10 @@ static inline bool HasEnabledThreadDataHashAlgorithms(const ThreadData& threadDa
 
 static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 {
-	VisitResultDigests([&](ResultDigestType digestType)
+	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
+		(void)index;
+		ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
 		SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);
 		return true;
 	});

@@ -40,7 +40,7 @@ typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 typedef std::list<ResultData> ResultList;
 
-enum { RESULT_DIGEST_STORAGE_COUNT = 4 };
+enum { HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT };
 
 #define MAX_FILES_NUM 8192
 
@@ -60,7 +60,7 @@ struct ResultDigestStorage
 
 struct HashAlgorithmSelectionState
 {
-	bool enabled[RESULT_DIGEST_STORAGE_COUNT]; // Enabled hash algorithms for the current session
+	bool enabled[HASH_ALGORITHM_REGISTRY_COUNT]; // Enabled hash algorithms for the current session
 };
 
 struct ResultDigestCompatibilityFields
