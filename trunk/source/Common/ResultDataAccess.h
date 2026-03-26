@@ -7,6 +7,8 @@
 #include "Common/Utils.h"
 #include "Common/ResultDigestAccess.h"
 
+using sunjwbase::strtotstr;
+
 static inline const ResultCoreState& GetResultCoreState(const ResultData& result)
 {
 	return result.coreState;

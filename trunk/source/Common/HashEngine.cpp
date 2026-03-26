@@ -231,6 +231,19 @@ static ResultData& BeginFileResult(ThreadData *thrdData, HashEngineObserver *obs
 	return result;
 }
 
+static void EmitMetaResult(HashEngineObserver *observer, ResultData& result);
+static void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase);
+static void EmitReadFileError(HashEngineObserver *observer, ResultData& result);
+
+struct FileHashContexts
+{
+	MD5_CTX mdContext; // MD5 context
+	CSHA1 sha1; // SHA1 object
+	SHA256_CTX sha256Ctx; // SHA256 context
+	SHA512_CTX sha512Ctx; // SHA512 context
+	uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
+};
+
 static uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
 	OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, tstring& tstrFileVersion)
 {
@@ -293,15 +306,6 @@ static void UpdateWholeProgressAfterFile(HashEngineObserver *observer, ThreadDat
 }
 
 typedef ResultDigestStorage FinalizedDigestBundle;
-
-struct FileHashContexts
-{
-	MD5_CTX mdContext; // MD5 context
-	CSHA1 sha1; // SHA1 object
-	SHA256_CTX sha256Ctx; // SHA256 context
-	SHA512_CTX sha512Ctx; // SHA512 context
-	uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
-};
 
 struct FileExecutionState
 {
@@ -553,7 +557,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 				cvCalc.wait(lock, [&]
 				{
 					// not to wait
-					return (!queueDataBuffer.empty() || isFileFinished || thrdData->stop);
+					return (!queueDataBuffer.empty() || isFileFinished || ShouldStopThreadData(*thrdData));
 				});
 
 				if (queueDataBuffer.empty() && isFileFinished)
@@ -568,7 +572,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 			}
 			cvFile.notify_all();
 
-			if (thrdData->stop)
+			if (ShouldStopThreadData(*thrdData))
 				break;
 
 			if (!ptrDataBufCalc)
@@ -598,7 +602,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 
 	do
 	{
-		if (thrdData->stop)
+		if (ShouldStopThreadData(*thrdData))
 			break;
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
@@ -622,7 +626,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 			cvFile.wait(lock, [&]
 			{
 				// limit to 4 DataBuffer
-				return (queueDataBuffer.size() < 4 || thrdData->stop);
+				return (queueDataBuffer.size() < 4 || ShouldStopThreadData(*thrdData));
 			});
 			queueDataBuffer.push(std::move(ptrDataBufFile));
 		}
@@ -663,7 +667,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 	taskHash.wait();
 #endif
 
-	if (thrdData->stop)
+	if (ShouldStopThreadData(*thrdData))
 	{
 		executionState->fileAttemptState.osFile->close();
 		return true;
