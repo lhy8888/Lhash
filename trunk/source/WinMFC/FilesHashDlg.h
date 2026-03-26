@@ -12,6 +12,7 @@
 
 #include "Common/Global.h"
 #include "UIBridgeMFC.h"
+#include "FilesHashAlgorithmSelectionController.h"
 
 // CMD5SUM03Dlg ¶Ô»°¿ò
 class CFilesHashDlg : public CDialog
@@ -70,6 +71,7 @@ protected:
 	sunjwbase::OsMutex m_mainMtx;
 
 	UIBridgeMFC *m_uiBridgeMFC;
+	FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;
 	ThreadData m_thrdData;
 	HANDLE m_hWorkThread;
 	float m_calculateTime;
@@ -91,9 +93,6 @@ protected:
 	void ResultFind(CString strFile, CString strHash);
 	void AppendResult(const ResultData& result);
 	void ClearFind();
-	void ResetHashAlgorithmChecks();
-	void SyncHashAlgorithmSelections();
-	BOOL ValidateHashAlgorithmSelection();
 
 	void DoMD5();
 	void StopWorkingThread();

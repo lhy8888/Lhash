@@ -1991,14 +1991,11 @@ internal static class Program
             AssertContains(uwpRes, "HashAlgorithmDialogMessage", "UWP resources do not yet include the algorithm-selection dialog message.");
 
             AssertContains(mfcHeader, "CButton m_chkMd5;", "MFC dialog does not yet expose the MD5 checkbox control.");
-            AssertContains(mfcHeader, "void ResetHashAlgorithmChecks();", "MFC dialog does not yet expose the checkbox reset helper.");
-            AssertContains(mfcHeader, "void SyncHashAlgorithmSelections();", "MFC dialog does not yet expose the algorithm-sync helper.");
-            AssertContains(mfcHeader, "BOOL ValidateHashAlgorithmSelection();", "MFC dialog does not yet expose the algorithm-validation helper.");
+            AssertContains(mfcHeader, "FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;", "MFC dialog does not yet keep the desktop hash-algorithm controller seam.");
             AssertContains(mfcDialog, "DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);", "MFC dialog does not yet bind the MD5 checkbox.");
-            AssertContains(mfcDialog, "ResetHashAlgorithmChecks();", "MFC dialog does not yet default the algorithm checkboxes.");
-            AssertContains(mfcDialog, "SyncHashAlgorithmSelections();", "MFC dialog does not yet synchronize algorithm selections into ThreadData.");
-            AssertContains(mfcDialog, "if (!ValidateHashAlgorithmSelection())", "MFC dialog does not yet block zero-algorithm starts.");
-            AssertContains(mfcDialog, "AfxMessageBox(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM), MB_OK | MB_ICONWARNING);", "MFC dialog does not yet warn when no algorithm is selected.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.ResetChecks();", "MFC dialog does not yet default the algorithm checkboxes through the dedicated controller seam.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SyncSelections();", "MFC dialog does not yet synchronize algorithm selections through the dedicated controller seam.");
+            AssertContains(mfcDialog, "if (!m_hashAlgorithmSelectionController.ValidateSelection(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))", "MFC dialog does not yet block zero-algorithm starts through the dedicated controller seam.");
             AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet include the MD5 checkbox.");
             AssertContains(mfcRc, "IDC_CHECK_SHA1", "MFC resources do not yet include the SHA1 checkbox.");
             AssertContains(mfcRc, "IDC_CHECK_SHA256", "MFC resources do not yet include the SHA256 checkbox.");
@@ -2187,6 +2184,49 @@ internal static class Program
             AssertContains(uwpPage, "StackPanelHashAlgorithms.Children.Add(checkBox);", "UWP page does not yet append dynamic algorithm checkboxes.");
             AssertContains(uwpPage, "SetHashAlgorithmControlsEnabled(bool enabled)", "UWP page does not yet centralize dynamic algorithm enable/disable state.");
             AssertDoesNotContain(uwpPage, "CheckBoxHashMd5", "UWP page still hardcodes the MD5 checkbox after introducing dynamic algorithm controls.");
+        }, failures);
+
+        Run("Phase 13 extracts the legacy desktop hash-algorithm checkbox flow into a dedicated MFC controller seam", () =>
+        {
+            string mfcControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.h");
+            string mfcController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
+            string mfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(mfcControllerHeader, "class FilesHashAlgorithmSelectionController", "Phase 13 is missing the dedicated MFC hash-algorithm selection controller.");
+            AssertContains(mfcControllerHeader, "void Initialize(ThreadData* threadData,", "Phase 13 controller does not yet expose the checkbox/thread initialization seam.");
+            AssertContains(mfcControllerHeader, "void ResetChecks();", "Phase 13 controller does not yet expose the default-checkbox helper.");
+            AssertContains(mfcControllerHeader, "void SyncSelections();", "Phase 13 controller does not yet expose the selection-sync helper.");
+            AssertContains(mfcControllerHeader, "BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;", "Phase 13 controller does not yet expose the zero-selection validation helper.");
+            AssertContains(mfcControllerHeader, "void SetEnabled(BOOL enabled);", "Phase 13 controller does not yet expose the checkbox enable/disable helper.");
+            AssertContains(mfcController, "#include \"Common/ThreadDataAccess.h\"", "Phase 13 controller does not yet layer on top of ThreadDataAccess.");
+            AssertContains(mfcController, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 13 controller does not yet route checkbox traversal through the registry seam.");
+            AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
+            AssertContains(mfcController, "HasEnabledThreadDataHashAlgorithms(*m_threadData)", "Phase 13 controller does not yet validate zero-algorithm selection through ThreadDataAccess.");
+            AssertContains(mfcController, "AfxMessageBox(noSelectionMessage, MB_OK | MB_ICONWARNING);", "Phase 13 controller does not yet keep the legacy desktop warning path.");
+
+            AssertContains(mfcHeader, "#include \"FilesHashAlgorithmSelectionController.h\"", "FilesHashDlg.h does not yet include the dedicated phase 13 controller.");
+            AssertContains(mfcHeader, "FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;", "FilesHashDlg.h does not yet store the dedicated phase 13 controller.");
+            AssertDoesNotContain(mfcHeader, "void ResetHashAlgorithmChecks();", "FilesHashDlg.h still exposes the legacy inline checkbox-reset helper after phase 13.");
+            AssertDoesNotContain(mfcHeader, "void SyncHashAlgorithmSelections();", "FilesHashDlg.h still exposes the legacy inline selection-sync helper after phase 13.");
+            AssertDoesNotContain(mfcHeader, "BOOL ValidateHashAlgorithmSelection();", "FilesHashDlg.h still exposes the legacy inline selection-validation helper after phase 13.");
+
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.Initialize(&m_thrdData, &m_chkMd5, &m_chkSha1, &m_chkSha256, &m_chkSha512);", "FilesHashDlg.cpp does not yet initialize the dedicated phase 13 controller.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.ResetChecks();", "FilesHashDlg.cpp does not yet route default checkbox setup through the dedicated controller.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SyncSelections();", "FilesHashDlg.cpp does not yet route checkbox state synchronization through the dedicated controller.");
+            AssertContains(mfcDialog, "if (!m_hashAlgorithmSelectionController.ValidateSelection(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))", "FilesHashDlg.cpp does not yet route zero-algorithm validation through the dedicated controller.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SetEnabled(FALSE);", "FilesHashDlg.cpp does not yet route working-state checkbox disablement through the dedicated controller.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SetEnabled(TRUE);", "FilesHashDlg.cpp does not yet route idle-state checkbox enablement through the dedicated controller.");
+            AssertDoesNotContain(mfcDialog, "void CFilesHashDlg::ResetHashAlgorithmChecks()", "FilesHashDlg.cpp still owns the legacy inline checkbox-reset implementation after phase 13.");
+            AssertDoesNotContain(mfcDialog, "void CFilesHashDlg::SyncHashAlgorithmSelections()", "FilesHashDlg.cpp still owns the legacy inline selection-sync implementation after phase 13.");
+            AssertDoesNotContain(mfcDialog, "void CFilesHashDlg::ValidateHashAlgorithmSelection()", "FilesHashDlg.cpp still owns the legacy inline selection-validation implementation after phase 13.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashAlgorithmSelectionController.cpp", "fileshash.vcxproj does not yet compile the dedicated phase 13 controller.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashAlgorithmSelectionController.h", "fileshash.vcxproj does not yet include the dedicated phase 13 controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashAlgorithmSelectionController.cpp", "fileshash.vcxproj.filters does not yet track the dedicated phase 13 controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashAlgorithmSelectionController.h", "fileshash.vcxproj.filters does not yet track the dedicated phase 13 controller header.");
         }, failures);
 
         if (failures.Count > 0)

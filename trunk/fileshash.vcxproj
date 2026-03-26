@@ -248,6 +248,7 @@
     <ClCompile Include="source\stdafx.cpp" />
     <ClCompile Include="source\WinMFC\AboutDlg.cpp" />
     <ClCompile Include="source\WinMFC\FilesHash.cpp" />
+    <ClCompile Include="source\WinMFC\FilesHashAlgorithmSelectionController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashDlg.cpp" />
     <ClCompile Include="source\WinMFC\FindDlg.cpp" />
     <ClCompile Include="source\WinMFC\HyperEdit.cpp" />
@@ -280,6 +281,7 @@
     <ClInclude Include="source\WinCommon\WindowsComm.h" />
     <ClInclude Include="source\WinMFC\AboutDlg.h" />
     <ClInclude Include="source\WinMFC\FilesHash.h" />
+    <ClInclude Include="source\WinMFC\FilesHashAlgorithmSelectionController.h" />
     <ClInclude Include="source\WinMFC\FilesHashDlg.h" />
     <ClInclude Include="source\WinMFC\FindDlg.h" />
     <ClInclude Include="source\WinMFC\HyperEdit.h" />
