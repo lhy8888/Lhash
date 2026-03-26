@@ -304,31 +304,20 @@ static inline bool VisitRenderableResultMetaLines(const ResultData& result, TRes
 template<typename TResultStateNet>
 static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)
 {
-	TResultStateNet resultStateNet = TResultStateNet::ResultNone;
-
-	DispatchResultStateByType(resultState,
-		[&]()
-		{
-			resultStateNet = TResultStateNet::ResultNone;
-		},
-		[&]()
-		{
-			resultStateNet = TResultStateNet::ResultPath;
-		},
-		[&]()
-		{
-			resultStateNet = TResultStateNet::ResultMeta;
-		},
-		[&]()
-		{
-			resultStateNet = TResultStateNet::ResultAll;
-		},
-		[&]()
-		{
-			resultStateNet = TResultStateNet::ResultError;
-		});
-
-	return resultStateNet;
+	switch (resultState)
+	{
+	case RESULT_PATH:
+		return TResultStateNet::ResultPath;
+	case RESULT_META:
+		return TResultStateNet::ResultMeta;
+	case RESULT_ALL:
+		return TResultStateNet::ResultAll;
+	case RESULT_ERROR:
+		return TResultStateNet::ResultError;
+	case RESULT_NONE:
+	default:
+		return TResultStateNet::ResultNone;
+	}
 }
 
 template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>
@@ -354,24 +343,21 @@ static inline void DispatchResultDigestValueByType(ResultDigestType digestType, 
 template<typename TResultDataNet, typename TResultString>
 static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)
 {
-	DispatchResultDigestValueByType(digestType,
-		[&]()
-		{
-			resultDataNet.MD5 = digestValue;
-		},
-		[&]()
-		{
-			resultDataNet.SHA1 = digestValue;
-		},
-		[&]()
-		{
-			resultDataNet.SHA256 = digestValue;
-		},
-		[&]()
-		{
-			resultDataNet.SHA512 = digestValue;
-		});
-
+	switch (digestType)
+	{
+	case RESULT_DIGEST_MD5:
+		resultDataNet.MD5 = digestValue;
+		break;
+	case RESULT_DIGEST_SHA1:
+		resultDataNet.SHA1 = digestValue;
+		break;
+	case RESULT_DIGEST_SHA256:
+		resultDataNet.SHA256 = digestValue;
+		break;
+	case RESULT_DIGEST_SHA512:
+		resultDataNet.SHA512 = digestValue;
+		break;
+	}
 	return resultDataNet;
 }
 

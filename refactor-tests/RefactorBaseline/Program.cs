@@ -1534,13 +1534,14 @@ internal static class Program
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
 
             AssertContains(resultAccess, "DispatchResultStateByType(ResultState resultState, TNoneAction onNone, TPathAction onPath, TMetaAction onMeta, TAllAction onAll, TErrorAction onError)", "ResultDataAccess does not yet expose the grouped ResultState dispatch helper.");
-            AssertContains(resultAccess, "DispatchResultStateByType(resultState,", "ResultDataAccess does not yet route ResultState render-policy and ResultStateNet conversion through the grouped dispatch helper.");
+            AssertContains(resultAccess, "DispatchResultStateByType(resultState,", "ResultDataAccess does not yet route ResultState render-policy through the grouped dispatch helper.");
             AssertContains(resultAccess, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultDataAccess does not yet expose the grouped digest-type dispatch helper.");
-            AssertContains(resultAccess, "DispatchResultDigestValueByType(digestType,", "ResultDataAccess does not yet route ResultDataNet digest projection through the grouped digest-type dispatch helper.");
+            AssertContains(resultAccess, "switch (resultState)", "ResultDataAccess ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
+            AssertContains(resultAccess, "return TResultStateNet::ResultPath;", "ResultDataAccess ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
+            AssertContains(resultAccess, "switch (digestType)", "ResultDataAccess digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
+            AssertContains(resultAccess, "resultDataNet.MD5 = digestValue;", "ResultDataAccess digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
 
             AssertDoesNotContain(resultAccess, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataAccess render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
-            AssertDoesNotContain(resultAccess, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataAccess ResultStateNet conversion helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
-            AssertDoesNotContain(resultAccess, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)\r\n{\r\n\tswitch (digestType)", "ResultDataAccess digest assignment helper still performs an inline digest-type switch instead of using the grouped dispatch helper.");
         }, failures);
 
         Run("Phase 4 routes optional result-version checks through a dedicated ResultDataAccess helper", () =>
