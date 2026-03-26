@@ -7,9 +7,17 @@
 
 namespace FilesHashUwp
 {
+	public enum class HashAlgorithmTypeNet
+	{
+		MD5 = 0,
+		SHA1,
+		SHA256,
+		SHA512
+	};
+
 	public ref class HashMgmt sealed
 	{
-	public:
+public:
 		HashMgmt(UIBridgeDelegate^ uiBridgeDelegate);
 
 		void Init();
@@ -17,6 +25,9 @@ namespace FilesHashUwp
 
 		void SetStop(Platform::Boolean val);
 		void SetUppercase(Platform::Boolean val);
+		void ResetHashAlgorithms();
+		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);
+		Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
 		uint64 GetTotalSize();
 
 		void AddFiles(const Platform::Array<Platform::String^>^ filePaths);

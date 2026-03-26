@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
@@ -33,6 +34,10 @@ namespace FilesHashUwp
 
         private const string KeyAlreadyRun = "AlreadyRun";
         private const string KeyUppercase = "Uppercase";
+        private const string KeyHashAlgorithmMd5 = "HashAlgorithmMd5";
+        private const string KeyHashAlgorithmSha1 = "HashAlgorithmSha1";
+        private const string KeyHashAlgorithmSha256 = "HashAlgorithmSha256";
+        private const string KeyHashAlgorithmSha512 = "HashAlgorithmSha512";
 
         private ResourceLoader m_resourceLoaderMain;
         private UISettings m_uiSettings;
@@ -331,6 +336,10 @@ namespace FilesHashUwp
                     ButtonClear.IsEnabled = true;
                     ButtonVerify.IsEnabled = true;
                     CheckBoxUppercase.IsEnabled = true;
+                    CheckBoxHashMd5.IsEnabled = true;
+                    CheckBoxHashSha1.IsEnabled = true;
+                    CheckBoxHashSha256.IsEnabled = true;
+                    CheckBoxHashSha512.IsEnabled = true;
                     break;
                 case MainPageControlStat.MainPageCalcIng:
                     HidePopupAbout();
@@ -343,6 +352,10 @@ namespace FilesHashUwp
                     ButtonClear.IsEnabled = false;
                     ButtonVerify.IsEnabled = false;
                     CheckBoxUppercase.IsEnabled = false;
+                    CheckBoxHashMd5.IsEnabled = false;
+                    CheckBoxHashSha1.IsEnabled = false;
+                    CheckBoxHashSha256.IsEnabled = false;
+                    CheckBoxHashSha512.IsEnabled = false;
                     break;
                 case MainPageControlStat.MainPageVerify:
                     ButtonVerify.IsEnabled = false;
@@ -375,6 +388,59 @@ namespace FilesHashUwp
             {
                 UwpHelper.SaveLocalSettings(KeyUppercase, m_uppercaseChecked);
             }
+        }
+
+        private static bool GetCheckBoxValue(CheckBox checkBox)
+        {
+            return checkBox.IsChecked.HasValue && checkBox.IsChecked.Value;
+        }
+
+        private bool IsAnyHashAlgorithmSelected()
+        {
+            return GetCheckBoxValue(CheckBoxHashMd5) ||
+                GetCheckBoxValue(CheckBoxHashSha1) ||
+                GetCheckBoxValue(CheckBoxHashSha256) ||
+                GetCheckBoxValue(CheckBoxHashSha512);
+        }
+
+        private void UpdateHashAlgorithmStat(bool saveLocalSetting = true)
+        {
+            bool hashMd5Enabled = GetCheckBoxValue(CheckBoxHashMd5);
+            bool hashSha1Enabled = GetCheckBoxValue(CheckBoxHashSha1);
+            bool hashSha256Enabled = GetCheckBoxValue(CheckBoxHashSha256);
+            bool hashSha512Enabled = GetCheckBoxValue(CheckBoxHashSha512);
+
+            if (saveLocalSetting)
+            {
+                UwpHelper.SaveLocalSettings(KeyHashAlgorithmMd5, hashMd5Enabled);
+                UwpHelper.SaveLocalSettings(KeyHashAlgorithmSha1, hashSha1Enabled);
+                UwpHelper.SaveLocalSettings(KeyHashAlgorithmSha256, hashSha256Enabled);
+                UwpHelper.SaveLocalSettings(KeyHashAlgorithmSha512, hashSha512Enabled);
+            }
+
+            m_hashMgmt.ResetHashAlgorithms();
+            m_hashMgmt.SetHashAlgorithmEnabled(HashAlgorithmTypeNet.MD5, hashMd5Enabled);
+            m_hashMgmt.SetHashAlgorithmEnabled(HashAlgorithmTypeNet.SHA1, hashSha1Enabled);
+            m_hashMgmt.SetHashAlgorithmEnabled(HashAlgorithmTypeNet.SHA256, hashSha256Enabled);
+            m_hashMgmt.SetHashAlgorithmEnabled(HashAlgorithmTypeNet.SHA512, hashSha512Enabled);
+        }
+
+        private async Task<bool> ValidateHashAlgorithmSelectionAsync()
+        {
+            if (IsAnyHashAlgorithmSelected())
+            {
+                return true;
+            }
+
+            ContentDialog dialog = new ContentDialog()
+            {
+                Title = m_resourceLoaderMain.GetString("HashAlgorithmDialogTitle"),
+                Content = m_resourceLoaderMain.GetString("HashAlgorithmDialogMessage"),
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close
+            };
+            await dialog.ShowAsync();
+            return false;
         }
 
         private void UpdateResultUppercase()
@@ -420,9 +486,14 @@ namespace FilesHashUwp
                 m_mainPageStat == MainPageControlStat.MainPageWaitingExit);
         }
 
-        private void StartHashCalc(List<string> filePaths)
+        private async void StartHashCalc(List<string> filePaths)
         {
             if (!IsAbleToCalcFiles())
+            {
+                return;
+            }
+
+            if (!await ValidateHashAlgorithmSelectionAsync())
             {
                 return;
             }
@@ -439,6 +510,7 @@ namespace FilesHashUwp
             m_hashMgmt.AddFiles(filePaths.ToArray());
 
             UpdateUppercaseStat();
+            UpdateHashAlgorithmStat();
             m_hashMgmt.SetUppercase(m_uppercaseChecked);
             ProgressBarMain.Value = 0;
 
@@ -540,6 +612,20 @@ namespace FilesHashUwp
             AppendInlinesToTextMain(inlines);
         }
 
+        private void AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)
+        {
+            if (string.IsNullOrEmpty(digestValue))
+            {
+                return;
+            }
+
+            inlines.Add(UwpHelper.GenRunFromString(digestLabel));
+            Hyperlink hyperlinkDigest = GenHyperlinkFromStringForTextMain(digestValue);
+            m_hyperlinksMain.Add(hyperlinkDigest);
+            inlines.Add(hyperlinkDigest);
+            inlines.Add(UwpHelper.GenRunFromString("\r\n"));
+        }
+
         private void AppendFileHashToTextMain(ResultDataNet resultData, bool uppercase)
         {
             string strFileMD5, strFileSHA1, strFileSHA256, strFileSHA512;
@@ -560,26 +646,14 @@ namespace FilesHashUwp
             }
 
             List<Inline> inlines = new List<Inline>();
-            inlines.Add(UwpHelper.GenRunFromString("MD5: "));
-            Hyperlink hyperlinkMD5 = GenHyperlinkFromStringForTextMain(strFileMD5);
-            m_hyperlinksMain.Add(hyperlinkMD5);
-            inlines.Add(hyperlinkMD5);
-            inlines.Add(UwpHelper.GenRunFromString("\r\n"));
-            inlines.Add(UwpHelper.GenRunFromString("SHA1: "));
-            Hyperlink hyperlinkSHA1 = GenHyperlinkFromStringForTextMain(strFileSHA1);
-            m_hyperlinksMain.Add(hyperlinkSHA1);
-            inlines.Add(hyperlinkSHA1);
-            inlines.Add(UwpHelper.GenRunFromString("\r\n"));
-            inlines.Add(UwpHelper.GenRunFromString("SHA256: "));
-            Hyperlink hyperlinkSHA256 = GenHyperlinkFromStringForTextMain(strFileSHA256);
-            m_hyperlinksMain.Add(hyperlinkSHA256);
-            inlines.Add(hyperlinkSHA256);
-            inlines.Add(UwpHelper.GenRunFromString("\r\n"));
-            inlines.Add(UwpHelper.GenRunFromString("SHA512: "));
-            Hyperlink hyperlinkSHA512 = GenHyperlinkFromStringForTextMain(strFileSHA512);
-            m_hyperlinksMain.Add(hyperlinkSHA512);
-            inlines.Add(hyperlinkSHA512);
-            inlines.Add(UwpHelper.GenRunFromString("\r\n\r\n"));
+            AppendDigestHashToTextMain(inlines, "MD5: ", strFileMD5);
+            AppendDigestHashToTextMain(inlines, "SHA1: ", strFileSHA1);
+            AppendDigestHashToTextMain(inlines, "SHA256: ", strFileSHA256);
+            AppendDigestHashToTextMain(inlines, "SHA512: ", strFileSHA512);
+            if (inlines.Count > 0)
+            {
+                inlines.Add(UwpHelper.GenRunFromString("\r\n"));
+            }
             AppendInlinesToTextMain(inlines);
         }
 
@@ -801,6 +875,11 @@ namespace FilesHashUwp
 
             // Init stat
             SetPageControlStat(MainPageControlStat.MainPageNone);
+            CheckBoxHashMd5.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmMd5) ?? true);
+            CheckBoxHashSha1.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmSha1) ?? true);
+            CheckBoxHashSha256.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmSha256) ?? true);
+            CheckBoxHashSha512.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmSha512) ?? true);
+            UpdateHashAlgorithmStat(false);
 
             HandleCommandLineArgs();
         }
@@ -880,6 +959,16 @@ namespace FilesHashUwp
         private void CheckBoxUppercase_Unchecked(object sender, RoutedEventArgs e)
         {
             UpdateResultUppercase();
+        }
+
+        private void CheckBoxHashAlgorithm_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateHashAlgorithmStat();
+        }
+
+        private void CheckBoxHashAlgorithm_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateHashAlgorithmStat();
         }
 
         private void TextMainHyperlink_Click(Hyperlink sender, HyperlinkClickEventArgs args)

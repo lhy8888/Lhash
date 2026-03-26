@@ -45,6 +45,7 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("&About");
 	m_stringsMap[_T("MAINDLG_EXIT")] = _T("E&xit");
 	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("Copy hash value");
+	m_stringsMap[_T("MAINDLG_SELECT_HASH_ALGORITHM")] = _T("Enable at least one hash algorithm before starting.");
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("Verify");

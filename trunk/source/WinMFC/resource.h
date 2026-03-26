@@ -41,6 +41,10 @@
 #define IDC_CONTEXT                     1028
 #define IDC_SYSLINK1                    1029
 #define IDC_SYSLINK_SITE                1029
+#define IDC_CHECK_MD5                   1030
+#define IDC_CHECK_SHA1                  1031
+#define IDC_CHECK_SHA256                1032
+#define IDC_CHECK_SHA512                1033
 #define ID_HYPEREDITMENU_COPYHASH       32772
 #define ID_HYPEREDITMENU_X              32773
 
@@ -50,7 +54,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

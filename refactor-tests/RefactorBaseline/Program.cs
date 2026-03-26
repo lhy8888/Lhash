@@ -1914,6 +1914,89 @@ internal static class Program
             AssertContains(digestAccess, "if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))", "ResultDigestAccess formatted display visitor does not yet skip disabled or absent digest values.");
         }, failures);
 
+        Run("Phase 8 exposes algorithm selection through managed and UI entry points", () =>
+        {
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string winUiXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml");
+            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
+            string winUiRes = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string uwpXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml");
+            string uwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+            string uwpRes = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string mfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string mfcStringsBase = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
+            string mfcStringsZh = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp");
+
+            AssertContains(hashMgmtClrHeader, "public enum class HashAlgorithmTypeNet", "CLR bridge does not yet expose the managed hash-algorithm enum.");
+            AssertContains(hashMgmtClrHeader, "void ResetHashAlgorithms();", "CLR bridge does not yet expose the managed algorithm reset helper.");
+            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);", "CLR bridge does not yet expose the managed algorithm enable helper.");
+            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "CLR bridge does not yet expose the managed algorithm query helper.");
+            AssertContains(hashMgmtClr, "ResetThreadDataHashAlgorithms(*m_pThreadData);", "CLR bridge does not yet reset native algorithm selections from the managed seam.");
+            AssertContains(hashMgmtClr, "SetThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType, val);", "CLR bridge does not yet forward algorithm enablement to ThreadDataAccess.");
+            AssertContains(hashMgmtClr, "if (!HasEnabledThreadDataHashAlgorithms(*m_pThreadData))", "CLR bridge does not yet reject zero-algorithm hash starts.");
+
+            AssertContains(hashMgmtUwpHeader, "public enum class HashAlgorithmTypeNet", "UWP bridge does not yet expose the managed hash-algorithm enum.");
+            AssertContains(hashMgmtUwpHeader, "void ResetHashAlgorithms();", "UWP bridge does not yet expose the managed algorithm reset helper.");
+            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);", "UWP bridge does not yet expose the managed algorithm enable helper.");
+            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "UWP bridge does not yet expose the managed algorithm query helper.");
+            AssertContains(hashMgmtUwp, "ResetThreadDataHashAlgorithms(m_threadData);", "UWP bridge does not yet reset native algorithm selections from the managed seam.");
+            AssertContains(hashMgmtUwp, "SetThreadDataHashAlgorithmEnabled(m_threadData, digestType, val);", "UWP bridge does not yet forward algorithm enablement to ThreadDataAccess.");
+            AssertContains(hashMgmtUwp, "if (!HasEnabledThreadDataHashAlgorithms(m_threadData))", "UWP bridge does not yet reject zero-algorithm hash starts.");
+
+            AssertContains(winUiXaml, "CheckBoxHashMd5", "WinUI page does not yet expose the MD5 toggle.");
+            AssertContains(winUiXaml, "CheckBoxHashSha1", "WinUI page does not yet expose the SHA1 toggle.");
+            AssertContains(winUiXaml, "CheckBoxHashSha256", "WinUI page does not yet expose the SHA256 toggle.");
+            AssertContains(winUiXaml, "CheckBoxHashSha512", "WinUI page does not yet expose the SHA512 toggle.");
+            AssertContains(winUiPage, "KeyHashAlgorithmMd5", "WinUI page does not yet persist the MD5 toggle state.");
+            AssertContains(winUiPage, "UpdateHashAlgorithmStat(bool saveLocalSetting = true)", "WinUI page does not yet synchronize algorithm selections into HashMgmt.");
+            AssertContains(winUiPage, "ValidateHashAlgorithmSelectionAsync()", "WinUI page does not yet validate algorithm selection before start.");
+            AssertContains(winUiPage, "if (!await ValidateHashAlgorithmSelectionAsync())", "WinUI page does not yet block zero-algorithm starts.");
+            AssertContains(winUiPage, "m_mainWindow.HashMgmt.ResetHashAlgorithms();", "WinUI page does not yet reset managed selections before reapplying the current checkbox state.");
+            AssertContains(winUiPage, "SetHashAlgorithmEnabled(HashAlgorithmTypeNet.MD5, hashMd5Enabled);", "WinUI page does not yet forward the MD5 toggle.");
+            AssertContains(winUiPage, "CheckBoxHashMd5.IsChecked = (bool)(WinUIHelper.LoadLocalSettings(KeyHashAlgorithmMd5) ?? true);", "WinUI page does not yet default MD5 to enabled on first load.");
+            AssertContains(winUiPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "WinUI page does not yet centralize selective digest display rendering.");
+            AssertContains(winUiPage, "if (string.IsNullOrEmpty(digestValue))", "WinUI page does not yet skip empty digest values.");
+            AssertContains(winUiRes, "HashAlgorithmDialogTitle", "WinUI resources do not yet include the algorithm-selection dialog title.");
+            AssertContains(winUiRes, "HashAlgorithmDialogMessage", "WinUI resources do not yet include the algorithm-selection dialog message.");
+
+            AssertContains(uwpXaml, "CheckBoxHashMd5", "UWP page does not yet expose the MD5 toggle.");
+            AssertContains(uwpXaml, "CheckBoxHashSha1", "UWP page does not yet expose the SHA1 toggle.");
+            AssertContains(uwpXaml, "CheckBoxHashSha256", "UWP page does not yet expose the SHA256 toggle.");
+            AssertContains(uwpXaml, "CheckBoxHashSha512", "UWP page does not yet expose the SHA512 toggle.");
+            AssertContains(uwpPage, "KeyHashAlgorithmMd5", "UWP page does not yet persist the MD5 toggle state.");
+            AssertContains(uwpPage, "UpdateHashAlgorithmStat(bool saveLocalSetting = true)", "UWP page does not yet synchronize algorithm selections into HashMgmt.");
+            AssertContains(uwpPage, "ValidateHashAlgorithmSelectionAsync()", "UWP page does not yet validate algorithm selection before start.");
+            AssertContains(uwpPage, "if (!await ValidateHashAlgorithmSelectionAsync())", "UWP page does not yet block zero-algorithm starts.");
+            AssertContains(uwpPage, "m_hashMgmt.ResetHashAlgorithms();", "UWP page does not yet reset managed selections before reapplying the current checkbox state.");
+            AssertContains(uwpPage, "SetHashAlgorithmEnabled(HashAlgorithmTypeNet.MD5, hashMd5Enabled);", "UWP page does not yet forward the MD5 toggle.");
+            AssertContains(uwpPage, "CheckBoxHashMd5.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmMd5) ?? true);", "UWP page does not yet default MD5 to enabled on first load.");
+            AssertContains(uwpPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "UWP page does not yet centralize selective digest display rendering.");
+            AssertContains(uwpPage, "if (string.IsNullOrEmpty(digestValue))", "UWP page does not yet skip empty digest values.");
+            AssertContains(uwpRes, "HashAlgorithmDialogTitle", "UWP resources do not yet include the algorithm-selection dialog title.");
+            AssertContains(uwpRes, "HashAlgorithmDialogMessage", "UWP resources do not yet include the algorithm-selection dialog message.");
+
+            AssertContains(mfcHeader, "CButton m_chkMd5;", "MFC dialog does not yet expose the MD5 checkbox control.");
+            AssertContains(mfcHeader, "void ResetHashAlgorithmChecks();", "MFC dialog does not yet expose the checkbox reset helper.");
+            AssertContains(mfcHeader, "void SyncHashAlgorithmSelections();", "MFC dialog does not yet expose the algorithm-sync helper.");
+            AssertContains(mfcHeader, "BOOL ValidateHashAlgorithmSelection();", "MFC dialog does not yet expose the algorithm-validation helper.");
+            AssertContains(mfcDialog, "DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);", "MFC dialog does not yet bind the MD5 checkbox.");
+            AssertContains(mfcDialog, "ResetHashAlgorithmChecks();", "MFC dialog does not yet default the algorithm checkboxes.");
+            AssertContains(mfcDialog, "SyncHashAlgorithmSelections();", "MFC dialog does not yet synchronize algorithm selections into ThreadData.");
+            AssertContains(mfcDialog, "if (!ValidateHashAlgorithmSelection())", "MFC dialog does not yet block zero-algorithm starts.");
+            AssertContains(mfcDialog, "AfxMessageBox(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM), MB_OK | MB_ICONWARNING);", "MFC dialog does not yet warn when no algorithm is selected.");
+            AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet include the MD5 checkbox.");
+            AssertContains(mfcRc, "IDC_CHECK_SHA1", "MFC resources do not yet include the SHA1 checkbox.");
+            AssertContains(mfcRc, "IDC_CHECK_SHA256", "MFC resources do not yet include the SHA256 checkbox.");
+            AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet include the SHA512 checkbox.");
+            AssertContains(mfcStringsBase, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC English strings do not yet include the algorithm-selection warning.");
+            AssertContains(mfcStringsZh, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC Chinese strings do not yet include the algorithm-selection warning.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

@@ -156,6 +156,18 @@
   <data name="CheckBoxUppercase.Content" xml:space="preserve">
     <value>Uppercase</value>
   </data>
+  <data name="CheckBoxHashMd5.Content" xml:space="preserve">
+    <value>MD5</value>
+  </data>
+  <data name="CheckBoxHashSha1.Content" xml:space="preserve">
+    <value>SHA1</value>
+  </data>
+  <data name="CheckBoxHashSha256.Content" xml:space="preserve">
+    <value>SHA256</value>
+  </data>
+  <data name="CheckBoxHashSha512.Content" xml:space="preserve">
+    <value>SHA512</value>
+  </data>
   <data name="ResultFileVersion" xml:space="preserve">
     <value>Version:</value>
   </data>
@@ -191,6 +203,12 @@
   </data>
   <data name="HashValue" xml:space="preserve">
     <value>Hash</value>
+  </data>
+  <data name="HashAlgorithmDialogTitle" xml:space="preserve">
+    <value>Select a hash algorithm</value>
+  </data>
+  <data name="HashAlgorithmDialogMessage" xml:space="preserve">
+    <value>Enable at least one hash algorithm before starting.</value>
   </data>
   <data name="HyperlinkButtonGithub.Content" xml:space="preserve">
     <value>Hosted on GitHub</value>

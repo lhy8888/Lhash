@@ -45,6 +45,7 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("关于(&A)");
 	m_stringsMap[_T("MAINDLG_EXIT")] = _T("退出(&X)");
 	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("复制哈希值");
+	m_stringsMap[_T("MAINDLG_SELECT_HASH_ALGORITHM")] = _T("开始计算前，至少需要启用一种 Hash 算法。");
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("验证");

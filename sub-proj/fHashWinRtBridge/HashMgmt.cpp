@@ -12,6 +12,27 @@ using namespace Platform;
 using namespace FilesHashUwp;
 using namespace sunjwbase;
 
+static bool TryConvertHashAlgorithmType(HashAlgorithmTypeNet hashAlgorithm, ResultDigestType *digestType)
+{
+	switch (hashAlgorithm)
+	{
+	case HashAlgorithmTypeNet::MD5:
+		*digestType = RESULT_DIGEST_MD5;
+		return true;
+	case HashAlgorithmTypeNet::SHA1:
+		*digestType = RESULT_DIGEST_SHA1;
+		return true;
+	case HashAlgorithmTypeNet::SHA256:
+		*digestType = RESULT_DIGEST_SHA256;
+		return true;
+	case HashAlgorithmTypeNet::SHA512:
+		*digestType = RESULT_DIGEST_SHA512;
+		return true;
+	default:
+		return false;
+	}
+}
+
 HashMgmt::HashMgmt(UIBridgeDelegate^ uiBridgeDelegate)
 	:m_hWorkThread(NULL)
 {
@@ -38,6 +59,33 @@ void HashMgmt::SetUppercase(Boolean val)
 	SetThreadDataUppercase(m_threadData, val);
 }
 
+void HashMgmt::ResetHashAlgorithms()
+{
+	ResetThreadDataHashAlgorithms(m_threadData);
+}
+
+void HashMgmt::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Boolean val)
+{
+	ResultDigestType digestType;
+	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	{
+		return;
+	}
+
+	SetThreadDataHashAlgorithmEnabled(m_threadData, digestType, val);
+}
+
+Boolean HashMgmt::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+{
+	ResultDigestType digestType;
+	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	{
+		return false;
+	}
+
+	return IsThreadDataHashAlgorithmEnabled(m_threadData, digestType);
+}
+
 uint64 HashMgmt::GetTotalSize()
 {
 	return GetThreadDataTotalSize(m_threadData);
@@ -53,6 +101,11 @@ void HashMgmt::AddFiles(const Array<String^>^ filePaths)
 
 void HashMgmt::StartHashThread()
 {
+	if (!HasEnabledThreadDataHashAlgorithms(m_threadData))
+	{
+		throw ref new FailureException(L"At least one hash algorithm must be enabled.");
+	}
+
 	if (m_hWorkThread)
 	{
 		CloseHandle(m_hWorkThread);

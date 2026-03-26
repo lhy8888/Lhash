@@ -12,6 +12,27 @@ using namespace System;
 using namespace FilesHashWUI;
 using namespace sunjwbase;
 
+static bool TryConvertHashAlgorithmType(HashAlgorithmTypeNet hashAlgorithm, ResultDigestType *digestType)
+{
+	switch (hashAlgorithm)
+	{
+	case HashAlgorithmTypeNet::MD5:
+		*digestType = RESULT_DIGEST_MD5;
+		return true;
+	case HashAlgorithmTypeNet::SHA1:
+		*digestType = RESULT_DIGEST_SHA1;
+		return true;
+	case HashAlgorithmTypeNet::SHA256:
+		*digestType = RESULT_DIGEST_SHA256;
+		return true;
+	case HashAlgorithmTypeNet::SHA512:
+		*digestType = RESULT_DIGEST_SHA512;
+		return true;
+	default:
+		return false;
+	}
+}
+
 static TStrVector ConvertSystemStringArrayToTStrVector(cli::array<String^>^ filePaths)
 {
 	TStrVector fullPaths;
@@ -59,6 +80,33 @@ void HashMgmtClr::SetUppercase(bool val)
 	SetThreadDataUppercase(*m_pThreadData, val);
 }
 
+void HashMgmtClr::ResetHashAlgorithms()
+{
+	ResetThreadDataHashAlgorithms(*m_pThreadData);
+}
+
+void HashMgmtClr::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val)
+{
+	ResultDigestType digestType;
+	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	{
+		return;
+	}
+
+	SetThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType, val);
+}
+
+bool HashMgmtClr::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+{
+	ResultDigestType digestType;
+	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	{
+		return false;
+	}
+
+	return IsThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType);
+}
+
 UInt64 HashMgmtClr::GetTotalSize()
 {
 	return GetThreadDataTotalSize(*m_pThreadData);
@@ -71,6 +119,11 @@ void HashMgmtClr::AddFiles(cli::array<String^>^ filePaths)
 
 void HashMgmtClr::StartHashThread()
 {
+	if (!HasEnabledThreadDataHashAlgorithms(*m_pThreadData))
+	{
+		throw gcnew InvalidOperationException("At least one hash algorithm must be enabled.");
+	}
+
 	if (m_hWorkThread)
 	{
 		CloseHandle(m_hWorkThread);

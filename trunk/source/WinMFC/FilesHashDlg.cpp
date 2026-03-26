@@ -162,6 +162,10 @@ void CFilesHashDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EXIT, m_btnExit);
 	DDX_Control(pDX, IDC_CLEAN, m_btnClr);
 	DDX_Control(pDX, IDC_CHECKUP, m_chkUppercase);
+	DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);
+	DDX_Control(pDX, IDC_CHECK_SHA1, m_chkSha1);
+	DDX_Control(pDX, IDC_CHECK_SHA256, m_chkSha256);
+	DDX_Control(pDX, IDC_CHECK_SHA512, m_chkSha512);
 	DDX_Control(pDX, IDC_FIND, m_btnFind);
 	DDX_Control(pDX, IDC_CONTEXT, m_btnContext);
 }
@@ -276,6 +280,8 @@ BOOL CFilesHashDlg::OnInitDialog()
 	SetThreadDataWorking(m_thrdData, false);
 	m_progWhole.SetRange(0, 99);
 	m_chkUppercase.SetCheck(0);
+	ResetHashAlgorithmChecks();
+	SyncHashAlgorithmSelections();
 
 	if(HasThreadDataInputFiles(m_thrdData))
 		SetTimer(4, 50, NULL); // 使 DoMD5() 在 OnInitDialog() 之后执行
@@ -653,6 +659,32 @@ void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
+void CFilesHashDlg::ResetHashAlgorithmChecks()
+{
+	m_chkMd5.SetCheck(BST_CHECKED);
+	m_chkSha1.SetCheck(BST_CHECKED);
+	m_chkSha256.SetCheck(BST_CHECKED);
+	m_chkSha512.SetCheck(BST_CHECKED);
+}
+
+void CFilesHashDlg::SyncHashAlgorithmSelections()
+{
+	SetThreadDataHashAlgorithmEnabled(m_thrdData, RESULT_DIGEST_MD5, (m_chkMd5.GetCheck() != FALSE));
+	SetThreadDataHashAlgorithmEnabled(m_thrdData, RESULT_DIGEST_SHA1, (m_chkSha1.GetCheck() != FALSE));
+	SetThreadDataHashAlgorithmEnabled(m_thrdData, RESULT_DIGEST_SHA256, (m_chkSha256.GetCheck() != FALSE));
+	SetThreadDataHashAlgorithmEnabled(m_thrdData, RESULT_DIGEST_SHA512, (m_chkSha512.GetCheck() != FALSE));
+}
+
+BOOL CFilesHashDlg::ValidateHashAlgorithmSelection()
+{
+	if (HasEnabledThreadDataHashAlgorithms(m_thrdData))
+	{
+		return TRUE;
+	}
+
+	AfxMessageBox(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM), MB_OK | MB_ICONWARNING);
+	return FALSE;
+}
 void CFilesHashDlg::SetWholeProgPos(UINT pos)
 {
 	m_progWhole.SetPos(pos);
@@ -682,6 +714,11 @@ void CFilesHashDlg::DoMD5()
 	SetWholeProgPos(0);
 
 	SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));
+	SyncHashAlgorithmSelections();
+	if (!ValidateHashAlgorithmSelection())
+	{
+		return;
+	}
 
 	m_calculateTime = 0.0;
 	m_timer = SetTimer(1, 100, NULL);
@@ -741,6 +778,10 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 		m_btnFind.EnableWindow(FALSE);
 		m_btnContext.EnableWindow(FALSE);
 		m_chkUppercase.EnableWindow(FALSE);
+		m_chkMd5.EnableWindow(FALSE);
+		m_chkSha1.EnableWindow(FALSE);
+		m_chkSha256.EnableWindow(FALSE);
+		m_chkSha512.EnableWindow(FALSE);
 		GotoDlgCtrl(&m_btnOpen);
 	}
 	else
@@ -764,6 +805,10 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 		}
 		m_btnContext.EnableWindow(TRUE);
 		m_chkUppercase.EnableWindow(TRUE);
+		m_chkMd5.EnableWindow(TRUE);
+		m_chkSha1.EnableWindow(TRUE);
+		m_chkSha256.EnableWindow(TRUE);
+		m_chkSha512.EnableWindow(TRUE);
 		GotoDlgCtrl(&m_btnOpen);
 		PrepareDropTarget(this, TRUE);
 		PrepareDropTarget(&m_editMain, TRUE);

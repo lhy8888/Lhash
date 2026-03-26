@@ -119,9 +119,44 @@
                         Content="[Uppercase]"
                         TabIndex="3"
                         Unchecked="CheckBoxUppercase_Unchecked" />
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="20,0,0,10"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Bottom"
+                        Spacing="12">
+                        <CheckBox
+                            x:Name="CheckBoxHashMd5"
+                            x:Uid="CheckBoxHashMd5"
+                            Checked="CheckBoxHashAlgorithm_Checked"
+                            Content="MD5"
+                            TabIndex="4"
+                            Unchecked="CheckBoxHashAlgorithm_Unchecked" />
+                        <CheckBox
+                            x:Name="CheckBoxHashSha1"
+                            x:Uid="CheckBoxHashSha1"
+                            Checked="CheckBoxHashAlgorithm_Checked"
+                            Content="SHA1"
+                            TabIndex="5"
+                            Unchecked="CheckBoxHashAlgorithm_Unchecked" />
+                        <CheckBox
+                            x:Name="CheckBoxHashSha256"
+                            x:Uid="CheckBoxHashSha256"
+                            Checked="CheckBoxHashAlgorithm_Checked"
+                            Content="SHA256"
+                            TabIndex="6"
+                            Unchecked="CheckBoxHashAlgorithm_Unchecked" />
+                        <CheckBox
+                            x:Name="CheckBoxHashSha512"
+                            x:Uid="CheckBoxHashSha512"
+                            Checked="CheckBoxHashAlgorithm_Checked"
+                            Content="SHA512"
+                            TabIndex="7"
+                            Unchecked="CheckBoxHashAlgorithm_Unchecked" />
+                    </StackPanel>
                     <TextBlock
                         x:Name="TextBlockSpeed"
-                        Grid.Column="2"
+                        Grid.Column="3"
                         Margin="5,0,0,18"
                         VerticalAlignment="Bottom"
                         Text="[Speed]" />
@@ -135,7 +170,7 @@
                         VerticalAlignment="Bottom"
                         Click="ButtonClear_Click"
                         Content="[Clear]"
-                        TabIndex="4" />
+                        TabIndex="8" />
                     <Button
                         x:Name="ButtonVerify"
                         x:Uid="ButtonVerify"
@@ -145,7 +180,7 @@
                         VerticalAlignment="Bottom"
                         Click="ButtonVerify_Click"
                         Content="[Verify]"
-                        TabIndex="5">
+                        TabIndex="9">
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="F" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
@@ -161,7 +196,7 @@
                         Click="ButtonOpen_Click"
                         Content="[Open]"
                         Style="{StaticResource AccentButtonStyle}"
-                        TabIndex="1" />
+                        TabIndex="10" />
                 </Grid>
 
             </Grid>

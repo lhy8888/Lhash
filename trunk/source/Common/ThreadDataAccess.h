@@ -215,6 +215,25 @@ static inline bool VisitEnabledThreadDataHashAlgorithms(const ThreadData& thread
 	});
 }
 
+static inline size_t GetEnabledThreadDataHashAlgorithmCount(const ThreadData& threadData)
+{
+	size_t enabledCount = 0;
+
+	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+	{
+		(void)digestType;
+		++enabledCount;
+		return true;
+	});
+
+	return enabledCount;
+}
+
+static inline bool HasEnabledThreadDataHashAlgorithms(const ThreadData& threadData)
+{
+	return GetEnabledThreadDataHashAlgorithmCount(threadData) > 0;
+}
+
 static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 {
 	VisitResultDigests([&](ResultDigestType digestType)

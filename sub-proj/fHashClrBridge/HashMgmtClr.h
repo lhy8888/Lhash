@@ -6,9 +6,17 @@
 
 namespace FilesHashWUI
 {
+	public enum class HashAlgorithmTypeNet
+	{
+		MD5 = 0,
+		SHA1,
+		SHA256,
+		SHA512
+	};
+
 	public ref class HashMgmtClr sealed
 	{
-	public:
+public:
 		HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates);
 
 		virtual ~HashMgmtClr()
@@ -30,6 +38,9 @@ namespace FilesHashWUI
 
 		void SetStop(bool val);
 		void SetUppercase(bool val);
+		void ResetHashAlgorithms();
+		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);
+		bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
 		System::UInt64 GetTotalSize();
 
 		void AddFiles(cli::array<System::String^>^ filePaths);
