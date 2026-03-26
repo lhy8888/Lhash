@@ -15,6 +15,14 @@ namespace FilesHashUwp
 		SHA512
 	};
 
+	public ref class HashAlgorithmDescriptorNet sealed
+	{
+public:
+		property int DigestType;
+		property Platform::String^ StableName;
+		property Platform::String^ DisplayLabel;
+	};
+
 	public ref class HashMgmt sealed
 	{
 public:
@@ -26,8 +34,11 @@ public:
 		void SetStop(Platform::Boolean val);
 		void SetUppercase(Platform::Boolean val);
 		void ResetHashAlgorithms();
+		Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();
 		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);
 		Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
+		void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);
+		Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);
 		uint64 GetTotalSize();
 
 		void AddFiles(const Platform::Array<Platform::String^>^ filePaths);

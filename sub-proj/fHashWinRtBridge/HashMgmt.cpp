@@ -12,25 +12,37 @@ using namespace Platform;
 using namespace FilesHashUwp;
 using namespace sunjwbase;
 
+static bool TryConvertHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
+{
+	return TryGetHashAlgorithmType(digestTypeValue, digestType);
+}
+
 static bool TryConvertHashAlgorithmType(HashAlgorithmTypeNet hashAlgorithm, ResultDigestType *digestType)
 {
-	switch (hashAlgorithm)
+	return TryConvertHashAlgorithmDigestType(static_cast<int>(hashAlgorithm), digestType);
+}
+
+static HashAlgorithmDescriptorNet^ CreateHashAlgorithmDescriptorNet(const HashAlgorithmDescriptor& algorithmDescriptor)
+{
+	HashAlgorithmDescriptorNet^ descriptorNet = ref new HashAlgorithmDescriptorNet();
+	descriptorNet->DigestType = static_cast<int>(GetHashAlgorithmDescriptorType(algorithmDescriptor));
+	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
+	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
+	descriptorNet->StableName = ConvertToPlatStr(stableName.c_str());
+	descriptorNet->DisplayLabel = ConvertToPlatStr(displayLabel.c_str());
+	return descriptorNet;
+}
+
+static Array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDescriptors()
+{
+	Array<HashAlgorithmDescriptorNet^>^ algorithmDescriptors = ref new Array<HashAlgorithmDescriptorNet^>(GetRegisteredHashAlgorithmCount());
+
+	for (int algorithmIndex = 0; algorithmIndex < GetRegisteredHashAlgorithmCount(); ++algorithmIndex)
 	{
-	case HashAlgorithmTypeNet::MD5:
-		*digestType = RESULT_DIGEST_MD5;
-		return true;
-	case HashAlgorithmTypeNet::SHA1:
-		*digestType = RESULT_DIGEST_SHA1;
-		return true;
-	case HashAlgorithmTypeNet::SHA256:
-		*digestType = RESULT_DIGEST_SHA256;
-		return true;
-	case HashAlgorithmTypeNet::SHA512:
-		*digestType = RESULT_DIGEST_SHA512;
-		return true;
-	default:
-		return false;
+		algorithmDescriptors[algorithmIndex] = CreateHashAlgorithmDescriptorNet(GetHashAlgorithmDescriptorAt(algorithmIndex));
 	}
+
+	return algorithmDescriptors;
 }
 
 HashMgmt::HashMgmt(UIBridgeDelegate^ uiBridgeDelegate)
@@ -64,10 +76,25 @@ void HashMgmt::ResetHashAlgorithms()
 	ResetThreadDataHashAlgorithms(m_threadData);
 }
 
+Array<HashAlgorithmDescriptorNet^>^ HashMgmt::GetSupportedHashAlgorithms()
+{
+	return CreateSupportedHashAlgorithmDescriptors();
+}
+
 void HashMgmt::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Boolean val)
 {
+	SetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm), val);
+}
+
+Boolean HashMgmt::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+{
+	return GetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm));
+}
+
+void HashMgmt::SetHashAlgorithmEnabledByDigestType(int digestTypeValue, Boolean val)
+{
 	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
 	{
 		return;
 	}
@@ -75,10 +102,10 @@ void HashMgmt::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Boole
 	SetThreadDataHashAlgorithmEnabled(m_threadData, digestType, val);
 }
 
-Boolean HashMgmt::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+Boolean HashMgmt::GetHashAlgorithmEnabledByDigestType(int digestTypeValue)
 {
 	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
 	{
 		return false;
 	}

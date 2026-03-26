@@ -79,40 +79,12 @@
                     Unchecked="CheckBoxUppercase_Unchecked" />
 
                 <StackPanel
+                    x:Name="StackPanelHashAlgorithms"
                     Grid.Column="2"
                     Margin="20,0,0,10"
                     Orientation="Horizontal"
                     VerticalAlignment="Bottom"
-                    Spacing="12">
-                    <CheckBox
-                        x:Name="CheckBoxHashMd5"
-                        x:Uid="CheckBoxHashMd5"
-                        Checked="CheckBoxHashAlgorithm_Checked"
-                        Content="MD5"
-                        TabIndex="4"
-                        Unchecked="CheckBoxHashAlgorithm_Unchecked" />
-                    <CheckBox
-                        x:Name="CheckBoxHashSha1"
-                        x:Uid="CheckBoxHashSha1"
-                        Checked="CheckBoxHashAlgorithm_Checked"
-                        Content="SHA1"
-                        TabIndex="5"
-                        Unchecked="CheckBoxHashAlgorithm_Unchecked" />
-                    <CheckBox
-                        x:Name="CheckBoxHashSha256"
-                        x:Uid="CheckBoxHashSha256"
-                        Checked="CheckBoxHashAlgorithm_Checked"
-                        Content="SHA256"
-                        TabIndex="6"
-                        Unchecked="CheckBoxHashAlgorithm_Unchecked" />
-                    <CheckBox
-                        x:Name="CheckBoxHashSha512"
-                        x:Uid="CheckBoxHashSha512"
-                        Checked="CheckBoxHashAlgorithm_Checked"
-                        Content="SHA512"
-                        TabIndex="7"
-                        Unchecked="CheckBoxHashAlgorithm_Unchecked" />
-                </StackPanel>
+                    Spacing="12" />
 
                 <TextBlock
                     x:Name="TextBlockSpeed"

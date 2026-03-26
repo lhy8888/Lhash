@@ -14,6 +14,14 @@ namespace FilesHashWUI
 		SHA512
 	};
 
+	public ref class HashAlgorithmDescriptorNet sealed
+	{
+public:
+		property int DigestType;
+		property System::String^ StableName;
+		property System::String^ DisplayLabel;
+	};
+
 	public ref class HashMgmtClr sealed
 	{
 public:
@@ -39,8 +47,11 @@ public:
 		void SetStop(bool val);
 		void SetUppercase(bool val);
 		void ResetHashAlgorithms();
+		cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();
 		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);
 		bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
+		void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);
+		bool GetHashAlgorithmEnabledByDigestType(int digestType);
 		System::UInt64 GetTotalSize();
 
 		void AddFiles(cli::array<System::String^>^ filePaths);

@@ -104,6 +104,24 @@ static inline ResultDigestType GetHashAlgorithmTypeAt(int index)
 	return GetHashAlgorithmDescriptorType(GetHashAlgorithmDescriptorAt(index));
 }
 
+static inline bool IsRegisteredHashAlgorithmType(ResultDigestType digestType)
+{
+	int algorithmIndex = GetHashAlgorithmIndex(digestType);
+	return GetHashAlgorithmTypeAt(algorithmIndex) == digestType;
+}
+
+static inline bool TryGetHashAlgorithmType(int digestTypeValue, ResultDigestType *digestType)
+{
+	ResultDigestType candidateDigestType = static_cast<ResultDigestType>(digestTypeValue);
+	if (!IsRegisteredHashAlgorithmType(candidateDigestType))
+	{
+		return false;
+	}
+
+	*digestType = candidateDigestType;
+	return true;
+}
+
 static inline sunjwbase::tstring GetHashAlgorithmDisplayLabel(ResultDigestType digestType)
 {
 	return GetHashAlgorithmDescriptorDisplayLabel(GetHashAlgorithmDescriptor(digestType));

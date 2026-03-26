@@ -1960,33 +1960,31 @@ internal static class Program
             AssertContains(hashMgmtUwp, "SetThreadDataHashAlgorithmEnabled(m_threadData, digestType, val);", "UWP bridge does not yet forward algorithm enablement to ThreadDataAccess.");
             AssertContains(hashMgmtUwp, "if (!HasEnabledThreadDataHashAlgorithms(m_threadData))", "UWP bridge does not yet reject zero-algorithm hash starts.");
 
-            AssertContains(winUiXaml, "CheckBoxHashMd5", "WinUI page does not yet expose the MD5 toggle.");
-            AssertContains(winUiXaml, "CheckBoxHashSha1", "WinUI page does not yet expose the SHA1 toggle.");
-            AssertContains(winUiXaml, "CheckBoxHashSha256", "WinUI page does not yet expose the SHA256 toggle.");
-            AssertContains(winUiXaml, "CheckBoxHashSha512", "WinUI page does not yet expose the SHA512 toggle.");
-            AssertContains(winUiPage, "KeyHashAlgorithmMd5", "WinUI page does not yet persist the MD5 toggle state.");
+            AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic hash-algorithm container.");
+            AssertContains(winUiPage, "KeyHashAlgorithmPrefix", "WinUI page does not yet persist dynamic hash-algorithm toggle state.");
             AssertContains(winUiPage, "UpdateHashAlgorithmStat(bool saveLocalSetting = true)", "WinUI page does not yet synchronize algorithm selections into HashMgmt.");
             AssertContains(winUiPage, "ValidateHashAlgorithmSelectionAsync()", "WinUI page does not yet validate algorithm selection before start.");
             AssertContains(winUiPage, "if (!await ValidateHashAlgorithmSelectionAsync())", "WinUI page does not yet block zero-algorithm starts.");
             AssertContains(winUiPage, "m_mainWindow.HashMgmt.ResetHashAlgorithms();", "WinUI page does not yet reset managed selections before reapplying the current checkbox state.");
-            AssertContains(winUiPage, "SetHashAlgorithmEnabled(HashAlgorithmTypeNet.MD5, hashMd5Enabled);", "WinUI page does not yet forward the MD5 toggle.");
-            AssertContains(winUiPage, "CheckBoxHashMd5.IsChecked = (bool)(WinUIHelper.LoadLocalSettings(KeyHashAlgorithmMd5) ?? true);", "WinUI page does not yet default MD5 to enabled on first load.");
+            AssertContains(winUiPage, "LoadHashAlgorithmControls()", "WinUI page does not yet materialize dynamic hash-algorithm controls.");
+            AssertContains(winUiPage, "m_mainWindow.HashMgmt.GetSupportedHashAlgorithms();", "WinUI page does not yet fetch supported algorithms from the managed seam.");
+            AssertContains(winUiPage, "SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);", "WinUI page does not yet forward dynamic hash-algorithm selections.");
+            AssertContains(winUiPage, "WinUIHelper.LoadLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm)) ?? true", "WinUI page does not yet default dynamic hash-algorithm entries to enabled on first load.");
             AssertContains(winUiPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "WinUI page does not yet centralize selective digest display rendering.");
             AssertContains(winUiPage, "if (string.IsNullOrEmpty(digestValue))", "WinUI page does not yet skip empty digest values.");
             AssertContains(winUiRes, "HashAlgorithmDialogTitle", "WinUI resources do not yet include the algorithm-selection dialog title.");
             AssertContains(winUiRes, "HashAlgorithmDialogMessage", "WinUI resources do not yet include the algorithm-selection dialog message.");
 
-            AssertContains(uwpXaml, "CheckBoxHashMd5", "UWP page does not yet expose the MD5 toggle.");
-            AssertContains(uwpXaml, "CheckBoxHashSha1", "UWP page does not yet expose the SHA1 toggle.");
-            AssertContains(uwpXaml, "CheckBoxHashSha256", "UWP page does not yet expose the SHA256 toggle.");
-            AssertContains(uwpXaml, "CheckBoxHashSha512", "UWP page does not yet expose the SHA512 toggle.");
-            AssertContains(uwpPage, "KeyHashAlgorithmMd5", "UWP page does not yet persist the MD5 toggle state.");
+            AssertContains(uwpXaml, "StackPanelHashAlgorithms", "UWP page does not yet expose the dynamic hash-algorithm container.");
+            AssertContains(uwpPage, "KeyHashAlgorithmPrefix", "UWP page does not yet persist dynamic hash-algorithm toggle state.");
             AssertContains(uwpPage, "UpdateHashAlgorithmStat(bool saveLocalSetting = true)", "UWP page does not yet synchronize algorithm selections into HashMgmt.");
             AssertContains(uwpPage, "ValidateHashAlgorithmSelectionAsync()", "UWP page does not yet validate algorithm selection before start.");
             AssertContains(uwpPage, "if (!await ValidateHashAlgorithmSelectionAsync())", "UWP page does not yet block zero-algorithm starts.");
             AssertContains(uwpPage, "m_hashMgmt.ResetHashAlgorithms();", "UWP page does not yet reset managed selections before reapplying the current checkbox state.");
-            AssertContains(uwpPage, "SetHashAlgorithmEnabled(HashAlgorithmTypeNet.MD5, hashMd5Enabled);", "UWP page does not yet forward the MD5 toggle.");
-            AssertContains(uwpPage, "CheckBoxHashMd5.IsChecked = (bool)(UwpHelper.LoadLocalSettings(KeyHashAlgorithmMd5) ?? true);", "UWP page does not yet default MD5 to enabled on first load.");
+            AssertContains(uwpPage, "LoadHashAlgorithmControls()", "UWP page does not yet materialize dynamic hash-algorithm controls.");
+            AssertContains(uwpPage, "m_hashMgmt.GetSupportedHashAlgorithms();", "UWP page does not yet fetch supported algorithms from the managed seam.");
+            AssertContains(uwpPage, "SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);", "UWP page does not yet forward dynamic hash-algorithm selections.");
+            AssertContains(uwpPage, "UwpHelper.LoadLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm)) ?? true", "UWP page does not yet default dynamic hash-algorithm entries to enabled on first load.");
             AssertContains(uwpPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "UWP page does not yet centralize selective digest display rendering.");
             AssertContains(uwpPage, "if (string.IsNullOrEmpty(digestValue))", "UWP page does not yet skip empty digest values.");
             AssertContains(uwpRes, "HashAlgorithmDialogTitle", "UWP resources do not yet include the algorithm-selection dialog title.");
@@ -2137,6 +2135,58 @@ internal static class Program
             AssertContains(threadAccess, "GetHashAlgorithmIndex(digestType)", "ThreadDataAccess does not yet route selection storage through the registry index seam.");
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadDataAccess does not yet route enabled-algorithm iteration through the registry seam.");
             AssertContains(threadAccess, "ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);", "ThreadDataAccess does not yet resolve enabled algorithm types through the registry seam.");
+        }, failures);
+
+        Run("Phase 12 routes managed and XAML algorithm entry through dynamic registry-driven descriptors while keeping the legacy desktop checkbox surface intact", () =>
+        {
+            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string winUiXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml");
+            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
+            string uwpXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml");
+            string uwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+
+            AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmType(int digestTypeValue, ResultDigestType *digestType)", "HashAlgorithmRegistry does not yet expose the generic digest-type conversion seam.");
+            AssertContains(hashAlgorithmRegistry, "IsRegisteredHashAlgorithmType(ResultDigestType digestType)", "HashAlgorithmRegistry does not yet expose the registered-type validation helper.");
+
+            AssertContains(hashMgmtClrHeader, "public ref class HashAlgorithmDescriptorNet sealed", "CLR bridge does not yet expose the managed algorithm descriptor.");
+            AssertContains(hashMgmtClrHeader, "cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "CLR bridge does not yet expose the supported-algorithm list helper.");
+            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", "CLR bridge does not yet expose the generic digest-type enable helper.");
+            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledByDigestType(int digestType);", "CLR bridge does not yet expose the generic digest-type query helper.");
+            AssertContains(hashMgmtClr, "return TryGetHashAlgorithmType(digestTypeValue, digestType);", "CLR bridge does not yet route generic digest-type conversion through the registry seam.");
+            AssertContains(hashMgmtClr, "CreateSupportedHashAlgorithmDescriptors()", "CLR bridge does not yet materialize a dynamic managed algorithm descriptor list.");
+            AssertContains(hashMgmtClr, "descriptorNet->StableName =", "CLR bridge managed algorithm descriptors do not yet expose stable names.");
+            AssertContains(hashMgmtClr, "descriptorNet->DisplayLabel =", "CLR bridge managed algorithm descriptors do not yet expose display labels.");
+
+            AssertContains(hashMgmtUwpHeader, "public ref class HashAlgorithmDescriptorNet sealed", "UWP bridge does not yet expose the managed algorithm descriptor.");
+            AssertContains(hashMgmtUwpHeader, "Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "UWP bridge does not yet expose the supported-algorithm list helper.");
+            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", "UWP bridge does not yet expose the generic digest-type enable helper.");
+            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);", "UWP bridge does not yet expose the generic digest-type query helper.");
+            AssertContains(hashMgmtUwp, "return TryGetHashAlgorithmType(digestTypeValue, digestType);", "UWP bridge does not yet route generic digest-type conversion through the registry seam.");
+            AssertContains(hashMgmtUwp, "CreateSupportedHashAlgorithmDescriptors()", "UWP bridge does not yet materialize a dynamic managed algorithm descriptor list.");
+            AssertContains(hashMgmtUwp, "descriptorNet->StableName =", "UWP bridge managed algorithm descriptors do not yet expose stable names.");
+            AssertContains(hashMgmtUwp, "descriptorNet->DisplayLabel =", "UWP bridge managed algorithm descriptors do not yet expose display labels.");
+
+            AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic algorithm container.");
+            AssertContains(winUiPage, "HashAlgorithmDescriptorNet[] m_hashAlgorithms", "WinUI page does not yet store the managed algorithm descriptor list.");
+            AssertContains(winUiPage, "Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes", "WinUI page does not yet track dynamic algorithm checkboxes by digest type.");
+            AssertContains(winUiPage, "GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)", "WinUI page does not yet route algorithm persistence through stable-name keys.");
+            AssertContains(winUiPage, "LoadHashAlgorithmControls()", "WinUI page does not yet materialize dynamic algorithm controls.");
+            AssertContains(winUiPage, "StackPanelHashAlgorithms.Children.Add(checkBox);", "WinUI page does not yet append dynamic algorithm checkboxes.");
+            AssertContains(winUiPage, "SetHashAlgorithmControlsEnabled(bool enabled)", "WinUI page does not yet centralize dynamic algorithm enable/disable state.");
+            AssertDoesNotContain(winUiPage, "CheckBoxHashMd5", "WinUI page still hardcodes the MD5 checkbox after introducing dynamic algorithm controls.");
+
+            AssertContains(uwpXaml, "StackPanelHashAlgorithms", "UWP page does not yet expose the dynamic algorithm container.");
+            AssertContains(uwpPage, "HashAlgorithmDescriptorNet[] m_hashAlgorithms", "UWP page does not yet store the managed algorithm descriptor list.");
+            AssertContains(uwpPage, "Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes", "UWP page does not yet track dynamic algorithm checkboxes by digest type.");
+            AssertContains(uwpPage, "GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)", "UWP page does not yet route algorithm persistence through stable-name keys.");
+            AssertContains(uwpPage, "LoadHashAlgorithmControls()", "UWP page does not yet materialize dynamic algorithm controls.");
+            AssertContains(uwpPage, "StackPanelHashAlgorithms.Children.Add(checkBox);", "UWP page does not yet append dynamic algorithm checkboxes.");
+            AssertContains(uwpPage, "SetHashAlgorithmControlsEnabled(bool enabled)", "UWP page does not yet centralize dynamic algorithm enable/disable state.");
+            AssertDoesNotContain(uwpPage, "CheckBoxHashMd5", "UWP page still hardcodes the MD5 checkbox after introducing dynamic algorithm controls.");
         }, failures);
 
         if (failures.Count > 0)

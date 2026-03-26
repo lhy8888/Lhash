@@ -12,25 +12,14 @@ using namespace System;
 using namespace FilesHashWUI;
 using namespace sunjwbase;
 
+static bool TryConvertHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
+{
+	return TryGetHashAlgorithmType(digestTypeValue, digestType);
+}
+
 static bool TryConvertHashAlgorithmType(HashAlgorithmTypeNet hashAlgorithm, ResultDigestType *digestType)
 {
-	switch (hashAlgorithm)
-	{
-	case HashAlgorithmTypeNet::MD5:
-		*digestType = RESULT_DIGEST_MD5;
-		return true;
-	case HashAlgorithmTypeNet::SHA1:
-		*digestType = RESULT_DIGEST_SHA1;
-		return true;
-	case HashAlgorithmTypeNet::SHA256:
-		*digestType = RESULT_DIGEST_SHA256;
-		return true;
-	case HashAlgorithmTypeNet::SHA512:
-		*digestType = RESULT_DIGEST_SHA512;
-		return true;
-	default:
-		return false;
-	}
+	return TryConvertHashAlgorithmDigestType(static_cast<int>(hashAlgorithm), digestType);
 }
 
 static TStrVector ConvertSystemStringArrayToTStrVector(cli::array<String^>^ filePaths)
@@ -51,6 +40,29 @@ static cli::array<ResultDataNet>^ CreateProjectedResultDataNetArray(size_t resul
 static void SetProjectedResultDataNet(cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
 {
 	projectedResults[static_cast<int>(index)] = resultDataNet;
+}
+
+static HashAlgorithmDescriptorNet^ CreateHashAlgorithmDescriptorNet(const HashAlgorithmDescriptor& algorithmDescriptor)
+{
+	HashAlgorithmDescriptorNet^ descriptorNet = gcnew HashAlgorithmDescriptorNet();
+	descriptorNet->DigestType = static_cast<int>(GetHashAlgorithmDescriptorType(algorithmDescriptor));
+	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
+	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
+	descriptorNet->StableName = ConvertTstrToSystemString(stableName.c_str());
+	descriptorNet->DisplayLabel = ConvertTstrToSystemString(displayLabel.c_str());
+	return descriptorNet;
+}
+
+static cli::array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDescriptors()
+{
+	cli::array<HashAlgorithmDescriptorNet^>^ algorithmDescriptors = gcnew cli::array<HashAlgorithmDescriptorNet^>(GetRegisteredHashAlgorithmCount());
+
+	for (int algorithmIndex = 0; algorithmIndex < GetRegisteredHashAlgorithmCount(); ++algorithmIndex)
+	{
+		algorithmDescriptors[algorithmIndex] = CreateHashAlgorithmDescriptorNet(GetHashAlgorithmDescriptorAt(algorithmIndex));
+	}
+
+	return algorithmDescriptors;
 }
 
 HashMgmtClr::HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates)
@@ -95,10 +107,25 @@ void HashMgmtClr::ResetHashAlgorithms()
 	ResetThreadDataHashAlgorithms(*m_pThreadData);
 }
 
+cli::array<HashAlgorithmDescriptorNet^>^ HashMgmtClr::GetSupportedHashAlgorithms()
+{
+	return CreateSupportedHashAlgorithmDescriptors();
+}
+
 void HashMgmtClr::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val)
 {
+	SetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm), val);
+}
+
+bool HashMgmtClr::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+{
+	return GetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm));
+}
+
+void HashMgmtClr::SetHashAlgorithmEnabledByDigestType(int digestTypeValue, bool val)
+{
 	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
 	{
 		return;
 	}
@@ -106,10 +133,10 @@ void HashMgmtClr::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bo
 	SetThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType, val);
 }
 
-bool HashMgmtClr::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
+bool HashMgmtClr::GetHashAlgorithmEnabledByDigestType(int digestTypeValue)
 {
 	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmType(hashAlgorithm, &digestType))
+	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
 	{
 		return false;
 	}
