@@ -390,11 +390,12 @@ static inline TResultDataNet AssignResultCoreToNet(TResultDataNet resultDataNet,
 template<typename TResultDataNet, typename TStringConverter>
 static inline TResultDataNet AssignResultDigestsToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)
 {
-	VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)
+	for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)
 	{
+		ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);
+		const tstring& digestValueTstr = GetResultDigest(result, digestType);
 		resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));
-		return true;
-	});
+	}
 	return resultDataNet;
 }
 
