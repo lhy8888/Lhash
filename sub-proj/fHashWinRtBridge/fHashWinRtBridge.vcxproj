@@ -176,7 +176,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -197,7 +197,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -218,7 +218,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -239,7 +239,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -260,7 +260,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -281,7 +281,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -302,7 +302,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -323,7 +323,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>

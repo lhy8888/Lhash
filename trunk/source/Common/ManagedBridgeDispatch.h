@@ -11,22 +11,22 @@ enum ManagedResultDispatchType
 	MANAGED_RESULT_DISPATCH_FILE_ERROR
 };
 
-template<typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
-static inline void DispatchManagedResultByType(ManagedResultDispatchType dispatchType, bool uppercase, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
+template<typename TResultDataNet, typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
+static inline void DispatchManagedResultByType(ManagedResultDispatchType dispatchType, TResultDataNet resultDataNet, bool uppercase, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
 {
 	switch (dispatchType)
 	{
 	case MANAGED_RESULT_DISPATCH_FILE_NAME:
-		onFileName();
+		onFileName(resultDataNet);
 		break;
 	case MANAGED_RESULT_DISPATCH_FILE_META:
-		onFileMeta();
+		onFileMeta(resultDataNet);
 		break;
 	case MANAGED_RESULT_DISPATCH_FILE_HASH:
-		onFileHash(uppercase);
+		onFileHash(resultDataNet, uppercase);
 		break;
 	case MANAGED_RESULT_DISPATCH_FILE_ERROR:
-		onFileError();
+		onFileError(resultDataNet);
 		break;
 	}
 }
@@ -83,22 +83,8 @@ static inline int DispatchManagedDelegateQueryByType(ManagedDelegateQueryType qu
 template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
 static inline void DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase, TStringConverter convertString, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
 {
-	ProjectAndDispatchResult<TResultDataNet, TResultStateNet>(result, convertString, [&](TResultDataNet resultDataNet)
-	{
-		DispatchManagedResultByType(dispatchType, uppercase, [&]()
-		{
-			onFileName(resultDataNet);
-		}, [&]()
-		{
-			onFileMeta(resultDataNet);
-		}, [&](bool hashUppercase)
-		{
-			onFileHash(resultDataNet, hashUppercase);
-		}, [&]()
-		{
-			onFileError(resultDataNet);
-		});
-	});
+	TResultDataNet resultDataNet = ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString);
+	DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);
 }
 
 template<typename TPreparingCalcAction, typename TRemovePreparingCalcAction, typename TCalcStopAction, typename TCalcFinishAction, typename TUpdateProgWholeAction>

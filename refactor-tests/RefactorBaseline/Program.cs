@@ -482,7 +482,7 @@ internal static class Program
             AssertContains(clrBridge, "SetThreadDataUppercase(*m_pThreadData, val);", "CLR bridge does not yet route SetUppercase() through ThreadDataAccess.");
             AssertContains(clrBridge, "GetThreadDataTotalSize(*m_pThreadData);", "CLR bridge does not yet route GetTotalSize() through ThreadDataAccess.");
             AssertContains(clrBridge, "GetThreadDataResultCount(*m_pThreadData);", "CLR bridge does not yet route GetResultCount() through ThreadDataAccess.");
-            AssertContains(clrBridge, "ResetThreadDataInputFilesAndAppend(*m_pThreadData, filePaths->Length, [&](uint32_t fileIndex)", "CLR bridge does not yet route AddFiles() through the grouped ThreadDataAccess batch-input helper.");
+            AssertContains(clrBridge, "ReplaceThreadDataInputFiles(*m_pThreadData, ConvertSystemStringArrayToTStrVector(filePaths));", "CLR bridge does not yet route AddFiles() through the current compile-safe ThreadDataAccess batch-input helper.");
 
             AssertContains(uwpBridge, "#include \"Common/ThreadDataAccess.h\"", "UWP bridge does not yet consume the ThreadDataAccess seam.");
             AssertContains(uwpBridge, "SetThreadDataObserver(m_threadData, m_spUiBridgeUwp.get());", "UWP bridge does not yet route observer assignment through ThreadDataAccess.");
@@ -567,7 +567,9 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "AppendTextToBuffer(_T(\"\\r\\nSHA512: \"))", "UIBridgeMFC still hardcodes digest label emission instead of using the digest seam.");
 
             AssertContains(mfcDialog, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC dialog no longer routes digest search through the neutral digest seam.");
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge search no longer routes through the neutral digest seam.");
+            AssertContains(clrMgmt, "CountDigestMatchingResults(resultList, tstrHashToFind)", "CLR bridge search no longer routes digest-match counting through the neutral digest seam.");
+            AssertContains(clrMgmt, "ResultMatchesDigestText(*itr, tstrHashToFind)", "CLR bridge search no longer routes per-result digest matching through the neutral digest seam.");
+            AssertContains(clrMgmt, "ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString)", "CLR bridge search no longer routes projected result creation through the centralized projection seam.");
             AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge search no longer routes through the neutral digest seam.");
 
             AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultString>", "ResultDataAccess does not yet expose the centralized ResultDataNet digest-assignment template.");
@@ -1087,7 +1089,7 @@ internal static class Program
             AssertContains(resultAccess, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultHandler>", "ResultDataAccess does not yet expose the centralized project-and-dispatch helper template.");
             AssertContains(resultAccess, "ProjectAndDispatchResult(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "ResultDataAccess does not yet expose the centralized project-and-dispatch helper.");
             AssertContains(resultAccess, "resultHandler(ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataAccess project-and-dispatch helper does not yet compose projection and dispatch through the centralized projection seam.");
-            AssertContains(managedDispatch, "ProjectAndDispatchResult<TResultDataNet, TResultStateNet>(result, convertString, [&](TResultDataNet resultDataNet)", "Common managed-bridge dispatch header does not yet route managed projection-dispatch directly through ResultDataAccess.");
+            AssertContains(managedDispatch, "TResultDataNet resultDataNet = ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString);", "Common managed-bridge dispatch header does not yet materialize projected managed results through the centralized projection seam.");
             AssertDoesNotContain(managedDispatch, "ProjectManagedBridgeResultAndDispatch(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "Common managed-bridge dispatch header still keeps the redundant managed projection-dispatch wrapper.");
 
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
@@ -1120,9 +1122,9 @@ internal static class Program
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(managedDispatch, "enum ManagedResultDispatchType", "Common managed-bridge dispatch header does not yet expose the dedicated managed result-dispatch type.");
-            AssertContains(managedDispatch, "DispatchManagedResultByType(ManagedResultDispatchType dispatchType, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
+            AssertContains(managedDispatch, "DispatchManagedResultByType(ManagedResultDispatchType dispatchType, TResultDataNet resultDataNet, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
             AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase", "Common managed-bridge dispatch header does not yet expose the shared managed result-dispatch wrapper.");
-            AssertContains(managedDispatch, "DispatchManagedResultByType(dispatchType, uppercase, [&]()", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
+            AssertContains(managedDispatch, "DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still includes the deprecated managed-bridge helper header.");
             AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
@@ -1304,8 +1306,8 @@ internal static class Program
             AssertContains(resultAccess, "return CreateProjectedMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, [&](const ResultData& result)", "ResultDataAccess managed digest-match array projection helper does not yet reuse the centralized projected-match collection helper.");
             AssertContains(resultAccess, "return ResultMatchesDigestText(result, digestText);", "ResultDataAccess managed digest-match array projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge management layer does not yet route matching-result array projection through the centralized ResultDataAccess helper.");
-            AssertContains(clrMgmt, "projectedResults[index] = resultDataNet;", "CLR bridge management layer no longer writes projected results into the managed array through the current path.");
+            AssertContains(clrMgmt, "cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));", "CLR bridge management layer does not yet allocate projected managed results through the current compile-safe digest-match count seam.");
+            AssertContains(clrMgmt, "projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);", "CLR bridge management layer no longer writes projected results into the managed array through the current projection path.");
             AssertDoesNotContain(clrMgmt, "ResultList findResultList;", "CLR bridge management layer still stages matching results in a temporary list instead of using the centralized matching-result projection helper.");
             AssertDoesNotContain(clrMgmt, "ResultDataNet resultDataNet = ConvertResultDataToNet(*itr);", "CLR bridge management layer still performs inline per-item projection instead of using the centralized result-list projection helper.");
 
@@ -1342,7 +1344,7 @@ internal static class Program
             AssertContains(resultAccess, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataAccess digest-match count helper does not yet reuse the centralized digest-match visitor seam.");
 
             AssertContains(clrMgmt, "tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);", "CLR bridge management layer does not yet route digest-search normalization through the centralized ResultDataAccess helper.");
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>", "CLR bridge management layer does not yet route digest-match array allocation through the centralized projection helper.");
+            AssertContains(clrMgmt, "cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));", "CLR bridge management layer does not yet route digest-match array allocation through the current compile-safe projection helper.");
             AssertDoesNotContain(clrMgmt, "for (; itr != m_pThreadData->resultList.end(); ++itr)", "CLR bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtotstr(str_upper(tstrtostr(tstrHashToFind)));", "CLR bridge management layer still uppercases digest search text inline instead of using the centralized normalization helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtrim(tstrHashToFind);", "CLR bridge management layer still trims digest search text inline instead of using the centralized normalization helper.");
@@ -1364,7 +1366,7 @@ internal static class Program
             AssertContains(resultAccess, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataAccess digest-match projection helper does not yet reuse the centralized matching-projection seam.");
             AssertContains(resultAccess, "return ResultMatchesDigestText(result, digestText);", "ResultDataAccess digest-match projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)", "CLR bridge management layer does not yet route digest-match projection through the dedicated ResultDataAccess helper.");
+            AssertContains(clrMgmt, "projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);", "CLR bridge management layer does not yet route digest-match projection through the current compile-safe ResultDataAccess helper.");
             AssertDoesNotContain(clrMgmt, "VisitProjectedMatchingResults<ResultDataNet, ResultStateNet>(m_pThreadData->resultList, [&](const ResultData& result)", "CLR bridge management layer still keeps the inline digest-match projection lambda instead of using the dedicated helper.");
 
             AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge management layer does not yet route digest-match projection through the dedicated ResultDataAccess helper.");
@@ -1834,7 +1836,7 @@ internal static class Program
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
 
             AssertContains(clrBridge, "<AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>", "CLR bridge no longer links the native library through AdditionalDependencies in the baseline layout.");
-            AssertContains(clrBridge, "<AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\\$(Configuration)\\fHashWUINative\\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>", "CLR bridge no longer resolves the native library through the current output-path coupling.");
+            AssertContains(clrBridge, "<AdditionalLibraryDirectories>$(ProjectDir)..\\fHashWUINative\\$(Platform)\\$(Configuration)\\fHashWUINative\\;$(SolutionDir)$(Platform)\\$(Configuration)\\fHashWUINative\\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>", "CLR bridge no longer resolves the native library through the current output-path coupling.");
         }, failures);
 
         Run("Phase 7 routes platform bridges through HashEngineBridge while leaving UIBridgeBase as a compatibility shim", () =>

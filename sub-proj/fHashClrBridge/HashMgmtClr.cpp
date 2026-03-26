@@ -12,6 +12,16 @@ using namespace System;
 using namespace FilesHashWUI;
 using namespace sunjwbase;
 
+static TStrVector ConvertSystemStringArrayToTStrVector(cli::array<String^>^ filePaths)
+{
+	TStrVector fullPaths;
+	for (int fileIndex = 0; fileIndex < filePaths->Length; ++fileIndex)
+	{
+		fullPaths.push_back(tstring(ConvertSystemStringToTstr(filePaths[fileIndex])));
+	}
+	return fullPaths;
+}
+
 HashMgmtClr::HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates)
 	:m_pUiBridgeWUI(NULL), m_pThreadData(NULL), m_hWorkThread(NULL)
 {
@@ -56,10 +66,7 @@ UInt64 HashMgmtClr::GetTotalSize()
 
 void HashMgmtClr::AddFiles(cli::array<String^>^ filePaths)
 {
-	ResetThreadDataInputFilesAndAppend(*m_pThreadData, filePaths->Length, [&](uint32_t fileIndex)
-	{
-		return tstring(ConvertSystemStringToTstr(filePaths[fileIndex]));
-	});
+	ReplaceThreadDataInputFiles(*m_pThreadData, ConvertSystemStringArrayToTStrVector(filePaths));
 }
 
 void HashMgmtClr::StartHashThread()
@@ -83,16 +90,19 @@ cli::array<ResultDataNet>^ HashMgmtClr::FindResult(String^ sstrHashToFind)
 	tstring tstrHashToFind(ConvertSystemStringToTstr(sstrHashToFind));
 	tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);
 
-	return CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, [&](size_t resultCount)
+	const ResultList& resultList = GetThreadDataResults(*m_pThreadData);
+	cli::array<ResultDataNet>^ projectedResults = gcnew cli::array<ResultDataNet>(static_cast<int>(CountDigestMatchingResults(resultList, tstrHashToFind)));
+	int projectedIndex = 0;
+	ResultList::const_iterator itr = resultList.begin();
+	for (; itr != resultList.end(); ++itr)
 	{
-		return gcnew cli::array<ResultDataNet>(resultCount);
-	}, [&](const TCHAR* resultText)
-	{
-		return ConvertTstrToSystemString(resultText);
-	}, [&](cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
-	{
-		projectedResults[index] = resultDataNet;
-	});
+		if (ResultMatchesDigestText(*itr, tstrHashToFind))
+		{
+			projectedResults[projectedIndex] = ProjectResultDataToNet<ResultDataNet, ResultStateNet>(*itr, ConvertTstrToSystemString);
+			++projectedIndex;
+		}
+	}
+	return projectedResults;
 }
 
 UInt64 HashMgmtClr::GetResultCount()

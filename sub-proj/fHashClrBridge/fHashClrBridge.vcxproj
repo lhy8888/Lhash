@@ -127,7 +127,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -143,7 +143,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -181,7 +181,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -197,7 +197,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
