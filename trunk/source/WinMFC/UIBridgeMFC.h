@@ -8,6 +8,7 @@
 #include "Common/strhelper.h"
 #include "OsUtils/OsThread.h"
 #include "Common/Global.h"
+#include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestAccess.h"
 #include "HyperEditHash.h"
 
