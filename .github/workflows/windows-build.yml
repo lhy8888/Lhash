@@ -1,4 +1,4 @@
-name: Windows Build
+﻿name: Windows Build
 
 on:
   workflow_dispatch:
@@ -164,8 +164,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+
+      - name: Restore WinUI CLR bridge packages
+        shell: powershell
+        run: dotnet restore sub-proj/fHashClrBridge/fHashClrBridge.vcxproj
 
       - name: Build WinUI native and CLR bridge
         shell: powershell
