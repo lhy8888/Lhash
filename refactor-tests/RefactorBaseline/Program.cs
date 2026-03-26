@@ -2255,7 +2255,13 @@ internal static class Program
             AssertDoesNotContain(uwpShellVerb, "BOOL bCreated = CreateProcess(", "UWP shell extension still keeps an inline CreateProcess launch path after phase 14.");
 
             AssertContains(wuiShellProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "WinUI shell extension project does not yet define a standalone-build SolutionDir fallback for phase 14.");
+            AssertContains(wuiShellProject, "$(ProjectDir);$(ProjectDir)..\\..\\trunk\\source\\;", "WinUI shell extension project does not yet route include paths through an explicit ProjectDir-to-trunk source seam in phase 14.");
+            AssertContains(wuiShellProject, "$(ProjectDir)..\\..\\trunk\\fHashWUIWap\\ShellExt\\", "WinUI shell extension project does not yet route release post-build output through an explicit ProjectDir-to-trunk WAP seam in phase 14.");
+            AssertContains(wuiShellProject, "$(ProjectDir)..\\..\\trunk\\fHashWUIWap\\;", "WinUI shell extension project does not yet route resource includes through an explicit ProjectDir-to-trunk WAP seam in phase 14.");
             AssertContains(uwpShellProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "UWP shell extension project does not yet define a standalone-build SolutionDir fallback for phase 14.");
+            AssertContains(uwpShellProject, "$(ProjectDir);$(ProjectDir)..\\..\\trunk\\source\\;", "UWP shell extension project does not yet route include paths through an explicit ProjectDir-to-trunk source seam in phase 14.");
+            AssertContains(uwpShellProject, "$(ProjectDir)..\\..\\trunk\\source\\WinUWP\\", "UWP shell extension project does not yet route post-build output through an explicit ProjectDir-to-trunk WinUWP seam in phase 14.");
+            AssertContains(uwpShellProject, "$(ProjectDir)..\\..\\trunk\\fHashUwpWap\\;", "UWP shell extension project does not yet route resource includes through an explicit ProjectDir-to-trunk WAP seam in phase 14.");
 
             AssertContains(workflow, "build-wui-shell-ext-x64:", "Windows workflow does not yet compile the WinUI shell extension in phase 14.");
             AssertContains(workflow, "build-uwp-shell-ext-x64:", "Windows workflow does not yet compile the UWP shell extension in phase 14.");
