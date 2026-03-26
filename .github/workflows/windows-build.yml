@@ -172,10 +172,6 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Restore WinUI CLR bridge packages
-        shell: powershell
-        run: dotnet restore sub-proj/fHashClrBridge/fHashClrBridge.vcxproj
-
       - name: Build WinUI native and CLR bridge
         shell: powershell
         run: |
@@ -191,7 +187,7 @@ jobs:
             throw "MSBuild failed while building fHashWUINative. See artifacts/build-winui-native-x64.log for details."
           }
 
-          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
             Tee-Object -FilePath $bridgeLogPath
 
           if ($LASTEXITCODE -ne 0) {
