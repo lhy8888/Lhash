@@ -36,6 +36,8 @@ void FilesHashAlgorithmSelectionController::ResetChecks()
 		{
 			checkBox->SetCheck(BST_CHECKED);
 		}
+
+		return true;
 	});
 }
 
@@ -55,6 +57,8 @@ void FilesHashAlgorithmSelectionController::SyncSelections()
 		{
 			SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));
 		}
+
+		return true;
 	});
 }
 
@@ -79,6 +83,8 @@ void FilesHashAlgorithmSelectionController::SetEnabled(BOOL enabled)
 		{
 			checkBox->EnableWindow(enabled);
 		}
+
+		return true;
 	});
 }
 
