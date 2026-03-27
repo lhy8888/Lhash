@@ -2,34 +2,21 @@
 
 #include "HashMgmtClr.h"
 #include "ClrHelper.h"
-#include "Common/strhelper.h"
-#include "Common/ResultDataSearch.h"
-#include "Common/ResultDataProjection.h"
-#include "Common/ThreadDataAccess.h"
+#include "Common/ManagedHashMgmtAccess.h"
 #include "Common/HashEngine.h"
 using namespace std;
 using namespace System;
 using namespace FilesHashWUI;
 using namespace sunjwbase;
 
-static bool TryConvertHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
+static HashAlgorithmDescriptorNet^ CreateHashAlgorithmDescriptorNetInstance()
 {
-	return TryGetHashAlgorithmType(digestTypeValue, digestType);
+	return gcnew HashAlgorithmDescriptorNet();
 }
 
-static bool TryConvertHashAlgorithmType(HashAlgorithmTypeNet hashAlgorithm, ResultDigestType *digestType)
+static cli::array<HashAlgorithmDescriptorNet^>^ CreateHashAlgorithmDescriptorNetArray(size_t algorithmCount)
 {
-	return TryConvertHashAlgorithmDigestType(static_cast<int>(hashAlgorithm), digestType);
-}
-
-static TStrVector ConvertSystemStringArrayToTStrVector(cli::array<String^>^ filePaths)
-{
-	TStrVector fullPaths;
-	for (int fileIndex = 0; fileIndex < filePaths->Length; ++fileIndex)
-	{
-		fullPaths.push_back(tstring(ConvertSystemStringToTstr(filePaths[fileIndex])));
-	}
-	return fullPaths;
+	return gcnew cli::array<HashAlgorithmDescriptorNet^>(static_cast<int>(algorithmCount));
 }
 
 static cli::array<ResultDataNet>^ CreateProjectedResultDataNetArray(size_t resultCount)
@@ -42,27 +29,17 @@ static void SetProjectedResultDataNet(cli::array<ResultDataNet>^ projectedResult
 	projectedResults[static_cast<int>(index)] = resultDataNet;
 }
 
-static HashAlgorithmDescriptorNet^ CreateHashAlgorithmDescriptorNet(const HashAlgorithmDescriptor& algorithmDescriptor)
+static sunjwbase::tstring ConvertManagedFilePathToTstr(String^ filePath)
 {
-	HashAlgorithmDescriptorNet^ descriptorNet = gcnew HashAlgorithmDescriptorNet();
-	descriptorNet->DigestType = static_cast<int>(GetHashAlgorithmDescriptorType(algorithmDescriptor));
-	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
-	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
-	descriptorNet->StableName = ConvertTstrToSystemString(stableName.c_str());
-	descriptorNet->DisplayLabel = ConvertTstrToSystemString(displayLabel.c_str());
-	return descriptorNet;
+	return tstring(ConvertSystemStringToTstr(filePath));
 }
 
 static cli::array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDescriptors()
 {
-	cli::array<HashAlgorithmDescriptorNet^>^ algorithmDescriptors = gcnew cli::array<HashAlgorithmDescriptorNet^>(GetRegisteredHashAlgorithmCount());
-
-	for (int algorithmIndex = 0; algorithmIndex < GetRegisteredHashAlgorithmCount(); ++algorithmIndex)
-	{
-		algorithmDescriptors[algorithmIndex] = CreateHashAlgorithmDescriptorNet(GetHashAlgorithmDescriptorAt(algorithmIndex));
-	}
-
-	return algorithmDescriptors;
+	return CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>(
+		CreateHashAlgorithmDescriptorNetArray,
+		CreateHashAlgorithmDescriptorNetInstance,
+		ConvertTstrToSystemString);
 }
 
 HashMgmtClr::HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates)
@@ -124,24 +101,12 @@ bool HashMgmtClr::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
 
 void HashMgmtClr::SetHashAlgorithmEnabledByDigestType(int digestTypeValue, bool val)
 {
-	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
-	{
-		return;
-	}
-
-	SetThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType, val);
+	::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);
 }
 
 bool HashMgmtClr::GetHashAlgorithmEnabledByDigestType(int digestTypeValue)
 {
-	ResultDigestType digestType;
-	if (!TryConvertHashAlgorithmDigestType(digestTypeValue, &digestType))
-	{
-		return false;
-	}
-
-	return IsThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType);
+	return ::GetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue);
 }
 
 UInt64 HashMgmtClr::GetTotalSize()
@@ -151,7 +116,7 @@ UInt64 HashMgmtClr::GetTotalSize()
 
 void HashMgmtClr::AddFiles(cli::array<String^>^ filePaths)
 {
-	ReplaceThreadDataInputFiles(*m_pThreadData, ConvertSystemStringArrayToTStrVector(filePaths));
+	ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);
 }
 
 void HashMgmtClr::StartHashThread()
@@ -177,10 +142,12 @@ void HashMgmtClr::StartHashThread()
 
 cli::array<ResultDataNet>^ HashMgmtClr::FindResult(String^ sstrHashToFind)
 {
-	tstring tstrHashToFind(ConvertSystemStringToTstr(sstrHashToFind));
-	tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);
-
-	return CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);
+	return CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(
+		*m_pThreadData,
+		tstring(ConvertSystemStringToTstr(sstrHashToFind)),
+		CreateProjectedResultDataNetArray,
+		ConvertTstrToSystemString,
+		SetProjectedResultDataNet);
 }
 
 UInt64 HashMgmtClr::GetResultCount()

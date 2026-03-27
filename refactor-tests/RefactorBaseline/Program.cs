@@ -479,22 +479,22 @@ internal static class Program
             AssertContains(threadAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadData access seams grouped path getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return GetThreadDataExecutionState(threadData).results;", "ThreadData access seams grouped result-list getter does not yet route through the neutral ThreadData field name.");
 
-            AssertContains(clrBridge, "#include \"Common/ThreadDataAccess.h\"", "CLR bridge does not yet consume the ThreadDataAccess seam.");
+            AssertContains(clrBridge, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet consume the current shared managed thread-data seam.");
             AssertContains(clrBridge, "SetThreadDataObserver(*m_pThreadData, m_pUiBridgeWUI);", "CLR bridge does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(clrBridge, "ResetThreadDataForNewSession(*m_pThreadData);", "CLR bridge does not yet route Clear() through ThreadDataAccess.");
             AssertContains(clrBridge, "SetThreadDataStop(*m_pThreadData, val);", "CLR bridge does not yet route SetStop() through ThreadDataAccess.");
             AssertContains(clrBridge, "SetThreadDataUppercase(*m_pThreadData, val);", "CLR bridge does not yet route SetUppercase() through ThreadDataAccess.");
             AssertContains(clrBridge, "GetThreadDataTotalSize(*m_pThreadData);", "CLR bridge does not yet route GetTotalSize() through ThreadDataAccess.");
             AssertContains(clrBridge, "GetThreadDataResultCount(*m_pThreadData);", "CLR bridge does not yet route GetResultCount() through ThreadDataAccess.");
-            AssertContains(clrBridge, "ReplaceThreadDataInputFiles(*m_pThreadData, ConvertSystemStringArrayToTStrVector(filePaths));", "CLR bridge does not yet route AddFiles() through the current compile-safe ThreadDataAccess batch-input helper.");
+            AssertContains(clrBridge, "ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);", "CLR bridge does not yet route AddFiles() through the current compile-safe managed input-file helper.");
 
-            AssertContains(uwpBridge, "#include \"Common/ThreadDataAccess.h\"", "UWP bridge does not yet consume the ThreadDataAccess seam.");
+            AssertContains(uwpBridge, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet consume the current shared managed thread-data seam.");
             AssertContains(uwpBridge, "SetThreadDataObserver(m_threadData, m_spUiBridgeUwp.get());", "UWP bridge does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(uwpBridge, "ResetThreadDataForNewSession(m_threadData);", "UWP bridge does not yet route Clear() through ThreadDataAccess.");
             AssertContains(uwpBridge, "SetThreadDataStop(m_threadData, val);", "UWP bridge does not yet route SetStop() through ThreadDataAccess.");
             AssertContains(uwpBridge, "SetThreadDataUppercase(m_threadData, val);", "UWP bridge does not yet route SetUppercase() through ThreadDataAccess.");
             AssertContains(uwpBridge, "GetThreadDataTotalSize(m_threadData);", "UWP bridge does not yet route GetTotalSize() through ThreadDataAccess.");
-            AssertContains(uwpBridge, "ResetThreadDataInputFilesAndAppend(m_threadData, filePaths->Length, [&](uint32_t fileIndex)", "UWP bridge does not yet route AddFiles() through the grouped ThreadDataAccess batch-input helper.");
+            AssertContains(uwpBridge, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP bridge does not yet route AddFiles() through the grouped managed input-file helper.");
 
             AssertContains(mfcDialog, "#include \"Common/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam.");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
@@ -577,8 +577,8 @@ internal static class Program
             AssertContains(mfcSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC search controller no longer routes digest search through the neutral digest seam.");
             AssertContains(clrMgmt, "CreateProjectedResultDataNetArray(size_t resultCount)", "CLR bridge search does not yet expose the compile-safe managed result-array factory.");
             AssertContains(clrMgmt, "SetProjectedResultDataNet(cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)", "CLR bridge search does not yet expose the compile-safe managed result-array setter.");
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);", "CLR bridge search no longer routes through the centralized digest-match projection seam.");
-            AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge search no longer routes through the neutral digest seam.");
+            AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "CLR bridge search no longer routes through the centralized managed digest-match projection seam.");
+            AssertContains(uwpMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "UWP bridge search no longer routes through the centralized managed digest-match projection seam.");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultString>", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
@@ -1322,13 +1322,13 @@ internal static class Program
             AssertContains(resultProjection, "return CreateProjectedMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, [&](const ResultData& result)", "ResultDataProjection managed digest-match array projection helper does not yet reuse the centralized projected-match collection helper.");
             AssertContains(resultProjection, "return ResultMatchesDigestText(result, digestText);", "ResultDataProjection managed digest-match array projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);", "CLR bridge management layer does not yet allocate projected managed results through the centralized digest-match collection seam.");
+            AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "CLR bridge management layer does not yet allocate projected managed results through the centralized digest-match collection seam.");
             AssertContains(clrMgmt, "projectedResults[static_cast<int>(index)] = resultDataNet;", "CLR bridge management layer no longer writes projected results into the managed array through the current projection path.");
             AssertDoesNotContain(clrMgmt, "ResultList findResultList;", "CLR bridge management layer still stages matching results in a temporary list instead of using the centralized matching-result projection helper.");
             AssertDoesNotContain(clrMgmt, "ResultDataNet resultDataNet = ConvertResultDataToNet(*itr);", "CLR bridge management layer still performs inline per-item projection instead of using the centralized result-list projection helper.");
 
-            AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge management layer does not yet route matching-result array projection through the centralized ResultDataAccess helper.");
-            AssertContains(uwpMgmt, "projectedResults[index] = resultDataNet;", "UWP bridge management layer no longer writes projected results into the managed array through the current path.");
+            AssertContains(uwpMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "UWP bridge management layer does not yet route matching-result array projection through the centralized managed helper.");
+            AssertContains(uwpMgmt, "projectedResults[static_cast<unsigned int>(index)] = resultDataNet;", "UWP bridge management layer no longer writes projected results into the managed array through the current path.");
             AssertDoesNotContain(uwpMgmt, "ResultList findResultList;", "UWP bridge management layer still stages matching results in a temporary list instead of using the centralized matching-result projection helper.");
             AssertDoesNotContain(uwpMgmt, "ResultDataNet resultDataNet = UIBridgeUwp::ConvertResultDataToNet(*itr);", "UWP bridge management layer still performs inline per-item projection instead of using the centralized result-list projection helper.");
         }, failures);
@@ -1359,15 +1359,13 @@ internal static class Program
             AssertContains(resultSearch, "normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);", "ResultDataSearch digest-search normalization helper does not yet trim through the centralized seam.");
             AssertContains(resultSearch, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataSearch digest-match count helper does not yet reuse the centralized digest-match visitor seam.");
 
-            AssertContains(clrMgmt, "tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);", "CLR bridge management layer does not yet route digest-search normalization through the centralized ResultDataAccess helper.");
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);", "CLR bridge management layer does not yet route digest-match array allocation through the centralized projection helper.");
+            AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "CLR bridge management layer does not yet route digest-search and projection through the centralized managed helper.");
             AssertDoesNotContain(clrMgmt, "for (; itr != m_pThreadData->resultList.end(); ++itr)", "CLR bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
             AssertDoesNotContain(clrMgmt, "for (; itr != resultList.end(); ++itr)", "CLR bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtotstr(str_upper(tstrtostr(tstrHashToFind)));", "CLR bridge management layer still uppercases digest search text inline instead of using the centralized normalization helper.");
             AssertDoesNotContain(clrMgmt, "tstrHashToFind = strtrim(tstrHashToFind);", "CLR bridge management layer still trims digest search text inline instead of using the centralized normalization helper.");
 
-            AssertContains(uwpMgmt, "tstrHashToFind = NormalizeDigestSearchText(tstrHashToFind);", "UWP bridge management layer does not yet route digest-search normalization through the centralized ResultDataAccess helper.");
-            AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>", "UWP bridge management layer does not yet route digest-match array allocation through the centralized projection helper.");
+            AssertContains(uwpMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "UWP bridge management layer does not yet route digest-search and projection through the centralized managed helper.");
             AssertDoesNotContain(uwpMgmt, "for (; itr != m_threadData.resultList.end(); ++itr)", "UWP bridge management layer still performs manual result-list filtering instead of using the centralized matching helper.");
             AssertDoesNotContain(uwpMgmt, "tstrHashToFind = strtotstr(str_upper(tstrtostr(tstrHashToFind)));", "UWP bridge management layer still uppercases digest search text inline instead of using the centralized normalization helper.");
             AssertDoesNotContain(uwpMgmt, "tstrHashToFind = strtrim(tstrHashToFind);", "UWP bridge management layer still trims digest search text inline instead of using the centralized normalization helper.");
@@ -1383,10 +1381,10 @@ internal static class Program
             AssertContains(resultProjection, "VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)", "ResultDataProjection digest-match projection helper does not yet reuse the centralized matching-projection seam.");
             AssertContains(resultProjection, "return ResultMatchesDigestText(result, digestText);", "ResultDataProjection digest-match projection helper does not yet reuse the centralized digest-match predicate seam.");
 
-            AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);", "CLR bridge management layer does not yet route digest-match projection through the current compile-safe ResultDataProjection helper.");
+            AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "CLR bridge management layer does not yet route digest-match projection through the current compile-safe managed helper.");
             AssertDoesNotContain(clrMgmt, "VisitProjectedMatchingResults<ResultDataNet, ResultStateNet>(m_pThreadData->resultList, [&](const ResultData& result)", "CLR bridge management layer still keeps the inline digest-match projection lambda instead of using the dedicated helper.");
 
-            AssertContains(uwpMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(GetThreadDataResults(m_threadData), tstrHashToFind, [&](size_t resultCount)", "UWP bridge management layer does not yet route digest-match projection through the dedicated ResultDataAccess helper.");
+            AssertContains(uwpMgmt, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "UWP bridge management layer does not yet route digest-match projection through the dedicated managed helper.");
             AssertDoesNotContain(uwpMgmt, "VisitProjectedMatchingResults<ResultDataNet, ResultStateNet>(m_threadData.resultList, [&](const ResultData& result)", "UWP bridge management layer still keeps the inline digest-match projection lambda instead of using the dedicated helper.");
         }, failures);
 
@@ -1962,7 +1960,7 @@ internal static class Program
             AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);", "CLR bridge does not yet expose the managed algorithm enable helper.");
             AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "CLR bridge does not yet expose the managed algorithm query helper.");
             AssertContains(hashMgmtClr, "ResetThreadDataHashAlgorithms(*m_pThreadData);", "CLR bridge does not yet reset native algorithm selections from the managed seam.");
-            AssertContains(hashMgmtClr, "SetThreadDataHashAlgorithmEnabled(*m_pThreadData, digestType, val);", "CLR bridge does not yet forward algorithm enablement to ThreadDataAccess.");
+            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);", "CLR bridge does not yet forward algorithm enablement through the shared managed helper.");
             AssertContains(hashMgmtClr, "if (!HasEnabledThreadDataHashAlgorithms(*m_pThreadData))", "CLR bridge does not yet reject zero-algorithm hash starts.");
 
             AssertContains(hashMgmtUwpHeader, "public enum class HashAlgorithmTypeNet", "UWP bridge does not yet expose the managed hash-algorithm enum.");
@@ -1970,7 +1968,7 @@ internal static class Program
             AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);", "UWP bridge does not yet expose the managed algorithm enable helper.");
             AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "UWP bridge does not yet expose the managed algorithm query helper.");
             AssertContains(hashMgmtUwp, "ResetThreadDataHashAlgorithms(m_threadData);", "UWP bridge does not yet reset native algorithm selections from the managed seam.");
-            AssertContains(hashMgmtUwp, "SetThreadDataHashAlgorithmEnabled(m_threadData, digestType, val);", "UWP bridge does not yet forward algorithm enablement to ThreadDataAccess.");
+            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);", "UWP bridge does not yet forward algorithm enablement through the shared managed helper.");
             AssertContains(hashMgmtUwp, "if (!HasEnabledThreadDataHashAlgorithms(m_threadData))", "UWP bridge does not yet reject zero-algorithm hash starts.");
 
             AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic hash-algorithm container.");
@@ -2059,10 +2057,8 @@ internal static class Program
             AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
-            AssertContains(hashMgmtClr, "#include \"Common/ResultDataProjection.h\"", "CLR search bridge does not yet consume the split result-data projection seam.");
-            AssertContains(hashMgmtClr, "#include \"Common/ResultDataSearch.h\"", "CLR search bridge does not yet consume the split result-data search seam.");
-            AssertContains(hashMgmtUwp, "#include \"Common/ResultDataProjection.h\"", "UWP search bridge does not yet consume the split result-data projection seam.");
-            AssertContains(hashMgmtUwp, "#include \"Common/ResultDataSearch.h\"", "UWP search bridge does not yet consume the split result-data search seam.");
+            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
+            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
         }, failures);
 
         Run("Phase 10 splits HashEngine preparation and result-finalization helpers into dedicated implementation files", () =>
@@ -2170,19 +2166,14 @@ internal static class Program
             AssertContains(hashMgmtClrHeader, "cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "CLR bridge does not yet expose the supported-algorithm list helper.");
             AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", "CLR bridge does not yet expose the generic digest-type enable helper.");
             AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledByDigestType(int digestType);", "CLR bridge does not yet expose the generic digest-type query helper.");
-            AssertContains(hashMgmtClr, "return TryGetHashAlgorithmType(digestTypeValue, digestType);", "CLR bridge does not yet route generic digest-type conversion through the registry seam.");
+            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedHashAlgorithmDescriptors()", "CLR bridge does not yet materialize a dynamic managed algorithm descriptor list.");
-            AssertContains(hashMgmtClr, "descriptorNet->StableName =", "CLR bridge managed algorithm descriptors do not yet expose stable names.");
-            AssertContains(hashMgmtClr, "descriptorNet->DisplayLabel =", "CLR bridge managed algorithm descriptors do not yet expose display labels.");
-
             AssertContains(hashMgmtUwpHeader, "public ref class HashAlgorithmDescriptorNet sealed", "UWP bridge does not yet expose the managed algorithm descriptor.");
             AssertContains(hashMgmtUwpHeader, "Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "UWP bridge does not yet expose the supported-algorithm list helper.");
             AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", "UWP bridge does not yet expose the generic digest-type enable helper.");
             AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);", "UWP bridge does not yet expose the generic digest-type query helper.");
-            AssertContains(hashMgmtUwp, "return TryGetHashAlgorithmType(digestTypeValue, digestType);", "UWP bridge does not yet route generic digest-type conversion through the registry seam.");
+            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtUwp, "CreateSupportedHashAlgorithmDescriptors()", "UWP bridge does not yet materialize a dynamic managed algorithm descriptor list.");
-            AssertContains(hashMgmtUwp, "descriptorNet->StableName =", "UWP bridge managed algorithm descriptors do not yet expose stable names.");
-            AssertContains(hashMgmtUwp, "descriptorNet->DisplayLabel =", "UWP bridge managed algorithm descriptors do not yet expose display labels.");
 
             AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic algorithm container.");
             AssertContains(winUiPage, "HashAlgorithmDescriptorNet[] m_hashAlgorithms", "WinUI page does not yet store the managed algorithm descriptor list.");
@@ -2439,6 +2430,42 @@ internal static class Program
 
             AssertContains(mfcAlgorithmController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC algorithm controller does not yet consume the phase 18 execution seam.");
             AssertDoesNotContain(mfcAlgorithmController, "#include \"Common/ThreadDataAccess.h\"", "MFC algorithm controller still depends on the umbrella ThreadDataAccess header after phase 18.");
+        }, failures);
+
+        Run("Phase 19 extracts shared managed hash-management helpers for CLR and UWP bridges", () =>
+        {
+            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+
+            AssertContains(managedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)", "Phase 19 is missing the shared managed digest-type conversion helper.");
+            AssertContains(managedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
+            AssertContains(managedHashMgmtAccess, "descriptorNet->StableName =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose stable names.");
+            AssertContains(managedHashMgmtAccess, "descriptorNet->DisplayLabel =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose display labels.");
+            AssertContains(managedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type enable helper.");
+            AssertContains(managedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type query helper.");
+            AssertContains(managedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
+            AssertContains(managedHashMgmtAccess, "CreateProjectedManagedDigestMatchingResults(", "Phase 19 is missing the shared managed digest-search projection helper.");
+
+            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
+            AssertContains(hashMgmtClr, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>", "CLR HashMgmt does not yet route descriptor projection through the shared managed helper.");
+            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);", "CLR HashMgmt does not yet route digest-type enablement through the shared managed helper.");
+            AssertContains(hashMgmtClr, "::GetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue);", "CLR HashMgmt does not yet route digest-type queries through the shared managed helper.");
+            AssertContains(hashMgmtClr, "ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);", "CLR HashMgmt does not yet route managed file ingestion through the shared managed helper.");
+            AssertContains(hashMgmtClr, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "CLR HashMgmt does not yet route digest-search projection through the shared managed helper.");
+            AssertDoesNotContain(hashMgmtClr, "#include \"Common/ResultDataSearch.h\"", "CLR HashMgmt still depends directly on the digest-search header after phase 19.");
+            AssertDoesNotContain(hashMgmtClr, "#include \"Common/ResultDataProjection.h\"", "CLR HashMgmt still depends directly on the result-projection header after phase 19.");
+            AssertDoesNotContain(hashMgmtClr, "#include \"Common/ThreadDataAccess.h\"", "CLR HashMgmt still depends directly on the umbrella ThreadDataAccess header after phase 19.");
+
+            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
+            AssertContains(hashMgmtUwp, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, Array<HashAlgorithmDescriptorNet^>^>", "UWP HashMgmt does not yet route descriptor projection through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);", "UWP HashMgmt does not yet route digest-type enablement through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "::GetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue);", "UWP HashMgmt does not yet route digest-type queries through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP HashMgmt does not yet route managed file ingestion through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "UWP HashMgmt does not yet route digest-search projection through the shared managed helper.");
+            AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ResultDataSearch.h\"", "UWP HashMgmt still depends directly on the digest-search header after phase 19.");
+            AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ResultDataProjection.h\"", "UWP HashMgmt still depends directly on the result-projection header after phase 19.");
+            AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ThreadDataAccess.h\"", "UWP HashMgmt still depends directly on the umbrella ThreadDataAccess header after phase 19.");
         }, failures);
 
         if (failures.Count > 0)
