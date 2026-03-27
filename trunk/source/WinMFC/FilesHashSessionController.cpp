@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <CommCtrl.h>
 #include <process.h>
 
 #include "FilesHashSessionController.h"
