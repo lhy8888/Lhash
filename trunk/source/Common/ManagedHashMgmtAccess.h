@@ -83,10 +83,11 @@ static inline void ReplaceThreadDataInputFilesFromManagedArray(
 	const TManagedArray& filePaths,
 	TStringConverter convertText)
 {
-	ResetThreadDataInputFilesAndAppend(threadData, static_cast<uint32_t>(filePaths->Length), [&](uint32_t fileIndex)
+	ResetThreadDataInputFiles(threadData);
+	for (uint32_t fileIndex = 0; fileIndex < static_cast<uint32_t>(filePaths->Length); ++fileIndex)
 	{
-		return convertText(filePaths[fileIndex]);
-	});
+		AppendThreadDataInputFile(threadData, convertText(filePaths[fileIndex]));
+	}
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TThreadData, typename TArrayFactory, typename TStringConverter, typename TResultSetter>
