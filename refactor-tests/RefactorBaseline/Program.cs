@@ -407,73 +407,77 @@ internal static class Program
         Run("Phase 5 routes managed ThreadData lifecycle through dedicated ThreadDataAccess helpers", () =>
         {
             string threadDataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
+            string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
+            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+            string threadAccess = string.Join("\r\n", threadDataAccess, threadExecutionAccess, threadInputAccess, threadResultAccess);
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
 
-            AssertContains(threadDataAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "ThreadDataAccess does not yet expose the observer-assignment helper.");
-            AssertContains(threadDataAccess, "GetThreadDataObserver(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the observer getter helper.");
-            AssertContains(threadDataAccess, "GetThreadDataInputState(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped input-state getter helper.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataInputState(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped mutable input-state helper.");
-            AssertContains(threadDataAccess, "GetThreadDataExecutionState(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped execution-state getter helper.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataExecutionState(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped mutable execution-state helper.");
-            AssertContains(threadDataAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped input-files getter helper.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataInputFiles(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped mutable input-files helper.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataResults(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped mutable result-list helper.");
-            AssertContains(threadDataAccess, "ResetThreadDataInputFiles(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped input-file reset helper.");
-            AssertContains(threadDataAccess, "SetThreadDataFileCount(ThreadData& threadData, uint32_t fileCount)", "ThreadDataAccess does not yet expose the file-count helper.");
-            AssertContains(threadDataAccess, "AddThreadDataFullPath(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadDataAccess does not yet expose the full-path append helper.");
-            AssertContains(threadDataAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadDataAccess does not yet expose the grouped input-file append helper.");
-            AssertContains(threadDataAccess, "ResetThreadDataInputFilesAndAppend(ThreadData& threadData, uint32_t fileCount, TInputFileFactory inputFileFactory)", "ThreadDataAccess does not yet expose the grouped batch input-file append helper.");
-            AssertContains(threadDataAccess, "AppendTrimmedThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadDataAccess does not yet expose the trimmed input-file append helper.");
-            AssertContains(threadDataAccess, "AppendThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadDataAccess does not yet expose the grouped input-file list append helper.");
-            AssertContains(threadDataAccess, "ReplaceThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadDataAccess does not yet expose the grouped input-file replacement helper.");
-            AssertContains(threadDataAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadDataAccess does not yet expose the grouped trimmed input-file replacement helper.");
-            AssertContains(threadDataAccess, "AppendThreadDataResult(ThreadData& threadData)", "ThreadDataAccess does not yet expose the result-append helper.");
-            AssertContains(threadDataAccess, "ClearThreadDataResults(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped result-clear helper.");
-            AssertContains(threadDataAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped reset helper.");
-            AssertContains(threadDataAccess, "SetThreadDataStop(ThreadData& threadData, bool stopValue)", "ThreadDataAccess does not yet expose the stop-flag helper.");
-            AssertContains(threadDataAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "ThreadDataAccess does not yet expose the working-state setter helper.");
-            AssertContains(threadDataAccess, "IsThreadDataWorking(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the working-state getter helper.");
-            AssertContains(threadDataAccess, "SetThreadDataUppercase(ThreadData& threadData, bool uppercase)", "ThreadDataAccess does not yet expose the uppercase helper.");
-            AssertContains(threadDataAccess, "GetThreadDataUppercase(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the uppercase getter helper.");
-            AssertContains(threadDataAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the total-size helper.");
-            AssertContains(threadDataAccess, "ResetThreadDataTotalSize(ThreadData& threadData)", "ThreadDataAccess does not yet expose the total-size reset helper.");
-            AssertContains(threadDataAccess, "AddThreadDataTotalSize(ThreadData& threadData, uint64_t sizeDelta)", "ThreadDataAccess does not yet expose the total-size increment helper.");
-            AssertContains(threadDataAccess, "ReplaceThreadDataCountedFileSize(ThreadData& threadData, uint64_t previousSize, uint64_t currentSize)", "ThreadDataAccess does not yet expose the counted-file-size replacement helper.");
-            AssertContains(threadDataAccess, "GetThreadDataFileCount(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the file-count getter helper.");
-            AssertContains(threadDataAccess, "GetThreadDataResultCount(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the result-count helper.");
-            AssertContains(threadDataAccess, "HasThreadDataInputFiles(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the input-file presence helper.");
-            AssertContains(threadDataAccess, "ShouldStopThreadData(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the stop-flag getter helper.");
-            AssertContains(threadDataAccess, "GetThreadDataFullPath(const ThreadData& threadData, uint32_t fileIndex)", "ThreadDataAccess does not yet expose the grouped path getter helper.");
-            AssertContains(threadDataAccess, "GetThreadDataResults(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the grouped result-list getter.");
-            AssertContains(threadDataAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "ThreadDataAccess does not yet expose the grouped result-list visitor.");
-            AssertContains(threadDataAccess, "AddThreadDataFullPath(threadData, fullPath);", "ThreadDataAccess grouped input-file append helper does not yet reuse the full-path seam.");
-            AssertContains(threadDataAccess, "ResetThreadDataInputFiles(threadData);", "ThreadDataAccess grouped batch input-file append helper does not yet reuse the input reset seam.");
-            AssertContains(threadDataAccess, "SetThreadDataFileCount(threadData, fileCount);", "ThreadDataAccess grouped batch input-file append helper does not yet reuse the file-count seam.");
-            AssertContains(threadDataAccess, "AddThreadDataFullPath(threadData, inputFileFactory(fileIndex));", "ThreadDataAccess grouped batch input-file append helper does not yet reuse the full-path append seam.");
-            AssertContains(threadDataAccess, "sunjwbase::tstring trimmedPath = sunjwbase::strtrim(fullPath);", "ThreadDataAccess trimmed input-file append helper does not yet normalize text through the shared trim seam.");
-            AssertContains(threadDataAccess, "AppendThreadDataInputFile(threadData, trimmedPath);", "ThreadDataAccess trimmed input-file append helper does not yet reuse the grouped input-file append seam.");
-            AssertContains(threadDataAccess, "AppendThreadDataInputFile(threadData, *itr);", "ThreadDataAccess grouped input-file list append helper does not yet reuse the grouped single-file append seam.");
-            AssertContains(threadDataAccess, "AppendThreadDataInputFiles(threadData, fullPaths);", "ThreadDataAccess grouped input-file replacement helper does not yet reuse the grouped list append seam.");
-            AssertContains(threadDataAccess, "AppendTrimmedThreadDataInputFile(threadData, *itr);", "ThreadDataAccess grouped trimmed input-file replacement helper does not yet reuse the trimmed single-file append seam.");
-            AssertContains(threadDataAccess, "ClearThreadDataResults(threadData);", "ThreadDataAccess grouped reset helper does not yet reuse the result-clear seam.");
+            AssertContains(threadAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "ThreadData access seams do not yet expose the observer-assignment helper.");
+            AssertContains(threadAccess, "GetThreadDataObserver(const ThreadData& threadData)", "ThreadData access seams do not yet expose the observer getter helper.");
+            AssertContains(threadAccess, "GetThreadDataInputState(const ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped input-state getter helper.");
+            AssertContains(threadAccess, "GetMutableThreadDataInputState(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped mutable input-state helper.");
+            AssertContains(threadAccess, "GetThreadDataExecutionState(const ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped execution-state getter helper.");
+            AssertContains(threadAccess, "GetMutableThreadDataExecutionState(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped mutable execution-state helper.");
+            AssertContains(threadAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped input-files getter helper.");
+            AssertContains(threadAccess, "GetMutableThreadDataInputFiles(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped mutable input-files helper.");
+            AssertContains(threadAccess, "GetMutableThreadDataResults(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped mutable result-list helper.");
+            AssertContains(threadAccess, "ResetThreadDataInputFiles(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped input-file reset helper.");
+            AssertContains(threadAccess, "SetThreadDataFileCount(ThreadData& threadData, uint32_t fileCount)", "ThreadData access seams do not yet expose the file-count helper.");
+            AssertContains(threadAccess, "AddThreadDataFullPath(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadData access seams do not yet expose the full-path append helper.");
+            AssertContains(threadAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadData access seams do not yet expose the grouped input-file append helper.");
+            AssertContains(threadAccess, "ResetThreadDataInputFilesAndAppend(ThreadData& threadData, uint32_t fileCount, TInputFileFactory inputFileFactory)", "ThreadData access seams do not yet expose the grouped batch input-file append helper.");
+            AssertContains(threadAccess, "AppendTrimmedThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "ThreadData access seams do not yet expose the trimmed input-file append helper.");
+            AssertContains(threadAccess, "AppendThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadData access seams do not yet expose the grouped input-file list append helper.");
+            AssertContains(threadAccess, "ReplaceThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadData access seams do not yet expose the grouped input-file replacement helper.");
+            AssertContains(threadAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "ThreadData access seams do not yet expose the grouped trimmed input-file replacement helper.");
+            AssertContains(threadAccess, "AppendThreadDataResult(ThreadData& threadData)", "ThreadData access seams do not yet expose the result-append helper.");
+            AssertContains(threadAccess, "ClearThreadDataResults(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped result-clear helper.");
+            AssertContains(threadAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped reset helper.");
+            AssertContains(threadAccess, "SetThreadDataStop(ThreadData& threadData, bool stopValue)", "ThreadData access seams do not yet expose the stop-flag helper.");
+            AssertContains(threadAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "ThreadData access seams do not yet expose the working-state setter helper.");
+            AssertContains(threadAccess, "IsThreadDataWorking(const ThreadData& threadData)", "ThreadData access seams do not yet expose the working-state getter helper.");
+            AssertContains(threadAccess, "SetThreadDataUppercase(ThreadData& threadData, bool uppercase)", "ThreadData access seams do not yet expose the uppercase helper.");
+            AssertContains(threadAccess, "GetThreadDataUppercase(const ThreadData& threadData)", "ThreadData access seams do not yet expose the uppercase getter helper.");
+            AssertContains(threadAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "ThreadData access seams do not yet expose the total-size helper.");
+            AssertContains(threadAccess, "ResetThreadDataTotalSize(ThreadData& threadData)", "ThreadData access seams do not yet expose the total-size reset helper.");
+            AssertContains(threadAccess, "AddThreadDataTotalSize(ThreadData& threadData, uint64_t sizeDelta)", "ThreadData access seams do not yet expose the total-size increment helper.");
+            AssertContains(threadAccess, "ReplaceThreadDataCountedFileSize(ThreadData& threadData, uint64_t previousSize, uint64_t currentSize)", "ThreadData access seams do not yet expose the counted-file-size replacement helper.");
+            AssertContains(threadAccess, "GetThreadDataFileCount(const ThreadData& threadData)", "ThreadData access seams do not yet expose the file-count getter helper.");
+            AssertContains(threadAccess, "GetThreadDataResultCount(const ThreadData& threadData)", "ThreadData access seams do not yet expose the result-count helper.");
+            AssertContains(threadAccess, "HasThreadDataInputFiles(const ThreadData& threadData)", "ThreadData access seams do not yet expose the input-file presence helper.");
+            AssertContains(threadAccess, "ShouldStopThreadData(const ThreadData& threadData)", "ThreadData access seams do not yet expose the stop-flag getter helper.");
+            AssertContains(threadAccess, "GetThreadDataFullPath(const ThreadData& threadData, uint32_t fileIndex)", "ThreadData access seams do not yet expose the grouped path getter helper.");
+            AssertContains(threadAccess, "GetThreadDataResults(const ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped result-list getter.");
+            AssertContains(threadAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "ThreadData access seams do not yet expose the grouped result-list visitor.");
+            AssertContains(threadAccess, "AddThreadDataFullPath(threadData, fullPath);", "ThreadData access seams grouped input-file append helper does not yet reuse the full-path seam.");
+            AssertContains(threadAccess, "ResetThreadDataInputFiles(threadData);", "ThreadData access seams grouped batch input-file append helper does not yet reuse the input reset seam.");
+            AssertContains(threadAccess, "SetThreadDataFileCount(threadData, fileCount);", "ThreadData access seams grouped batch input-file append helper does not yet reuse the file-count seam.");
+            AssertContains(threadAccess, "AddThreadDataFullPath(threadData, inputFileFactory(fileIndex));", "ThreadData access seams grouped batch input-file append helper does not yet reuse the full-path append seam.");
+            AssertContains(threadAccess, "sunjwbase::tstring trimmedPath = sunjwbase::strtrim(fullPath);", "ThreadData access seams trimmed input-file append helper does not yet normalize text through the shared trim seam.");
+            AssertContains(threadAccess, "AppendThreadDataInputFile(threadData, trimmedPath);", "ThreadData access seams trimmed input-file append helper does not yet reuse the grouped input-file append seam.");
+            AssertContains(threadAccess, "AppendThreadDataInputFile(threadData, *itr);", "ThreadData access seams grouped input-file list append helper does not yet reuse the grouped single-file append seam.");
+            AssertContains(threadAccess, "AppendThreadDataInputFiles(threadData, fullPaths);", "ThreadData access seams grouped input-file replacement helper does not yet reuse the grouped list append seam.");
+            AssertContains(threadAccess, "AppendTrimmedThreadDataInputFile(threadData, *itr);", "ThreadData access seams grouped trimmed input-file replacement helper does not yet reuse the trimmed single-file append seam.");
+            AssertContains(threadAccess, "ClearThreadDataResults(threadData);", "ThreadData access seams grouped reset helper does not yet reuse the result-clear seam.");
             AssertContains(threadDataAccess, "ResetThreadDataInputFiles(threadData);", "ThreadDataAccess grouped reset helper does not yet reuse the input-file reset seam.");
-            AssertContains(threadDataAccess, "return threadData.inputState;", "ThreadDataAccess grouped input-state getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return threadData.executionState;", "ThreadDataAccess grouped execution-state getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataInputState(threadData).inputFiles;", "ThreadDataAccess grouped input-files getter does not yet route through the grouped input-state seam.");
-            AssertContains(threadDataAccess, "return GetMutableThreadDataInputState(threadData).inputFiles;", "ThreadDataAccess grouped mutable input-files helper does not yet route through the grouped input-state seam.");
-            AssertContains(threadDataAccess, "return GetMutableThreadDataExecutionState(threadData).results;", "ThreadDataAccess grouped mutable result-list helper does not yet route through the grouped execution-state seam.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataExecutionState(threadData).working = working;", "ThreadDataAccess working-state setter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataExecutionState(threadData).working;", "ThreadDataAccess working-state getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataExecutionState(threadData).stopRequested = stopValue;", "ThreadDataAccess stop setter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataExecutionState(threadData).stopRequested;", "ThreadDataAccess stop getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataExecutionState(threadData).uppercaseDigest = uppercase;", "ThreadDataAccess uppercase setter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataExecutionState(threadData).uppercaseDigest;", "ThreadDataAccess uppercase getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "GetMutableThreadDataExecutionState(threadData).countedSize += sizeDelta;", "ThreadDataAccess total-size increment helper does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataInputState(threadData).fileCount;", "ThreadDataAccess file-count getter does not yet route through the grouped input-state seam.");
-            AssertContains(threadDataAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadDataAccess grouped path getter does not yet route through the neutral ThreadData field name.");
-            AssertContains(threadDataAccess, "return GetThreadDataExecutionState(threadData).results;", "ThreadDataAccess grouped result-list getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return threadData.inputState;", "ThreadData access seams grouped input-state getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return threadData.executionState;", "ThreadData access seams grouped execution-state getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataInputState(threadData).inputFiles;", "ThreadData access seams grouped input-files getter does not yet route through the grouped input-state seam.");
+            AssertContains(threadAccess, "return GetMutableThreadDataInputState(threadData).inputFiles;", "ThreadData access seams grouped mutable input-files helper does not yet route through the grouped input-state seam.");
+            AssertContains(threadAccess, "return GetMutableThreadDataExecutionState(threadData).results;", "ThreadData access seams grouped mutable result-list helper does not yet route through the grouped execution-state seam.");
+            AssertContains(threadAccess, "GetMutableThreadDataExecutionState(threadData).working = working;", "ThreadData access seams working-state setter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataExecutionState(threadData).working;", "ThreadData access seams working-state getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "GetMutableThreadDataExecutionState(threadData).stopRequested = stopValue;", "ThreadData access seams stop setter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataExecutionState(threadData).stopRequested;", "ThreadData access seams stop getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "GetMutableThreadDataExecutionState(threadData).uppercaseDigest = uppercase;", "ThreadData access seams uppercase setter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataExecutionState(threadData).uppercaseDigest;", "ThreadData access seams uppercase getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "GetMutableThreadDataExecutionState(threadData).countedSize += sizeDelta;", "ThreadData access seams total-size increment helper does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataInputState(threadData).fileCount;", "ThreadData access seams file-count getter does not yet route through the grouped input-state seam.");
+            AssertContains(threadAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadData access seams grouped path getter does not yet route through the neutral ThreadData field name.");
+            AssertContains(threadAccess, "return GetThreadDataExecutionState(threadData).results;", "ThreadData access seams grouped result-list getter does not yet route through the neutral ThreadData field name.");
 
             AssertContains(clrBridge, "#include \"Common/ThreadDataAccess.h\"", "CLR bridge does not yet consume the ThreadDataAccess seam.");
             AssertContains(clrBridge, "SetThreadDataObserver(*m_pThreadData, m_pUiBridgeWUI);", "CLR bridge does not yet route observer assignment through ThreadDataAccess.");
@@ -1895,7 +1899,12 @@ internal static class Program
         Run("Phase 8 introduces thread-scoped hash algorithm selection while keeping the current four algorithms enabled by default", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+            string threadAccess = string.Join(
+                "\r\n",
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
@@ -1904,7 +1913,7 @@ internal static class Program
             AssertContains(global, "bool enabled[HASH_ALGORITHM_REGISTRY_COUNT];", "Hash-algorithm selection state does not yet store the current enabled flags through the registry-count constant.");
             AssertContains(global, "HashAlgorithmSelectionState hashAlgorithms;", "ThreadData execution state does not yet carry the hash-algorithm selection state.");
 
-            AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadDataAccess does not yet include the hash-algorithm registry seam needed for algorithm selection.");
+            AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadData access seams do not yet include the hash-algorithm registry seam needed for algorithm selection.");
             AssertContains(threadAccess, "GetThreadDataHashAlgorithmSelectionState(const ThreadData& threadData)", "ThreadDataAccess does not yet expose the const hash-algorithm selection helper.");
             AssertContains(threadAccess, "GetMutableThreadDataHashAlgorithmSelectionState(ThreadData& threadData)", "ThreadDataAccess does not yet expose the mutable hash-algorithm selection helper.");
             AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "ThreadDataAccess does not yet expose the hash-algorithm enable/disable helper.");
@@ -2108,7 +2117,12 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
             string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
-            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+            string threadAccess = string.Join(
+                "\r\n",
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
 
             AssertContains(global, "HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT", "Global.h does not yet centralize the built-in hash algorithm count through a dedicated registry-count constant.");
 
@@ -2131,10 +2145,10 @@ internal static class Program
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess does not yet route digest order through the registry seam.");
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess does not yet route digest index lookup through the registry seam.");
 
-            AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadDataAccess does not yet consume the hash-algorithm registry seam.");
-            AssertContains(threadAccess, "GetHashAlgorithmIndex(digestType)", "ThreadDataAccess does not yet route selection storage through the registry index seam.");
-            AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadDataAccess does not yet route enabled-algorithm iteration through the registry seam.");
-            AssertContains(threadAccess, "ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);", "ThreadDataAccess does not yet resolve enabled algorithm types through the registry seam.");
+            AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadData access seams do not yet consume the hash-algorithm registry seam.");
+            AssertContains(threadAccess, "GetHashAlgorithmIndex(digestType)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
+            AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadData access seams do not yet route enabled-algorithm iteration through the registry seam.");
+            AssertContains(threadAccess, "ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);", "ThreadData access seams do not yet resolve enabled algorithm types through the registry seam.");
         }, failures);
 
         Run("Phase 12 routes managed and XAML algorithm entry through dynamic registry-driven descriptors while keeping the legacy desktop checkbox surface intact", () =>
@@ -2204,7 +2218,7 @@ internal static class Program
             AssertContains(mfcControllerHeader, "void SyncSelections();", "Phase 13 controller does not yet expose the selection-sync helper.");
             AssertContains(mfcControllerHeader, "BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;", "Phase 13 controller does not yet expose the zero-selection validation helper.");
             AssertContains(mfcControllerHeader, "void SetEnabled(BOOL enabled);", "Phase 13 controller does not yet expose the checkbox enable/disable helper.");
-            AssertContains(mfcController, "#include \"Common/ThreadDataAccess.h\"", "Phase 13 controller does not yet layer on top of ThreadDataAccess.");
+            AssertContains(mfcController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
             AssertContains(mfcController, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 13 controller does not yet route checkbox traversal through the registry seam.");
             AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
             AssertContains(mfcController, "HasEnabledThreadDataHashAlgorithms(*m_threadData)", "Phase 13 controller does not yet validate zero-algorithm selection through ThreadDataAccess.");
@@ -2381,6 +2395,50 @@ internal static class Program
 
             AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
             AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
+        }, failures);
+
+        Run("Phase 18 splits ThreadData access into dedicated execution, input, and result seams", () =>
+        {
+            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
+            string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
+            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string mfcAlgorithmController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
+
+            AssertContains(threadAccess, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the execution seam.");
+            AssertContains(threadAccess, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the input seam.");
+            AssertContains(threadAccess, "#include \"Common/ThreadDataResultAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the result seam.");
+            AssertContains(threadAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "Phase 18 compatibility ThreadDataAccess shim does not yet keep the grouped session-reset helper.");
+            AssertDoesNotContain(threadAccess, "AppendThreadDataInputFile(ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns input-file helpers after the seam split.");
+            AssertDoesNotContain(threadAccess, "VisitThreadDataResults(const ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns result traversal after the seam split.");
+
+            AssertContains(threadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "Phase 18 execution seam does not yet own observer wiring.");
+            AssertContains(threadExecutionAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "Phase 18 execution seam does not yet own working-state writes.");
+            AssertContains(threadExecutionAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "Phase 18 execution seam does not yet own algorithm enablement.");
+            AssertContains(threadExecutionAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "Phase 18 execution seam does not yet own counted-size reads.");
+
+            AssertContains(threadInputAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "Phase 18 input seam does not yet own input-file reads.");
+            AssertContains(threadInputAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "Phase 18 input seam does not yet own input-file appends.");
+            AssertContains(threadInputAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "Phase 18 input seam does not yet own trimmed input-file replacement.");
+            AssertContains(threadInputAccess, "VisitThreadDataInputFiles(const ThreadData& threadData, TInputFileVisitor visitor)", "Phase 18 input seam does not yet own input-file traversal.");
+
+            AssertContains(threadResultAccess, "GetThreadDataResults(const ThreadData& threadData)", "Phase 18 result seam does not yet own result-list reads.");
+            AssertContains(threadResultAccess, "AppendThreadDataResult(ThreadData& threadData)", "Phase 18 result seam does not yet own result-list appends.");
+            AssertContains(threadResultAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "Phase 18 result seam does not yet own result traversal.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 execution seam.");
+            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataInputAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 input seam.");
+            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataResultAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 result seam.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataAccess.h\"", "HashEngineInternal.h still consumes the umbrella ThreadDataAccess header after the phase 18 seam split.");
+
+            AssertContains(mfcSearchController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC search controller does not yet consume the phase 18 execution seam.");
+            AssertContains(mfcSearchController, "#include \"Common/ThreadDataResultAccess.h\"", "MFC search controller does not yet consume the phase 18 result seam.");
+            AssertDoesNotContain(mfcSearchController, "#include \"Common/ThreadDataAccess.h\"", "MFC search controller still depends on the umbrella ThreadDataAccess header after phase 18.");
+
+            AssertContains(mfcAlgorithmController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC algorithm controller does not yet consume the phase 18 execution seam.");
+            AssertDoesNotContain(mfcAlgorithmController, "#include \"Common/ThreadDataAccess.h\"", "MFC algorithm controller still depends on the umbrella ThreadDataAccess header after phase 18.");
         }, failures);
 
         if (failures.Count > 0)

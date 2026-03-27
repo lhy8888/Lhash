@@ -3,7 +3,9 @@
 
 #include "Common/HashEngine.h"
 #include "Common/HashEngineObserver.h"
-#include "Common/ThreadDataAccess.h"
+#include "Common/ThreadDataExecutionAccess.h"
+#include "Common/ThreadDataInputAccess.h"
+#include "Common/ThreadDataResultAccess.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestAccess.h"
 
