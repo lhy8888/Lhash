@@ -252,6 +252,7 @@
     <ClCompile Include="source\WinMFC\FilesHashDlg.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashInputController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashSearchController.cpp" />
+    <ClCompile Include="source\WinMFC\FilesHashSessionController.cpp" />
     <ClCompile Include="source\WinMFC\FindDlg.cpp" />
     <ClCompile Include="source\WinMFC\HyperEdit.cpp" />
     <ClCompile Include="source\WinMFC\HyperEditHash.cpp" />
@@ -287,6 +288,7 @@
     <ClInclude Include="source\WinMFC\FilesHashDlg.h" />
     <ClInclude Include="source\WinMFC\FilesHashInputController.h" />
     <ClInclude Include="source\WinMFC\FilesHashSearchController.h" />
+    <ClInclude Include="source\WinMFC\FilesHashSessionController.h" />
     <ClInclude Include="source\WinMFC\FindDlg.h" />
     <ClInclude Include="source\WinMFC\HyperEdit.h" />
     <ClInclude Include="source\WinMFC\HyperEditHash.h" />

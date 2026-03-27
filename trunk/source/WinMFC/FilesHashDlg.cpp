@@ -16,7 +16,6 @@
 #include "Common/Global.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/Utils.h"
-#include "Common/HashEngine.h"
 #include "WindowsUtils.h"
 #include "UIBridgeMFC.h"
 #include "WinCommon/WindowsComm.h"
@@ -26,65 +25,6 @@ using namespace std;
 using namespace sunjwbase;
 using namespace WindowsStrings;
 
-namespace
-{
-	struct WindowMessageFilterStatus
-	{
-		DWORD cbSize;
-		DWORD extStatus;
-	};
-	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTEREX)(HWND, UINT, DWORD, void*);
-	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTER)(UINT, DWORD);
-	const DWORD WINDOW_MESSAGE_FILTER_ACTION_ALLOW = 1;
-	void AllowMessageForWindow(HWND hWnd, UINT message)
-	{
-		if (hWnd == NULL)
-		{
-			return;
-		}
-		HMODULE hUser32 = GetModuleHandle(_T("user32.dll"));
-		if (hUser32 == NULL)
-		{
-			return;
-		}
-		LPFN_CHANGEWINDOWMESSAGEFILTEREX pChangeWindowMessageFilterEx =
-			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTEREX>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
-		if (pChangeWindowMessageFilterEx != NULL)
-		{
-			WindowMessageFilterStatus cfs = { sizeof(WindowMessageFilterStatus), 0 };
-			pChangeWindowMessageFilterEx(hWnd, message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW, &cfs);
-			return;
-		}
-		LPFN_CHANGEWINDOWMESSAGEFILTER pChangeWindowMessageFilter =
-			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTER>(GetProcAddress(hUser32, "ChangeWindowMessageFilter"));
-		if (pChangeWindowMessageFilter != NULL)
-		{
-			pChangeWindowMessageFilter(message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW);
-		}
-	}
-	void PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
-	{
-		if (pWnd == NULL || !::IsWindow(pWnd->GetSafeHwnd()))
-		{
-			return;
-		}
-		if (bAccept)
-		{
-			pWnd->ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);
-		}
-		else
-		{
-			pWnd->ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);
-		}
-		pWnd->DragAcceptFiles(bAccept);
-		if (bAccept)
-		{
-			AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);
-			AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);
-			AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);
-		}
-	}
-}
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -152,7 +92,6 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
-	m_hWorkThread = NULL;
 	m_waitingExit = FALSE;
 
 	m_calculateTime = 0.0;
@@ -181,8 +120,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, this);
 	m_hashInputController.Initialize(&m_thrdData, this);
 	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
-	PrepareDropTarget(this, TRUE);
-	PrepareDropTarget(&m_editMain, TRUE);
+	m_hashSessionController.Initialize(&m_thrdData, this, &m_editMain, &m_btnOpen, &m_btnClr, &m_btnFind, &m_btnContext, &m_chkUppercase, &m_hashAlgorithmSelectionController);
 
 	m_mainMtx.lock();
 	{
@@ -211,7 +149,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	pWnd = (CStatic*)GetDlgItem(IDC_STATIC_ADDRESULT);
 	pWnd->SetWindowText(_T(""));
 
-	SetCtrls(FALSE);
+	m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 
 	// 从命令行获取文件路径
 	m_hashInputController.LoadCommandLineFiles(theApp.m_lpCmdLine);
@@ -310,7 +248,7 @@ void CFilesHashDlg::OnClose()
 	if(IsThreadDataWorking(m_thrdData))
 	{
 		m_waitingExit = TRUE;
-		StopWorkingThread();
+		m_hashSessionController.StopWorkingThread();
 
 		return;
 	}
@@ -339,7 +277,7 @@ void CFilesHashDlg::OnBnClickedOpen()
 	else
 	{
 		//??????
-		StopWorkingThread();
+		m_hashSessionController.StopWorkingThread();
 	}
 }
 void CFilesHashDlg::OnBnClickedExit()
@@ -507,20 +445,13 @@ void CFilesHashDlg::DoMD5()
 		RefreshMainText();
 	}
 
-	if (m_hWorkThread)
-	{
-		CloseHandle(m_hWorkThread);
-	}
-
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
 	PrepareAdvTaskbar();
 
 	SetWholeProgPos(0);
 
-	SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));
-	m_hashAlgorithmSelectionController.SyncSelections();
-	if (!m_hashAlgorithmSelectionController.ValidateSelection(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
+	if (!m_hashSessionController.PrepareHashStart(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
 	{
 		return;
 	}
@@ -534,26 +465,8 @@ void CFilesHashDlg::DoMD5()
 	pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
 	pWnd->SetWindowText(_T(""));
 
-	DWORD thredID;
-
-	SetThreadDataStop(m_thrdData, false);
-	m_hWorkThread = (HANDLE)_beginthreadex(NULL,
-											0,
-											(unsigned int (WINAPI *)(void *))HashThreadFunc,
-											&m_thrdData,
-											0,
-											(unsigned int *)&thredID);
-
+	m_hashSessionController.StartHashThread();
 }
-
-void CFilesHashDlg::StopWorkingThread()
-{
-	if(IsThreadDataWorking(m_thrdData))
-	{
-		SetThreadDataStop(m_thrdData, true);
-	}
-}
-
 HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
@@ -564,51 +477,6 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	return hbr;
 }
 
-
-void CFilesHashDlg::SetCtrls(BOOL working)
-{
-	if(working)
-	{
-		PrepareDropTarget(this, FALSE);
-		PrepareDropTarget(&m_editMain, FALSE);
-		// Make open button to be stop button
-		m_btnOpen.EnableWindow(TRUE);
-		m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_STOP));
-
-		m_btnClr.EnableWindow(FALSE);
-		m_btnFind.EnableWindow(FALSE);
-		m_btnContext.EnableWindow(FALSE);
-		m_chkUppercase.EnableWindow(FALSE);
-		m_hashAlgorithmSelectionController.SetEnabled(FALSE);
-		GotoDlgCtrl(&m_btnOpen);
-	}
-	else
-	{
-		// Make open button to be open button.
-		m_btnOpen.EnableWindow(TRUE);
-		m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_OPEN));
-
-		m_btnClr.EnableWindow(TRUE);
-		m_btnFind.EnableWindow(TRUE);
-		if(m_bLimited)
-		{
-			Button_SetElevationRequiredState(m_btnContext.GetSafeHwnd(), TRUE);
-			//m_btnContext.SetWindowText(MAINDLG_CONTEXT_INIT);
-			//m_btnContext.EnableWindow(FALSE);
-		}
-		else
-		{
-			Button_SetElevationRequiredState(m_btnContext.GetSafeHwnd(), FALSE);
-			//m_btnContext.EnableWindow(TRUE);
-		}
-		m_btnContext.EnableWindow(TRUE);
-		m_chkUppercase.EnableWindow(TRUE);
-		m_hashAlgorithmSelectionController.SetEnabled(TRUE);
-		GotoDlgCtrl(&m_btnOpen);
-		PrepareDropTarget(this, TRUE);
-		PrepareDropTarget(&m_editMain, TRUE);
-	}
-}
 
 void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
 {
@@ -662,7 +530,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 	switch(wParam)
 	{
 	case WP_WORKING:
-		SetCtrls(TRUE);
+		m_hashSessionController.SetControls(TRUE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 		break;
 	case WP_REFRESH_TEXT:
 		RefreshMainText();
@@ -676,7 +544,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		// 停止主界面计时器 计算读取速度
 
 		// 界面设置 - 开始
-		SetCtrls(FALSE);
+		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 		// 界面设置 - 结束
 
 		SetWholeProgPos(99);
@@ -689,7 +557,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		pWnd->SetWindowText(_T(""));
 
 		//界面设置 - 开始
-		SetCtrls(FALSE);
+		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 		//界面设置 - 结束
 
 		m_mainMtx.lock();

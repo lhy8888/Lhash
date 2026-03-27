@@ -143,22 +143,24 @@ internal static partial class Program
         Run("WinMFC drag and drop still works across the resized result area", () =>
         {
             string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string sessionController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSessionController.cpp");
             string hyperEditHashHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.h");
             string hyperEditHashSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\HyperEditHash.cpp");
             string dialogResource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string dialogAndSession = dialogContent + Environment.NewLine + sessionController;
 
-            AssertContains(dialogContent, "ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);", "Shared drop-target helper no longer advertises file-drop support on the receiving windows.");
-            AssertContains(dialogContent, "ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);", "Shared drop-target helper no longer removes file-drop style while hashing is in progress.");
-            AssertContains(dialogContent, "pWnd->DragAcceptFiles(bAccept);", "Shared drop-target helper no longer toggles file-drop acceptance.");
-            AssertContains(dialogContent, "PrepareDropTarget(this, TRUE);", "Main dialog no longer restores drag-and-drop handling through the shared helper.");
-            AssertContains(dialogContent, "PrepareDropTarget(&m_editMain, TRUE);", "Main result edit control no longer restores drag-and-drop handling through the shared helper.");
+            AssertContains(dialogAndSession, "ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);", "Shared drop-target helper no longer advertises file-drop support on the receiving windows.");
+            AssertContains(dialogAndSession, "ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);", "Shared drop-target helper no longer removes file-drop style while hashing is in progress.");
+            AssertContains(dialogAndSession, "pWnd->DragAcceptFiles(bAccept);", "Shared drop-target helper no longer toggles file-drop acceptance.");
+            AssertContains(sessionController, "PrepareDropTarget(m_parentWnd, TRUE);", "Main dialog no longer restores drag-and-drop handling through the session controller helper.");
+            AssertContains(sessionController, "PrepareDropTarget(m_mainEditDropTarget, TRUE);", "Main result edit control no longer restores drag-and-drop handling through the session controller helper.");
             AssertContains(dialogContent, "m_btnFind.ShowWindow(SW_HIDE);", "Legacy MFC verify button is still visible in the main dialog.");
-            AssertContains(dialogContent, "ChangeWindowMessageFilterEx", "Elevated drag-and-drop compatibility handling is missing.");
-            AssertContains(dialogContent, "ChangeWindowMessageFilter", "Legacy message-filter compatibility fallback is missing.");
-            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);", "WM_DROPFILES is no longer allowed through the window message filter.");
-            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA is no longer allowed through the window message filter.");
-            AssertContains(dialogContent, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
-            AssertDoesNotContain(dialogContent, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
+            AssertContains(dialogAndSession, "ChangeWindowMessageFilterEx", "Elevated drag-and-drop compatibility handling is missing.");
+            AssertContains(dialogAndSession, "ChangeWindowMessageFilter", "Legacy message-filter compatibility fallback is missing.");
+            AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);", "WM_DROPFILES is no longer allowed through the window message filter.");
+            AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA is no longer allowed through the window message filter.");
+            AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
+            AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,0,0,0,0", "Legacy MFC verify button still consumes visible layout space.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");

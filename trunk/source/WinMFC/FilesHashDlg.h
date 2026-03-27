@@ -15,6 +15,7 @@
 #include "FilesHashAlgorithmSelectionController.h"
 #include "FilesHashInputController.h"
 #include "FilesHashSearchController.h"
+#include "FilesHashSessionController.h"
 
 // CMD5SUM03Dlg 对话框
 class CFilesHashDlg : public CDialog
@@ -72,8 +73,8 @@ protected:
 	FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;
 	FilesHashInputController m_hashInputController;
 	FilesHashSearchController m_hashSearchController;
+	FilesHashSessionController m_hashSessionController;
 	ThreadData m_thrdData;
-	HANDLE m_hWorkThread;
 	float m_calculateTime;
 	UINT_PTR m_timer;
 	BOOL m_waitingExit; // 等待线程退出后，退出程序
@@ -88,10 +89,8 @@ protected:
 
 
 	void DoMD5();
-	void StopWorkingThread();
 
 	// 下面的为计算时使用，一般不要用
-	void SetCtrls(BOOL working);
 	void SetWholeProgPos(UINT pos);
 	void RefreshMainText(BOOL bScrollToEnd = TRUE);
 	void CalcSpeed(ULONGLONG tsize);
