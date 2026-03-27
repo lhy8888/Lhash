@@ -4,6 +4,7 @@
 #include "Common/HashAlgorithmRegistry.h"
 #include "Common/ResultDataProjection.h"
 #include "Common/ResultDataSearch.h"
+#include "Common/ThreadDataAccess.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
 #include "Common/ThreadDataResultAccess.h"
