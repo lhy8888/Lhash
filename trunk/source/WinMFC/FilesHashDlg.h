@@ -63,10 +63,6 @@ protected:
 	CButton m_btnClr;
 	CButton m_btnFind;
 	CButton m_chkUppercase;
-	CButton m_chkMd5;
-	CButton m_chkSha1;
-	CButton m_chkSha256;
-	CButton m_chkSha512;
 	CButton m_btnContext;
 
 	sunjwbase::OsMutex m_mainMtx;

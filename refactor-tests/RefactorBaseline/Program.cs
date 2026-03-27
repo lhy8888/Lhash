@@ -1994,9 +1994,7 @@ internal static class Program
             AssertContains(uwpRes, "HashAlgorithmDialogTitle", "UWP resources do not yet include the algorithm-selection dialog title.");
             AssertContains(uwpRes, "HashAlgorithmDialogMessage", "UWP resources do not yet include the algorithm-selection dialog message.");
 
-            AssertContains(mfcHeader, "CButton m_chkMd5;", "MFC dialog does not yet expose the MD5 checkbox control.");
             AssertContains(mfcHeader, "FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;", "MFC dialog does not yet keep the desktop hash-algorithm controller seam.");
-            AssertContains(mfcDialog, "DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);", "MFC dialog does not yet bind the MD5 checkbox.");
             AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.ResetChecks();", "MFC dialog does not yet default the algorithm checkboxes through the dedicated controller seam.");
             AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SyncSelections();", "MFC dialog does not yet synchronize algorithm selections through the dedicated controller seam.");
             AssertContains(mfcDialog, "if (!m_hashAlgorithmSelectionController.ValidateSelection(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))", "MFC dialog does not yet block zero-algorithm starts through the dedicated controller seam.");
@@ -2201,7 +2199,7 @@ internal static class Program
             string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
 
             AssertContains(mfcControllerHeader, "class FilesHashAlgorithmSelectionController", "Phase 13 is missing the dedicated MFC hash-algorithm selection controller.");
-            AssertContains(mfcControllerHeader, "void Initialize(ThreadData* threadData,", "Phase 13 controller does not yet expose the checkbox/thread initialization seam.");
+            AssertContains(mfcControllerHeader, "void Initialize(ThreadData* threadData", "Phase 13 controller does not yet expose the checkbox/thread initialization seam.");
             AssertContains(mfcControllerHeader, "void ResetChecks();", "Phase 13 controller does not yet expose the default-checkbox helper.");
             AssertContains(mfcControllerHeader, "void SyncSelections();", "Phase 13 controller does not yet expose the selection-sync helper.");
             AssertContains(mfcControllerHeader, "BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;", "Phase 13 controller does not yet expose the zero-selection validation helper.");
@@ -2218,7 +2216,7 @@ internal static class Program
             AssertDoesNotContain(mfcHeader, "void SyncHashAlgorithmSelections();", "FilesHashDlg.h still exposes the legacy inline selection-sync helper after phase 13.");
             AssertDoesNotContain(mfcHeader, "BOOL ValidateHashAlgorithmSelection();", "FilesHashDlg.h still exposes the legacy inline selection-validation helper after phase 13.");
 
-            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.Initialize(&m_thrdData, &m_chkMd5, &m_chkSha1, &m_chkSha256, &m_chkSha512);", "FilesHashDlg.cpp does not yet initialize the dedicated phase 13 controller.");
+            AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.Initialize(", "FilesHashDlg.cpp does not yet initialize the dedicated phase 13 controller.");
             AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.ResetChecks();", "FilesHashDlg.cpp does not yet route default checkbox setup through the dedicated controller.");
             AssertContains(mfcDialog, "m_hashAlgorithmSelectionController.SyncSelections();", "FilesHashDlg.cpp does not yet route checkbox state synchronization through the dedicated controller.");
             AssertContains(mfcDialog, "if (!m_hashAlgorithmSelectionController.ValidateSelection(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))", "FilesHashDlg.cpp does not yet route zero-algorithm validation through the dedicated controller.");
@@ -2344,6 +2342,45 @@ internal static class Program
             AssertContains(mfcProject, "source\\WinMFC\\FilesHashSearchController.h", "fileshash.vcxproj does not yet include the dedicated phase 16 search controller header.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashSearchController.cpp", "fileshash.vcxproj.filters does not yet track the dedicated phase 16 search controller source.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashSearchController.h", "fileshash.vcxproj.filters does not yet track the dedicated phase 16 search controller header.");
+        }, failures);
+
+        Run("Phase 17 upgrades the legacy desktop hash-algorithm surface to runtime dynamic controls", () =>
+        {
+            string mfcControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.h");
+            string mfcController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+
+            AssertContains(mfcControllerHeader, "#include <vector>", "Phase 17 controller does not yet depend on the dynamic checkbox collection type.");
+            AssertContains(mfcControllerHeader, "struct HashAlgorithmCheckBox", "Phase 17 controller is missing the grouped runtime checkbox state.");
+            AssertContains(mfcControllerHeader, "void CreateDynamicCheckBoxes();", "Phase 17 controller is missing the dynamic checkbox creation helper.");
+            AssertContains(mfcControllerHeader, "void DestroyDynamicCheckBoxes();", "Phase 17 controller is missing the dynamic checkbox cleanup helper.");
+            AssertContains(mfcControllerHeader, "CRect GetCheckBoxLayoutRect() const;", "Phase 17 controller is missing the runtime layout helper.");
+            AssertContains(mfcControllerHeader, "std::vector<HashAlgorithmCheckBox> m_checkBoxes;", "Phase 17 controller does not yet store runtime-generated checkbox entries.");
+
+            AssertContains(mfcController, "HASH_ALGORITHM_LAYOUT_SOURCE_IDS[]", "Phase 17 controller does not yet define the legacy checkbox layout-source ids.");
+            AssertContains(mfcController, "CreateDynamicCheckBoxes();", "Phase 17 controller does not yet create runtime checkbox controls during initialization.");
+            AssertContains(mfcController, "checkBoxEntry.checkBox->Create(", "Phase 17 controller does not yet materialize runtime checkbox windows.");
+            AssertContains(mfcController, "GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor)", "Phase 17 controller does not yet source checkbox labels from the hash-algorithm registry.");
+            AssertContains(mfcController, "layoutControl->ShowWindow(SW_HIDE);", "Phase 17 controller does not yet hide the legacy fixed checkbox resources after using them as layout anchors.");
+            AssertDoesNotContain(mfcController, "m_chkMd5", "Phase 17 controller still keeps fixed MD5 checkbox members after dynamicization.");
+            AssertDoesNotContain(mfcController, "switch (digestType)", "Phase 17 controller still uses a fixed digest-type switch instead of runtime checkbox traversal.");
+
+            AssertContains(dlgHeader, "FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;", "FilesHashDlg.h does not yet keep the phase 17 dynamic checkbox controller.");
+            AssertDoesNotContain(dlgHeader, "CButton m_chkMd5;", "FilesHashDlg.h still keeps the fixed MD5 checkbox member after phase 17.");
+            AssertDoesNotContain(dlgHeader, "CButton m_chkSha1;", "FilesHashDlg.h still keeps the fixed SHA1 checkbox member after phase 17.");
+            AssertDoesNotContain(dlgHeader, "CButton m_chkSha256;", "FilesHashDlg.h still keeps the fixed SHA256 checkbox member after phase 17.");
+            AssertDoesNotContain(dlgHeader, "CButton m_chkSha512;", "FilesHashDlg.h still keeps the fixed SHA512 checkbox member after phase 17.");
+
+            AssertContains(dlgCpp, "m_hashAlgorithmSelectionController.Initialize(&m_thrdData, this);", "FilesHashDlg.cpp does not yet initialize the phase 17 controller through the dialog surface.");
+            AssertDoesNotContain(dlgCpp, "DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);", "FilesHashDlg.cpp still binds the fixed MD5 checkbox after phase 17.");
+            AssertDoesNotContain(dlgCpp, "DDX_Control(pDX, IDC_CHECK_SHA1, m_chkSha1);", "FilesHashDlg.cpp still binds the fixed SHA1 checkbox after phase 17.");
+            AssertDoesNotContain(dlgCpp, "DDX_Control(pDX, IDC_CHECK_SHA256, m_chkSha256);", "FilesHashDlg.cpp still binds the fixed SHA256 checkbox after phase 17.");
+            AssertDoesNotContain(dlgCpp, "DDX_Control(pDX, IDC_CHECK_SHA512, m_chkSha512);", "FilesHashDlg.cpp still binds the fixed SHA512 checkbox after phase 17.");
+
+            AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
+            AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
         }, failures);
 
         if (failures.Count > 0)

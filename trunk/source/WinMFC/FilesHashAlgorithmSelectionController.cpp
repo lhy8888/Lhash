@@ -3,27 +3,47 @@
 #include "FilesHashAlgorithmSelectionController.h"
 
 #include "Common/ThreadDataAccess.h"
+#include "resource.h"
 
-FilesHashAlgorithmSelectionController::FilesHashAlgorithmSelectionController()
-	: m_threadData(NULL),
-	m_chkMd5(NULL),
-	m_chkSha1(NULL),
-	m_chkSha256(NULL),
-	m_chkSha512(NULL)
+namespace
+{
+	const UINT HASH_ALGORITHM_CHECK_BOX_ID_BASE = 50000;
+	const UINT HASH_ALGORITHM_LAYOUT_SOURCE_IDS[] =
+	{
+		IDC_CHECK_MD5,
+		IDC_CHECK_SHA1,
+		IDC_CHECK_SHA256,
+		IDC_CHECK_SHA512
+	};
+
+	const int HASH_ALGORITHM_CHECK_BOX_SPACING_X = 6;
+	const int HASH_ALGORITHM_CHECK_BOX_SPACING_Y = 4;
+	const int HASH_ALGORITHM_CHECK_BOX_PADDING_X = 18;
+}
+
+FilesHashAlgorithmSelectionController::HashAlgorithmCheckBox::HashAlgorithmCheckBox()
+	: digestType(RESULT_DIGEST_MD5),
+	controlId(0),
+	checkBox(NULL)
 {
 }
 
-void FilesHashAlgorithmSelectionController::Initialize(ThreadData* threadData,
-	CButton* chkMd5,
-	CButton* chkSha1,
-	CButton* chkSha256,
-	CButton* chkSha512)
+FilesHashAlgorithmSelectionController::FilesHashAlgorithmSelectionController()
+	: m_threadData(NULL),
+	m_parentWnd(NULL)
+{
+}
+
+FilesHashAlgorithmSelectionController::~FilesHashAlgorithmSelectionController()
+{
+	DestroyDynamicCheckBoxes();
+}
+
+void FilesHashAlgorithmSelectionController::Initialize(ThreadData* threadData, CWnd* parentWnd)
 {
 	m_threadData = threadData;
-	m_chkMd5 = chkMd5;
-	m_chkSha1 = chkSha1;
-	m_chkSha256 = chkSha256;
-	m_chkSha512 = chkSha512;
+	m_parentWnd = parentWnd;
+	CreateDynamicCheckBoxes();
 }
 
 void FilesHashAlgorithmSelectionController::ResetChecks()
@@ -88,19 +108,152 @@ void FilesHashAlgorithmSelectionController::SetEnabled(BOOL enabled)
 	});
 }
 
+void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
+{
+	DestroyDynamicCheckBoxes();
+
+	if (m_parentWnd == NULL || !::IsWindow(m_parentWnd->GetSafeHwnd()))
+	{
+		return;
+	}
+
+	CRect layoutRect = GetCheckBoxLayoutRect();
+	if (layoutRect.IsRectEmpty())
+	{
+		return;
+	}
+
+	CWnd* firstLayoutControl = m_parentWnd->GetDlgItem(HASH_ALGORITHM_LAYOUT_SOURCE_IDS[0]);
+	CFont* font = (firstLayoutControl != NULL) ? firstLayoutControl->GetFont() : m_parentWnd->GetFont();
+	CDC* pDC = m_parentWnd->GetDC();
+	CFont* oldFont = (pDC != NULL && font != NULL) ? pDC->SelectObject(font) : NULL;
+
+	int currentX = layoutRect.left;
+	int currentY = layoutRect.top;
+	int maxRight = layoutRect.right;
+	int checkBoxHeight = layoutRect.Height();
+
+	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+	{
+		HashAlgorithmCheckBox checkBoxEntry;
+		checkBoxEntry.digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+		checkBoxEntry.controlId = HASH_ALGORITHM_CHECK_BOX_ID_BASE + index;
+		checkBoxEntry.checkBox = new CButton();
+
+		sunjwbase::tstring label = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
+		int checkBoxWidth = static_cast<int>(label.length()) * 8 + HASH_ALGORITHM_CHECK_BOX_PADDING_X;
+		if (pDC != NULL)
+		{
+			checkBoxWidth = pDC->GetTextExtent(label.c_str()).cx + HASH_ALGORITHM_CHECK_BOX_PADDING_X;
+		}
+
+		if (currentX > layoutRect.left && (currentX + checkBoxWidth) > maxRight)
+		{
+			currentX = layoutRect.left;
+			currentY += checkBoxHeight + HASH_ALGORITHM_CHECK_BOX_SPACING_Y;
+		}
+
+		CRect checkBoxRect(currentX, currentY, currentX + checkBoxWidth, currentY + checkBoxHeight);
+		if (!checkBoxEntry.checkBox->Create(
+			label.c_str(),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+			checkBoxRect,
+			m_parentWnd,
+			checkBoxEntry.controlId))
+		{
+			delete checkBoxEntry.checkBox;
+			checkBoxEntry.checkBox = NULL;
+			return false;
+		}
+		if (font != NULL)
+		{
+			checkBoxEntry.checkBox->SetFont(font);
+		}
+
+		m_checkBoxes.push_back(checkBoxEntry);
+		currentX += checkBoxWidth + HASH_ALGORITHM_CHECK_BOX_SPACING_X;
+		return true;
+	});
+
+	if (pDC != NULL)
+	{
+		if (oldFont != NULL)
+		{
+			pDC->SelectObject(oldFont);
+		}
+		m_parentWnd->ReleaseDC(pDC);
+	}
+}
+
+void FilesHashAlgorithmSelectionController::DestroyDynamicCheckBoxes()
+{
+	for (size_t index = 0; index < m_checkBoxes.size(); ++index)
+	{
+		CButton* checkBox = m_checkBoxes[index].checkBox;
+		if (checkBox != NULL)
+		{
+			if (::IsWindow(checkBox->GetSafeHwnd()))
+			{
+				checkBox->DestroyWindow();
+			}
+
+			delete checkBox;
+		}
+	}
+
+	m_checkBoxes.clear();
+}
+
+CRect FilesHashAlgorithmSelectionController::GetCheckBoxLayoutRect() const
+{
+	CRect layoutRect(0, 0, 0, 0);
+	bool hasLayoutRect = false;
+
+	for (int index = 0; index < _countof(HASH_ALGORITHM_LAYOUT_SOURCE_IDS); ++index)
+	{
+		CWnd* layoutControl = (m_parentWnd != NULL) ? m_parentWnd->GetDlgItem(HASH_ALGORITHM_LAYOUT_SOURCE_IDS[index]) : NULL;
+		if (layoutControl == NULL || !::IsWindow(layoutControl->GetSafeHwnd()))
+		{
+			continue;
+		}
+
+		CRect controlRect;
+		layoutControl->GetWindowRect(&controlRect);
+		m_parentWnd->ScreenToClient(&controlRect);
+		layoutControl->ShowWindow(SW_HIDE);
+
+		if (!hasLayoutRect)
+		{
+			layoutRect = controlRect;
+			hasLayoutRect = true;
+		}
+		else
+		{
+			layoutRect.UnionRect(layoutRect, controlRect);
+		}
+	}
+
+	CWnd* openButton = (m_parentWnd != NULL) ? m_parentWnd->GetDlgItem(IDC_OPEN) : NULL;
+	if (openButton != NULL && ::IsWindow(openButton->GetSafeHwnd()))
+	{
+		CRect openButtonRect;
+		openButton->GetWindowRect(&openButtonRect);
+		m_parentWnd->ScreenToClient(&openButtonRect);
+		layoutRect.right = openButtonRect.left - HASH_ALGORITHM_CHECK_BOX_SPACING_X;
+	}
+
+	return layoutRect;
+}
+
 CButton* FilesHashAlgorithmSelectionController::GetCheckBox(ResultDigestType digestType) const
 {
-	switch (digestType)
+	for (size_t index = 0; index < m_checkBoxes.size(); ++index)
 	{
-	case RESULT_DIGEST_MD5:
-		return m_chkMd5;
-	case RESULT_DIGEST_SHA1:
-		return m_chkSha1;
-	case RESULT_DIGEST_SHA256:
-		return m_chkSha256;
-	case RESULT_DIGEST_SHA512:
-		return m_chkSha512;
-	default:
-		return NULL;
+		if (m_checkBoxes[index].digestType == digestType)
+		{
+			return m_checkBoxes[index].checkBox;
+		}
 	}
+
+	return NULL;
 }

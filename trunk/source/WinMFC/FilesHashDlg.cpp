@@ -160,10 +160,6 @@ void CFilesHashDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EXIT, m_btnExit);
 	DDX_Control(pDX, IDC_CLEAN, m_btnClr);
 	DDX_Control(pDX, IDC_CHECKUP, m_chkUppercase);
-	DDX_Control(pDX, IDC_CHECK_MD5, m_chkMd5);
-	DDX_Control(pDX, IDC_CHECK_SHA1, m_chkSha1);
-	DDX_Control(pDX, IDC_CHECK_SHA256, m_chkSha256);
-	DDX_Control(pDX, IDC_CHECK_SHA512, m_chkSha512);
 	DDX_Control(pDX, IDC_FIND, m_btnFind);
 	DDX_Control(pDX, IDC_CONTEXT, m_btnContext);
 }
@@ -236,7 +232,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));
 
 	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
-	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, &m_chkMd5, &m_chkSha1, &m_chkSha256, &m_chkSha512);
+	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, this);
 	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
 	PrepareDropTarget(this, TRUE);
 	PrepareDropTarget(&m_editMain, TRUE);
