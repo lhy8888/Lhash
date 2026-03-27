@@ -13,6 +13,7 @@
 #include "Common/Global.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"
+#include "FilesHashSearchController.h"
 
 // CMD5SUM03Dlg 对话框
 class CFilesHashDlg : public CDialog
@@ -72,6 +73,7 @@ protected:
 
 	UIBridgeMFC *m_uiBridgeMFC;
 	FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;
+	FilesHashSearchController m_hashSearchController;
 	ThreadData m_thrdData;
 	HANDLE m_hWorkThread;
 	float m_calculateTime;
@@ -80,9 +82,7 @@ protected:
 	BOOL m_bAdvTaskbar;
 	ITaskbarList3* pTl;
 
-	BOOL m_bFind; // 是否在搜索模式
-	CString m_strFindFile;
-	CString m_strFindHash;
+
 
 	BOOL m_bLimited;
 
@@ -90,9 +90,7 @@ protected:
 	void ClearFilePaths();
 	void PrepareAdvTaskbar();
 
-	void ResultFind(CString strFile, CString strHash);
-	void AppendResult(const ResultData& result);
-	void ClearFind();
+
 
 	void DoMD5();
 	void StopWorkingThread();
@@ -100,7 +98,6 @@ protected:
 	// 下面的为计算时使用，一般不要用
 	void SetCtrls(BOOL working);
 	void SetWholeProgPos(UINT pos);
-	void RefreshResult();
 	void RefreshMainText(BOOL bScrollToEnd = TRUE);
 	void CalcSpeed(ULONGLONG tsize);
 

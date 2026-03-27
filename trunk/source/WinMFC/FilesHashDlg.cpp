@@ -14,7 +14,6 @@
 #include "FindDlg.h"
 #include "AboutDlg.h"
 #include "Common/Global.h"
-#include "Common/ResultDataSearch.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/Utils.h"
 #include "Common/HashEngine.h"
@@ -209,7 +208,6 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	PrepareAdvTaskbar();
 
-	m_bFind = FALSE;
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
 	m_hWorkThread = NULL;
@@ -239,6 +237,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
 	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, &m_chkMd5, &m_chkSha1, &m_chkSha256, &m_chkSha512);
+	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
 	PrepareDropTarget(this, TRUE);
 	PrepareDropTarget(&m_editMain, TRUE);
 
@@ -527,7 +526,8 @@ void CFilesHashDlg::OnBnClickedClean()
 		}
 		else if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR_VERIFY)) == 0)
 		{
-			ClearFind();
+			m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
+			RefreshMainText();
 		}
 	}
 }
@@ -539,19 +539,9 @@ void CFilesHashDlg::OnBnClickedFind()
 	Find.SetFindHash(_T(""));
 	if (IDOK == Find.DoModal())
 	{
-		m_strFindHash = Find.GetFindHash().Trim();
-		if (m_strFindHash.Compare(_T("")) != 0)
+		if (m_hashSearchController.BeginSearch(CString(), Find.GetFindHash(), GetStringByKey(MAINDLG_CLEAR_VERIFY)))
 		{
-			m_bFind = TRUE; // 进入搜索模式
-			m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR_VERIFY));
-
-			m_editMain.ClearTextBuffer();
-			ResultFind(m_strFindFile, m_strFindHash);
 			m_editMain.ShowTextBuffer();
-			//m_editMain.LineScrollEnd(); // 将文本框滚动到结尾
-
-			m_btnFind.EnableWindow(FALSE);
-			m_btnOpen.EnableWindow(FALSE);
 		}
 	}
 }
@@ -608,19 +598,8 @@ void CFilesHashDlg::OnBnClickedCheckup()
 	// Remember current scroll position
 	int iFirstVisible = m_editMain.GetFirstVisibleLine();
 
-	if(!m_bFind)
-	{
-		// List mode
-		RefreshResult();
-		RefreshMainText(FALSE);
-	}
-	else
-	{
-		// Search mode
-		m_editMain.ClearTextBuffer();
-		ResultFind(m_strFindFile, m_strFindHash);
-		m_editMain.ShowTextBuffer();
-	}
+	m_hashSearchController.RebuildCurrentView();
+	RefreshMainText(FALSE);
 
 	// Reset scroll position
 	m_editMain.LineScroll(iFirstVisible);
@@ -670,9 +649,10 @@ void CFilesHashDlg::SetWholeProgPos(UINT pos)
 
 void CFilesHashDlg::DoMD5()
 {
-	if (m_bFind)
+	if (m_hashSearchController.IsActive())
 	{
-		ClearFind();
+		m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
+		RefreshMainText();
 	}
 
 	if (m_hWorkThread)
@@ -680,7 +660,6 @@ void CFilesHashDlg::DoMD5()
 		CloseHandle(m_hWorkThread);
 	}
 
-	m_bFind = FALSE;
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
 	PrepareAdvTaskbar();
@@ -781,15 +760,6 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 		PrepareDropTarget(this, TRUE);
 		PrepareDropTarget(&m_editMain, TRUE);
 	}
-}
-
-void CFilesHashDlg::RefreshResult()
-{
-	m_editMain.ClearTextBuffer();
-	VisitThreadDataResults(m_thrdData, [&](const ResultData& result)
-	{
-		AppendResult(result);
-	});
 }
 
 void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
@@ -1008,46 +978,4 @@ void CFilesHashDlg::OnHypereditmenuCopyhash()
 void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI)
 {
 	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
-}
-
-void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
-{
-	m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_FIND_IN_RESULT));
-	m_editMain.AppendTextToBuffer(_T("\r\n"));
-	m_editMain.AppendTextToBuffer(GetStringByKey(HASHVALUE_STRING));
-	m_editMain.AppendTextToBuffer(_T(" "));
-	m_editMain.AppendTextToBuffer(strHash);
-	m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
-	m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_RESULT));
-	m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
-
-		tstring tstrFileToFind = NormalizeResultPathSearchText(strFile.GetString());
-	tstring tstrHashToFind = NormalizeDigestSearchText(strHash.GetString());
-
-	size_t count = VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)
-	{
-		AppendResult(result);
-	});
-
-	if(count == 0)
-		m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_NORESULT));
-}
-
-void CFilesHashDlg::AppendResult(const ResultData& result)
-{
-	SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));
-	UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(m_thrdData), &m_editMain);
-}
-
-void CFilesHashDlg::ClearFind()
-{
-	// 退出搜索模式
-	m_bFind = FALSE;
-	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
-
-	m_btnFind.EnableWindow(TRUE);
-	m_btnOpen.EnableWindow(TRUE);
-
-	RefreshResult();
-	RefreshMainText();
 }

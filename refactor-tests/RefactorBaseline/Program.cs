@@ -493,6 +493,8 @@ internal static class Program
             AssertContains(uwpBridge, "ResetThreadDataInputFilesAndAppend(m_threadData, filePaths->Length, [&](uint32_t fileIndex)", "UWP bridge does not yet route AddFiles() through the grouped ThreadDataAccess batch-input helper.");
 
             AssertContains(mfcDialog, "#include \"Common/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam.");
+            string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string mfcDialogAndSearch = mfcDialog + Environment.NewLine + mfcSearchController;
             AssertContains(mfcDialog, "SetThreadDataObserver(m_thrdData, m_uiBridgeMFC);", "MFC dialog does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(mfcDialog, "ResetThreadDataForNewSession(m_thrdData);", "MFC dialog does not yet route dialog initialization through ThreadDataAccess.");
             AssertContains(mfcDialog, "ReplaceThreadDataInputFiles(m_thrdData, Paras);", "MFC dialog does not yet route command-line file loading through the grouped ThreadDataAccess replacement helper.");
@@ -501,10 +503,10 @@ internal static class Program
             AssertContains(mfcDialog, "SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));", "MFC dialog does not yet route uppercase updates through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataWorking(m_thrdData, false);", "MFC dialog does not yet route initial working-state resets through ThreadDataAccess.");
             AssertContains(mfcDialog, "IsThreadDataWorking(m_thrdData)", "MFC dialog does not yet route working-state checks through ThreadDataAccess.");
-            AssertContains(mfcDialog, "GetThreadDataUppercase(m_thrdData)", "MFC dialog does not yet route uppercase reads through ThreadDataAccess.");
+            AssertContains(mfcDialogAndSearch, "GetThreadDataUppercase(*m_threadData)", "MFC search flow does not yet route uppercase reads through ThreadDataAccess.");
             AssertContains(mfcDialog, "GetThreadDataTotalSize(m_thrdData)", "MFC dialog does not yet route total-size reads through ThreadDataAccess.");
-            AssertContains(mfcDialog, "GetThreadDataResults(m_thrdData)", "MFC dialog does not yet route grouped result-list reads through ThreadDataAccess.");
-            AssertContains(mfcDialog, "VisitThreadDataResults(m_thrdData, [&](const ResultData& result)", "MFC dialog does not yet route grouped result iteration through ThreadDataAccess.");
+            AssertContains(mfcDialogAndSearch, "GetThreadDataResults(*m_threadData)", "MFC search flow does not yet route grouped result-list reads through ThreadDataAccess.");
+            AssertContains(mfcDialogAndSearch, "VisitThreadDataResults(*m_threadData, [&](const ResultData& result)", "MFC search flow does not yet route grouped result iteration through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataStop(m_thrdData, false);", "MFC dialog does not yet route work-thread start stop-flag resets through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataStop(m_thrdData, true);", "MFC dialog does not yet route work-thread stop requests through ThreadDataAccess.");
             AssertContains(mfcDialog, "ResetThreadDataInputFiles(m_thrdData);", "MFC dialog does not yet route file-path clearing through ThreadDataAccess.");
@@ -567,7 +569,8 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "AppendTextToBuffer(_T(\"\\r\\nSHA256: \"))", "UIBridgeMFC still hardcodes digest label emission instead of using the digest seam.");
             AssertDoesNotContain(bridgeMfc, "AppendTextToBuffer(_T(\"\\r\\nSHA512: \"))", "UIBridgeMFC still hardcodes digest label emission instead of using the digest seam.");
 
-            AssertContains(mfcDialog, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC dialog no longer routes digest search through the neutral digest seam.");
+            string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            AssertContains(mfcSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC search controller no longer routes digest search through the neutral digest seam.");
             AssertContains(clrMgmt, "CreateProjectedResultDataNetArray(size_t resultCount)", "CLR bridge search does not yet expose the compile-safe managed result-array factory.");
             AssertContains(clrMgmt, "SetProjectedResultDataNet(cli::array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)", "CLR bridge search does not yet expose the compile-safe managed result-array setter.");
             AssertContains(clrMgmt, "CreateProjectedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(GetThreadDataResults(*m_pThreadData), tstrHashToFind, CreateProjectedResultDataNetArray, ConvertTstrToSystemString, SetProjectedResultDataNet);", "CLR bridge search no longer routes through the centralized digest-match projection seam.");
@@ -918,8 +921,9 @@ internal static class Program
 
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized ResultDataNet projection helper.");
 
-            AssertContains(filesHashDlg, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
-            AssertContains(filesHashDlg, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet read result paths through the neutral ResultDataAccess path-match seam.");
+            string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
+            AssertContains(filesHashSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet read result paths through the neutral ResultDataAccess path-match seam.");
         }, failures);
 
         Run("Phase 4 routes non-digest ResultData writes through dedicated ResultDataAccess setters", () =>
@@ -1393,7 +1397,7 @@ internal static class Program
         Run("Phase 5 routes MFC result search iteration through the centralized ResultDataAccess matching helper", () =>
         {
             string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
-            string filesHashDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
 
             AssertContains(resultSearch, "ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized path+digest-match predicate helper.");
             AssertContains(resultSearch, "VisitPathAndDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized path+digest matching visitor helper.");
@@ -1402,15 +1406,15 @@ internal static class Program
             AssertContains(resultSearch, "return VisitMatchingResults(resultList, [&](const ResultData& result)", "ResultDataSearch path+digest matching helper does not yet reuse the centralized matching visitor seam.");
             AssertContains(resultSearch, "return ResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataSearch path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
 
-            AssertContains(filesHashDlg, "VisitPathAndDigestMatchingResults(GetThreadDataResults(m_thrdData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet route result iteration through the centralized path+digest matching helper.");
-            AssertContains(filesHashDlg, "tstring tstrFileToFind = NormalizeResultPathSearchText(strFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized ResultDataAccess helper.");
-            AssertContains(filesHashDlg, "tstring tstrHashToFind = NormalizeDigestSearchText(strHash.GetString());", "Legacy MFC search flow does not yet normalize digest search text through the centralized ResultDataAccess helper.");
-            AssertContains(filesHashDlg, "AppendResult(result);", "Legacy MFC search flow no longer appends matched results through the current path.");
-            AssertDoesNotContain(filesHashDlg, "strHash.MakeUpper();", "Legacy MFC search flow still uppercases digest search text inline instead of using the centralized normalization seam.");
-            AssertDoesNotContain(filesHashDlg, "strFile.MakeLower();", "Legacy MFC search flow still lowercases path search text inline instead of using the centralized normalization seam.");
-            AssertDoesNotContain(filesHashDlg, "CString strPathLower = CString(GetResultPath(result).c_str());", "Legacy MFC search flow still lowercases result paths inline instead of using the centralized path-match seam.");
-            AssertDoesNotContain(filesHashDlg, "ResultContainsDigest(result, strHash.GetString())", "Legacy MFC search flow still evaluates digest matches inline instead of using the centralized normalized digest-match seam.");
-            AssertDoesNotContain(filesHashDlg, "return ResultMatchesPathText(result, tstrFileToFind) &&", "Legacy MFC search flow still keeps the inline path+digest predicate instead of using the centralized combined match helper.");
+            AssertContains(filesHashSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet route result iteration through the centralized path+digest matching helper.");
+            AssertContains(filesHashSearchController, "tstring tstrFileToFind = NormalizeResultPathSearchText(m_strFindFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized ResultDataAccess helper.");
+            AssertContains(filesHashSearchController, "tstring tstrHashToFind = NormalizeDigestSearchText(m_strFindHash.GetString());", "Legacy MFC search flow does not yet normalize digest search text through the centralized ResultDataAccess helper.");
+            AssertContains(filesHashSearchController, "AppendResult(result);", "Legacy MFC search flow no longer appends matched results through the current path.");
+            AssertDoesNotContain(filesHashSearchController, "strHash.MakeUpper();", "Legacy MFC search flow still uppercases digest search text inline instead of using the centralized normalization seam.");
+            AssertDoesNotContain(filesHashSearchController, "strFile.MakeLower();", "Legacy MFC search flow still lowercases path search text inline instead of using the centralized normalization seam.");
+            AssertDoesNotContain(filesHashSearchController, "CString strPathLower = CString(GetResultPath(result).c_str());", "Legacy MFC search flow still lowercases result paths inline instead of using the centralized path-match seam.");
+            AssertDoesNotContain(filesHashSearchController, "ResultContainsDigest(result, strHash.GetString())", "Legacy MFC search flow still evaluates digest matches inline instead of using the centralized normalized digest-match seam.");
+            AssertDoesNotContain(filesHashSearchController, "return ResultMatchesPathText(result, tstrFileToFind) &&", "Legacy MFC search flow still keeps the inline path+digest predicate instead of using the centralized combined match helper.");
         }, failures);
 
         Run("Phase 4 centralizes non-digest ResultData fields behind a dedicated core-state structure", () =>
@@ -2046,7 +2050,8 @@ internal static class Program
             AssertContains(bridgeMfcHeader, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge header does not yet consume the split digest render seam.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge implementation does not yet consume the split result-data render seam.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
-            AssertContains(filesHashDlg, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
+            string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
             AssertContains(hashMgmtClr, "#include \"Common/ResultDataProjection.h\"", "CLR search bridge does not yet consume the split result-data projection seam.");
             AssertContains(hashMgmtClr, "#include \"Common/ResultDataSearch.h\"", "CLR search bridge does not yet consume the split result-data search seam.");
             AssertContains(hashMgmtUwp, "#include \"Common/ResultDataProjection.h\"", "UWP search bridge does not yet consume the split result-data projection seam.");
@@ -2296,6 +2301,49 @@ internal static class Program
             AssertDoesNotContain(uwpRegisterHeader, "class CRegisterExtension", "UWP shell extension still keeps a local CRegisterExtension declaration after phase 15.");
             AssertContains(uwpRegisterCpp, "#include \"WinCommon/ShellRegisterExtensionImpl.h\"", "UWP shell extension does not yet route RegisterExtension implementation through the shared phase 15 core.");
             AssertDoesNotContain(uwpRegisterCpp, "HRESULT CRegisterExtension::RegisterAppAsLocalServer", "UWP shell extension still keeps a local registration implementation after phase 15.");
+        }, failures);
+
+        Run("Phase 16 extracts the legacy desktop search flow into a dedicated MFC controller seam", () =>
+        {
+            string searchControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.h");
+            string searchControllerCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(searchControllerHeader, "class FilesHashSearchController", "Phase 16 is missing the dedicated MFC search controller declaration.");
+            AssertContains(searchControllerHeader, "BOOL BeginSearch", "Phase 16 search controller is missing the begin-search entry point.");
+            AssertContains(searchControllerHeader, "void ClearSearch", "Phase 16 search controller is missing the search-clear entry point.");
+            AssertContains(searchControllerHeader, "void RebuildCurrentView", "Phase 16 search controller is missing the view-rebuild entry point.");
+            AssertContains(searchControllerCpp, "VisitPathAndDigestMatchingResults", "Phase 16 search controller does not yet route search matching through the shared result-search seam.");
+            AssertContains(searchControllerCpp, "VisitThreadDataResults", "Phase 16 search controller does not yet rebuild list mode through the shared thread-data result seam.");
+            AssertContains(searchControllerCpp, "UIBridgeMFC::AppendResultToHyperEdit", "Phase 16 search controller does not yet route result rendering through the shared MFC bridge seam.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashSearchController.h\"", "FilesHashDlg.h does not yet include the phase 16 search controller.");
+            AssertContains(dlgHeader, "FilesHashSearchController m_hashSearchController;", "FilesHashDlg.h does not yet hold the phase 16 search controller member.");
+            AssertDoesNotContain(dlgHeader, "BOOL m_bFind;", "FilesHashDlg.h still keeps the old inline search-mode flag after phase 16.");
+            AssertDoesNotContain(dlgHeader, "CString m_strFindFile;", "FilesHashDlg.h still keeps the old inline search file filter after phase 16.");
+            AssertDoesNotContain(dlgHeader, "CString m_strFindHash;", "FilesHashDlg.h still keeps the old inline search hash filter after phase 16.");
+            AssertDoesNotContain(dlgHeader, "void ResultFind(", "FilesHashDlg.h still declares the old inline search renderer after phase 16.");
+            AssertDoesNotContain(dlgHeader, "void ClearFind(", "FilesHashDlg.h still declares the old inline search clear helper after phase 16.");
+            AssertDoesNotContain(dlgHeader, "void RefreshResult();", "FilesHashDlg.h still declares the old inline result-list refresh helper after phase 16.");
+
+            AssertContains(dlgCpp, "m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);", "FilesHashDlg.cpp does not yet initialize the phase 16 search controller.");
+            AssertContains(dlgCpp, "m_hashSearchController.BeginSearch(CString(), Find.GetFindHash(), GetStringByKey(MAINDLG_CLEAR_VERIFY))", "FilesHashDlg.cpp does not yet route search start through the phase 16 controller.");
+            AssertContains(dlgCpp, "m_hashSearchController.RebuildCurrentView();", "FilesHashDlg.cpp does not yet route checkup/search refresh through the phase 16 controller.");
+            AssertContains(dlgCpp, "m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));", "FilesHashDlg.cpp does not yet route search clear through the phase 16 controller.");
+            AssertContains(dlgCpp, "m_hashSearchController.IsActive()", "FilesHashDlg.cpp does not yet query search-mode state through the phase 16 controller.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ResultFind(", "FilesHashDlg.cpp still keeps the old inline search renderer after phase 16.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ClearFind(", "FilesHashDlg.cpp still keeps the old inline search clear helper after phase 16.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::RefreshResult()", "FilesHashDlg.cpp still keeps the old inline result-list refresh helper after phase 16.");
+            AssertDoesNotContain(dlgCpp, "m_bFind", "FilesHashDlg.cpp still uses the old inline search-mode flag after phase 16.");
+            AssertDoesNotContain(dlgCpp, "m_strFindHash", "FilesHashDlg.cpp still uses the old inline search hash field after phase 16.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashSearchController.cpp", "fileshash.vcxproj does not yet compile the dedicated phase 16 search controller.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashSearchController.h", "fileshash.vcxproj does not yet include the dedicated phase 16 search controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashSearchController.cpp", "fileshash.vcxproj.filters does not yet track the dedicated phase 16 search controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashSearchController.h", "fileshash.vcxproj.filters does not yet track the dedicated phase 16 search controller header.");
         }, failures);
 
         if (failures.Count > 0)
