@@ -126,16 +126,19 @@ internal static partial class Program
         }, failures);
         Run("WinMFC copy-data validation guard exists", () =>
         {
-            string content = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string inputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
+            string content = dialogContent + Environment.NewLine + inputController;
+
             AssertContains(content, "IsValidCopyDataString", "Missing WM_COPYDATA input validation helper.");
             AssertContains(content, "CommandLineToArgvW", "Missing hardened Windows command-line parsing.");
             AssertContains(content, "CopyDraggedPath", "Missing long-path-safe drag/drop path extraction.");
-            AssertContains(content, "pCopyDataStruct->dwData == 0 &&", "WM_COPYDATA handler no longer gates parsing on the expected payload type.");
+            AssertContains(dialogContent, "pCopyDataStruct->dwData == 0 &&", "WM_COPYDATA handler no longer gates parsing on the expected payload type.");
             AssertContains(content, "cbData < sizeof(TCHAR)", "WM_COPYDATA validation no longer rejects undersized payloads.");
             AssertContains(content, "% sizeof(TCHAR)", "WM_COPYDATA validation no longer checks character alignment.");
             AssertContains(content, "pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL", "WM_COPYDATA validation no longer rejects null buffers.");
             AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
-            AssertContains(content, "!IsThreadDataWorking(m_thrdData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
+            AssertContains(dialogContent, "!IsThreadDataWorking(m_thrdData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>
         {
@@ -181,6 +184,8 @@ internal static partial class Program
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcInputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
+            string mfcDialogAndInput = mfcDialog + Environment.NewLine + mfcInputController;
 
             AssertContains(legacyShell, "PROCESS_QUERY_LIMITED_INFORMATION", "Legacy shell extension still asks for excessive process rights.");
             AssertContains(legacyShell, "CloseHandle(pInfo.hThread);", "Legacy shell extension does not close thread handles after CreateProcess.");
@@ -196,7 +201,7 @@ internal static partial class Program
             AssertContains(wuiShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "WinUI shell extension no longer routes detached process launch through the hardened shared helper.");
             AssertContains(uwpShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "UWP shell extension does not consume the shared hardened shell-command core.");
             AssertContains(uwpShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "UWP shell extension no longer routes detached process launch through the hardened shared helper.");
-            AssertContains(mfcDialog, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
+            AssertContains(mfcDialogAndInput, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
             AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);

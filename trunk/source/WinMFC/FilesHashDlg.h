@@ -13,6 +13,7 @@
 #include "Common/Global.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"
+#include "FilesHashInputController.h"
 #include "FilesHashSearchController.h"
 
 // CMD5SUM03Dlg ¶Ô»°¿ò
@@ -69,6 +70,7 @@ protected:
 
 	UIBridgeMFC *m_uiBridgeMFC;
 	FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;
+	FilesHashInputController m_hashInputController;
 	FilesHashSearchController m_hashSearchController;
 	ThreadData m_thrdData;
 	HANDLE m_hWorkThread;
@@ -81,9 +83,6 @@ protected:
 
 
 	BOOL m_bLimited;
-
-	TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);
-	void ClearFilePaths();
 	void PrepareAdvTaskbar();
 
 

@@ -28,74 +28,25 @@ using namespace WindowsStrings;
 
 namespace
 {
-	bool CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath)
-	{
-		UINT cchPath = DragQueryFile(hDropInfo, index, NULL, 0);
-		if (cchPath == 0)
-		{
-			return false;
-		}
-
-		std::vector<TCHAR> pathBuffer(cchPath + 1, 0);
-		if (DragQueryFile(hDropInfo, index, pathBuffer.data(), cchPath + 1) == 0)
-		{
-			return false;
-		}
-
-		tstrPath.assign(pathBuffer.data());
-		return true;
-	}
-
-	bool IsValidCopyDataString(const COPYDATASTRUCT* pCopyDataStruct)
-	{
-		if (pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL)
-		{
-			return false;
-		}
-
-		if (pCopyDataStruct->cbData < sizeof(TCHAR) ||
-			(pCopyDataStruct->cbData % sizeof(TCHAR)) != 0)
-		{
-			return false;
-		}
-
-		size_t charCount = pCopyDataStruct->cbData / sizeof(TCHAR);
-		const TCHAR* szData = static_cast<const TCHAR*>(pCopyDataStruct->lpData);
-		for (size_t i = 0; i < charCount; ++i)
-		{
-			if (szData[i] == _T('\0'))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	struct WindowMessageFilterStatus
 	{
 		DWORD cbSize;
 		DWORD extStatus;
 	};
-
 	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTEREX)(HWND, UINT, DWORD, void*);
 	typedef BOOL (WINAPI *LPFN_CHANGEWINDOWMESSAGEFILTER)(UINT, DWORD);
-
 	const DWORD WINDOW_MESSAGE_FILTER_ACTION_ALLOW = 1;
-
 	void AllowMessageForWindow(HWND hWnd, UINT message)
 	{
 		if (hWnd == NULL)
 		{
 			return;
 		}
-
 		HMODULE hUser32 = GetModuleHandle(_T("user32.dll"));
 		if (hUser32 == NULL)
 		{
 			return;
 		}
-
 		LPFN_CHANGEWINDOWMESSAGEFILTEREX pChangeWindowMessageFilterEx =
 			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTEREX>(GetProcAddress(hUser32, "ChangeWindowMessageFilterEx"));
 		if (pChangeWindowMessageFilterEx != NULL)
@@ -104,7 +55,6 @@ namespace
 			pChangeWindowMessageFilterEx(hWnd, message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW, &cfs);
 			return;
 		}
-
 		LPFN_CHANGEWINDOWMESSAGEFILTER pChangeWindowMessageFilter =
 			reinterpret_cast<LPFN_CHANGEWINDOWMESSAGEFILTER>(GetProcAddress(hUser32, "ChangeWindowMessageFilter"));
 		if (pChangeWindowMessageFilter != NULL)
@@ -112,14 +62,12 @@ namespace
 			pChangeWindowMessageFilter(message, WINDOW_MESSAGE_FILTER_ACTION_ALLOW);
 		}
 	}
-
 	void PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
 	{
 		if (pWnd == NULL || !::IsWindow(pWnd->GetSafeHwnd()))
 		{
 			return;
 		}
-
 		if (bAccept)
 		{
 			pWnd->ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);
@@ -128,7 +76,6 @@ namespace
 		{
 			pWnd->ModifyStyleEx(WS_EX_ACCEPTFILES, 0, 0);
 		}
-
 		pWnd->DragAcceptFiles(bAccept);
 		if (bAccept)
 		{
@@ -138,7 +85,6 @@ namespace
 		}
 	}
 }
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -233,6 +179,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
 	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, this);
+	m_hashInputController.Initialize(&m_thrdData, this);
 	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
 	PrepareDropTarget(this, TRUE);
 	PrepareDropTarget(&m_editMain, TRUE);
@@ -267,9 +214,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	SetCtrls(FALSE);
 
 	// 从命令行获取文件路径
-	TStrVector Paras = ParseFilesCmdLine(theApp.m_lpCmdLine);
-	ClearFilePaths();
-	ReplaceThreadDataInputFiles(m_thrdData, Paras);
+	m_hashInputController.LoadCommandLineFiles(theApp.m_lpCmdLine);
 	// 从命令行获取文件路径结束
 
 	SetThreadDataWorking(m_thrdData, false);
@@ -323,103 +268,28 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 {
 	if(!IsThreadDataWorking(m_thrdData))
 	{
-		unsigned int i;
 		DragAcceptFiles(FALSE);
-
-		ClearFilePaths();
-		uint32_t droppedFileCount = DragQueryFile(hDropInfo, -1, NULL, 0);
-
-		for(i = 0; i < droppedFileCount; i++)
-		{
-			tstring tstrDragFilename;
-			if (CopyDraggedPath(hDropInfo, i, tstrDragFilename))
-			{
-				AppendThreadDataInputFile(m_thrdData, tstrDragFilename);
-			}
-		}
-
-		DragFinish(hDropInfo);
+		BOOL hasPendingFiles = m_hashInputController.LoadDroppedFiles(hDropInfo);
 		DragAcceptFiles(TRUE);
-
-		if (HasThreadDataInputFiles(m_thrdData))
+		if (hasPendingFiles)
 		{
 			DoMD5();
 		}
 	}
 }
-
-
 BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
 	if (pCopyDataStruct->dwData == 0)
 		SetForegroundWindow();
-
 	if (pCopyDataStruct->dwData == 0 &&
 		!IsThreadDataWorking(m_thrdData) &&
-		IsValidCopyDataString(pCopyDataStruct))
+		m_hashInputController.LoadCopyDataFiles(pCopyDataStruct))
 	{
-		const TCHAR *szFiles = static_cast<const TCHAR *>(pCopyDataStruct->lpData);
-		TStrVector Paras = ParseFilesCmdLine(const_cast<TCHAR *>(szFiles));
-		ClearFilePaths();
-		ReplaceTrimmedThreadDataInputFiles(m_thrdData, Paras);
-
-		if (HasThreadDataInputFiles(m_thrdData))
-		{
-			DoMD5();
-		}
-
+		DoMD5();
 		return TRUE;
 	}
-
 	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
 }
-
-TStrVector CFilesHashDlg::ParseFilesCmdLine(LPTSTR filesCmdLine)
-{
-	TStrVector parameters;
-	if (filesCmdLine == NULL || filesCmdLine[0] == _T('\0'))
-	{
-		return parameters;
-	}
-
-#if defined(UNICODE) || defined(_UNICODE)
-	int argc = 0;
-	LPWSTR* argv = CommandLineToArgvW(filesCmdLine, &argc);
-	if (argv == NULL)
-	{
-		return parameters;
-	}
-
-	for (int i = 0; i < argc; ++i)
-	{
-		if (argv[i] != NULL && argv[i][0] != L'\0')
-		{
-			parameters.push_back(argv[i]);
-		}
-	}
-	LocalFree(argv);
-#else
-	std::wstring wstrCmdLine = strtowstr(std::string(filesCmdLine));
-	int argc = 0;
-	LPWSTR* argv = CommandLineToArgvW(wstrCmdLine.c_str(), &argc);
-	if (argv == NULL)
-	{
-		return parameters;
-	}
-
-	for (int i = 0; i < argc; ++i)
-	{
-		if (argv[i] != NULL && argv[i][0] != L'\0')
-		{
-			parameters.push_back(wstrtostr(argv[i]));
-		}
-	}
-	LocalFree(argv);
-#endif
-
-	return parameters;
-}
-
 void CFilesHashDlg::PrepareAdvTaskbar()
 {
 	m_bAdvTaskbar = FALSE;
@@ -459,33 +329,19 @@ void CFilesHashDlg::OnBnClickedOpen()
 	if(!IsThreadDataWorking(m_thrdData))
 	{
 		CString filter;
-		TCHAR* nameBuffer;
-		POSITION pos;
-		nameBuffer = new TCHAR[MAX_FILES_NUM * MAX_PATH + 1];
-		nameBuffer[0] = 0;
 		filter = GetStringByKey(FILE_STRING);
 		filter.Append(_T("(*.*)|*.*|"));
-		CFileDialog dlgOpen(TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_ALLOWMULTISELECT, filter, NULL, 0);
-		dlgOpen.GetOFN().lpstrFile = nameBuffer;
-		dlgOpen.GetOFN().nMaxFile = MAX_FILES_NUM;
-		if(IDOK == dlgOpen.DoModal())
+		if (m_hashInputController.LoadOpenFileDialogSelection(filter))
 		{
-			pos = dlgOpen.GetStartPosition();
-			ClearFilePaths();
-			for(; pos != NULL;)
-				AppendThreadDataInputFile(m_thrdData, dlgOpen.GetNextPathName(pos).GetString());
-
 			DoMD5();
 		}
-		delete[] nameBuffer;
 	}
 	else
 	{
-		//停止工作线程
+		//??????
 		StopWorkingThread();
 	}
 }
-
 void CFilesHashDlg::OnBnClickedExit()
 {
 	PostMessage(WM_CLOSE);//OnCancel();
@@ -708,10 +564,6 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	return hbr;
 }
 
-void CFilesHashDlg::ClearFilePaths()
-{
-	ResetThreadDataInputFiles(m_thrdData);
-}
 
 void CFilesHashDlg::SetCtrls(BOOL working)
 {

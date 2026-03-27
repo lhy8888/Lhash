@@ -497,12 +497,14 @@ internal static class Program
             AssertContains(uwpBridge, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP bridge does not yet route AddFiles() through the grouped managed input-file helper.");
 
             AssertContains(mfcDialog, "#include \"Common/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam.");
+            string mfcInputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string mfcDialogAndInput = mfcDialog + Environment.NewLine + mfcInputController;
             string mfcDialogAndSearch = mfcDialog + Environment.NewLine + mfcSearchController;
             AssertContains(mfcDialog, "SetThreadDataObserver(m_thrdData, m_uiBridgeMFC);", "MFC dialog does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(mfcDialog, "ResetThreadDataForNewSession(m_thrdData);", "MFC dialog does not yet route dialog initialization through ThreadDataAccess.");
-            AssertContains(mfcDialog, "ReplaceThreadDataInputFiles(m_thrdData, Paras);", "MFC dialog does not yet route command-line file loading through the grouped ThreadDataAccess replacement helper.");
-            AssertContains(mfcDialog, "AppendThreadDataInputFile(m_thrdData, tstrDragFilename);", "MFC dialog does not yet route drag-drop path appends through ThreadDataAccess.");
+            AssertContains(mfcDialogAndInput, "ReplaceThreadDataInputFiles(*m_threadData, parameters);", "MFC file-input flow does not yet route command-line file loading through the grouped ThreadDataAccess replacement helper.");
+            AssertContains(mfcDialogAndInput, "AppendThreadDataInputFile(*m_threadData, tstrDragFilename);", "MFC file-input flow does not yet route drag-drop path appends through ThreadDataAccess.");
             AssertContains(mfcDialog, "HasThreadDataInputFiles(m_thrdData)", "MFC dialog does not yet route input-file presence checks through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataUppercase(m_thrdData, (m_chkUppercase.GetCheck() != FALSE));", "MFC dialog does not yet route uppercase updates through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataWorking(m_thrdData, false);", "MFC dialog does not yet route initial working-state resets through ThreadDataAccess.");
@@ -513,8 +515,8 @@ internal static class Program
             AssertContains(mfcDialogAndSearch, "VisitThreadDataResults(*m_threadData, [&](const ResultData& result)", "MFC search flow does not yet route grouped result iteration through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataStop(m_thrdData, false);", "MFC dialog does not yet route work-thread start stop-flag resets through ThreadDataAccess.");
             AssertContains(mfcDialog, "SetThreadDataStop(m_thrdData, true);", "MFC dialog does not yet route work-thread stop requests through ThreadDataAccess.");
-            AssertContains(mfcDialog, "ResetThreadDataInputFiles(m_thrdData);", "MFC dialog does not yet route file-path clearing through ThreadDataAccess.");
-            AssertContains(mfcDialog, "ReplaceTrimmedThreadDataInputFiles(m_thrdData, Paras);", "MFC dialog does not yet route WM_COPYDATA file loading through the grouped trimmed ThreadDataAccess replacement helper.");
+            AssertContains(mfcDialogAndInput, "ResetThreadDataInputFiles(*m_threadData);", "MFC file-input flow does not yet route file-path clearing through ThreadDataAccess.");
+            AssertContains(mfcDialogAndInput, "ReplaceTrimmedThreadDataInputFiles(*m_threadData, parameters);", "MFC file-input flow does not yet route WM_COPYDATA file loading through the grouped trimmed ThreadDataAccess replacement helper.");
             AssertContains(mfcDialog, "ClearThreadDataResults(m_thrdData);", "MFC dialog does not yet route result clearing through ThreadDataAccess.");
         }, failures);
 
@@ -2466,6 +2468,51 @@ internal static class Program
             AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ResultDataSearch.h\"", "UWP HashMgmt still depends directly on the digest-search header after phase 19.");
             AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ResultDataProjection.h\"", "UWP HashMgmt still depends directly on the result-projection header after phase 19.");
             AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ThreadDataAccess.h\"", "UWP HashMgmt still depends directly on the umbrella ThreadDataAccess header after phase 19.");
+        }, failures);
+
+        Run("Phase 20 extracts the legacy desktop file-input flow into a dedicated controller", () =>
+        {
+            string inputControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.h");
+            string inputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(inputControllerHeader, "void LoadCommandLineFiles(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line ingestion seam.");
+            AssertContains(inputControllerHeader, "BOOL LoadOpenFileDialogSelection(LPCTSTR fileFilter);", "Phase 20 input controller is missing the open-dialog ingestion seam.");
+            AssertContains(inputControllerHeader, "BOOL LoadDroppedFiles(HDROP hDropInfo);", "Phase 20 input controller is missing the drag-drop ingestion seam.");
+            AssertContains(inputControllerHeader, "BOOL LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct);", "Phase 20 input controller is missing the WM_COPYDATA ingestion seam.");
+            AssertContains(inputControllerHeader, "static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line parser seam.");
+            AssertContains(inputControllerHeader, "void ClearFilePaths();", "Phase 20 input controller is missing the grouped input-reset helper.");
+
+            AssertContains(inputController, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 20 input controller does not yet consume the dedicated ThreadData input seam.");
+            AssertContains(inputController, "CommandLineToArgvW", "Phase 20 input controller does not yet own the hardened command-line parser.");
+            AssertContains(inputController, "CopyDraggedPath", "Phase 20 input controller does not yet own long-path-safe drag/drop extraction.");
+            AssertContains(inputController, "IsValidCopyDataString", "Phase 20 input controller does not yet own WM_COPYDATA validation.");
+            AssertContains(inputController, "ReplaceThreadDataInputFiles(*m_threadData, parameters);", "Phase 20 input controller does not yet route command-line replacement through ThreadData input access.");
+            AssertContains(inputController, "AppendThreadDataInputFile(*m_threadData, dlgOpen.GetNextPathName(pos).GetString());", "Phase 20 input controller does not yet route file-dialog appends through ThreadData input access.");
+            AssertContains(inputController, "ReplaceTrimmedThreadDataInputFiles(*m_threadData, parameters);", "Phase 20 input controller does not yet route WM_COPYDATA replacement through ThreadData input access.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashInputController.h\"", "FilesHashDlg.h does not yet consume the phase 20 input controller.");
+            AssertContains(dlgHeader, "FilesHashInputController m_hashInputController;", "FilesHashDlg.h does not yet keep the phase 20 input controller.");
+            AssertDoesNotContain(dlgHeader, "TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);", "FilesHashDlg.h still declares the old inline command-line parser after phase 20.");
+            AssertDoesNotContain(dlgHeader, "void ClearFilePaths();", "FilesHashDlg.h still declares the old inline input-reset helper after phase 20.");
+
+            AssertContains(dlgCpp, "m_hashInputController.Initialize(&m_thrdData, this);", "FilesHashDlg.cpp does not yet initialize the phase 20 input controller.");
+            AssertContains(dlgCpp, "m_hashInputController.LoadCommandLineFiles(theApp.m_lpCmdLine);", "FilesHashDlg.cpp does not yet route command-line ingestion through the phase 20 input controller.");
+            AssertContains(dlgCpp, "m_hashInputController.LoadDroppedFiles(hDropInfo);", "FilesHashDlg.cpp does not yet route drag-drop ingestion through the phase 20 input controller.");
+            AssertContains(dlgCpp, "m_hashInputController.LoadCopyDataFiles(pCopyDataStruct)", "FilesHashDlg.cpp does not yet route WM_COPYDATA ingestion through the phase 20 input controller.");
+            AssertContains(dlgCpp, "m_hashInputController.LoadOpenFileDialogSelection(filter)", "FilesHashDlg.cpp does not yet route open-dialog ingestion through the phase 20 input controller.");
+            AssertDoesNotContain(dlgCpp, "TStrVector CFilesHashDlg::ParseFilesCmdLine(", "FilesHashDlg.cpp still keeps the old inline command-line parser after phase 20.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ClearFilePaths()", "FilesHashDlg.cpp still keeps the old inline input-reset helper after phase 20.");
+            AssertDoesNotContain(dlgCpp, "IsValidCopyDataString(pCopyDataStruct)", "FilesHashDlg.cpp still keeps inline WM_COPYDATA validation after phase 20.");
+            AssertDoesNotContain(dlgCpp, "CopyDraggedPath(hDropInfo", "FilesHashDlg.cpp still keeps inline drag-drop path extraction after phase 20.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashInputController.cpp", "fileshash.vcxproj does not yet compile the phase 20 input controller.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashInputController.h", "fileshash.vcxproj does not yet include the phase 20 input controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashInputController.cpp", "fileshash.vcxproj.filters does not yet track the phase 20 input controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashInputController.h", "fileshash.vcxproj.filters does not yet track the phase 20 input controller header.");
         }, failures);
 
         if (failures.Count > 0)
