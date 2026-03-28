@@ -9,6 +9,7 @@
 class CHyperEditHash;
 class UIBridgeMFC;
 class FilesHashAlgorithmSelectionController;
+class FilesHashCommandController;
 class FilesHashInputController;
 class FilesHashSearchController;
 class FilesHashSessionController;
@@ -36,6 +37,7 @@ public:
 		CButton* btnContext,
 		UIBridgeMFC** uiBridgeMFC,
 		FilesHashAlgorithmSelectionController* hashAlgorithmSelectionController,
+		FilesHashCommandController* hashCommandController,
 		FilesHashInputController* hashInputController,
 		FilesHashSearchController* hashSearchController,
 		FilesHashSessionController* hashSessionController,

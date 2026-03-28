@@ -6,6 +6,7 @@
 
 #include "Common/ThreadDataAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
+#include "FilesHashCommandController.h"
 #include "FilesHashContextMenuController.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
@@ -50,6 +51,7 @@ void FilesHashInitializationController::InitializeDialog(
 	CButton* btnContext,
 	UIBridgeMFC** uiBridgeMFC,
 	FilesHashAlgorithmSelectionController* hashAlgorithmSelectionController,
+	FilesHashCommandController* hashCommandController,
 	FilesHashInputController* hashInputController,
 	FilesHashSearchController* hashSearchController,
 	FilesHashSessionController* hashSessionController,
@@ -84,6 +86,7 @@ void FilesHashInitializationController::InitializeDialog(
 		btnContext == NULL ||
 		uiBridgeMFC == NULL ||
 		hashAlgorithmSelectionController == NULL ||
+		hashCommandController == NULL ||
 		hashInputController == NULL ||
 		hashSearchController == NULL ||
 		hashSessionController == NULL ||
@@ -115,6 +118,7 @@ void FilesHashInitializationController::InitializeDialog(
 	hashSearchController->Initialize(threadData, mainEdit, btnClr, btnFind, btnOpen, chkUppercase);
 	hashSessionController->Initialize(threadData, parentWnd, mainEdit, btnOpen, btnClr, btnFind, btnContext, chkUppercase, hashAlgorithmSelectionController);
 	hashLifecycleController->Initialize(threadData, parentWnd, btnClr, uiBridgeMFC, hashSearchController, hashSessionController, hashProgressController, hashResultViewController);
+	hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashProgressController, hashResultViewController);
 	hashContextMenuController->Initialize(btnContext, parentWnd->GetDlgItem(IDC_STATIC_ADDRESULT));
 	hashProgressController->Initialize(parentWnd, progressCtrl);
 	hashResultViewController->Initialize(mainMutex, mainEdit);

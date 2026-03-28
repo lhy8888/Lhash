@@ -11,8 +11,6 @@
 
 #include "FilesHash.h"
 #include "FilesHashDlg.h"
-#include "FindDlg.h"
-#include "AboutDlg.h"
 #include "Common/Global.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/Utils.h"
@@ -100,6 +98,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 		&m_btnContext,
 		&m_uiBridgeMFC,
 		&m_hashAlgorithmSelectionController,
+		&m_hashCommandController,
 		&m_hashInputController,
 		&m_hashSearchController,
 		&m_hashSessionController,
@@ -193,69 +192,29 @@ void CFilesHashDlg::OnClose()
 
 void CFilesHashDlg::OnBnClickedOpen()
 {
-	if(!IsThreadDataWorking(m_thrdData))
-	{
-		CString filter;
-		filter = GetStringByKey(FILE_STRING);
-		filter.Append(_T("(*.*)|*.*|"));
-		if (m_hashInputController.LoadOpenFileDialogSelection(filter))
-		{
-			m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
-		}
-	}
-	else
-	{
-		//??????
-		m_hashSessionController.StopWorkingThread();
-	}
+	CString filter;
+	filter = GetStringByKey(FILE_STRING);
+	filter.Append(_T("(*.*)|*.*|"));
+	m_hashCommandController.HandleOpenButtonClick(filter, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 }
 void CFilesHashDlg::OnBnClickedExit()
 {
-	PostMessage(WM_CLOSE);//OnCancel();
+	m_hashCommandController.HandleExitButtonClick();
 }
 
 void CFilesHashDlg::OnBnClickedAbout()
 {
-	CAboutDlg About;
-	About.DoModal();
+	m_hashCommandController.HandleAboutButtonClick();
 }
 
 void CFilesHashDlg::OnBnClickedClean()
 {
-	if (!IsThreadDataWorking(m_thrdData))
-	{
-		CString strBtnText;
-		m_btnClr.GetWindowText(strBtnText);
-		if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR)) == 0)
-		{
-			m_hashResultViewController.ClearResults(m_thrdData);
-
-			CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_TIME);
-			pWnd->SetWindowText(_T(""));
-			pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
-			pWnd->SetWindowText(_T(""));
-
-			m_hashProgressController.SetWholeProgress(0);
-		}
-		else if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR_VERIFY)) == 0)
-		{
-			m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
-			m_hashResultViewController.RefreshMainText();
-		}
-	}
+	m_hashCommandController.HandleCleanButtonClick(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(MAINDLG_CLEAR_VERIFY));
 }
 
 void CFilesHashDlg::OnBnClickedFind()
 {
-	CFindDlg Find;
-	Find.SetFindHash(_T(""));
-	if (IDOK == Find.DoModal())
-	{
-		if (m_hashSearchController.BeginSearch(CString(), Find.GetFindHash(), GetStringByKey(MAINDLG_CLEAR_VERIFY)))
-		{
-			m_hashResultViewController.RefreshMainText(FALSE);
-		}
-	}
+	m_hashCommandController.HandleFindButtonClick(GetStringByKey(MAINDLG_CLEAR_VERIFY));
 }
 
 void CFilesHashDlg::OnBnClickedContext()

@@ -13,6 +13,7 @@
 #include "Common/Global.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"
+#include "FilesHashCommandController.h"
 #include "FilesHashInputController.h"
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
@@ -76,6 +77,7 @@ protected:
 
 	UIBridgeMFC *m_uiBridgeMFC;
 	FilesHashAlgorithmSelectionController m_hashAlgorithmSelectionController;
+	FilesHashCommandController m_hashCommandController;
 	FilesHashInputController m_hashInputController;
 	FilesHashSearchController m_hashSearchController;
 	FilesHashSessionController m_hashSessionController;
