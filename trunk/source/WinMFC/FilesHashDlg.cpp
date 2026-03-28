@@ -119,19 +119,18 @@ BOOL CFilesHashDlg::OnInitDialog()
 	m_hashSessionController.Initialize(&m_thrdData, this, &m_editMain, &m_btnOpen, &m_btnClr, &m_btnFind, &m_btnContext, &m_chkUppercase, &m_hashAlgorithmSelectionController);
 	m_hashContextMenuController.Initialize(&m_btnContext, GetDlgItem(IDC_STATIC_ADDRESULT));
 	m_hashProgressController.Initialize(this, &m_progWhole);
+	m_hashResultViewController.Initialize(&m_mainMtx, &m_editMain);
 
 	m_mainMtx.lock();
 	{
 		SetThreadDataObserver(m_thrdData, m_uiBridgeMFC);
 		ResetThreadDataForNewSession(m_thrdData);
 
-
 		m_editMain.SetLimitText(UINT_MAX);
-		m_editMain.ClearTextBuffer();
-		m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_INITINFO));
-		m_editMain.ShowTextBuffer();
 	}
 	m_mainMtx.unlock();
+
+	m_hashResultViewController.ShowInitialInfo(GetStringByKey(MAINDLG_INITINFO));
 
 	m_hashContextMenuController.RefreshButtonText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU), GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
 	m_hashContextMenuController.ResetStatus();
@@ -272,15 +271,9 @@ void CFilesHashDlg::OnBnClickedClean()
 		m_btnClr.GetWindowText(strBtnText);
 		if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR)) == 0)
 		{
-			m_mainMtx.lock();
-			{
-				m_editMain.ClearTextBuffer();
-				ClearThreadDataResults(m_thrdData);
-				m_editMain.ShowTextBuffer();
-			}
-			m_mainMtx.unlock();
+			m_hashResultViewController.ClearResults(m_thrdData);
 
-			CStatic* pWnd =(CStatic *)GetDlgItem(IDC_STATIC_TIME);
+			CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_TIME);
 			pWnd->SetWindowText(_T(""));
 			pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
 			pWnd->SetWindowText(_T(""));
@@ -290,21 +283,20 @@ void CFilesHashDlg::OnBnClickedClean()
 		else if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR_VERIFY)) == 0)
 		{
 			m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
-			RefreshMainText();
+			m_hashResultViewController.RefreshMainText();
 		}
 	}
 }
 
 void CFilesHashDlg::OnBnClickedFind()
 {
-	// TODO: 在此添加控件通知处理程序代码
 	CFindDlg Find;
 	Find.SetFindHash(_T(""));
 	if (IDOK == Find.DoModal())
 	{
 		if (m_hashSearchController.BeginSearch(CString(), Find.GetFindHash(), GetStringByKey(MAINDLG_CLEAR_VERIFY)))
 		{
-			m_editMain.ShowTextBuffer();
+			m_hashResultViewController.RefreshMainText(FALSE);
 		}
 	}
 }
@@ -326,23 +318,12 @@ void CFilesHashDlg::OnBnClickedContext()
 
 void CFilesHashDlg::OnBnClickedCheckup()
 {
-	// Remember current scroll position
-	int iFirstVisible = m_editMain.GetFirstVisibleLine();
-
-	m_hashSearchController.RebuildCurrentView();
-	RefreshMainText(FALSE);
-
-	// Reset scroll position
-	m_editMain.LineScroll(iFirstVisible);
+	m_hashResultViewController.RebuildCurrentViewPreservingScroll(m_hashSearchController);
 }
 
 void CFilesHashDlg::OnBnClickedUpperHash()
 {
-	if (m_chkUppercase.IsWindowEnabled())
-	{
-		m_chkUppercase.SetCheck(!m_chkUppercase.GetCheck());
-		OnBnClickedCheckup();
-	}
+	m_hashResultViewController.ToggleUppercaseAndRebuild(&m_chkUppercase, m_hashSearchController);
 }
 
 void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
@@ -367,7 +348,7 @@ void CFilesHashDlg::DoMD5()
 	if (m_hashSearchController.IsActive())
 	{
 		m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
-		RefreshMainText();
+		m_hashResultViewController.RefreshMainText();
 	}
 
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
@@ -395,23 +376,6 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 }
 
 
-void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
-{
-	m_mainMtx.lock();
-
-	if (bScrollToEnd)
-	{
-		// 将文本框滚动到结尾
-		m_editMain.ShowTextBufferScrollEnd();
-	}
-	else
-	{
-		m_editMain.ShowTextBuffer();
-	}
-
-	m_mainMtx.unlock();
-}
-
 LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 {
 	switch(wParam)
@@ -420,40 +384,20 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		m_hashSessionController.SetControls(TRUE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 		break;
 	case WP_REFRESH_TEXT:
-		RefreshMainText();
+		m_hashResultViewController.RefreshMainText();
 		break;
 	case WP_PROG_WHOLE:
 		m_hashProgressController.SetWholeProgress((int)lParam);
 		break;
 	case WP_FINISHED:
-		// 停止主界面计时器 计算读取速度
 		m_hashProgressController.FinishTiming(GetThreadDataTotalSize(m_thrdData));
-		// 停止主界面计时器 计算读取速度
-
-		// 界面设置 - 开始
 		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-		// 界面设置 - 结束
-
 		m_hashProgressController.SetWholeProgress(99);
 		break;
 	case WP_STOPPED:
 		m_hashProgressController.ResetAfterStop();
-
-		//界面设置 - 开始
 		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-		//界面设置 - 结束
-
-		m_mainMtx.lock();
-		{
-			m_editMain.AppendTextToBuffer(_T("\r\n"));
-			//m_editMain.AppendTextToBuffer(MAINDLG_CALCU_TERMINAL);
-			//m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
-
-			// 将文本框滚动到结尾
-			m_editMain.ShowTextBufferScrollEnd();
-		}
-		m_mainMtx.unlock();
-
+		m_hashResultViewController.AppendLineBreakAndScrollEnd();
 		m_hashProgressController.SetWholeProgress(0);
 
 		if(m_waitingExit)
@@ -471,16 +415,7 @@ LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 	switch(wParam)
 	{
 	case WM_HYPEREDIT_MENU:
-		{
-			CPoint cpPoint = m_editMain.GetLastScreenPoint();
-
-			CMenu menuHyperEdit;
-			menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);
-			CMenu *pmSubMenu = menuHyperEdit.GetSubMenu(0);
-			ASSERT(pmSubMenu);
-			pmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON,
-				cpPoint.x, cpPoint.y, this);
-		}
+		m_hashResultViewController.ShowHyperEditMenu(this);
 		break;
 	}
 
@@ -489,92 +424,15 @@ LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 
 void CFilesHashDlg::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu)
 {
-    ASSERT(pPopupMenu != NULL);
-    // Check the enabled state of various menu items.
-
-    CCmdUI state;
-    state.m_pMenu = pPopupMenu;
-    ASSERT(state.m_pOther == NULL);
-    ASSERT(state.m_pParentMenu == NULL);
-
-    // Determine if menu is popup in top-level menu and set m_pOther to
-    // it if so (m_pParentMenu == NULL indicates that it is secondary popup).
-    HMENU hParentMenu;
-    if (AfxGetThreadState()->m_hTrackingMenu == pPopupMenu->m_hMenu)
-        state.m_pParentMenu = pPopupMenu;    // Parent == child for tracking popup.
-    else if ((hParentMenu = ::GetMenu(m_hWnd)) != NULL)
-    {
-        CWnd* pParent = this;
-           // Child windows don't have menus--need to go to the top!
-        if (pParent != NULL &&
-           (hParentMenu = ::GetMenu(pParent->m_hWnd)) != NULL)
-        {
-           int nIndexMax = ::GetMenuItemCount(hParentMenu);
-           for (int nIndex = 0; nIndex < nIndexMax; nIndex++)
-           {
-            if (::GetSubMenu(hParentMenu, nIndex) == pPopupMenu->m_hMenu)
-            {
-                // When popup is found, m_pParentMenu is containing menu.
-                state.m_pParentMenu = CMenu::FromHandle(hParentMenu);
-                break;
-            }
-           }
-        }
-    }
-
-    state.m_nIndexMax = pPopupMenu->GetMenuItemCount();
-    for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
-      state.m_nIndex++)
-    {
-        state.m_nID = pPopupMenu->GetMenuItemID(state.m_nIndex);
-        if (state.m_nID == 0)
-           continue; // Menu separator or invalid cmd - ignore it.
-
-        ASSERT(state.m_pOther == NULL);
-        ASSERT(state.m_pMenu != NULL);
-        if (state.m_nID == (UINT)-1)
-        {
-           // Possibly a popup menu, route to first item of that popup.
-           state.m_pSubMenu = pPopupMenu->GetSubMenu(state.m_nIndex);
-           if (state.m_pSubMenu == NULL ||
-            (state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
-            state.m_nID == (UINT)-1)
-           {
-            continue;       // First item of popup can't be routed to.
-           }
-           state.DoUpdate(this, TRUE);   // Popups are never auto disabled.
-        }
-        else
-        {
-           // Normal menu item.
-           // Auto enable/disable if frame window has m_bAutoMenuEnable
-           // set and command is _not_ a system command.
-           state.m_pSubMenu = NULL;
-           state.DoUpdate(this, FALSE);
-        }
-
-        // Adjust for menu deletions and additions.
-        UINT nCount = pPopupMenu->GetMenuItemCount();
-        if (nCount < state.m_nIndexMax)
-        {
-           state.m_nIndex -= (state.m_nIndexMax - nCount);
-           while (state.m_nIndex < nCount &&
-            pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
-           {
-            state.m_nIndex++;
-           }
-        }
-        state.m_nIndexMax = nCount;
-    }
+	m_hashResultViewController.UpdatePopupMenu(this, pPopupMenu);
 }
 
 void CFilesHashDlg::OnHypereditmenuCopyhash()
 {
-	CString cstrHyperlink = m_editMain.GetLastHyperlink();
-	WindowsUtils::CopyCString(cstrHyperlink);
+	m_hashResultViewController.CopyLastHyperlink();
 }
 
 void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
+	m_hashResultViewController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
 }

@@ -414,6 +414,8 @@ internal static class Program
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcResultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
+            string mfcResultLifecycle = string.Join("\r\n", mfcDialog, mfcResultViewController);
 
             AssertContains(threadAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "ThreadData access seams do not yet expose the observer-assignment helper.");
             AssertContains(threadAccess, "GetThreadDataObserver(const ThreadData& threadData)", "ThreadData access seams do not yet expose the observer getter helper.");
@@ -519,7 +521,7 @@ internal static class Program
             AssertContains(mfcSessionController, "SetThreadDataStop(*m_threadData, true);", "MFC session flow does not yet route work-thread stop requests through ThreadDataAccess.");
             AssertContains(mfcDialogAndInput, "ResetThreadDataInputFiles(*m_threadData);", "MFC file-input flow does not yet route file-path clearing through ThreadDataAccess.");
             AssertContains(mfcDialogAndInput, "ReplaceTrimmedThreadDataInputFiles(*m_threadData, parameters);", "MFC file-input flow does not yet route WM_COPYDATA file loading through the grouped trimmed ThreadDataAccess replacement helper.");
-            AssertContains(mfcDialog, "ClearThreadDataResults(m_thrdData);", "MFC dialog does not yet route result clearing through ThreadDataAccess.");
+            AssertContains(mfcResultLifecycle, "ClearThreadDataResults(threadData);", "Legacy desktop result clearing does not yet route through ThreadDataAccess.");
         }, failures);
 
         Run("Phase 2 routes digest access through a neutral ResultData seam while keeping the fixed four-digest contract", () =>
@@ -2340,7 +2342,11 @@ internal static class Program
 
             AssertContains(dlgCpp, "m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);", "FilesHashDlg.cpp does not yet initialize the phase 16 search controller.");
             AssertContains(dlgCpp, "m_hashSearchController.BeginSearch(CString(), Find.GetFindHash(), GetStringByKey(MAINDLG_CLEAR_VERIFY))", "FilesHashDlg.cpp does not yet route search start through the phase 16 controller.");
-            AssertContains(dlgCpp, "m_hashSearchController.RebuildCurrentView();", "FilesHashDlg.cpp does not yet route checkup/search refresh through the phase 16 controller.");
+            if (!dlgCpp.Contains("m_hashSearchController.RebuildCurrentView();") &&
+                !dlgCpp.Contains("m_hashResultViewController.RebuildCurrentViewPreservingScroll(m_hashSearchController);"))
+            {
+                throw new InvalidOperationException("FilesHashDlg.cpp does not yet route checkup/search refresh through the phase 16 controller.");
+            }
             AssertContains(dlgCpp, "m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));", "FilesHashDlg.cpp does not yet route search clear through the phase 16 controller.");
             AssertContains(dlgCpp, "m_hashSearchController.IsActive()", "FilesHashDlg.cpp does not yet query search-mode state through the phase 16 controller.");
             AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ResultFind(", "FilesHashDlg.cpp still keeps the old inline search renderer after phase 16.");
@@ -2655,6 +2661,60 @@ internal static class Program
             AssertContains(mfcProject, "source\\WinMFC\\FilesHashProgressController.h", "fileshash.vcxproj does not yet include the phase 23 progress controller header.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashProgressController.cpp", "fileshash.vcxproj.filters does not yet track the phase 23 progress controller source.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashProgressController.h", "fileshash.vcxproj.filters does not yet track the phase 23 progress controller header.");
+        }, failures);
+
+        Run("Phase 24 extracts the legacy desktop result-view and HyperEdit flow into a dedicated controller", () =>
+        {
+            string resultViewControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.h");
+            string resultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(resultViewControllerHeader, "void ShowInitialInfo(LPCTSTR initInfo);", "Phase 24 result-view controller is missing the initial-info seam.");
+            AssertContains(resultViewControllerHeader, "void ClearResults(ThreadData& threadData);", "Phase 24 result-view controller is missing the clear-results seam.");
+            AssertContains(resultViewControllerHeader, "void RefreshMainText(BOOL scrollToEnd = TRUE);", "Phase 24 result-view controller is missing the text-refresh seam.");
+            AssertContains(resultViewControllerHeader, "void RebuildCurrentViewPreservingScroll(FilesHashSearchController& searchController);", "Phase 24 result-view controller is missing the scroll-preserving rebuild seam.");
+            AssertContains(resultViewControllerHeader, "void ToggleUppercaseAndRebuild(CButton* chkUppercase, FilesHashSearchController& searchController);", "Phase 24 result-view controller is missing the uppercase-toggle seam.");
+            AssertContains(resultViewControllerHeader, "void ShowHyperEditMenu(CWnd* ownerWnd);", "Phase 24 result-view controller is missing the HyperEdit menu seam.");
+            AssertContains(resultViewControllerHeader, "void UpdatePopupMenu(CWnd* ownerWnd, CMenu* pPopupMenu);", "Phase 24 result-view controller is missing the popup-update seam.");
+            AssertContains(resultViewControllerHeader, "void CopyLastHyperlink() const;", "Phase 24 result-view controller is missing the copy-hyperlink seam.");
+
+            AssertContains(resultViewController, "#include \"WindowsUtils.h\"", "Phase 24 result-view controller does not yet own clipboard integration.");
+            AssertContains(resultViewController, "#include \"resource.h\"", "Phase 24 result-view controller does not yet consume HyperEdit menu resources.");
+            AssertContains(resultViewController, "ClearThreadDataResults(threadData);", "Phase 24 result-view controller does not yet own result clearing.");
+            AssertContains(resultViewController, "searchController.RebuildCurrentView();", "Phase 24 result-view controller does not yet own the rebuilt-view refresh path.");
+            AssertContains(resultViewController, "m_mainEdit->GetFirstVisibleLine()", "Phase 24 result-view controller does not yet own scroll preservation.");
+            AssertContains(resultViewController, "menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);", "Phase 24 result-view controller does not yet own the HyperEdit menu load.");
+            AssertContains(resultViewController, "WindowsUtils::CopyCString(m_mainEdit->GetLastHyperlink());", "Phase 24 result-view controller does not yet own copy-hyperlink handling.");
+            AssertContains(resultViewController, "pCmdUI->SetText(copyText);", "Phase 24 result-view controller does not yet own menu-text updates.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashResultViewController.h\"", "FilesHashDlg.h does not yet consume the phase 24 result-view controller.");
+            AssertContains(dlgHeader, "FilesHashResultViewController m_hashResultViewController;", "FilesHashDlg.h does not yet keep the phase 24 result-view controller.");
+            AssertDoesNotContain(dlgHeader, "void RefreshMainText(BOOL bScrollToEnd = TRUE);", "FilesHashDlg.h still declares the old inline text-refresh helper after phase 24.");
+
+            AssertContains(dlgCpp, "m_hashResultViewController.Initialize(&m_mainMtx, &m_editMain);", "FilesHashDlg.cpp does not yet initialize the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.ShowInitialInfo(GetStringByKey(MAINDLG_INITINFO));", "FilesHashDlg.cpp does not yet route initial result text through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.ClearResults(m_thrdData);", "FilesHashDlg.cpp does not yet route clear-results flow through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.RefreshMainText();", "FilesHashDlg.cpp does not yet route text refresh through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.RefreshMainText(FALSE);", "FilesHashDlg.cpp does not yet route non-scrolling refresh through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.RebuildCurrentViewPreservingScroll(m_hashSearchController);", "FilesHashDlg.cpp does not yet route result rebuilding through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.ToggleUppercaseAndRebuild(&m_chkUppercase, m_hashSearchController);", "FilesHashDlg.cpp does not yet route uppercase rebuild through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.AppendLineBreakAndScrollEnd();", "FilesHashDlg.cpp does not yet route stop-output updates through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.ShowHyperEditMenu(this);", "FilesHashDlg.cpp does not yet route HyperEdit popup display through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.UpdatePopupMenu(this, pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu state through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.CopyLastHyperlink();", "FilesHashDlg.cpp does not yet route hyperlink copying through the phase 24 result-view controller.");
+            AssertContains(dlgCpp, "m_hashResultViewController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));", "FilesHashDlg.cpp does not yet route menu-text updates through the phase 24 result-view controller.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::RefreshMainText(", "FilesHashDlg.cpp still keeps the old inline text-refresh helper after phase 24.");
+            AssertDoesNotContain(dlgCpp, "WindowsUtils::CopyCString(", "FilesHashDlg.cpp still performs inline copy-hyperlink handling after phase 24.");
+            AssertDoesNotContain(dlgCpp, "menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);", "FilesHashDlg.cpp still performs inline HyperEdit menu loading after phase 24.");
+            AssertDoesNotContain(dlgCpp, "GetFirstVisibleLine()", "FilesHashDlg.cpp still performs inline scroll-preserving rebuilds after phase 24.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashResultViewController.cpp", "fileshash.vcxproj does not yet compile the phase 24 result-view controller source.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashResultViewController.h", "fileshash.vcxproj does not yet include the phase 24 result-view controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashResultViewController.cpp", "fileshash.vcxproj.filters does not yet track the phase 24 result-view controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashResultViewController.h", "fileshash.vcxproj.filters does not yet track the phase 24 result-view controller header.");
         }, failures);
 
         if (failures.Count > 0)

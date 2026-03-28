@@ -45,6 +45,9 @@
     <ClCompile Include="source\WinMFC\FilesHashProgressController.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="source\WinMFC\FilesHashResultViewController.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="source\WinMFC\FilesHashSearchController.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -108,6 +111,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="source\WinMFC\FilesHashProgressController.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WinMFC\FilesHashResultViewController.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="source\WinMFC\FilesHashSearchController.h">

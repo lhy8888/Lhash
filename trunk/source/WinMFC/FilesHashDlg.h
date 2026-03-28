@@ -19,6 +19,7 @@
 
 #include "FilesHashContextMenuController.h"
 #include "FilesHashProgressController.h"
+#include "FilesHashResultViewController.h"
 
 // CMD5SUM03Dlg 对话框
 class CFilesHashDlg : public CDialog
@@ -33,7 +34,6 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
-	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
@@ -80,14 +80,12 @@ protected:
 
 	FilesHashContextMenuController m_hashContextMenuController;
 	FilesHashProgressController m_hashProgressController;
+	FilesHashResultViewController m_hashResultViewController;
 	ThreadData m_thrdData;
 	BOOL m_waitingExit; // 等待线程退出后，退出程序
 
 	BOOL m_bLimited;
 
 	void DoMD5();
-
-	// 下面的为计算时使用，一般不要用
-	void RefreshMainText(BOOL bScrollToEnd = TRUE);
 
 };
