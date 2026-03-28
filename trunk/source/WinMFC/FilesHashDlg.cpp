@@ -84,7 +84,6 @@ BOOL CFilesHashDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);
 	SetIcon(m_hIcon, FALSE);
 
-	m_waitingExit = FALSE;
 	m_bLimited = WindowsUtils::IsLimitedProc();
 
 	m_hashInitializationController.InitializeDialog(
@@ -104,6 +103,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 		&m_hashInputController,
 		&m_hashSearchController,
 		&m_hashSessionController,
+		&m_hashLifecycleController,
 		&m_hashContextMenuController,
 		&m_hashProgressController,
 		&m_hashResultViewController,
@@ -164,7 +164,7 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 		DragAcceptFiles(TRUE);
 		if (hasPendingFiles)
 		{
-			DoMD5();
+			m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 		}
 	}
 }
@@ -176,26 +176,16 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 		!IsThreadDataWorking(m_thrdData) &&
 		m_hashInputController.LoadCopyDataFiles(pCopyDataStruct))
 	{
-		DoMD5();
+		m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 		return TRUE;
 	}
 	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
 }
 void CFilesHashDlg::OnClose()
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	if(IsThreadDataWorking(m_thrdData))
+	if (m_hashLifecycleController.HandleClose())
 	{
-		m_waitingExit = TRUE;
-		m_hashSessionController.StopWorkingThread();
-
 		return;
-	}
-
-	if(m_uiBridgeMFC != NULL)
-	{
-		delete m_uiBridgeMFC;
-		m_uiBridgeMFC = NULL;
 	}
 
 	CDialog::OnClose();
@@ -210,7 +200,7 @@ void CFilesHashDlg::OnBnClickedOpen()
 		filter.Append(_T("(*.*)|*.*|"));
 		if (m_hashInputController.LoadOpenFileDialogSelection(filter))
 		{
-			DoMD5();
+			m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 		}
 	}
 	else
@@ -295,42 +285,9 @@ void CFilesHashDlg::OnBnClickedUpperHash()
 
 void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if(nIDEvent == 1)
-	{
-		// 计算花费时间
-		m_hashProgressController.AdvanceTimeTick(GetStringByKey(SECOND_STRING));
-	}
-	else if(nIDEvent == 4)
-	{
-		// 通过命令行启动的
-		DoMD5();
-		KillTimer(4);
-	}
+	m_hashLifecycleController.HandleTimer(nIDEvent, GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_CLEAR), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 
 	CDialog::OnTimer(nIDEvent);
-}
-
-void CFilesHashDlg::DoMD5()
-{
-	if (m_hashSearchController.IsActive())
-	{
-		m_hashSearchController.ClearSearch(GetStringByKey(MAINDLG_CLEAR));
-		m_hashResultViewController.RefreshMainText();
-	}
-
-	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
-
-	m_hashProgressController.PrepareAdvTaskbar();
-	m_hashProgressController.SetWholeProgress(0);
-
-	if (!m_hashSessionController.PrepareHashStart(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
-	{
-		return;
-	}
-
-	m_hashProgressController.StartTiming(GetStringByKey(SECOND_STRING));
-
-	m_hashSessionController.StartHashThread();
 }
 HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
@@ -345,36 +302,7 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 {
-	switch(wParam)
-	{
-	case WP_WORKING:
-		m_hashSessionController.SetControls(TRUE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-		break;
-	case WP_REFRESH_TEXT:
-		m_hashResultViewController.RefreshMainText();
-		break;
-	case WP_PROG_WHOLE:
-		m_hashProgressController.SetWholeProgress((int)lParam);
-		break;
-	case WP_FINISHED:
-		m_hashProgressController.FinishTiming(GetThreadDataTotalSize(m_thrdData));
-		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-		m_hashProgressController.SetWholeProgress(99);
-		break;
-	case WP_STOPPED:
-		m_hashProgressController.ResetAfterStop();
-		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-		m_hashResultViewController.AppendLineBreakAndScrollEnd();
-		m_hashProgressController.SetWholeProgress(0);
-
-		if(m_waitingExit)
-		{
-			PostMessage(WM_CLOSE);
-		}
-		break;
-	}
-
-	return 0;
+	return m_hashLifecycleController.HandleThreadMessage(wParam, lParam, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 }
 
 LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)

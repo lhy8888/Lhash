@@ -19,6 +19,7 @@
 
 #include "FilesHashContextMenuController.h"
 #include "FilesHashInitializationController.h"
+#include "FilesHashLifecycleController.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 
@@ -78,16 +79,13 @@ protected:
 	FilesHashInputController m_hashInputController;
 	FilesHashSearchController m_hashSearchController;
 	FilesHashSessionController m_hashSessionController;
+	FilesHashLifecycleController m_hashLifecycleController;
 
 	FilesHashContextMenuController m_hashContextMenuController;
 	FilesHashInitializationController m_hashInitializationController;
 	FilesHashProgressController m_hashProgressController;
 	FilesHashResultViewController m_hashResultViewController;
 	ThreadData m_thrdData;
-	BOOL m_waitingExit; // 等待线程退出后，退出程序
-
 	BOOL m_bLimited;
-
-	void DoMD5();
 
 };

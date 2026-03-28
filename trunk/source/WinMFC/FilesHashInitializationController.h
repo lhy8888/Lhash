@@ -12,6 +12,7 @@ class FilesHashAlgorithmSelectionController;
 class FilesHashInputController;
 class FilesHashSearchController;
 class FilesHashSessionController;
+class FilesHashLifecycleController;
 class FilesHashContextMenuController;
 class FilesHashProgressController;
 class FilesHashResultViewController;
@@ -38,6 +39,7 @@ public:
 		FilesHashInputController* hashInputController,
 		FilesHashSearchController* hashSearchController,
 		FilesHashSessionController* hashSessionController,
+		FilesHashLifecycleController* hashLifecycleController,
 		FilesHashContextMenuController* hashContextMenuController,
 		FilesHashProgressController* hashProgressController,
 		FilesHashResultViewController* hashResultViewController,

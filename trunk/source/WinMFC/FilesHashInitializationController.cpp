@@ -8,6 +8,7 @@
 #include "FilesHashAlgorithmSelectionController.h"
 #include "FilesHashContextMenuController.h"
 #include "FilesHashInputController.h"
+#include "FilesHashLifecycleController.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 #include "FilesHashSearchController.h"
@@ -52,6 +53,7 @@ void FilesHashInitializationController::InitializeDialog(
 	FilesHashInputController* hashInputController,
 	FilesHashSearchController* hashSearchController,
 	FilesHashSessionController* hashSessionController,
+	FilesHashLifecycleController* hashLifecycleController,
 	FilesHashContextMenuController* hashContextMenuController,
 	FilesHashProgressController* hashProgressController,
 	FilesHashResultViewController* hashResultViewController,
@@ -85,6 +87,7 @@ void FilesHashInitializationController::InitializeDialog(
 		hashInputController == NULL ||
 		hashSearchController == NULL ||
 		hashSessionController == NULL ||
+		hashLifecycleController == NULL ||
 		hashContextMenuController == NULL ||
 		hashProgressController == NULL ||
 		hashResultViewController == NULL)
@@ -111,6 +114,7 @@ void FilesHashInitializationController::InitializeDialog(
 	hashInputController->Initialize(threadData, parentWnd);
 	hashSearchController->Initialize(threadData, mainEdit, btnClr, btnFind, btnOpen, chkUppercase);
 	hashSessionController->Initialize(threadData, parentWnd, mainEdit, btnOpen, btnClr, btnFind, btnContext, chkUppercase, hashAlgorithmSelectionController);
+	hashLifecycleController->Initialize(threadData, parentWnd, btnClr, uiBridgeMFC, hashSearchController, hashSessionController, hashProgressController, hashResultViewController);
 	hashContextMenuController->Initialize(btnContext, parentWnd->GetDlgItem(IDC_STATIC_ADDRESULT));
 	hashProgressController->Initialize(parentWnd, progressCtrl);
 	hashResultViewController->Initialize(mainMutex, mainEdit);
