@@ -2606,6 +2606,57 @@ internal static class Program
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashContextMenuController.h", "fileshash.vcxproj.filters does not yet track the phase 22 context controller header.");
         }, failures);
 
+        Run("Phase 23 extracts the legacy desktop progress and timing flow into a dedicated controller", () =>
+        {
+            string progressControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.h");
+            string progressController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(progressControllerHeader, "void PrepareAdvTaskbar();", "Phase 23 progress controller is missing the taskbar-preparation seam.");
+            AssertContains(progressControllerHeader, "void StartTiming(LPCTSTR secondText);", "Phase 23 progress controller is missing the timer-start seam.");
+            AssertContains(progressControllerHeader, "void AdvanceTimeTick(LPCTSTR secondText);", "Phase 23 progress controller is missing the timer-tick seam.");
+            AssertContains(progressControllerHeader, "void FinishTiming(ULONGLONG totalSize);", "Phase 23 progress controller is missing the finish-speed seam.");
+            AssertContains(progressControllerHeader, "void ResetAfterStop();", "Phase 23 progress controller is missing the stop-reset seam.");
+            AssertContains(progressControllerHeader, "void SetWholeProgress(UINT pos);", "Phase 23 progress controller is missing the grouped whole-progress seam.");
+
+            AssertContains(progressController, "CoCreateInstance(", "Phase 23 progress controller does not yet own taskbar setup.");
+            AssertContains(progressController, "IID_ITaskbarList3", "Phase 23 progress controller does not yet own the taskbar interface binding.");
+            AssertContains(progressController, "m_parentWnd->SetTimer(1, 100, NULL);", "Phase 23 progress controller does not yet own timer startup.");
+            AssertContains(progressController, "m_parentWnd->KillTimer(m_timerId);", "Phase 23 progress controller does not yet own timer shutdown.");
+            AssertContains(progressController, "m_taskbarList->SetProgressValue(", "Phase 23 progress controller does not yet own taskbar progress updates.");
+            AssertContains(progressController, "SetSpeedText(", "Phase 23 progress controller does not yet centralize speed-label updates.");
+            AssertContains(progressController, "SetTimeText(", "Phase 23 progress controller does not yet centralize time-label updates.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashProgressController.h\"", "FilesHashDlg.h does not yet consume the phase 23 progress controller.");
+            AssertContains(dlgHeader, "FilesHashProgressController m_hashProgressController;", "FilesHashDlg.h does not yet keep the phase 23 progress controller.");
+            AssertDoesNotContain(dlgHeader, "float m_calculateTime;", "FilesHashDlg.h still keeps the old inline timing state after phase 23.");
+            AssertDoesNotContain(dlgHeader, "UINT_PTR m_timer;", "FilesHashDlg.h still keeps the old inline timer handle after phase 23.");
+            AssertDoesNotContain(dlgHeader, "BOOL m_bAdvTaskbar;", "FilesHashDlg.h still keeps the old inline taskbar flag after phase 23.");
+            AssertDoesNotContain(dlgHeader, "ITaskbarList3* pTl;", "FilesHashDlg.h still keeps the old inline taskbar interface after phase 23.");
+            AssertDoesNotContain(dlgHeader, "void PrepareAdvTaskbar();", "FilesHashDlg.h still declares the old inline taskbar helper after phase 23.");
+            AssertDoesNotContain(dlgHeader, "void SetWholeProgPos(UINT pos);", "FilesHashDlg.h still declares the old inline progress helper after phase 23.");
+            AssertDoesNotContain(dlgHeader, "void CalcSpeed(ULONGLONG tsize);", "FilesHashDlg.h still declares the old inline speed helper after phase 23.");
+
+            AssertContains(dlgCpp, "m_hashProgressController.Initialize(this, &m_progWhole);", "FilesHashDlg.cpp does not yet initialize the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.PrepareAdvTaskbar();", "FilesHashDlg.cpp does not yet route taskbar prep through the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.StartTiming(GetStringByKey(SECOND_STRING));", "FilesHashDlg.cpp does not yet route timer startup through the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.AdvanceTimeTick(GetStringByKey(SECOND_STRING));", "FilesHashDlg.cpp does not yet route timer ticks through the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.FinishTiming(GetThreadDataTotalSize(m_thrdData));", "FilesHashDlg.cpp does not yet route finish-speed updates through the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.ResetAfterStop();", "FilesHashDlg.cpp does not yet route stop resets through the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_hashProgressController.SetWholeProgress((int)lParam);", "FilesHashDlg.cpp does not yet route progress callbacks through the phase 23 progress controller.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::PrepareAdvTaskbar()", "FilesHashDlg.cpp still keeps the old inline taskbar helper after phase 23.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::SetWholeProgPos(UINT pos)", "FilesHashDlg.cpp still keeps the old inline progress helper after phase 23.");
+            AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::CalcSpeed(ULONGLONG tsize)", "FilesHashDlg.cpp still keeps the old inline speed helper after phase 23.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashProgressController.cpp", "fileshash.vcxproj does not yet compile the phase 23 progress controller source.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashProgressController.h", "fileshash.vcxproj does not yet include the phase 23 progress controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashProgressController.cpp", "fileshash.vcxproj.filters does not yet track the phase 23 progress controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashProgressController.h", "fileshash.vcxproj.filters does not yet track the phase 23 progress controller header.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

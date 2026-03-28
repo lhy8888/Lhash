@@ -18,6 +18,7 @@
 #include "FilesHashSessionController.h"
 
 #include "FilesHashContextMenuController.h"
+#include "FilesHashProgressController.h"
 
 // CMD5SUM03Dlg 对话框
 class CFilesHashDlg : public CDialog
@@ -78,25 +79,15 @@ protected:
 	FilesHashSessionController m_hashSessionController;
 
 	FilesHashContextMenuController m_hashContextMenuController;
+	FilesHashProgressController m_hashProgressController;
 	ThreadData m_thrdData;
-	float m_calculateTime;
-	UINT_PTR m_timer;
 	BOOL m_waitingExit; // 等待线程退出后，退出程序
-	BOOL m_bAdvTaskbar;
-	ITaskbarList3* pTl;
-
-
 
 	BOOL m_bLimited;
-	void PrepareAdvTaskbar();
-
-
 
 	void DoMD5();
 
 	// 下面的为计算时使用，一般不要用
-	void SetWholeProgPos(UINT pos);
 	void RefreshMainText(BOOL bScrollToEnd = TRUE);
-	void CalcSpeed(ULONGLONG tsize);
 
 };

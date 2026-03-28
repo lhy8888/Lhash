@@ -87,14 +87,11 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 	// TODO：在此添加额外的初始化代码
 
-	PrepareAdvTaskbar();
+	m_hashProgressController.PrepareAdvTaskbar();
 
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
 	m_waitingExit = FALSE;
-
-	m_calculateTime = 0.0;
-	m_timer = -1;
 
 	m_bLimited = WindowsUtils::IsLimitedProc();
 
@@ -121,6 +118,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
 	m_hashSessionController.Initialize(&m_thrdData, this, &m_editMain, &m_btnOpen, &m_btnClr, &m_btnFind, &m_btnContext, &m_chkUppercase, &m_hashAlgorithmSelectionController);
 	m_hashContextMenuController.Initialize(&m_btnContext, GetDlgItem(IDC_STATIC_ADDRESULT));
+	m_hashProgressController.Initialize(this, &m_progWhole);
 
 	m_mainMtx.lock();
 	{
@@ -135,7 +133,6 @@ BOOL CFilesHashDlg::OnInitDialog()
 	}
 	m_mainMtx.unlock();
 
-	pTl = NULL;
 	m_hashContextMenuController.RefreshButtonText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU), GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
 	m_hashContextMenuController.ResetStatus();
 
@@ -218,20 +215,6 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 	}
 	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
 }
-void CFilesHashDlg::PrepareAdvTaskbar()
-{
-	m_bAdvTaskbar = FALSE;
-#ifndef _DEBUG
-	VERIFY(CoCreateInstance(
-			CLSID_TaskbarList, NULL, CLSCTX_ALL,
-			IID_ITaskbarList3, (void**)&pTl));
-	if(pTl)
-		m_bAdvTaskbar = TRUE;
-	else
-		m_bAdvTaskbar = FALSE;
-#endif
-}
-
 void CFilesHashDlg::OnClose()
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
@@ -302,7 +285,7 @@ void CFilesHashDlg::OnBnClickedClean()
 			pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
 			pWnd->SetWindowText(_T(""));
 
-			SetWholeProgPos(0);
+			m_hashProgressController.SetWholeProgress(0);
 		}
 		else if (strBtnText.Compare(GetStringByKey(MAINDLG_CLEAR_VERIFY)) == 0)
 		{
@@ -367,14 +350,7 @@ void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
 	if(nIDEvent == 1)
 	{
 		// 计算花费时间
-		m_calculateTime += 0.1f;
-		CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_TIME);
-		CString cstrTime;
-		int i_calculateTime = (int)m_calculateTime;
-		CString cstrFormat("%d ");
-		cstrFormat.Append(GetStringByKey(SECOND_STRING));
-		cstrTime.Format(cstrFormat, i_calculateTime);
-		pWnd->SetWindowText(cstrTime);
+		m_hashProgressController.AdvanceTimeTick(GetStringByKey(SECOND_STRING));
 	}
 	else if(nIDEvent == 4)
 	{
@@ -384,15 +360,6 @@ void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 
 	CDialog::OnTimer(nIDEvent);
-}
-
-void CFilesHashDlg::SetWholeProgPos(UINT pos)
-{
-	m_progWhole.SetPos(pos);
-	if (m_bAdvTaskbar)
-	{
-		pTl->SetProgressValue(GetSafeHwnd(), pos, 99);
-	}
 }
 
 void CFilesHashDlg::DoMD5()
@@ -405,23 +372,15 @@ void CFilesHashDlg::DoMD5()
 
 	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
 
-	PrepareAdvTaskbar();
-
-	SetWholeProgPos(0);
+	m_hashProgressController.PrepareAdvTaskbar();
+	m_hashProgressController.SetWholeProgress(0);
 
 	if (!m_hashSessionController.PrepareHashStart(GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
 	{
 		return;
 	}
 
-	m_calculateTime = 0.0;
-	m_timer = SetTimer(1, 100, NULL);
-	CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_TIME);
-	CString cstrZero(_T("0 "));
-	cstrZero.Append(GetStringByKey(SECOND_STRING));
-	pWnd->SetWindowText(cstrZero);
-	pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
-	pWnd->SetWindowText(_T(""));
+	m_hashProgressController.StartTiming(GetStringByKey(SECOND_STRING));
 
 	m_hashSessionController.StartHashThread();
 }
@@ -453,36 +412,6 @@ void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
 	m_mainMtx.unlock();
 }
 
-void CFilesHashDlg::CalcSpeed(ULONGLONG tsize)
-{
-	KillTimer(m_timer);
-	double speed;
-	if(m_calculateTime > 0.1)
-	{
-		speed = tsize / m_calculateTime;
-		CString speedStr, measure = _T("B/s");
-		if((speed / 1024) > 1)
-		{
-			speed /= 1024;
-			measure = _T("KB/s");
-			if((speed / 1024) > 1)
-			{
-				speed /= 1024;
-				measure = _T("MB/s");
-			}
-		}
-		speedStr.Format(_T("%4.2f "), speed);
-		speedStr.Append(measure);
-		CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
-		pWnd->SetWindowText(speedStr);
-	}
-	else
-	{
-		CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_SPEED);
-		pWnd->SetWindowText(_T(""));
-	}
-}
-
 LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 {
 	switch(wParam)
@@ -494,25 +423,21 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		RefreshMainText();
 		break;
 	case WP_PROG_WHOLE:
-		SetWholeProgPos((int)lParam);
+		m_hashProgressController.SetWholeProgress((int)lParam);
 		break;
 	case WP_FINISHED:
 		// 停止主界面计时器 计算读取速度
-		CalcSpeed(GetThreadDataTotalSize(m_thrdData));
+		m_hashProgressController.FinishTiming(GetThreadDataTotalSize(m_thrdData));
 		// 停止主界面计时器 计算读取速度
 
 		// 界面设置 - 开始
 		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 		// 界面设置 - 结束
 
-		SetWholeProgPos(99);
+		m_hashProgressController.SetWholeProgress(99);
 		break;
 	case WP_STOPPED:
-		KillTimer(1);
-
-		m_calculateTime = 0.0;
-		CStatic* pWnd = (CStatic*)GetDlgItem(IDC_STATIC_TIME);
-		pWnd->SetWindowText(_T(""));
+		m_hashProgressController.ResetAfterStop();
 
 		//界面设置 - 开始
 		m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
@@ -529,7 +454,7 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		}
 		m_mainMtx.unlock();
 
-		SetWholeProgPos(0);
+		m_hashProgressController.SetWholeProgress(0);
 
 		if(m_waitingExit)
 		{

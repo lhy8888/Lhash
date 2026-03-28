@@ -252,6 +252,7 @@
     <ClCompile Include="source\WinMFC\FilesHashContextMenuController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashDlg.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashInputController.cpp" />
+    <ClCompile Include="source\WinMFC\FilesHashProgressController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashSearchController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashSessionController.cpp" />
     <ClCompile Include="source\WinMFC\FindDlg.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="source\WinMFC\FilesHashContextMenuController.h" />
     <ClInclude Include="source\WinMFC\FilesHashDlg.h" />
     <ClInclude Include="source\WinMFC\FilesHashInputController.h" />
+    <ClInclude Include="source\WinMFC\FilesHashProgressController.h" />
     <ClInclude Include="source\WinMFC\FilesHashSearchController.h" />
     <ClInclude Include="source\WinMFC\FilesHashSessionController.h" />
     <ClInclude Include="source\WinMFC\FindDlg.h" />
