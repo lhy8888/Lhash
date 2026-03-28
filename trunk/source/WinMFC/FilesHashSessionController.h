@@ -14,7 +14,7 @@ public:
 	~FilesHashSessionController();
 
 	void Initialize(ThreadData* threadData,
-		CWnd* parentWnd,
+		CDialog* parentWnd,
 		CWnd* mainEditDropTarget,
 		CButton* btnOpen,
 		CButton* btnClr,
@@ -46,7 +46,7 @@ private:
 	void CloseWorkThreadHandle();
 
 	ThreadData* m_threadData;
-	CWnd* m_parentWnd;
+	CDialog* m_parentWnd;
 	CWnd* m_mainEditDropTarget;
 	CButton* m_btnOpen;
 	CButton* m_btnClr;

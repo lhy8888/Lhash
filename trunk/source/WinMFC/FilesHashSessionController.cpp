@@ -29,7 +29,7 @@ FilesHashSessionController::~FilesHashSessionController()
 }
 
 void FilesHashSessionController::Initialize(ThreadData* threadData,
-	CWnd* parentWnd,
+	CDialog* parentWnd,
 	CWnd* mainEditDropTarget,
 	CButton* btnOpen,
 	CButton* btnClr,
