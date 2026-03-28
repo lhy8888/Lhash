@@ -255,6 +255,7 @@
     <ClCompile Include="source\WinMFC\FilesHashInputController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashInitializationController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashLifecycleController.cpp" />
+    <ClCompile Include="source\WinMFC\FilesHashMessageController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashProgressController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashResultViewController.cpp" />
     <ClCompile Include="source\WinMFC\FilesHashSearchController.cpp" />
@@ -297,6 +298,7 @@
     <ClInclude Include="source\WinMFC\FilesHashInputController.h" />
     <ClInclude Include="source\WinMFC\FilesHashInitializationController.h" />
     <ClInclude Include="source\WinMFC\FilesHashLifecycleController.h" />
+    <ClInclude Include="source\WinMFC\FilesHashMessageController.h" />
     <ClInclude Include="source\WinMFC\FilesHashProgressController.h" />
     <ClInclude Include="source\WinMFC\FilesHashResultViewController.h" />
     <ClInclude Include="source\WinMFC\FilesHashSearchController.h" />

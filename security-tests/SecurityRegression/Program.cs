@@ -127,18 +127,19 @@ internal static partial class Program
         Run("WinMFC copy-data validation guard exists", () =>
         {
             string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string inputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
-            string content = dialogContent + Environment.NewLine + inputController;
+            string content = string.Join(Environment.NewLine, dialogContent, messageController, inputController);
 
             AssertContains(content, "IsValidCopyDataString", "Missing WM_COPYDATA input validation helper.");
             AssertContains(content, "CommandLineToArgvW", "Missing hardened Windows command-line parsing.");
             AssertContains(content, "CopyDraggedPath", "Missing long-path-safe drag/drop path extraction.");
-            AssertContains(dialogContent, "pCopyDataStruct->dwData == 0 &&", "WM_COPYDATA handler no longer gates parsing on the expected payload type.");
+            AssertContains(content, "pCopyDataStruct->dwData == 0 &&", "WM_COPYDATA handler no longer gates parsing on the expected payload type.");
             AssertContains(content, "cbData < sizeof(TCHAR)", "WM_COPYDATA validation no longer rejects undersized payloads.");
             AssertContains(content, "% sizeof(TCHAR)", "WM_COPYDATA validation no longer checks character alignment.");
             AssertContains(content, "pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL", "WM_COPYDATA validation no longer rejects null buffers.");
             AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
-            AssertContains(dialogContent, "!IsThreadDataWorking(m_thrdData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
+            AssertContains(content, "!IsThreadDataWorking(*m_threadData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>
         {

@@ -9,6 +9,7 @@
 #include "FilesHashCommandController.h"
 #include "FilesHashContextMenuController.h"
 #include "FilesHashInputController.h"
+#include "FilesHashMessageController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
@@ -52,6 +53,7 @@ void FilesHashInitializationController::InitializeDialog(
 	UIBridgeMFC** uiBridgeMFC,
 	FilesHashAlgorithmSelectionController* hashAlgorithmSelectionController,
 	FilesHashCommandController* hashCommandController,
+	FilesHashMessageController* hashMessageController,
 	FilesHashInputController* hashInputController,
 	FilesHashSearchController* hashSearchController,
 	FilesHashSessionController* hashSessionController,
@@ -87,6 +89,7 @@ void FilesHashInitializationController::InitializeDialog(
 		uiBridgeMFC == NULL ||
 		hashAlgorithmSelectionController == NULL ||
 		hashCommandController == NULL ||
+		hashMessageController == NULL ||
 		hashInputController == NULL ||
 		hashSearchController == NULL ||
 		hashSessionController == NULL ||
@@ -119,6 +122,7 @@ void FilesHashInitializationController::InitializeDialog(
 	hashSessionController->Initialize(threadData, parentWnd, mainEdit, btnOpen, btnClr, btnFind, btnContext, chkUppercase, hashAlgorithmSelectionController);
 	hashLifecycleController->Initialize(threadData, parentWnd, btnClr, uiBridgeMFC, hashSearchController, hashSessionController, hashProgressController, hashResultViewController);
 	hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashProgressController, hashResultViewController);
+	hashMessageController->Initialize(threadData, parentWnd, hashInputController, hashLifecycleController, hashResultViewController);
 	hashContextMenuController->Initialize(btnContext, parentWnd->GetDlgItem(IDC_STATIC_ADDRESULT));
 	hashProgressController->Initialize(parentWnd, progressCtrl);
 	hashResultViewController->Initialize(mainMutex, mainEdit);

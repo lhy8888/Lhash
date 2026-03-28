@@ -10,6 +10,7 @@ class CHyperEditHash;
 class UIBridgeMFC;
 class FilesHashAlgorithmSelectionController;
 class FilesHashCommandController;
+class FilesHashMessageController;
 class FilesHashInputController;
 class FilesHashSearchController;
 class FilesHashSessionController;
@@ -38,6 +39,7 @@ public:
 		UIBridgeMFC** uiBridgeMFC,
 		FilesHashAlgorithmSelectionController* hashAlgorithmSelectionController,
 		FilesHashCommandController* hashCommandController,
+		FilesHashMessageController* hashMessageController,
 		FilesHashInputController* hashInputController,
 		FilesHashSearchController* hashSearchController,
 		FilesHashSessionController* hashSessionController,

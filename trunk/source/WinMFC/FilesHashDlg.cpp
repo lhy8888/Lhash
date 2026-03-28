@@ -99,6 +99,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 		&m_uiBridgeMFC,
 		&m_hashAlgorithmSelectionController,
 		&m_hashCommandController,
+		&m_hashMessageController,
 		&m_hashInputController,
 		&m_hashSearchController,
 		&m_hashSessionController,
@@ -125,57 +126,28 @@ BOOL CFilesHashDlg::OnInitDialog()
 
 void CFilesHashDlg::OnPaint()
 {
-	if (IsIconic())
+	if (m_hashMessageController.HandlePaint(m_hIcon))
 	{
-		CPaintDC dc(this); // 用于绘制的设备上下文
-
-		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
-
-		// 使图标在工作矩形中居中
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
-
-		// 绘制图标
-		dc.DrawIcon(x, y, m_hIcon);
+		return;
 	}
-	else
-	{
-		CDialog::OnPaint();
-	}
+
+	CDialog::OnPaint();
 }
 
-//当用户拖动最小化窗口时系统调用此函数取得光标显示。
+//?????????????????????????
 HCURSOR CFilesHashDlg::OnQueryDragIcon()
 {
-	return static_cast<HCURSOR>(m_hIcon);
+	return m_hashMessageController.GetDragCursor(m_hIcon);
 }
 
 void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 {
-	if(!IsThreadDataWorking(m_thrdData))
-	{
-		DragAcceptFiles(FALSE);
-		BOOL hasPendingFiles = m_hashInputController.LoadDroppedFiles(hDropInfo);
-		DragAcceptFiles(TRUE);
-		if (hasPendingFiles)
-		{
-			m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
-		}
-	}
+	m_hashMessageController.HandleDropFiles(hDropInfo, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 }
 BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
-	if (pCopyDataStruct->dwData == 0)
-		SetForegroundWindow();
-	if (pCopyDataStruct->dwData == 0 &&
-		!IsThreadDataWorking(m_thrdData) &&
-		m_hashInputController.LoadCopyDataFiles(pCopyDataStruct))
+	if (m_hashMessageController.HandleCopyData(pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
 	{
-		m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 		return TRUE;
 	}
 	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
@@ -266,27 +238,20 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 
 LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 {
-	switch(wParam)
-	{
-	case WM_HYPEREDIT_MENU:
-		m_hashResultViewController.ShowHyperEditMenu(this);
-		break;
-	}
-
-	return 0;
+	return m_hashMessageController.HandleCustomMessage(wParam);
 }
 
 void CFilesHashDlg::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu)
 {
-	m_hashResultViewController.UpdatePopupMenu(this, pPopupMenu);
+	m_hashMessageController.HandleInitMenuPopup(pPopupMenu);
 }
 
 void CFilesHashDlg::OnHypereditmenuCopyhash()
 {
-	m_hashResultViewController.CopyLastHyperlink();
+	m_hashMessageController.HandleCopyHash();
 }
 
 void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI)
 {
-	m_hashResultViewController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
+	m_hashMessageController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
 }

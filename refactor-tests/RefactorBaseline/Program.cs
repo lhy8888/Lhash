@@ -503,11 +503,13 @@ internal static class Program
 
             AssertContains(mfcDialog, "#include \"Common/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam.");
             string mfcInputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
+            string mfcMessageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string mfcSessionController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSessionController.cpp");
             string mfcLifecycleController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
             string mfcDialogAndInitialization = string.Join("\r\n", mfcDialog, mfcInitializationController);
             string mfcDialogAndInput = mfcDialog + Environment.NewLine + mfcInputController;
+            string mfcDialogAndMessage = mfcDialog + Environment.NewLine + mfcMessageController;
             string mfcDialogAndSearch = mfcDialog + Environment.NewLine + mfcSearchController;
             string mfcDialogAndLifecycle = mfcDialog + Environment.NewLine + mfcLifecycleController;
             string mfcDialogAndSession = mfcDialog + Environment.NewLine + mfcSessionController;
@@ -518,7 +520,7 @@ internal static class Program
             AssertContains(mfcDialogAndInitialization, "HasThreadDataInputFiles(*threadData)", "MFC dialog does not yet route input-file presence checks through ThreadDataAccess.");
             AssertContains(mfcSessionController, "SetThreadDataUppercase(*m_threadData, (m_chkUppercase != NULL && m_chkUppercase->GetCheck() != FALSE));", "MFC session flow does not yet route uppercase updates through ThreadDataAccess.");
             AssertContains(mfcDialogAndInitialization, "SetThreadDataWorking(*threadData, false);", "MFC dialog does not yet route initial working-state resets through ThreadDataAccess.");
-            AssertContains(mfcDialog, "IsThreadDataWorking(m_thrdData)", "MFC dialog does not yet route working-state checks through ThreadDataAccess.");
+            AssertContains(mfcDialogAndMessage, "IsThreadDataWorking(*m_threadData)", "MFC dialog does not yet route working-state checks through ThreadDataAccess.");
             AssertContains(mfcDialogAndSearch, "GetThreadDataUppercase(*m_threadData)", "MFC search flow does not yet route uppercase reads through ThreadDataAccess.");
             AssertContains(mfcDialogAndLifecycle, "GetThreadDataTotalSize(*m_threadData)", "MFC dialog does not yet route total-size reads through ThreadDataAccess.");
             AssertContains(mfcDialogAndSearch, "GetThreadDataResults(*m_threadData)", "MFC search flow does not yet route grouped result-list reads through ThreadDataAccess.");
@@ -2502,6 +2504,7 @@ internal static class Program
             string inputControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.h");
             string inputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
             string commandController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp");
+            string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string initializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
             string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
             string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
@@ -2509,6 +2512,7 @@ internal static class Program
             string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
             string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
             string dlgCppAndCommand = dlgCpp + Environment.NewLine + commandController;
+            string dlgCppAndCommandAndMessage = string.Join(Environment.NewLine, dlgCpp, commandController, messageController);
 
             AssertContains(inputControllerHeader, "void LoadCommandLineFiles(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line ingestion seam.");
             AssertContains(inputControllerHeader, "BOOL LoadOpenFileDialogSelection(LPCTSTR fileFilter);", "Phase 20 input controller is missing the open-dialog ingestion seam.");
@@ -2532,8 +2536,8 @@ internal static class Program
 
             AssertContains(dlgCppAndInitialization, "hashInputController->Initialize(threadData, parentWnd);", "FilesHashDlg.cpp does not yet initialize the phase 20 input controller.");
             AssertContains(dlgCppAndInitialization, "hashInputController->LoadCommandLineFiles(filesCmdLine);", "FilesHashDlg.cpp does not yet route command-line ingestion through the phase 20 input controller.");
-            AssertContains(dlgCpp, "m_hashInputController.LoadDroppedFiles(hDropInfo);", "FilesHashDlg.cpp does not yet route drag-drop ingestion through the phase 20 input controller.");
-            AssertContains(dlgCpp, "m_hashInputController.LoadCopyDataFiles(pCopyDataStruct)", "FilesHashDlg.cpp does not yet route WM_COPYDATA ingestion through the phase 20 input controller.");
+            AssertContains(dlgCppAndCommandAndMessage, "m_hashInputController->LoadDroppedFiles(hDropInfo);", "FilesHashDlg.cpp does not yet route drag-drop ingestion through the phase 20 input controller.");
+            AssertContains(dlgCppAndCommandAndMessage, "m_hashInputController->LoadCopyDataFiles(pCopyDataStruct)", "FilesHashDlg.cpp does not yet route WM_COPYDATA ingestion through the phase 20 input controller.");
             AssertContains(dlgCppAndCommand, "m_hashInputController->LoadOpenFileDialogSelection(fileFilter)", "FilesHashDlg.cpp does not yet route open-dialog ingestion through the phase 20 input controller.");
             AssertDoesNotContain(dlgCpp, "TStrVector CFilesHashDlg::ParseFilesCmdLine(", "FilesHashDlg.cpp still keeps the old inline command-line parser after phase 20.");
             AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ClearFilePaths()", "FilesHashDlg.cpp still keeps the old inline input-reset helper after phase 20.");
@@ -2699,6 +2703,7 @@ internal static class Program
             string resultViewControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.h");
             string resultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
             string commandController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp");
+            string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string initializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
             string lifecycleController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
             string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
@@ -2706,7 +2711,7 @@ internal static class Program
             string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
             string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
-            string dlgCppAndCommandAndLifecycle = string.Join(Environment.NewLine, dlgCpp, commandController, lifecycleController);
+            string dlgCppAndCommandAndMessageAndLifecycle = string.Join(Environment.NewLine, dlgCpp, commandController, messageController, lifecycleController);
 
             AssertContains(resultViewControllerHeader, "void ShowInitialInfo(LPCTSTR initInfo);", "Phase 24 result-view controller is missing the initial-info seam.");
             AssertContains(resultViewControllerHeader, "void ClearResults(ThreadData& threadData);", "Phase 24 result-view controller is missing the clear-results seam.");
@@ -2732,16 +2737,16 @@ internal static class Program
 
             AssertContains(dlgCppAndInitialization, "hashResultViewController->Initialize(mainMutex, mainEdit);", "FilesHashDlg.cpp does not yet initialize the phase 24 result-view controller.");
             AssertContains(dlgCppAndInitialization, "hashResultViewController->ShowInitialInfo(initInfoText);", "FilesHashDlg.cpp does not yet route initial result text through the phase 24 result-view controller.");
-            AssertContains(dlgCppAndCommandAndLifecycle, "m_hashResultViewController->ClearResults(*m_threadData);", "FilesHashDlg.cpp does not yet route clear-results flow through the phase 24 result-view controller.");
-            AssertContains(dlgCppAndCommandAndLifecycle, "m_hashResultViewController->RefreshMainText();", "FilesHashDlg.cpp does not yet route text refresh through the phase 24 result-view controller.");
-            AssertContains(dlgCppAndCommandAndLifecycle, "m_hashResultViewController->RefreshMainText(FALSE);", "FilesHashDlg.cpp does not yet route non-scrolling refresh through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->ClearResults(*m_threadData);", "FilesHashDlg.cpp does not yet route clear-results flow through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->RefreshMainText();", "FilesHashDlg.cpp does not yet route text refresh through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->RefreshMainText(FALSE);", "FilesHashDlg.cpp does not yet route non-scrolling refresh through the phase 24 result-view controller.");
             AssertContains(dlgCpp, "m_hashResultViewController.RebuildCurrentViewPreservingScroll(m_hashSearchController);", "FilesHashDlg.cpp does not yet route result rebuilding through the phase 24 result-view controller.");
             AssertContains(dlgCpp, "m_hashResultViewController.ToggleUppercaseAndRebuild(&m_chkUppercase, m_hashSearchController);", "FilesHashDlg.cpp does not yet route uppercase rebuild through the phase 24 result-view controller.");
-            AssertContains(dlgCppAndCommandAndLifecycle, "m_hashResultViewController->AppendLineBreakAndScrollEnd();", "FilesHashDlg.cpp does not yet route stop-output updates through the phase 24 result-view controller.");
-            AssertContains(dlgCpp, "m_hashResultViewController.ShowHyperEditMenu(this);", "FilesHashDlg.cpp does not yet route HyperEdit popup display through the phase 24 result-view controller.");
-            AssertContains(dlgCpp, "m_hashResultViewController.UpdatePopupMenu(this, pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu state through the phase 24 result-view controller.");
-            AssertContains(dlgCpp, "m_hashResultViewController.CopyLastHyperlink();", "FilesHashDlg.cpp does not yet route hyperlink copying through the phase 24 result-view controller.");
-            AssertContains(dlgCpp, "m_hashResultViewController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));", "FilesHashDlg.cpp does not yet route menu-text updates through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->AppendLineBreakAndScrollEnd();", "FilesHashDlg.cpp does not yet route stop-output updates through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->ShowHyperEditMenu(m_parentWnd);", "FilesHashDlg.cpp does not yet route HyperEdit popup display through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->UpdatePopupMenu(m_parentWnd, pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu state through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->CopyLastHyperlink();", "FilesHashDlg.cpp does not yet route hyperlink copying through the phase 24 result-view controller.");
+            AssertContains(dlgCppAndCommandAndMessageAndLifecycle, "m_hashResultViewController->UpdateCopyHashMenuText(pCmdUI, copyText);", "FilesHashDlg.cpp does not yet route menu-text updates through the phase 24 result-view controller.");
             AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::RefreshMainText(", "FilesHashDlg.cpp still keeps the old inline text-refresh helper after phase 24.");
             AssertDoesNotContain(dlgCpp, "WindowsUtils::CopyCString(", "FilesHashDlg.cpp still performs inline copy-hyperlink handling after phase 24.");
             AssertDoesNotContain(dlgCpp, "menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);", "FilesHashDlg.cpp still performs inline HyperEdit menu loading after phase 24.");
@@ -2800,12 +2805,15 @@ internal static class Program
         {
             string lifecycleControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashLifecycleController.h");
             string lifecycleController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
+            string commandController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp");
+            string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string initializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
             string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
             string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
             string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
+            string dlgCppAndCommandAndMessage = string.Join(Environment.NewLine, dlgCpp, commandController, messageController);
 
             AssertContains(lifecycleControllerHeader, "class FilesHashLifecycleController", "Phase 26 lifecycle controller header is missing the controller type.");
             AssertContains(lifecycleControllerHeader, "void StartHashing(LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);", "Phase 26 lifecycle controller is missing the grouped hash-start seam.");
@@ -2830,7 +2838,7 @@ internal static class Program
             AssertDoesNotContain(dlgHeader, "void DoMD5();", "FilesHashDlg.h still declares the old inline hash-start helper after phase 26.");
 
             AssertContains(dlgCppAndInitialization, "hashLifecycleController->Initialize(threadData, parentWnd, btnClr, uiBridgeMFC, hashSearchController, hashSessionController, hashProgressController, hashResultViewController);", "FilesHashDlg.cpp does not yet initialize the phase 26 lifecycle controller.");
-            AssertContains(dlgCpp, "m_hashLifecycleController.StartHashing(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route hash-start requests through the phase 26 lifecycle controller.");
+            AssertContains(dlgCppAndCommandAndMessage, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "FilesHashDlg.cpp does not yet route hash-start requests through the phase 26 lifecycle controller.");
             AssertContains(dlgCpp, "m_hashLifecycleController.HandleTimer(nIDEvent, GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_CLEAR), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route timer handling through the phase 26 lifecycle controller.");
             AssertContains(dlgCpp, "m_hashLifecycleController.HandleThreadMessage(wParam, lParam, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));", "FilesHashDlg.cpp does not yet route thread messages through the phase 26 lifecycle controller.");
             AssertContains(dlgCpp, "m_hashLifecycleController.HandleClose()", "FilesHashDlg.cpp does not yet route close handling through the phase 26 lifecycle controller.");
@@ -2894,6 +2902,65 @@ internal static class Program
             AssertContains(mfcProject, "source\\WinMFC\\FilesHashCommandController.h", "fileshash.vcxproj does not yet include the phase 27 command controller header.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashCommandController.cpp", "fileshash.vcxproj.filters does not yet track the phase 27 command controller source.");
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashCommandController.h", "fileshash.vcxproj.filters does not yet track the phase 27 command controller header.");
+        }, failures);
+
+        Run("Phase 28 extracts the legacy desktop window-message flow into a dedicated controller", () =>
+        {
+            string messageControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.h");
+            string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
+            string initializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+            string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
+
+            AssertContains(messageControllerHeader, "class FilesHashMessageController", "Phase 28 message controller header is missing the controller type.");
+            AssertContains(messageControllerHeader, "BOOL HandlePaint(HICON icon) const;", "Phase 28 message controller is missing the paint seam.");
+            AssertContains(messageControllerHeader, "HCURSOR GetDragCursor(HICON icon) const;", "Phase 28 message controller is missing the drag-cursor seam.");
+            AssertContains(messageControllerHeader, "void HandleDropFiles(HDROP hDropInfo, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the drop-files seam.");
+            AssertContains(messageControllerHeader, "BOOL HandleCopyData(const COPYDATASTRUCT* pCopyDataStruct, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the copy-data seam.");
+            AssertContains(messageControllerHeader, "LRESULT HandleCustomMessage(WPARAM wParam) const;", "Phase 28 message controller is missing the custom-message seam.");
+            AssertContains(messageControllerHeader, "void HandleInitMenuPopup(CMenu* pPopupMenu) const;", "Phase 28 message controller is missing the popup-menu seam.");
+            AssertContains(messageControllerHeader, "void HandleCopyHash() const;", "Phase 28 message controller is missing the copy-hash seam.");
+            AssertContains(messageControllerHeader, "void UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const;", "Phase 28 message controller is missing the copy-menu-text seam.");
+
+            AssertContains(messageController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 28 message controller does not yet consume the execution seam.");
+            AssertContains(messageController, "m_parentWnd->IsIconic()", "Phase 28 message controller does not yet own iconic-paint gating.");
+            AssertContains(messageController, "dc.DrawIcon(x, y, icon);", "Phase 28 message controller does not yet own icon rendering.");
+            AssertContains(messageController, "m_parentWnd->DragAcceptFiles(FALSE);", "Phase 28 message controller does not yet own drop-target suspension during drag ingestion.");
+            AssertContains(messageController, "m_hashInputController->LoadDroppedFiles(hDropInfo);", "Phase 28 message controller does not yet own drag-drop ingestion.");
+            AssertContains(messageController, "m_parentWnd->SetForegroundWindow();", "Phase 28 message controller does not yet own foreground promotion for WM_COPYDATA.");
+            AssertContains(messageController, "m_hashInputController->LoadCopyDataFiles(pCopyDataStruct)", "Phase 28 message controller does not yet own WM_COPYDATA ingestion.");
+            AssertContains(messageController, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "Phase 28 message controller does not yet own non-button hash starts.");
+            AssertContains(messageController, "m_hashResultViewController->ShowHyperEditMenu(m_parentWnd);", "Phase 28 message controller does not yet own HyperEdit popup display.");
+            AssertContains(messageController, "m_hashResultViewController->UpdatePopupMenu(m_parentWnd, pPopupMenu);", "Phase 28 message controller does not yet own popup-menu updates.");
+            AssertContains(messageController, "m_hashResultViewController->CopyLastHyperlink();", "Phase 28 message controller does not yet own hyperlink copying.");
+            AssertContains(messageController, "m_hashResultViewController->UpdateCopyHashMenuText(pCmdUI, copyText);", "Phase 28 message controller does not yet own menu-text updates.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashMessageController.h\"", "FilesHashDlg.h does not yet consume the phase 28 message controller.");
+            AssertContains(dlgHeader, "FilesHashMessageController m_hashMessageController;", "FilesHashDlg.h does not yet keep the phase 28 message controller.");
+
+            AssertContains(dlgCppAndInitialization, "hashMessageController->Initialize(threadData, parentWnd, hashInputController, hashLifecycleController, hashResultViewController);", "FilesHashDlg.cpp does not yet initialize the phase 28 message controller.");
+            AssertContains(dlgCpp, "if (m_hashMessageController.HandlePaint(m_hIcon))", "FilesHashDlg.cpp does not yet route icon paint through the phase 28 message controller.");
+            AssertContains(dlgCpp, "return m_hashMessageController.GetDragCursor(m_hIcon);", "FilesHashDlg.cpp does not yet route drag-cursor queries through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleDropFiles(hDropInfo, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route WM_DROPFILES through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyData(pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM))", "FilesHashDlg.cpp does not yet route WM_COPYDATA through the phase 28 message controller.");
+            AssertContains(dlgCpp, "return m_hashMessageController.HandleCustomMessage(wParam);", "FilesHashDlg.cpp does not yet route custom messages through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleInitMenuPopup(pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu updates through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyHash();", "FilesHashDlg.cpp does not yet route copy-hash commands through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.UpdateCopyHashMenuText(pCmdUI, GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));", "FilesHashDlg.cpp does not yet route copy-menu text updates through the phase 28 message controller.");
+            AssertDoesNotContain(dlgCpp, "SetForegroundWindow();", "FilesHashDlg.cpp still performs inline foreground promotion after phase 28.");
+            AssertDoesNotContain(dlgCpp, "m_hashInputController.LoadDroppedFiles(hDropInfo);", "FilesHashDlg.cpp still performs inline drag-drop ingestion after phase 28.");
+            AssertDoesNotContain(dlgCpp, "m_hashInputController.LoadCopyDataFiles(pCopyDataStruct)", "FilesHashDlg.cpp still performs inline WM_COPYDATA ingestion after phase 28.");
+            AssertDoesNotContain(dlgCpp, "m_hashResultViewController.ShowHyperEditMenu(this);", "FilesHashDlg.cpp still performs inline HyperEdit popup display after phase 28.");
+            AssertDoesNotContain(dlgCpp, "m_hashResultViewController.UpdatePopupMenu(this, pPopupMenu);", "FilesHashDlg.cpp still performs inline popup-menu updates after phase 28.");
+            AssertDoesNotContain(dlgCpp, "m_hashResultViewController.CopyLastHyperlink();", "FilesHashDlg.cpp still performs inline hyperlink copying after phase 28.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashMessageController.cpp", "fileshash.vcxproj does not yet compile the phase 28 message controller source.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashMessageController.h", "fileshash.vcxproj does not yet include the phase 28 message controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashMessageController.cpp", "fileshash.vcxproj.filters does not yet track the phase 28 message controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashMessageController.h", "fileshash.vcxproj.filters does not yet track the phase 28 message controller header.");
         }, failures);
 
         if (failures.Count > 0)
