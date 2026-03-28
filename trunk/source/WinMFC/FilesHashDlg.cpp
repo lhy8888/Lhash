@@ -80,82 +80,49 @@ BOOL CFilesHashDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// 设置此对话框的图标。当应用程序主窗口不是对话框时，框架将自动
-	//  执行此操作
-	SetIcon(m_hIcon, TRUE);			// 设置大图标
-	SetIcon(m_hIcon, FALSE);		// 设置小图标
-
-	// TODO：在此添加额外的初始化代码
-
-	m_hashProgressController.PrepareAdvTaskbar();
-
-	m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR));
+	// Initialize dialog icons and startup state.
+	SetIcon(m_hIcon, TRUE);
+	SetIcon(m_hIcon, FALSE);
 
 	m_waitingExit = FALSE;
-
 	m_bLimited = WindowsUtils::IsLimitedProc();
 
-	CWnd* pWnd;
-	pWnd = GetDlgItem(IDC_STATIC_SPEED);
-	pWnd->SetWindowText(_T(""));
-	pWnd = GetDlgItem(IDC_STATIC_TIME);
-	pWnd->SetWindowText(_T(""));
-	pWnd = GetDlgItem(IDC_STATIC_UPPER);
-	pWnd->SetWindowText(GetStringByKey(MAINDLG_UPPER_HASH));
-	pWnd = GetDlgItem(IDC_STATIC_TIMETITLE);
-	pWnd->SetWindowText(GetStringByKey(MAINDLG_TIME_TITLE));
+	m_hashInitializationController.InitializeDialog(
+		&m_thrdData,
+		&m_mainMtx,
+		this,
+		&m_progWhole,
+		&m_editMain,
+		&m_btnOpen,
+		&m_btnExit,
+		&m_btnClr,
+		&m_btnFind,
+		&m_chkUppercase,
+		&m_btnContext,
+		&m_uiBridgeMFC,
+		&m_hashAlgorithmSelectionController,
+		&m_hashInputController,
+		&m_hashSearchController,
+		&m_hashSessionController,
+		&m_hashContextMenuController,
+		&m_hashProgressController,
+		&m_hashResultViewController,
+		m_bLimited,
+		theApp.m_lpCmdLine,
+		GetStringByKey(MAINDLG_CLEAR),
+		GetStringByKey(MAINDLG_UPPER_HASH),
+		GetStringByKey(MAINDLG_TIME_TITLE),
+		GetStringByKey(MAINDLG_OPEN),
+		GetStringByKey(MAINDLG_VERIFY),
+		GetStringByKey(MAINDLG_EXIT),
+		GetStringByKey(MAINDLG_ABOUT),
+		GetStringByKey(MAINDLG_ADD_CONTEXT_MENU),
+		GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU),
+		GetStringByKey(MAINDLG_STOP),
+		GetStringByKey(MAINDLG_INITINFO));
 
-	m_btnOpen.SetWindowText(GetStringByKey(MAINDLG_OPEN));
-	m_btnFind.SetWindowText(GetStringByKey(MAINDLG_VERIFY));
-	m_btnFind.ShowWindow(SW_HIDE);
-	m_btnExit.SetWindowText(GetStringByKey(MAINDLG_EXIT));
-	pWnd = GetDlgItem(IDC_ABOUT);
-	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));
-
-	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
-	m_hashAlgorithmSelectionController.Initialize(&m_thrdData, this);
-	m_hashInputController.Initialize(&m_thrdData, this);
-	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
-	m_hashSessionController.Initialize(&m_thrdData, this, &m_editMain, &m_btnOpen, &m_btnClr, &m_btnFind, &m_btnContext, &m_chkUppercase, &m_hashAlgorithmSelectionController);
-	m_hashContextMenuController.Initialize(&m_btnContext, GetDlgItem(IDC_STATIC_ADDRESULT));
-	m_hashProgressController.Initialize(this, &m_progWhole);
-	m_hashResultViewController.Initialize(&m_mainMtx, &m_editMain);
-
-	m_mainMtx.lock();
-	{
-		SetThreadDataObserver(m_thrdData, m_uiBridgeMFC);
-		ResetThreadDataForNewSession(m_thrdData);
-
-		m_editMain.SetLimitText(UINT_MAX);
-	}
-	m_mainMtx.unlock();
-
-	m_hashResultViewController.ShowInitialInfo(GetStringByKey(MAINDLG_INITINFO));
-
-	m_hashContextMenuController.RefreshButtonText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU), GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
-	m_hashContextMenuController.ResetStatus();
-
-	m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
-
-	// 从命令行获取文件路径
-	m_hashInputController.LoadCommandLineFiles(theApp.m_lpCmdLine);
-	// 从命令行获取文件路径结束
-
-	SetThreadDataWorking(m_thrdData, false);
-	m_progWhole.SetRange(0, 99);
-	m_chkUppercase.SetCheck(0);
-	m_hashAlgorithmSelectionController.ResetChecks();
-	m_hashAlgorithmSelectionController.SyncSelections();
-
-	if(HasThreadDataInputFiles(m_thrdData))
-		SetTimer(4, 50, NULL); // 使 DoMD5() 在 OnInitDialog() 之后执行
-
-	return TRUE;  // 除非设置了控件的焦点，否则返回 TRUE
+	return TRUE;
 }
-
-// 如果向对话框添加最小化按钮，则需要下面的代码
-//  来绘制该图标。对于使用文档/视图模型的 MFC 应用程序，
-//  这将由框架自动完成。
 
 void CFilesHashDlg::OnPaint()
 {

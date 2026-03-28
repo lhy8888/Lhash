@@ -18,6 +18,7 @@
 #include "FilesHashSessionController.h"
 
 #include "FilesHashContextMenuController.h"
+#include "FilesHashInitializationController.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 
@@ -79,6 +80,7 @@ protected:
 	FilesHashSessionController m_hashSessionController;
 
 	FilesHashContextMenuController m_hashContextMenuController;
+	FilesHashInitializationController m_hashInitializationController;
 	FilesHashProgressController m_hashProgressController;
 	FilesHashResultViewController m_hashResultViewController;
 	ThreadData m_thrdData;
