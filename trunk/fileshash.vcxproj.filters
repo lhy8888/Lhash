@@ -33,6 +33,9 @@
     <ClCompile Include="source\WinMFC\FilesHashAlgorithmSelectionController.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="source\WinMFC\FilesHashContextMenuController.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="source\WinMFC\FilesHashDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -90,6 +93,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="source\WinMFC\FilesHashAlgorithmSelectionController.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WinMFC\FilesHashContextMenuController.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="source\WinMFC\FilesHashDlg.h">

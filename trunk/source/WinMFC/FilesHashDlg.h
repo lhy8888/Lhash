@@ -17,6 +17,8 @@
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
 
+#include "FilesHashContextMenuController.h"
+
 // CMD5SUM03Dlg ¶Ô»°¿ò
 class CFilesHashDlg : public CDialog
 {
@@ -74,6 +76,8 @@ protected:
 	FilesHashInputController m_hashInputController;
 	FilesHashSearchController m_hashSearchController;
 	FilesHashSessionController m_hashSessionController;
+
+	FilesHashContextMenuController m_hashContextMenuController;
 	ThreadData m_thrdData;
 	float m_calculateTime;
 	UINT_PTR m_timer;

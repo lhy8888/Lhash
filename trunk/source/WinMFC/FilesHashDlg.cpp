@@ -18,7 +18,6 @@
 #include "Common/Utils.h"
 #include "WindowsUtils.h"
 #include "UIBridgeMFC.h"
-#include "WinCommon/WindowsComm.h"
 #include "WinCommon/WindowsStrings.h"
 
 using namespace std;
@@ -121,6 +120,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	m_hashInputController.Initialize(&m_thrdData, this);
 	m_hashSearchController.Initialize(&m_thrdData, &m_editMain, &m_btnClr, &m_btnFind, &m_btnOpen, &m_chkUppercase);
 	m_hashSessionController.Initialize(&m_thrdData, this, &m_editMain, &m_btnOpen, &m_btnClr, &m_btnFind, &m_btnContext, &m_chkUppercase, &m_hashAlgorithmSelectionController);
+	m_hashContextMenuController.Initialize(&m_btnContext, GetDlgItem(IDC_STATIC_ADDRESULT));
 
 	m_mainMtx.lock();
 	{
@@ -136,18 +136,8 @@ BOOL CFilesHashDlg::OnInitDialog()
 	m_mainMtx.unlock();
 
 	pTl = NULL;
-
-	if(WindowsUtils::ContextMenuExisted())
-	{
-		// 已经添加右键菜单
-		m_btnContext.SetWindowText(GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
-	}
-	else
-	{
-		m_btnContext.SetWindowText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU));
-	}
-	pWnd = (CStatic*)GetDlgItem(IDC_STATIC_ADDRESULT);
-	pWnd->SetWindowText(_T(""));
+	m_hashContextMenuController.RefreshButtonText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU), GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
+	m_hashContextMenuController.ResetStatus();
 
 	m_hashSessionController.SetControls(FALSE, m_bLimited, GetStringByKey(MAINDLG_OPEN), GetStringByKey(MAINDLG_STOP));
 
@@ -338,48 +328,16 @@ void CFilesHashDlg::OnBnClickedFind()
 
 void CFilesHashDlg::OnBnClickedContext()
 {
-	if (m_bLimited)
+	if (m_hashContextMenuController.HandleButtonClick(
+		m_bLimited,
+		GetStringByKey(MAINDLG_ADD_CONTEXT_MENU),
+		GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU),
+		GetStringByKey(MAINDLG_ADD_SUCCEEDED),
+		GetStringByKey(MAINDLG_ADD_FAILED),
+		GetStringByKey(MAINDLG_REMOVE_SUCCEEDED),
+		GetStringByKey(MAINDLG_REMOVE_FAILED)))
 	{
-		OSVERSIONINFOEX osvi;
-		BOOL bOsVersionInfoEx;
-		if (WindowsComm::GetWindowsVersion(osvi, bOsVersionInfoEx) &&
-			osvi.dwMajorVersion >= 6)
-		{
-			if (WindowsUtils::ElevateProcess())
-				ExitProcess(0);
-		}
-	}
-
-	// May not a limited process.
-	CStatic* pWnd = (CStatic *)GetDlgItem(IDC_STATIC_ADDRESULT);
-	CString buttonText = _T("");
-
-	m_btnContext.GetWindowText(buttonText);
-
-	if (buttonText.Compare(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU)) == 0)
-	{
-		WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash
-		if (WindowsUtils::AddContextMenu())
-		{
-			pWnd->SetWindowText(GetStringByKey(MAINDLG_ADD_SUCCEEDED));
-			m_btnContext.SetWindowText(GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));
-		}
-		else
-		{
-			pWnd->SetWindowText(GetStringByKey(MAINDLG_ADD_FAILED));
-		}
-	}
-	else if (buttonText.Compare(GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU)) == 0)
-	{
-		if (WindowsUtils::RemoveContextMenu())
-		{
-			pWnd->SetWindowText(GetStringByKey(MAINDLG_REMOVE_SUCCEEDED));
-			m_btnContext.SetWindowText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU));
-		}
-		else
-		{
-			pWnd->SetWindowText(GetStringByKey(MAINDLG_REMOVE_FAILED));
-		}
+		ExitProcess(0);
 	}
 }
 

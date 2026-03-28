@@ -2566,6 +2566,46 @@ internal static class Program
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashSessionController.h", "fileshash.vcxproj.filters does not yet track the phase 21 session controller header.");
         }, failures);
 
+        Run("Phase 22 extracts the legacy desktop context-menu flow into a dedicated controller", () =>
+        {
+            string contextControllerHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashContextMenuController.h");
+            string contextController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashContextMenuController.cpp");
+            string dlgHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
+            string dlgCpp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
+            string mfcProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string mfcProjectFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
+
+            AssertContains(contextControllerHeader, "void RefreshButtonText(LPCTSTR addText, LPCTSTR removeText);", "Phase 22 context controller is missing the button-text sync seam.");
+            AssertContains(contextControllerHeader, "BOOL HandleButtonClick(BOOL limited,", "Phase 22 context controller is missing the grouped click-handling seam.");
+            AssertContains(contextControllerHeader, "BOOL TryElevateLimitedProcess() const;", "Phase 22 context controller is missing the limited-process elevation helper.");
+
+            AssertContains(contextController, "#include \"WindowsUtils.h\"", "Phase 22 context controller no longer consumes WindowsUtils for context-menu actions.");
+            AssertContains(contextController, "WindowsUtils::ContextMenuExisted()", "Phase 22 context controller does not yet own the context-menu existence check.");
+            AssertContains(contextController, "WindowsUtils::ElevateProcess()", "Phase 22 context controller does not yet own the elevation path.");
+            AssertContains(contextController, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash", "Phase 22 context controller does not yet keep the pre-add cleanup path.");
+            AssertContains(contextController, "WindowsUtils::AddContextMenu()", "Phase 22 context controller does not yet own context-menu creation.");
+            AssertContains(contextController, "WindowsUtils::RemoveContextMenu()", "Phase 22 context controller does not yet own context-menu removal.");
+            AssertContains(contextController, "WindowsComm::GetWindowsVersion(osvi, bOsVersionInfoEx)", "Phase 22 context controller does not yet gate elevation by Windows version.");
+
+            AssertContains(dlgHeader, "#include \"FilesHashContextMenuController.h\"", "FilesHashDlg.h does not yet consume the phase 22 context controller.");
+            AssertContains(dlgHeader, "FilesHashContextMenuController m_hashContextMenuController;", "FilesHashDlg.h does not yet keep the phase 22 context controller.");
+
+            AssertContains(dlgCpp, "m_hashContextMenuController.Initialize(&m_btnContext, GetDlgItem(IDC_STATIC_ADDRESULT));", "FilesHashDlg.cpp does not yet initialize the phase 22 context controller.");
+            AssertContains(dlgCpp, "m_hashContextMenuController.RefreshButtonText(GetStringByKey(MAINDLG_ADD_CONTEXT_MENU), GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU));", "FilesHashDlg.cpp does not yet route initial context-button text through the phase 22 controller.");
+            AssertContains(dlgCpp, "m_hashContextMenuController.ResetStatus();", "FilesHashDlg.cpp does not yet route initial context status clearing through the phase 22 controller.");
+            AssertContains(dlgCpp, "m_hashContextMenuController.HandleButtonClick(", "FilesHashDlg.cpp does not yet route button clicks through the phase 22 context controller.");
+            AssertDoesNotContain(dlgCpp, "WindowsUtils::ContextMenuExisted()", "FilesHashDlg.cpp still performs inline context-menu existence checks after phase 22.");
+            AssertDoesNotContain(dlgCpp, "WindowsUtils::AddContextMenu()", "FilesHashDlg.cpp still performs inline context-menu creation after phase 22.");
+            AssertDoesNotContain(dlgCpp, "WindowsUtils::RemoveContextMenu()", "FilesHashDlg.cpp still performs inline context-menu removal after phase 22.");
+            AssertDoesNotContain(dlgCpp, "WindowsUtils::ElevateProcess()", "FilesHashDlg.cpp still performs inline elevation after phase 22.");
+            AssertDoesNotContain(dlgCpp, "WindowsComm::GetWindowsVersion", "FilesHashDlg.cpp still performs inline Windows-version checks after phase 22.");
+
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashContextMenuController.cpp", "fileshash.vcxproj does not yet compile the phase 22 context controller source.");
+            AssertContains(mfcProject, "source\\WinMFC\\FilesHashContextMenuController.h", "fileshash.vcxproj does not yet include the phase 22 context controller header.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashContextMenuController.cpp", "fileshash.vcxproj.filters does not yet track the phase 22 context controller source.");
+            AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashContextMenuController.h", "fileshash.vcxproj.filters does not yet track the phase 22 context controller header.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
