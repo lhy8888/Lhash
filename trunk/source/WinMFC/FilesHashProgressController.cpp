@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "FilesHashProgressController.h"
+#include "resource.h"
 
 FilesHashProgressController::FilesHashProgressController()
 	: m_parentWnd(NULL),
