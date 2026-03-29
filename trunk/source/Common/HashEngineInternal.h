@@ -1,8 +1,9 @@
-#ifndef _HASH_ENGINE_INTERNAL_H_
+﻿#ifndef _HASH_ENGINE_INTERNAL_H_
 #define _HASH_ENGINE_INTERNAL_H_
 
 #include "Common/HashEngine.h"
 #include "Common/HashEngineObserver.h"
+#include "Common/HashRequest.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
 #include "Common/ThreadDataResultAccess.h"
@@ -55,9 +56,9 @@ namespace HashEngineInternal
 		FinalizedDigestBundle digestBundle;
 	};
 
-	void AccumulatePreScannedFileSize(ThreadData *thrdData, ULLongVector& fSizes, uint32_t fileIndex);
-	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, ULLongVector& fSizes, bool *wasCancelled);
-	bool PrepareHashingWork(ThreadData *thrdData, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled);
+	void AccumulatePreScannedFileSize(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex);
+	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);
+	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled);
 
 	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
@@ -69,16 +70,16 @@ namespace HashEngineInternal
 
 	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
 		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
-	void InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts);
-	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, ThreadData *thrdData, bool isSizeCaled, uint32_t fileIndex);
+	void InitializeFileHashing(const HashRequest& request, HashEngineObserver *observer, FileHashContexts *hashContexts);
+	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);
 	const sunjwbase::tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType);
 	void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);
-	void PopulateDigestResult(const ThreadData& threadData, ResultData& result, const FinalizedDigestBundle& digestBundle);
-	void FinalizeDigestStrings(const ThreadData& threadData, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle);
+	void PopulateDigestResult(const HashRequest& request, ResultData& result, const FinalizedDigestBundle& digestBundle);
+	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle);
 
-	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled, bool uppercase,
+	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
-	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
 	void EmitMetaResult(HashEngineObserver *observer, ResultData& result);
 	void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase);
@@ -87,7 +88,7 @@ namespace HashEngineInternal
 	void EmitOpenFileError(HashEngineObserver *observer, ResultData& result, const TCHAR *errorText);
 	void EmitReadFileError(HashEngineObserver *observer, ResultData& result);
 	void FinishFileProcessing(HashEngineObserver *observer);
-	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
 }
 

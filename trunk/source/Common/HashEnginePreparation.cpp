@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
 
@@ -6,12 +6,11 @@ using namespace sunjwbase;
 
 namespace HashEngineInternal
 {
-	void AccumulatePreScannedFileSize(ThreadData *thrdData, ULLongVector& fSizes, uint32_t fileIndex)
+	void AccumulatePreScannedFileSize(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex)
 	{
 		uint64_t fSize = 0;
 
-		const TCHAR *path;
-		path = GetThreadDataFullPath(*thrdData, fileIndex).c_str();
+		const TCHAR *path = GetHashRequestFileAt(request, fileIndex).c_str();
 		OsFile osFile(path);
 		if (osFile.openRead())
 		{
@@ -23,11 +22,11 @@ namespace HashEngineInternal
 		AddThreadDataTotalSize(*thrdData, fSize);
 	}
 
-	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, ULLongVector& fSizes, bool *wasCancelled)
+	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
 	{
-		if (GetThreadDataFileCount(*thrdData) < 200)
+		if (GetHashRequestFileCount(request) < 200)
 		{
-			VisitThreadDataInputFiles(*thrdData, [&](uint32_t fileIndex, const tstring& fullPath)
+			VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 			{
 				(void)fullPath;
 				if (ShouldStopThreadData(*thrdData))
@@ -36,7 +35,7 @@ namespace HashEngineInternal
 					return false;
 				}
 
-				AccumulatePreScannedFileSize(thrdData, fSizes, fileIndex);
+				AccumulatePreScannedFileSize(thrdData, request, fSizes, fileIndex);
 				return true;
 			});
 
@@ -46,16 +45,16 @@ namespace HashEngineInternal
 		return false;
 	}
 
-	bool PrepareHashingWork(ThreadData *thrdData, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled)
+	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled)
 	{
-		observer->onPreparing();
-		bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, fSizes, wasCancelled);
+		observer->onProgressEvent(CreatePreparingProgressEvent());
+		bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, request, fSizes, wasCancelled);
 		if (*wasCancelled)
 		{
 			return isSizeCaled;
 		}
 
-		observer->onPreparationFinished();
+		observer->onProgressEvent(CreatePreparationFinishedProgressEvent());
 		return isSizeCaled;
 	}
 
@@ -86,7 +85,7 @@ namespace HashEngineInternal
 	void EmitPathResult(HashEngineObserver *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_PATH);
-		observer->onFileStarted(result);
+		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
 	}
 
 	ResultData& BeginFileResult(ThreadData *thrdData, HashEngineObserver *observer, const tstring& path)

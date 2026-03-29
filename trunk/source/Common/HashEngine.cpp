@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 #include "HashEngine.h"
 
@@ -84,7 +84,7 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 
 	if (positionNew > progressState->position)
 	{
-		observer->onFileProgress(positionNew);
+		observer->onProgressEvent(CreateFileProgressEvent(positionNew));
 		progressState->position = positionNew;
 	}
 
@@ -101,20 +101,20 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 	if (isSizeCaled && positionWholeNew > progressState->positionWhole)
 	{
 		progressState->positionWhole = positionWholeNew;
-		observer->onTotalProgress(progressState->positionWhole);
+		observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));
 	}
 }
 
 static int CancelHashing(ThreadData *thrdData, HashEngineObserver *observer)
 {
 	SetThreadDataWorking(*thrdData, false);
-	observer->onCancelled();
+	observer->onProgressEvent(CreateCancelledProgressEvent());
 	return 0;
 }
 
 static int CompleteHashing(ThreadData *thrdData, HashEngineObserver *observer)
 {
-	observer->onCompleted();
+	observer->onProgressEvent(CreateCompletedProgressEvent());
 	SetThreadDataWorking(*thrdData, false);
 	return 0;
 }
@@ -133,14 +133,14 @@ static uint64_t CalculateFileChunkIterations(uint64_t fsize)
 	return fsize / DataBuffer::preflen + 1;
 }
 
-static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result, uint32_t fileIndex,
+static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ResultData& result, uint32_t fileIndex,
 	bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	, ThreadPool *threadPool
 #endif
 )
 {
-	InitializeFileHashing(*thrdData, observer, &executionState->hashContexts);
+	InitializeFileHashing(request, observer, &executionState->hashContexts);
 
 	uint64_t fsize = PrepareFileMetaResult(thrdData, observer, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path, isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
 	uint64_t times = CalculateFileChunkIterations(fsize);
@@ -184,10 +184,10 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 			if (!ptrDataBufCalc)
 				continue;
 
-			bool isSha512Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512);
-			bool isSha256Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256);
-			bool isSha1Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1);
-			bool isMd5Enabled = IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5);
+			bool isSha512Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512);
+			bool isSha256Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
+			bool isSha1Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1);
+			bool isMd5Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
 			future<void> taskSHA512Update;
 			future<void> taskSHA256Update;
 			future<void> taskSHA1Update;
@@ -280,19 +280,19 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, HashEngineObserver *o
 
 		if (!executionState->fileAttemptState.readFailed)
 		{
-			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_MD5))
+			if (HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5))
 			{
 				MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen);
 			}
-			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA1))
+			if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1))
 			{
 				SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen);
 			}
-			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA256))
+			if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256))
 			{
 				SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen);
 			}
-			if (IsThreadDataHashAlgorithmEnabled(*thrdData, RESULT_DIGEST_SHA512))
+			if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512))
 			{
 				SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen);
 			}
@@ -325,19 +325,20 @@ int WINAPI HashThreadFunc(void *param)
 {
 	ThreadData *thrdData = (ThreadData *)param;
 	HashEngineObserver *observer = GetThreadDataObserver(*thrdData);
+	HashRequest request = CreateHashRequest(*thrdData);
 
 	SetThreadDataWorking(*thrdData, true);
 
 	ResetThreadDataTotalSize(*thrdData);
 	bool isSizeCaled = false;
-	ULLongVector fSizes(GetThreadDataFileCount(*thrdData));
+	ULLongVector fSizes(GetHashRequestFileCount(request));
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	ThreadPool threadPool(5);
 #endif
 
 	bool wasCancelled = false;
-	isSizeCaled = PrepareHashingWork(thrdData, observer, fSizes, &wasCancelled);
+	isSizeCaled = PrepareHashingWork(thrdData, request, observer, fSizes, &wasCancelled);
 	if (wasCancelled)
 	{
 		return CancelHashing(thrdData, observer);
@@ -345,7 +346,7 @@ int WINAPI HashThreadFunc(void *param)
 
 	FileExecutionState executionState = { 0 };
 
-	bool completedAllFiles = VisitThreadDataInputFiles(*thrdData, [&](uint32_t fileIndex, const tstring& fullPath)
+	bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 	{
 		if (ShouldStopThreadData(*thrdData))
 		{
@@ -368,7 +369,7 @@ int WINAPI HashThreadFunc(void *param)
 		OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);
 		if (executionState.fileAttemptState.isFileOpened)
 		{
-			bool wasStopped = ProcessOpenedFileHashing(thrdData, observer, result, fileIndex, isSizeCaled, fSizes, &executionState
+			bool wasStopped = ProcessOpenedFileHashing(thrdData, request, observer, result, fileIndex, isSizeCaled, fSizes, &executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 				, &threadPool
 #endif
@@ -379,7 +380,7 @@ int WINAPI HashThreadFunc(void *param)
 			}
 		}
 
-		CompleteFileAttempt(observer, thrdData, result, fileIndex, isSizeCaled, executionState);
+		CompleteFileAttempt(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);
 		return true;
 	});
 

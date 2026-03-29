@@ -1,7 +1,7 @@
-#ifndef _HASH_ENGINE_OBSERVER_H_
+﻿#ifndef _HASH_ENGINE_OBSERVER_H_
 #define _HASH_ENGINE_OBSERVER_H_
 
-struct ResultData;
+#include "Common/ProgressEvent.h"
 
 class HashEngineObserver
 {
@@ -72,6 +72,64 @@ public:
 	void onFileFinished()
 	{
 		fileFinish();
+	}
+
+	void onProgressEvent(const ProgressEvent& progressEvent)
+	{
+		switch (progressEvent.type)
+		{
+		case PROGRESS_EVENT_JOB_PREPARING:
+			preparingCalc();
+			break;
+		case PROGRESS_EVENT_JOB_PREPARATION_FINISHED:
+			removePreparingCalc();
+			break;
+		case PROGRESS_EVENT_JOB_CANCELLED:
+			calcStop();
+			break;
+		case PROGRESS_EVENT_JOB_COMPLETED:
+			calcFinish();
+			break;
+		case PROGRESS_EVENT_FILE_STARTED:
+			if (progressEvent.result.sourceResult != NULL)
+			{
+				showFileName(*progressEvent.result.sourceResult);
+			}
+			break;
+		case PROGRESS_EVENT_FILE_META_READY:
+			if (progressEvent.result.sourceResult != NULL)
+			{
+				showFileMeta(*progressEvent.result.sourceResult);
+			}
+			break;
+		case PROGRESS_EVENT_FILE_HASH_READY:
+			if (progressEvent.result.sourceResult != NULL)
+			{
+				showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);
+			}
+			break;
+		case PROGRESS_EVENT_FILE_FAILED:
+			if (progressEvent.result.sourceResult != NULL)
+			{
+				showFileErr(*progressEvent.result.sourceResult);
+			}
+			break;
+		case PROGRESS_EVENT_FILE_PROGRESS:
+			updateProg(progressEvent.value);
+			break;
+		case PROGRESS_EVENT_TOTAL_PROGRESS:
+			updateProgWhole(progressEvent.value);
+			break;
+		case PROGRESS_EVENT_FILE_CALCULATED:
+			fileCalcFinish();
+			break;
+		case PROGRESS_EVENT_FILE_FINISHED:
+			fileFinish();
+			break;
+		case PROGRESS_EVENT_NONE:
+		default:
+			break;
+		}
 	}
 
 	virtual void preparingCalc() = 0;

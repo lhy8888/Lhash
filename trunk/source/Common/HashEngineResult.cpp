@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
 #include "Common/strhelper.h"
@@ -49,9 +49,9 @@ namespace HashEngineInternal
 		return fsize;
 	}
 
-	void InitializeFileHashing(const ThreadData& threadData, HashEngineObserver *observer, FileHashContexts *hashContexts)
+	void InitializeFileHashing(const HashRequest& request, HashEngineObserver *observer, FileHashContexts *hashContexts)
 	{
-		VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
 			switch (digestType)
 			{
@@ -72,21 +72,21 @@ namespace HashEngineInternal
 			return true;
 		});
 
-		observer->onFileProgress(0);
+		observer->onProgressEvent(CreateFileProgressEvent(0));
 	}
 
-	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, ThreadData *thrdData, bool isSizeCaled, uint32_t fileIndex)
+	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)
 	{
 		if (!isSizeCaled)
 		{
-			if (GetThreadDataFileCount(*thrdData) == 0)
+			if (GetHashRequestFileCount(request) == 0)
 			{
-				observer->onTotalProgress(0);
+				observer->onProgressEvent(CreateTotalProgressEvent(0));
 			}
 			else
 			{
 				int progressMax = observer->progressMax();
-				observer->onTotalProgress((fileIndex + 1) * progressMax / (GetThreadDataFileCount(*thrdData)));
+				observer->onProgressEvent(CreateTotalProgressEvent((fileIndex + 1) * progressMax / static_cast<int>(GetHashRequestFileCount(request))));
 			}
 		}
 	}
@@ -101,23 +101,23 @@ namespace HashEngineInternal
 		SetDigestStorageValue(digestBundle, digestType, digestValue);
 	}
 
-	void PopulateDigestResult(const ThreadData& threadData, ResultData& result, const FinalizedDigestBundle& digestBundle)
+	void PopulateDigestResult(const HashRequest& request, ResultData& result, const FinalizedDigestBundle& digestBundle)
 	{
-		VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
 			SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));
 			return true;
 		});
 	}
 
-	void FinalizeDigestStrings(const ThreadData& threadData, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle)
+	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle)
 	{
 		char chHashBuff[1024] = { 0 };
 		char strSHA1[256] = { 0 };
 		string strSHA256;
 		string strSHA512;
 
-		VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
 			switch (digestType)
 			{
@@ -195,24 +195,24 @@ namespace HashEngineInternal
 		});
 	}
 
-	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled, bool uppercase,
+	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
-		observer->onFileCalculated();
+		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
 
-		FinalizeDigestStrings(*thrdData, executionState.hashContexts, executionState.digestBundle);
-		UpdateWholeProgressAfterFile(observer, thrdData, isSizeCaled, fileIndex);
+		FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);
+		UpdateWholeProgressAfterFile(observer, request, isSizeCaled, fileIndex);
 
 		executionState.fileAttemptState.osFile->close();
 
-		PopulateDigestResult(*thrdData, result, executionState.digestBundle);
+		PopulateDigestResult(request, result, executionState.digestBundle);
 		if (HasAnyResultDigests(result))
 		{
-			EmitHashResult(observer, result, uppercase);
+			EmitHashResult(observer, result, GetHashRequestUppercaseDigest(request));
 		}
 	}
 
-	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		if (executionState.fileAttemptState.readFailed)
@@ -222,7 +222,7 @@ namespace HashEngineInternal
 		}
 		else
 		{
-			CompleteSuccessfulFileHashing(observer, thrdData, result, fileIndex, isSizeCaled, GetThreadDataUppercase(*thrdData), executionState);
+			CompleteSuccessfulFileHashing(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);
 		}
 
 		FinishFileProcessing(observer);
@@ -231,19 +231,19 @@ namespace HashEngineInternal
 	void EmitMetaResult(HashEngineObserver *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_META);
-		observer->onFileMetaReady(result);
+		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
 	}
 
 	void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase)
 	{
 		SetResultState(result, RESULT_ALL);
-		observer->onFileHashReady(result, uppercase);
+		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
 	}
 
 	void EmitErrorResult(HashEngineObserver *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_ERROR);
-		observer->onFileFailed(result);
+		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
 	}
 
 	void EmitErrorMessageResult(HashEngineObserver *observer, ResultData& result, const tstring& errorText)
@@ -264,15 +264,15 @@ namespace HashEngineInternal
 
 	void FinishFileProcessing(HashEngineObserver *observer)
 	{
-		observer->onFileFinished();
+		observer->onProgressEvent(CreateFileFinishedProgressEvent());
 	}
 
-	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		if (executionState.fileAttemptState.isFileOpened)
 		{
-			CompleteOpenedFileAttempt(observer, thrdData, result, fileIndex, isSizeCaled, executionState);
+			CompleteOpenedFileAttempt(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);
 		}
 		else
 		{
