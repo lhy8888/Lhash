@@ -63,11 +63,18 @@ static inline TResultArray CreateProjectedMatchingHashResults(const ResultList& 
 {
 	TResultArray projectedResults = createResultArray(CountMatchingHashResults(resultList, predicate));
 	size_t matchIndex = 0;
-	VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)
+
+	for (ResultList::const_iterator itr = resultList.begin(); itr != resultList.end(); ++itr)
 	{
+		HashResult hashResult = ProjectHashResult(*itr);
+		if (!predicate(hashResult))
+		{
+			continue;
+		}
+
 		setProjectedResult(projectedResults, matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
 		++matchIndex;
-	});
+	}
 
 	return projectedResults;
 }
