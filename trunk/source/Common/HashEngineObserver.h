@@ -2,6 +2,7 @@
 #define _HASH_ENGINE_OBSERVER_H_
 
 #include "Common/HashProgressSink.h"
+#include "Common/HashResultCompatibility.h"
 
 class HashEngineObserver: public HashProgressSink
 {
@@ -34,9 +35,21 @@ public:
 		showFileName(result);
 	}
 
+	void onFileStarted(const HashResult& result)
+	{
+		ResultData compatibilityResult = CreateCompatibilityResultData(result);
+		showFileName(compatibilityResult);
+	}
+
 	void onFileMetaReady(const ResultData& result)
 	{
 		showFileMeta(result);
+	}
+
+	void onFileMetaReady(const HashResult& result)
+	{
+		ResultData compatibilityResult = CreateCompatibilityResultData(result);
+		showFileMeta(compatibilityResult);
 	}
 
 	void onFileHashReady(const ResultData& result, bool uppercase)
@@ -44,9 +57,21 @@ public:
 		showFileHash(result, uppercase);
 	}
 
+	void onFileHashReady(const HashResult& result, bool uppercase)
+	{
+		ResultData compatibilityResult = CreateCompatibilityResultData(result);
+		showFileHash(compatibilityResult, uppercase);
+	}
+
 	void onFileFailed(const ResultData& result)
 	{
 		showFileErr(result);
+	}
+
+	void onFileFailed(const HashResult& result)
+	{
+		ResultData compatibilityResult = CreateCompatibilityResultData(result);
+		showFileErr(compatibilityResult);
 	}
 
 	virtual int progressMax()
@@ -91,28 +116,16 @@ public:
 			calcFinish();
 			break;
 		case PROGRESS_EVENT_FILE_STARTED:
-			if (progressEvent.result.sourceResult != NULL)
-			{
-				showFileName(*progressEvent.result.sourceResult);
-			}
+			onFileStarted(progressEvent.result);
 			break;
 		case PROGRESS_EVENT_FILE_META_READY:
-			if (progressEvent.result.sourceResult != NULL)
-			{
-				showFileMeta(*progressEvent.result.sourceResult);
-			}
+			onFileMetaReady(progressEvent.result);
 			break;
 		case PROGRESS_EVENT_FILE_HASH_READY:
-			if (progressEvent.result.sourceResult != NULL)
-			{
-				showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);
-			}
+			onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);
 			break;
 		case PROGRESS_EVENT_FILE_FAILED:
-			if (progressEvent.result.sourceResult != NULL)
-			{
-				showFileErr(*progressEvent.result.sourceResult);
-			}
+			onFileFailed(progressEvent.result);
 			break;
 		case PROGRESS_EVENT_FILE_PROGRESS:
 			updateProg(progressEvent.value);

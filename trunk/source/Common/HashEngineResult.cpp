@@ -237,21 +237,21 @@ namespace HashEngineInternal
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		SetResultState(result, RESULT_META);
-		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
+		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(ProjectHashResult(result)));
 	}
 
 	void EmitHashResult(HashExecutionContext *executionContext, ResultData& result, bool uppercase)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		SetResultState(result, RESULT_ALL);
-		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
+		observer->onProgressEvent(CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase));
 	}
 
 	void EmitErrorResult(HashExecutionContext *executionContext, ResultData& result)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		SetResultState(result, RESULT_ERROR);
-		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
+		observer->onProgressEvent(CreateFileFailedProgressEvent(ProjectHashResult(result)));
 	}
 
 	void EmitErrorMessageResult(HashExecutionContext *executionContext, ResultData& result, const tstring& errorText)

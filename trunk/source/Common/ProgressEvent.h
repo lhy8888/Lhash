@@ -42,10 +42,21 @@ static inline ProgressEvent CreateLifecycleProgressEvent(ProgressEventType event
 	return progressEvent;
 }
 
+static inline ProgressEvent CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result);
+static inline ProgressEvent CreateFileStartedProgressEvent(const HashResult& result);
+static inline ProgressEvent CreateFileMetaReadyProgressEvent(const HashResult& result);
+static inline ProgressEvent CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest);
+static inline ProgressEvent CreateFileFailedProgressEvent(const HashResult& result);
+
 static inline ProgressEvent CreateResultProgressEvent(ProgressEventType eventType, const ResultData& result)
 {
+	return CreateResultProgressEvent(eventType, ProjectHashResult(result));
+}
+
+static inline ProgressEvent CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)
+{
 	ProgressEvent progressEvent = CreateLifecycleProgressEvent(eventType);
-	progressEvent.result = ProjectHashResult(result);
+	progressEvent.result = result;
 	return progressEvent;
 }
 
@@ -71,15 +82,30 @@ static inline ProgressEvent CreateCompletedProgressEvent()
 
 static inline ProgressEvent CreateFileStartedProgressEvent(const ResultData& result)
 {
+	return CreateFileStartedProgressEvent(ProjectHashResult(result));
+}
+
+static inline ProgressEvent CreateFileStartedProgressEvent(const HashResult& result)
+{
 	return CreateResultProgressEvent(PROGRESS_EVENT_FILE_STARTED, result);
 }
 
 static inline ProgressEvent CreateFileMetaReadyProgressEvent(const ResultData& result)
 {
+	return CreateFileMetaReadyProgressEvent(ProjectHashResult(result));
+}
+
+static inline ProgressEvent CreateFileMetaReadyProgressEvent(const HashResult& result)
+{
 	return CreateResultProgressEvent(PROGRESS_EVENT_FILE_META_READY, result);
 }
 
 static inline ProgressEvent CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)
+{
+	return CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercaseDigest);
+}
+
+static inline ProgressEvent CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)
 {
 	ProgressEvent progressEvent = CreateResultProgressEvent(PROGRESS_EVENT_FILE_HASH_READY, result);
 	progressEvent.uppercaseDigest = uppercaseDigest;
@@ -87,6 +113,11 @@ static inline ProgressEvent CreateFileHashReadyProgressEvent(const ResultData& r
 }
 
 static inline ProgressEvent CreateFileFailedProgressEvent(const ResultData& result)
+{
+	return CreateFileFailedProgressEvent(ProjectHashResult(result));
+}
+
+static inline ProgressEvent CreateFileFailedProgressEvent(const HashResult& result)
 {
 	return CreateResultProgressEvent(PROGRESS_EVENT_FILE_FAILED, result);
 }

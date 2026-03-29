@@ -87,7 +87,7 @@ namespace HashEngineInternal
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		SetResultState(result, RESULT_PATH);
-		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
+		observer->onProgressEvent(CreateFileStartedProgressEvent(ProjectHashResult(result)));
 	}
 
 	ResultData& BeginFileResult(HashExecutionContext *executionContext, const tstring& path)

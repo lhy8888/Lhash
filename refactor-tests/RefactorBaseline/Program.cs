@@ -3046,6 +3046,7 @@ internal static class Program
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashResultCompatibility = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
@@ -3062,25 +3063,28 @@ internal static class Program
             AssertContains(hashResult, "const ResultData *sourceResult;", "Phase 31 HashResult does not yet keep a compatibility link back to ResultData.");
             AssertContains(hashResult, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
             AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 31 does not yet project ResultData into HashResult.");
+            AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility reconstruction from HashResult.");
+            AssertContains(hashResultCompatibility, "CreateCompatibilityResultData(const HashResult& hashResult)", "Phase 35 does not yet expose compatibility result reconstruction.");
 
             AssertContains(progressEvent, "enum ProgressEventType", "Phase 31 does not yet define a stable ProgressEventType surface.");
             AssertContains(progressEvent, "struct ProgressEvent", "Phase 31 does not yet define a stable ProgressEvent contract.");
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 31 does not yet define hash-ready progress events.");
+            AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose hash-ready progress events directly from HashResult.");
 
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 31 does not yet define a neutral hash progress sink contract.");
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 31 hash progress sink does not yet own progress max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 31 hash progress sink does not yet own semantic progress-event dispatch.");
             AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "HashEngineObserver does not yet layer on top of the phase 31 hash progress sink.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "HashEngineObserver does not yet expose the phase 31 progress-event compatibility entry point.");
-            AssertContains(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet bridge progress events back to legacy hash rendering.");
+            AssertContains(hashEngineObserver, "onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet route hash-ready progress events through HashResult.");
             AssertContains(hashEngineObserver, "updateProgWhole(progressEvent.value);", "HashEngineObserver does not yet bridge progress events back to total-progress updates.");
 
             AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "HashEngine does not yet start from the phase 31 HashRequest contract.");
             AssertContains(hashEngine, "VisitHashRequestFiles(request", "HashEngine does not yet iterate files through HashRequest.");
             AssertContains(hashEngine, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "HashEngine does not yet read selected algorithms through HashRequest.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreatePreparingProgressEvent());", "HashEngine preparation does not yet emit semantic progress events.");
-            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileStartedProgressEvent(result));", "HashEngine does not yet emit file-started progress events.");
-            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "HashEngine does not yet emit hash-ready progress events.");
+            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileStartedProgressEvent(ProjectHashResult(result)));", "Phase 35 HashEngine does not yet emit file-started progress events through HashResult.");
+            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase));", "Phase 35 HashEngine does not yet emit hash-ready progress events through HashResult.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCancelledProgressEvent());", "HashEngine does not yet emit cancellation progress events.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCompletedProgressEvent());", "HashEngine does not yet emit completion progress events.");
         }, failures);
@@ -3187,6 +3191,36 @@ internal static class Program
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 35 HashEngine does not yet narrow the request-driven core entry onto HashExecutionContext.");
             AssertContains(hashEngine, "ShouldStopHashExecution(*executionContext)", "Phase 35 HashEngine does not yet read stop state through HashExecutionContext.");
             AssertContains(hashEngine, "ResetHashExecutionTotalSize(*executionContext);", "Phase 35 HashEngine does not yet reset counted size through HashExecutionContext.");
+        }, failures);
+
+        Run("Phase 35 routes semantic result events through HashResult while keeping legacy observer compatibility", () =>
+        {
+            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashResultCompatibility = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+
+            AssertContains(progressEvent, "CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", "Phase 35 does not yet expose ProgressEvent creation directly from HashResult.");
+            AssertContains(progressEvent, "CreateFileStartedProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-started events directly from HashResult.");
+            AssertContains(progressEvent, "CreateFileMetaReadyProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-meta events directly from HashResult.");
+            AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose file-hash events directly from HashResult.");
+            AssertContains(progressEvent, "CreateFileFailedProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-failed events directly from HashResult.");
+
+            AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility hydration from HashResult.");
+            AssertContains(hashResultCompatibility, "SetResultDigest(compatibilityResult, digestResult.type, digestResult.value);", "Phase 35 compatibility hydration does not yet rebuild digest values from HashResult.");
+
+            AssertContains(hashEngineObserver, "#include \"Common/HashResultCompatibility.h\"", "Phase 35 HashEngineObserver does not yet consume HashResultCompatibility.");
+            AssertContains(hashEngineObserver, "void onFileStarted(const HashResult& result)", "Phase 35 HashEngineObserver does not yet expose HashResult-based file-start compatibility.");
+            AssertContains(hashEngineObserver, "ResultData compatibilityResult = CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver does not yet rebuild compatibility ResultData from HashResult.");
+            AssertContains(hashEngineObserver, "onFileStarted(progressEvent.result);", "Phase 35 HashEngineObserver does not yet dispatch file-start events through HashResult.");
+            AssertContains(hashEngineObserver, "onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver does not yet dispatch hash-ready events through HashResult.");
+            AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
+
+            AssertContains(hashEnginePreparation, "CreateFileStartedProgressEvent(ProjectHashResult(result))", "Phase 35 preparation seam does not yet emit file-start events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileMetaReadyProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-meta events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase)", "Phase 35 result seam does not yet emit file-hash events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileFailedProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-failed events through HashResult.");
         }, failures);
 
         if (failures.Count > 0)
