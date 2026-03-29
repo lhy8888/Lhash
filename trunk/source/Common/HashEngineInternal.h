@@ -7,7 +7,7 @@
 #include "Common/ThreadDataInputAccess.h"
 #include "Common/ThreadDataResultAccess.h"
 #include "Common/ResultDataAccess.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDigestStateAccess.h"
 
 #include "OsUtils/OsFile.h"
 

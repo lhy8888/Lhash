@@ -2,7 +2,7 @@
 #define _RESULT_DATA_ACCESS_H_
 
 #include "Common/strhelper.h"
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDigestValueAccess.h"
 
 using sunjwbase::tstring;
 

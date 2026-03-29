@@ -535,7 +535,7 @@ internal static class Program
         Run("Phase 2 routes digest access through a neutral ResultData seam while keeping the fixed four-digest contract", () =>
         {
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
             string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
@@ -633,7 +633,7 @@ internal static class Program
         Run("Phase 3 introduces internal digest storage behind ResultData while preserving the legacy four-field compatibility surface", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string engineImpl = ReadHashEngineImplementation(repoRoot);
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
@@ -663,7 +663,7 @@ internal static class Program
 
         Run("Phase 3 resets digest storage through the neutral seam when a file result is created", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(digestAccess, "ResetResultDigests(ResultData& result)", "ResultDigestAccess does not yet expose the digest-reset helper introduced in phase 3.");
@@ -687,7 +687,7 @@ internal static class Program
         Run("Phase 3 centralizes the internal digest storage count instead of duplicating the magic number", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT", "Global.h does not yet centralize the internal digest storage count through the registry-count constant in phase 11.");
             AssertContains(global, "sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];", "ResultData internal digest storage is not yet bound to the centralized storage-count constant.");
@@ -696,7 +696,7 @@ internal static class Program
 
         Run("Phase 3 routes direct internal digest-slot access through stored-digest helpers", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetStoredResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the const stored-digest helper introduced in phase 3.");
             AssertContains(digestAccess, "GetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the mutable stored-digest helper introduced in phase 3.");
@@ -708,7 +708,7 @@ internal static class Program
 
         Run("Phase 3 routes legacy digest synchronization through dedicated compatibility helpers", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "SetCompatibilityResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess does not yet expose the digest compatibility write helper introduced in phase 3.");
             AssertContains(digestAccess, "ClearCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the digest compatibility clear helper introduced in phase 3.");
@@ -718,7 +718,7 @@ internal static class Program
 
         Run("Phase 3 routes legacy digest field selection through a single compatibility-field helper", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetCompatibilityResultDigestField(ResultDigestType digestType)", "ResultDigestAccess does not yet expose the compatibility digest field-selector helper introduced in phase 3.");
             AssertContains(digestAccess, "GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata compatibility-field accessor.");
@@ -730,7 +730,7 @@ internal static class Program
         Run("Phase 3 centralizes digest metadata so type, label, and legacy-field mapping share one source of truth", () =>
         {
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the centralized algorithm metadata struct introduced in phase 11.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
@@ -749,7 +749,7 @@ internal static class Program
 
         Run("Phase 3 routes type-based metadata lookup and stored-digest presence checks through dedicated helpers", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetResultDigestMetadata(ResultDigestType digestType)", "ResultDigestAccess does not yet expose the type-based metadata lookup helper introduced in phase 3.");
             AssertContains(digestAccess, "return GetHashAlgorithmDescriptor(digestType);", "ResultDigestAccess type-based metadata lookup helper does not yet route through the registry descriptor seam.");
@@ -762,7 +762,7 @@ internal static class Program
 
         Run("Phase 3 routes stored digest writes and clears through dedicated internal-storage helpers", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "SetStoredResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess does not yet expose the stored-digest write helper introduced in phase 3.");
             AssertContains(digestAccess, "ClearStoredResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the stored-digest clear helper introduced in phase 3.");
@@ -772,7 +772,7 @@ internal static class Program
 
         Run("Phase 3 routes digest-index lookup through centralized metadata instead of a standalone switch", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetResultDigestIndex(ResultDigestType digestType)", "ResultDigestAccess does not yet expose the digest-index helper.");
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess digest-index helper does not yet route through the registry index seam.");
@@ -781,7 +781,7 @@ internal static class Program
 
         Run("Phase 3 routes digest iteration through a dedicated metadata visitor helper", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "template<typename TResultDigestVisitor>", "ResultDigestAccess does not yet expose the digest-visitor template introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigests(TResultDigestVisitor visitor)", "ResultDigestAccess does not yet expose the centralized digest visitor helper.");
@@ -793,7 +793,7 @@ internal static class Program
 
         Run("Phase 3 routes metadata iteration through a dedicated metadata visitor helper", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "template<typename TResultDigestMetadataVisitor>", "ResultDigestAccess does not yet expose the metadata-visitor template introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", "ResultDigestAccess does not yet expose the centralized metadata visitor helper.");
@@ -805,7 +805,7 @@ internal static class Program
 
         Run("Phase 3 routes digest-value iteration through a dedicated value visitor helper and reuses it in managed bridges", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
@@ -828,7 +828,7 @@ internal static class Program
 
         Run("Phase 3 promotes ResultDigestStorage into a reusable neutral storage seam and reuses it for finalized digest bundles", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(digestAccess, "GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage getter seam.");
@@ -851,7 +851,7 @@ internal static class Program
 
         Run("Phase 3 routes ResultData digest-state access through dedicated state and field helpers", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetResultDigestState(const ResultData& result)", "ResultDigestAccess does not yet expose the const digest-state helper introduced in phase 3.");
             AssertContains(digestAccess, "GetMutableResultDigestState(ResultData& result)", "ResultDigestAccess does not yet expose the mutable digest-state helper introduced in phase 3.");
@@ -875,7 +875,7 @@ internal static class Program
 
         Run("Phase 3 routes digest metadata and values through a shared visitor seam for legacy MFC rendering", () =>
         {
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
@@ -1516,7 +1516,7 @@ internal static class Program
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(resultAccess, "#include \"Common/ResultDigestAccess.h\"", "ResultDataAccess does not yet consume the digest seam when composing the grouped result reset helper.");
+            AssertContains(resultAccess, "#include \"Common/ResultDigestValueAccess.h\"", "ResultDataAccess does not yet consume the digest value seam when composing the grouped result reset helper.");
             AssertContains(resultAccess, "ResetResultData(ResultData& result)", "ResultDataAccess does not yet expose the grouped ResultData reset helper introduced in phase 4.");
             AssertContains(resultAccess, "ResetResultCoreState(result);", "ResultDataAccess grouped ResultData reset helper does not yet reset grouped core state.");
             AssertContains(resultAccess, "ResetResultDigests(result);", "ResultDataAccess grouped ResultData reset helper does not yet reset digest state through the existing digest seam.");
@@ -1649,7 +1649,7 @@ internal static class Program
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "struct ResultDigestCompatibilityFields", "ResultData digest compatibility surface is missing.");
             AssertContains(global, "sunjwbase::tstring md5;", "ResultDigestCompatibilityFields does not yet expose the neutral MD5 field name.");
@@ -1674,7 +1674,7 @@ internal static class Program
         Run("Phase 5 neutralizes the internal ResultDigestStorage field name behind the existing ResultDigestAccess seam", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];", "ResultDigestStorage does not yet expose the neutral internal storage field name.");
             AssertDoesNotContain(global, "sunjwbase::tstring tstrDigests[RESULT_DIGEST_STORAGE_COUNT];", "ResultDigestStorage still uses the legacy tstrDigests field name internally.");
@@ -1686,7 +1686,7 @@ internal static class Program
         Run("Phase 5 neutralizes the internal ResultDigestState field names behind the existing ResultDigestAccess seam", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "ResultDigestStorage storage;", "ResultDigestState does not yet expose the neutral internal storage field name.");
             AssertContains(global, "ResultDigestCompatibilityFields compatibilityFields;", "ResultDigestState does not yet expose the neutral internal compatibility-fields name.");
@@ -1707,7 +1707,7 @@ internal static class Program
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "ResultCoreState coreState;", "ResultData does not yet expose the neutral grouped core-state field name.");
             AssertContains(global, "ResultDigestState digestState;", "ResultData does not yet expose the neutral grouped digest-state field name.");
@@ -1724,7 +1724,7 @@ internal static class Program
         Run("Phase 5 neutralizes the internal ResultDigestMetadata field names behind the existing digest-access seam", () =>
         {
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
@@ -1917,7 +1917,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
@@ -2036,7 +2036,7 @@ internal static class Program
             string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string managedBridgeDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
@@ -2063,7 +2063,7 @@ internal static class Program
 
             AssertDoesNotContain(digestAccess, "struct ResultDigestDisplayInfo", "ResultDigestAccess still owns digest display grouping after the phase 9 seam split.");
             AssertDoesNotContain(digestAccess, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestAccess still owns digest display traversal after the phase 9 seam split.");
-            AssertContains(digestRender, "#include \"Common/ResultDigestAccess.h\"", "ResultDigestRender does not yet layer on top of the digest core seam.");
+            AssertContains(digestRender, "#include \"Common/ResultDigestValueAccess.h\"", "ResultDigestRender does not yet layer on top of the digest value seam.");
             AssertContains(digestRender, "struct ResultDigestDisplayInfo", "ResultDigestRender does not yet own grouped digest display information.");
             AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet own digest display traversal.");
 
@@ -2129,7 +2129,7 @@ internal static class Program
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string threadAccess = string.Join(
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
@@ -2963,6 +2963,48 @@ internal static class Program
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashMessageController.h", "fileshash.vcxproj.filters does not yet track the phase 28 message controller header.");
         }, failures);
 
+        Run("Phase 29 splits digest access into dedicated metadata, state, and value seams", () =>
+        {
+            string digestAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h");
+            string digestMetadataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h");
+            string digestStateAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestStateAccess.h");
+            string digestValueAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h");
+            string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
+            string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+
+            AssertContains(digestAccess, "#include \"Common/ResultDigestMetadataAccess.h\"", "Phase 29 compatibility ResultDigestAccess shim does not yet layer on top of the metadata seam.");
+            AssertContains(digestAccess, "#include \"Common/ResultDigestStateAccess.h\"", "Phase 29 compatibility ResultDigestAccess shim does not yet layer on top of the state seam.");
+            AssertContains(digestAccess, "#include \"Common/ResultDigestValueAccess.h\"", "Phase 29 compatibility ResultDigestAccess shim does not yet layer on top of the value seam.");
+            AssertDoesNotContain(digestAccess, "GetResultDigestState(const ResultData& result)", "Phase 29 compatibility ResultDigestAccess shim still owns digest-state helpers after the seam split.");
+            AssertDoesNotContain(digestAccess, "GetResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 29 compatibility ResultDigestAccess shim still owns digest-value helpers after the seam split.");
+
+            AssertContains(digestMetadataAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "Phase 29 metadata seam does not yet bridge digest metadata onto the hash-algorithm descriptor.");
+            AssertContains(digestMetadataAccess, "GetResultDigestCount()", "Phase 29 metadata seam does not yet own digest-count reads.");
+            AssertContains(digestMetadataAccess, "GetResultDigestMetadataAt(int index)", "Phase 29 metadata seam does not yet own metadata lookup.");
+            AssertContains(digestMetadataAccess, "VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", "Phase 29 metadata seam does not yet own metadata iteration.");
+            AssertContains(digestMetadataAccess, "VisitResultDigests(TResultDigestVisitor visitor)", "Phase 29 metadata seam does not yet own digest-type iteration.");
+
+            AssertContains(digestStateAccess, "GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "Phase 29 state seam does not yet own reusable digest-storage reads.");
+            AssertContains(digestStateAccess, "GetResultDigestState(const ResultData& result)", "Phase 29 state seam does not yet own digest-state reads.");
+            AssertContains(digestStateAccess, "GetResultDigestStorage(const ResultData& result)", "Phase 29 state seam does not yet own digest-storage reads.");
+            AssertContains(digestStateAccess, "GetResultDigestCompatibilityFields(const ResultData& result)", "Phase 29 state seam does not yet own compatibility-field reads.");
+            AssertContains(digestStateAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 29 state seam does not yet own compatibility-value reads.");
+
+            AssertContains(digestValueAccess, "GetResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 29 value seam does not yet own digest reads.");
+            AssertContains(digestValueAccess, "VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", "Phase 29 value seam does not yet own metadata-value iteration.");
+            AssertContains(digestValueAccess, "HasAnyResultDigests(const ResultData& result)", "Phase 29 value seam does not yet own aggregate digest presence checks.");
+            AssertContains(digestValueAccess, "SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "Phase 29 value seam does not yet own digest writes.");
+            AssertContains(digestValueAccess, "ResetResultDigests(ResultData& result)", "Phase 29 value seam does not yet own digest resets.");
+
+            AssertContains(resultAccess, "#include \"Common/ResultDigestValueAccess.h\"", "ResultDataAccess does not yet consume the phase 29 digest value seam.");
+            AssertDoesNotContain(resultAccess, "#include \"Common/ResultDigestAccess.h\"", "ResultDataAccess still depends on the umbrella ResultDigestAccess header after phase 29.");
+            AssertContains(digestRender, "#include \"Common/ResultDigestValueAccess.h\"", "ResultDigestRender does not yet consume the phase 29 digest value seam.");
+            AssertDoesNotContain(digestRender, "#include \"Common/ResultDigestAccess.h\"", "ResultDigestRender still depends on the umbrella ResultDigestAccess header after phase 29.");
+            AssertContains(hashEngineInternal, "#include \"Common/ResultDigestStateAccess.h\"", "HashEngineInternal.h does not yet consume the phase 29 digest state seam.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/ResultDigestAccess.h\"", "HashEngineInternal.h still depends on the umbrella ResultDigestAccess header after phase 29.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -2982,6 +3024,16 @@ internal static class Program
     {
         string path = Path.Combine(repoRoot, relativePath);
         return File.ReadAllText(path, DetectEncoding(path));
+    }
+
+    private static string ReadResultDigestAccessSeams(string repoRoot)
+    {
+        return string.Join(
+            "\r\n",
+            ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestStateAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h"));
     }
 
     private static string ReadHashEngineImplementation(string repoRoot)

@@ -1,7 +1,7 @@
 #ifndef _RESULT_DIGEST_RENDER_H_
 #define _RESULT_DIGEST_RENDER_H_
 
-#include "Common/ResultDigestAccess.h"
+#include "Common/ResultDigestValueAccess.h"
 
 struct ResultDigestDisplayInfo
 {
