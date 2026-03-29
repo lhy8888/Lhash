@@ -66,7 +66,7 @@ static void SHA512UpdateWrapper(SHA512_CTX *context, void *datain, size_t len)
 }
 
 static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSizeCaled, unsigned int dataBufLen,
-	HashEngineObserver *observer, FileProgressState *progressState)
+	HashProgressSink *observer, FileProgressState *progressState)
 {
 	progressState->finishedSize += dataBufLen;
 
@@ -105,14 +105,14 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 	}
 }
 
-static int CancelHashing(ThreadData *thrdData, HashEngineObserver *observer)
+static int CancelHashing(ThreadData *thrdData, HashProgressSink *observer)
 {
 	SetThreadDataWorking(*thrdData, false);
 	observer->onProgressEvent(CreateCancelledProgressEvent());
 	return 0;
 }
 
-static int CompleteHashing(ThreadData *thrdData, HashEngineObserver *observer)
+static int CompleteHashing(ThreadData *thrdData, HashProgressSink *observer)
 {
 	observer->onProgressEvent(CreateCompletedProgressEvent());
 	SetThreadDataWorking(*thrdData, false);
@@ -133,7 +133,7 @@ static uint64_t CalculateFileChunkIterations(uint64_t fsize)
 	return fsize / DataBuffer::preflen + 1;
 }
 
-static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ResultData& result, uint32_t fileIndex,
+static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer, ResultData& result, uint32_t fileIndex,
 	bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	, ThreadPool *threadPool
@@ -321,7 +321,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 	return false;
 }
 
-int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)
+int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)
 {
 	SetThreadDataWorking(*thrdData, true);
 

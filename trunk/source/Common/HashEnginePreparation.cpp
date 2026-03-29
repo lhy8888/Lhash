@@ -45,7 +45,7 @@ namespace HashEngineInternal
 		return false;
 	}
 
-	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled)
+	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer, ULLongVector& fSizes, bool *wasCancelled)
 	{
 		observer->onProgressEvent(CreatePreparingProgressEvent());
 		bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, request, fSizes, wasCancelled);
@@ -82,13 +82,13 @@ namespace HashEngineInternal
 		progressState->position = 0;
 	}
 
-	void EmitPathResult(HashEngineObserver *observer, ResultData& result)
+	void EmitPathResult(HashProgressSink *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_PATH);
 		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
 	}
 
-	ResultData& BeginFileResult(ThreadData *thrdData, HashEngineObserver *observer, const tstring& path)
+	ResultData& BeginFileResult(ThreadData *thrdData, HashProgressSink *observer, const tstring& path)
 	{
 		ResultData& result = AppendThreadDataResult(*thrdData);
 
@@ -100,7 +100,7 @@ namespace HashEngineInternal
 		return result;
 	}
 
-	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashEngineObserver *observer, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
+	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashProgressSink *observer, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
 	{
 		ResetFileProgressState(&executionState->progressState);
 

@@ -15,7 +15,7 @@ using namespace sunjwbase;
 
 namespace HashEngineInternal
 {
-	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
+	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashProgressSink *observer, ResultData& result,
 		OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, tstring& tstrFileVersion)
 	{
 		SetResultModifiedDate(result, osFile.getModifiedTimeFormat());
@@ -49,7 +49,7 @@ namespace HashEngineInternal
 		return fsize;
 	}
 
-	void InitializeFileHashing(const HashRequest& request, HashEngineObserver *observer, FileHashContexts *hashContexts)
+	void InitializeFileHashing(const HashRequest& request, HashProgressSink *observer, FileHashContexts *hashContexts)
 	{
 		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
@@ -75,7 +75,7 @@ namespace HashEngineInternal
 		observer->onProgressEvent(CreateFileProgressEvent(0));
 	}
 
-	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)
+	void UpdateWholeProgressAfterFile(HashProgressSink *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)
 	{
 		if (!isSizeCaled)
 		{
@@ -195,7 +195,7 @@ namespace HashEngineInternal
 		});
 	}
 
-	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteSuccessfulFileHashing(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
@@ -212,7 +212,7 @@ namespace HashEngineInternal
 		}
 	}
 
-	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteOpenedFileAttempt(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		if (executionState.fileAttemptState.readFailed)
@@ -228,46 +228,46 @@ namespace HashEngineInternal
 		FinishFileProcessing(observer);
 	}
 
-	void EmitMetaResult(HashEngineObserver *observer, ResultData& result)
+	void EmitMetaResult(HashProgressSink *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_META);
 		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
 	}
 
-	void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase)
+	void EmitHashResult(HashProgressSink *observer, ResultData& result, bool uppercase)
 	{
 		SetResultState(result, RESULT_ALL);
 		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
 	}
 
-	void EmitErrorResult(HashEngineObserver *observer, ResultData& result)
+	void EmitErrorResult(HashProgressSink *observer, ResultData& result)
 	{
 		SetResultState(result, RESULT_ERROR);
 		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
 	}
 
-	void EmitErrorMessageResult(HashEngineObserver *observer, ResultData& result, const tstring& errorText)
+	void EmitErrorMessageResult(HashProgressSink *observer, ResultData& result, const tstring& errorText)
 	{
 		SetResultError(result, errorText);
 		EmitErrorResult(observer, result);
 	}
 
-	void EmitOpenFileError(HashEngineObserver *observer, ResultData& result, const TCHAR *errorText)
+	void EmitOpenFileError(HashProgressSink *observer, ResultData& result, const TCHAR *errorText)
 	{
 		EmitErrorMessageResult(observer, result, tstring(errorText));
 	}
 
-	void EmitReadFileError(HashEngineObserver *observer, ResultData& result)
+	void EmitReadFileError(HashProgressSink *observer, ResultData& result)
 	{
 		EmitErrorMessageResult(observer, result, strtotstr(string("Failed to read file while hashing.")));
 	}
 
-	void FinishFileProcessing(HashEngineObserver *observer)
+	void FinishFileProcessing(HashProgressSink *observer)
 	{
 		observer->onProgressEvent(CreateFileFinishedProgressEvent());
 	}
 
-	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteFileAttempt(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		if (executionState.fileAttemptState.isFileOpened)

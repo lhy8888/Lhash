@@ -1,9 +1,9 @@
 ﻿#ifndef _HASH_ENGINE_OBSERVER_H_
 #define _HASH_ENGINE_OBSERVER_H_
 
-#include "Common/ProgressEvent.h"
+#include "Common/HashProgressSink.h"
 
-class HashEngineObserver
+class HashEngineObserver: public HashProgressSink
 {
 public:
 	HashEngineObserver() {}
@@ -49,7 +49,7 @@ public:
 		showFileErr(result);
 	}
 
-	int progressMax()
+	virtual int progressMax()
 	{
 		return getProgMax();
 	}
@@ -74,7 +74,7 @@ public:
 		fileFinish();
 	}
 
-	void onProgressEvent(const ProgressEvent& progressEvent)
+	virtual void onProgressEvent(const ProgressEvent& progressEvent)
 	{
 		switch (progressEvent.type)
 		{

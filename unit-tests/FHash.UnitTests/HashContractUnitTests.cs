@@ -37,6 +37,7 @@ public sealed class HashContractUnitTests
     public void ProgressEvent_DefinesSemanticLifecycleSurface_AndObserverCompatibilityDispatch()
     {
         string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ProgressEvent.h");
+        string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressSink.h");
         string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineObserver.h");
 
         Assert.Contains("enum ProgressEventType", progressEvent, StringComparison.Ordinal);
@@ -44,7 +45,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("PROGRESS_EVENT_FILE_HASH_READY", progressEvent, StringComparison.Ordinal);
         Assert.Contains("CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", progressEvent, StringComparison.Ordinal);
 
-        Assert.Contains("void onProgressEvent(const ProgressEvent& progressEvent)", observer, StringComparison.Ordinal);
+        Assert.Contains("class HashProgressSink", progressSink, StringComparison.Ordinal);
+        Assert.Contains("virtual int progressMax() = 0;", progressSink, StringComparison.Ordinal);
+        Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", progressSink, StringComparison.Ordinal);
+
+        Assert.Contains("class HashEngineObserver: public HashProgressSink", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent)", observer, StringComparison.Ordinal);
         Assert.Contains("showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", observer, StringComparison.Ordinal);
         Assert.Contains("updateProgWhole(progressEvent.value);", observer, StringComparison.Ordinal);
     }
@@ -58,8 +64,8 @@ public sealed class HashContractUnitTests
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
-        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer);", engineHeader, StringComparison.Ordinal);
-        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)", engine, StringComparison.Ordinal);
+        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", engine, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.Contains("return RunHashRequest(thrdData, request, observer);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
@@ -70,7 +76,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateCancelledProgressEvent());", engine, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateCompletedProgressEvent());", engine, StringComparison.Ordinal);
 
-        Assert.Contains("PrepareHashingWork(ThreadData *thrdData, const HashRequest& request", preparation, StringComparison.Ordinal);
+        Assert.Contains("PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreatePreparingProgressEvent());", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", preparation, StringComparison.Ordinal);
@@ -81,6 +87,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", result, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", result, StringComparison.Ordinal);
 
+        Assert.Contains("#include \"Common/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("const HashRequest& request", internalHeader, StringComparison.Ordinal);
     }

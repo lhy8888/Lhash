@@ -1937,7 +1937,7 @@ internal static class Program
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(threadData);", "New ThreadData sessions do not yet reset hash algorithms to the default enabled set.");
             AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);", "ThreadDataAccess does not yet default the current algorithms to enabled.");
 
-            AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashEngineObserver *observer, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
+            AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashProgressSink *observer, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
             AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
             AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "PopulateDigestResult(request, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the request-scoped algorithm-selection seam.");
@@ -3046,6 +3046,7 @@ internal static class Program
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
@@ -3066,7 +3067,11 @@ internal static class Program
             AssertContains(progressEvent, "struct ProgressEvent", "Phase 31 does not yet define a stable ProgressEvent contract.");
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 31 does not yet define hash-ready progress events.");
 
-            AssertContains(hashEngineObserver, "void onProgressEvent(const ProgressEvent& progressEvent)", "HashEngineObserver does not yet expose the phase 31 progress-event compatibility entry point.");
+            AssertContains(hashProgressSink, "class HashProgressSink", "Phase 31 does not yet define a neutral hash progress sink contract.");
+            AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 31 hash progress sink does not yet own progress max queries.");
+            AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 31 hash progress sink does not yet own semantic progress-event dispatch.");
+            AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "HashEngineObserver does not yet layer on top of the phase 31 hash progress sink.");
+            AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "HashEngineObserver does not yet expose the phase 31 progress-event compatibility entry point.");
             AssertContains(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet bridge progress events back to legacy hash rendering.");
             AssertContains(hashEngineObserver, "updateProgWhole(progressEvent.value);", "HashEngineObserver does not yet bridge progress events back to total-progress updates.");
 
@@ -3122,10 +3127,48 @@ internal static class Program
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer);", "Phase 33 HashEngine header does not yet expose the request-driven core entry.");
-            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)", "Phase 33 HashEngine implementation does not yet define the request-driven core entry.");
+            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", "Phase 33 HashEngine header does not yet expose the request-driven core entry.");
+            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", "Phase 33 HashEngine implementation does not yet define the request-driven core entry.");
             AssertContains(hashEngine, "return RunHashRequest(thrdData, request, observer);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest.");
             AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest before dispatch.");
+        }, failures);
+
+        Run("Phase 34 narrows core hashing execution onto HashProgressSink while keeping HashEngineObserver as a compatibility adapter", () =>
+        {
+            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashEngine = ReadHashEngineImplementation(repoRoot);
+
+            AssertContains(hashProgressSink, "class HashProgressSink", "Phase 34 hash progress sink header is missing the neutral sink seam.");
+            AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 34 hash progress sink does not yet own progress-max queries.");
+            AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 34 hash progress sink does not yet own semantic event dispatch.");
+
+            AssertContains(hashEngineObserver, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashEngineObserver does not yet layer on top of HashProgressSink.");
+            AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "Phase 34 HashEngineObserver is not yet narrowed into a compatibility adapter on top of HashProgressSink.");
+            AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashEngineObserver no longer satisfies the progress-max sink contract.");
+            AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashEngineObserver no longer satisfies the semantic progress-event sink contract.");
+
+            AssertContains(hashEngineHeader, "class HashProgressSink;", "Phase 34 HashEngine header does not yet forward declare HashProgressSink.");
+            AssertDoesNotContain(hashEngineHeader, "class HashEngineObserver;", "Phase 34 HashEngine header still directly depends on HashEngineObserver.");
+            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", "Phase 34 HashEngine header does not yet narrow the request-driven core entry onto HashProgressSink.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashEngineInternal does not yet consume HashProgressSink.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/HashEngineObserver.h\"", "Phase 34 HashEngineInternal still directly depends on HashEngineObserver.");
+            AssertContains(hashEngineInternal, "HashProgressSink *observer", "Phase 34 HashEngineInternal does not yet route execution seams through HashProgressSink.");
+
+            AssertContains(hashEnginePreparation, "PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer", "Phase 34 preparation seam does not yet consume HashProgressSink.");
+            AssertContains(hashEnginePreparation, "EmitPathResult(HashProgressSink *observer, ResultData& result)", "Phase 34 preparation seam does not yet publish file-start events through HashProgressSink.");
+
+            AssertContains(hashEngineResult, "PrepareFileMetaResult(ThreadData *thrdData, HashProgressSink *observer, ResultData& result", "Phase 34 result seam does not yet consume HashProgressSink.");
+            AssertContains(hashEngineResult, "EmitHashResult(HashProgressSink *observer, ResultData& result, bool uppercase)", "Phase 34 result seam does not yet publish hash results through HashProgressSink.");
+
+            AssertContains(hashEngine, "HashProgressSink *observer, FileProgressState *progressState", "Phase 34 engine progress updates do not yet route through HashProgressSink.");
+            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", "Phase 34 HashEngine does not yet narrow the request-driven core entry onto HashProgressSink.");
+            AssertContains(hashEngine, "HashEngineObserver *observer = GetThreadDataObserver(*thrdData);", "Phase 34 HashThreadFunc no longer preserves the compatibility observer bridge.");
         }, failures);
 
         if (failures.Count > 0)

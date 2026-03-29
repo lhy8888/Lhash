@@ -2,7 +2,7 @@
 #define _HASH_ENGINE_INTERNAL_H_
 
 #include "Common/HashEngine.h"
-#include "Common/HashEngineObserver.h"
+#include "Common/HashProgressSink.h"
 #include "Common/HashRequest.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
@@ -58,37 +58,37 @@ namespace HashEngineInternal
 
 	void AccumulatePreScannedFileSize(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex);
 	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);
-	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer, ULLongVector& fSizes, bool *wasCancelled);
+	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer, ULLongVector& fSizes, bool *wasCancelled);
 
 	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
 	void ResetFileProgressState(FileProgressState *progressState);
 
-	void EmitPathResult(HashEngineObserver *observer, ResultData& result);
-	ResultData& BeginFileResult(ThreadData *thrdData, HashEngineObserver *observer, const sunjwbase::tstring& path);
-	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashEngineObserver *observer, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);
+	void EmitPathResult(HashProgressSink *observer, ResultData& result);
+	ResultData& BeginFileResult(ThreadData *thrdData, HashProgressSink *observer, const sunjwbase::tstring& path);
+	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashProgressSink *observer, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);
 
-	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashEngineObserver *observer, ResultData& result,
+	uint64_t PrepareFileMetaResult(ThreadData *thrdData, HashProgressSink *observer, ResultData& result,
 		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
-	void InitializeFileHashing(const HashRequest& request, HashEngineObserver *observer, FileHashContexts *hashContexts);
-	void UpdateWholeProgressAfterFile(HashEngineObserver *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);
+	void InitializeFileHashing(const HashRequest& request, HashProgressSink *observer, FileHashContexts *hashContexts);
+	void UpdateWholeProgressAfterFile(HashProgressSink *observer, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);
 	const sunjwbase::tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType);
 	void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);
 	void PopulateDigestResult(const HashRequest& request, ResultData& result, const FinalizedDigestBundle& digestBundle);
 	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle);
 
-	void CompleteSuccessfulFileHashing(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteSuccessfulFileHashing(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
-	void CompleteOpenedFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteOpenedFileAttempt(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
-	void EmitMetaResult(HashEngineObserver *observer, ResultData& result);
-	void EmitHashResult(HashEngineObserver *observer, ResultData& result, bool uppercase);
-	void EmitErrorResult(HashEngineObserver *observer, ResultData& result);
-	void EmitErrorMessageResult(HashEngineObserver *observer, ResultData& result, const sunjwbase::tstring& errorText);
-	void EmitOpenFileError(HashEngineObserver *observer, ResultData& result, const TCHAR *errorText);
-	void EmitReadFileError(HashEngineObserver *observer, ResultData& result);
-	void FinishFileProcessing(HashEngineObserver *observer);
-	void CompleteFileAttempt(HashEngineObserver *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void EmitMetaResult(HashProgressSink *observer, ResultData& result);
+	void EmitHashResult(HashProgressSink *observer, ResultData& result, bool uppercase);
+	void EmitErrorResult(HashProgressSink *observer, ResultData& result);
+	void EmitErrorMessageResult(HashProgressSink *observer, ResultData& result, const sunjwbase::tstring& errorText);
+	void EmitOpenFileError(HashProgressSink *observer, ResultData& result, const TCHAR *errorText);
+	void EmitReadFileError(HashProgressSink *observer, ResultData& result);
+	void FinishFileProcessing(HashProgressSink *observer);
+	void CompleteFileAttempt(HashProgressSink *observer, ThreadData *thrdData, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState);
 }
 
