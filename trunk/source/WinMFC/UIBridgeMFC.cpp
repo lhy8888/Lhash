@@ -77,24 +77,28 @@ void UIBridgeMFC::calcFinish()
 	PostThreadInfoMessage(WP_FINISHED);
 }
 
-void UIBridgeMFC::showFileName(const ResultData& result)
+void UIBridgeMFC::showFileName(const HashResult& result)
 {
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
+	ResultData compatibilityResult = CreateCompatibilityResultData(result);
+	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_FILE_NAME, false);
 }
 
-void UIBridgeMFC::showFileMeta(const ResultData& result)
+void UIBridgeMFC::showFileMeta(const HashResult& result)
 {
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
+	ResultData compatibilityResult = CreateCompatibilityResultData(result);
+	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_META, false);
 }
 
-void UIBridgeMFC::showFileHash(const ResultData& result, bool uppercase)
+void UIBridgeMFC::showFileHash(const HashResult& result, bool uppercase)
 {
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);
+	ResultData compatibilityResult = CreateCompatibilityResultData(result);
+	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_HASH, uppercase);
 }
 
-void UIBridgeMFC::showFileErr(const ResultData& result)
+void UIBridgeMFC::showFileErr(const HashResult& result)
 {
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
+	ResultData compatibilityResult = CreateCompatibilityResultData(result);
+	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_ERROR, false);
 }
 
 int UIBridgeMFC::getProgMax()

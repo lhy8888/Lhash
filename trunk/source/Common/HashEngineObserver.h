@@ -2,7 +2,6 @@
 #define _HASH_ENGINE_OBSERVER_H_
 
 #include "Common/HashProgressSink.h"
-#include "Common/HashResultCompatibility.h"
 
 class HashEngineObserver: public HashProgressSink
 {
@@ -32,46 +31,42 @@ public:
 
 	void onFileStarted(const ResultData& result)
 	{
-		showFileName(result);
+		onFileStarted(ProjectHashResult(result));
 	}
 
 	void onFileStarted(const HashResult& result)
 	{
-		ResultData compatibilityResult = CreateCompatibilityResultData(result);
-		showFileName(compatibilityResult);
+		showFileName(result);
 	}
 
 	void onFileMetaReady(const ResultData& result)
 	{
-		showFileMeta(result);
+		onFileMetaReady(ProjectHashResult(result));
 	}
 
 	void onFileMetaReady(const HashResult& result)
 	{
-		ResultData compatibilityResult = CreateCompatibilityResultData(result);
-		showFileMeta(compatibilityResult);
+		showFileMeta(result);
 	}
 
 	void onFileHashReady(const ResultData& result, bool uppercase)
 	{
-		showFileHash(result, uppercase);
+		onFileHashReady(ProjectHashResult(result), uppercase);
 	}
 
 	void onFileHashReady(const HashResult& result, bool uppercase)
 	{
-		ResultData compatibilityResult = CreateCompatibilityResultData(result);
-		showFileHash(compatibilityResult, uppercase);
+		showFileHash(result, uppercase);
 	}
 
 	void onFileFailed(const ResultData& result)
 	{
-		showFileErr(result);
+		onFileFailed(ProjectHashResult(result));
 	}
 
 	void onFileFailed(const HashResult& result)
 	{
-		ResultData compatibilityResult = CreateCompatibilityResultData(result);
-		showFileErr(compatibilityResult);
+		showFileErr(result);
 	}
 
 	virtual int progressMax()
@@ -150,10 +145,10 @@ public:
 	virtual void calcStop() = 0;
 	virtual void calcFinish() = 0;
 
-	virtual void showFileName(const ResultData& result) = 0;
-	virtual void showFileMeta(const ResultData& result) = 0;
-	virtual void showFileHash(const ResultData& result, bool uppercase) = 0;
-	virtual void showFileErr(const ResultData& result) = 0;
+	virtual void showFileName(const HashResult& result) = 0;
+	virtual void showFileMeta(const HashResult& result) = 0;
+	virtual void showFileHash(const HashResult& result, bool uppercase) = 0;
+	virtual void showFileErr(const HashResult& result) = 0;
 
 	virtual int getProgMax() = 0;
 	virtual void updateProg(int value) = 0;

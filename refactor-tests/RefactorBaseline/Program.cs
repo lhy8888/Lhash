@@ -61,10 +61,10 @@ internal static class Program
             AssertContains(observer, "virtual void removePreparingCalc() = 0;", "HashEngineObserver does not expose removePreparingCalc.");
             AssertContains(observer, "virtual void calcStop() = 0;", "HashEngineObserver does not expose calcStop.");
             AssertContains(observer, "virtual void calcFinish() = 0;", "HashEngineObserver does not expose calcFinish.");
-            AssertContains(observer, "virtual void showFileName(const ResultData& result) = 0;", "HashEngineObserver does not expose showFileName.");
-            AssertContains(observer, "virtual void showFileMeta(const ResultData& result) = 0;", "HashEngineObserver does not expose showFileMeta.");
-            AssertContains(observer, "virtual void showFileHash(const ResultData& result, bool uppercase) = 0;", "HashEngineObserver does not expose showFileHash.");
-            AssertContains(observer, "virtual void showFileErr(const ResultData& result) = 0;", "HashEngineObserver does not expose showFileErr.");
+            AssertContains(observer, "virtual void showFileName(const HashResult& result) = 0;", "HashEngineObserver does not expose HashResult-based showFileName.");
+            AssertContains(observer, "virtual void showFileMeta(const HashResult& result) = 0;", "HashEngineObserver does not expose HashResult-based showFileMeta.");
+            AssertContains(observer, "virtual void showFileHash(const HashResult& result, bool uppercase) = 0;", "HashEngineObserver does not expose HashResult-based showFileHash.");
+            AssertContains(observer, "virtual void showFileErr(const HashResult& result) = 0;", "HashEngineObserver does not expose HashResult-based showFileErr.");
             AssertContains(observer, "virtual void updateProg(int value) = 0;", "HashEngineObserver does not expose updateProg.");
             AssertContains(observer, "virtual void updateProgWhole(int value) = 0;", "HashEngineObserver does not expose updateProgWhole.");
             AssertContains(observer, "virtual void fileCalcFinish() = 0;", "HashEngineObserver does not expose fileCalcFinish.");
@@ -1085,10 +1085,10 @@ internal static class Program
             AssertContains(bridgeMfcHeader, "void AppendResultSectionAndRefresh(const ResultData& result,", "UIBridgeMFC does not yet expose the section-and-refresh helper.");
             AssertContains(bridgeMfcHeader, "AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyperEdit);", "UIBridgeMFC section-and-refresh helper does not yet dispatch through the centralized render-section helper.");
 
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);", "UIBridgeMFC does not yet route file-name rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);", "UIBridgeMFC does not yet route file-meta rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);", "UIBridgeMFC does not yet route file-hash rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);", "UIBridgeMFC does not yet route file-error rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_FILE_NAME, false);", "UIBridgeMFC does not yet route file-name rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_META, false);", "UIBridgeMFC does not yet route file-meta rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_HASH, uppercase);", "UIBridgeMFC does not yet route file-hash rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_ERROR, false);", "UIBridgeMFC does not yet route file-error rendering through the dedicated refresh helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_WORKING);", "UIBridgeMFC does not yet route preparing-state notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_STOPPED);", "UIBridgeMFC does not yet route stop notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_FINISHED);", "UIBridgeMFC does not yet route finish notifications through the thread-info helper.");
@@ -1157,8 +1157,8 @@ internal static class Program
             AssertContains(managedDispatch, "DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still includes the deprecated managed-bridge helper header.");
-            AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);", "WinUI bridge does not yet route file-name forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);", "WinUI bridge does not yet route file-meta forwarding through the dedicated managed result-dispatch helper.");
@@ -1171,8 +1171,8 @@ internal static class Program
 
             AssertContains(bridgeUwpHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "UWP bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "UWP bridge header still includes the deprecated managed-bridge helper header.");
-            AssertContains(bridgeUwpHeader, "void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwpHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);", "UWP bridge does not yet route file-name forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);", "UWP bridge does not yet route file-meta forwarding through the dedicated managed result-dispatch helper.");
@@ -2068,7 +2068,7 @@ internal static class Program
             AssertContains(digestRender, "struct ResultDigestDisplayInfo", "ResultDigestRender does not yet own grouped digest display information.");
             AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet own digest display traversal.");
 
-            AssertContains(managedBridgeDispatch, "#include \"Common/ResultDataProjection.h\"", "ManagedBridgeDispatch does not yet consume the split result-data projection seam.");
+            AssertContains(managedBridgeDispatch, "#include \"Common/HashResultProjection.h\"", "ManagedBridgeDispatch does not yet consume the split HashResult projection seam.");
             AssertContains(bridgeMfcHeader, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge header does not yet consume the split result-data render seam.");
             AssertContains(bridgeMfcHeader, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge header does not yet consume the split digest render seam.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge implementation does not yet consume the split result-data render seam.");
@@ -3193,7 +3193,7 @@ internal static class Program
             AssertContains(hashEngine, "ResetHashExecutionTotalSize(*executionContext);", "Phase 35 HashEngine does not yet reset counted size through HashExecutionContext.");
         }, failures);
 
-        Run("Phase 35 routes semantic result events through HashResult while keeping legacy observer compatibility", () =>
+        Run("Phase 35 routes semantic result events through HashResult while narrowing observer compatibility to thin wrappers", () =>
         {
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashResultCompatibility = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
@@ -3210,17 +3210,55 @@ internal static class Program
             AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility hydration from HashResult.");
             AssertContains(hashResultCompatibility, "SetResultDigest(compatibilityResult, digestResult.type, digestResult.value);", "Phase 35 compatibility hydration does not yet rebuild digest values from HashResult.");
 
-            AssertContains(hashEngineObserver, "#include \"Common/HashResultCompatibility.h\"", "Phase 35 HashEngineObserver does not yet consume HashResultCompatibility.");
             AssertContains(hashEngineObserver, "void onFileStarted(const HashResult& result)", "Phase 35 HashEngineObserver does not yet expose HashResult-based file-start compatibility.");
-            AssertContains(hashEngineObserver, "ResultData compatibilityResult = CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver does not yet rebuild compatibility ResultData from HashResult.");
+            AssertContains(hashEngineObserver, "onFileStarted(ProjectHashResult(result));", "Phase 35 HashEngineObserver does not yet keep the thin ResultData-to-HashResult wrapper.");
             AssertContains(hashEngineObserver, "onFileStarted(progressEvent.result);", "Phase 35 HashEngineObserver does not yet dispatch file-start events through HashResult.");
             AssertContains(hashEngineObserver, "onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver does not yet dispatch hash-ready events through HashResult.");
             AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
+            AssertDoesNotContain(hashEngineObserver, "CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver still rebuilds ResultData instead of staying as a thin HashResult wrapper.");
 
             AssertContains(hashEnginePreparation, "CreateFileStartedProgressEvent(ProjectHashResult(result))", "Phase 35 preparation seam does not yet emit file-start events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileMetaReadyProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-meta events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase)", "Phase 35 result seam does not yet emit file-hash events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileFailedProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-failed events through HashResult.");
+        }, failures);
+
+        Run("Phase 36 makes HashResult the bridge-facing result contract across MFC and managed adapters", () =>
+        {
+            string observer = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
+            string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
+            string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
+            string bridgeMfcSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWuiSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwpSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+
+            AssertContains(observer, "virtual void showFileName(const HashResult& result) = 0;", "Phase 36 observer seam does not yet expose HashResult-based file-name consumption.");
+            AssertContains(observer, "virtual void showFileMeta(const HashResult& result) = 0;", "Phase 36 observer seam does not yet expose HashResult-based file-meta consumption.");
+            AssertContains(observer, "virtual void showFileHash(const HashResult& result, bool uppercase) = 0;", "Phase 36 observer seam does not yet expose HashResult-based file-hash consumption.");
+            AssertContains(observer, "virtual void showFileErr(const HashResult& result) = 0;", "Phase 36 observer seam does not yet expose HashResult-based file-error consumption.");
+
+            AssertContains(hashResultProjection, "AssignHashResultCoreToNet", "Phase 36 does not yet project HashResult core fields directly to managed result DTOs.");
+            AssertContains(hashResultProjection, "AssignHashResultDigestsToNet", "Phase 36 does not yet project HashResult digest fields directly to managed result DTOs.");
+            AssertContains(hashResultProjection, "ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", "Phase 36 does not yet expose direct HashResult-to-managed projection.");
+
+            AssertContains(managedDispatch, "#include \"Common/HashResultProjection.h\"", "Phase 36 managed bridge dispatch does not yet depend on HashResultProjection.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 36 managed bridge dispatch does not yet expose HashResult-based projection dispatch.");
+            AssertContains(managedDispatch, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", "Phase 36 managed bridge dispatch does not yet project HashResult directly.");
+
+            AssertContains(bridgeMfcHeader, "#include \"Common/HashResultCompatibility.h\"", "Phase 36 MFC bridge does not yet consume HashResultCompatibility.");
+            AssertContains(bridgeMfcHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 MFC bridge header does not yet accept HashResult file-name consumption.");
+            AssertContains(bridgeMfcSource, "ResultData compatibilityResult = CreateCompatibilityResultData(result);", "Phase 36 MFC bridge does not yet rebuild compatibility ResultData for its legacy renderer.");
+
+            AssertContains(bridgeWuiHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 WinUI bridge header does not yet accept HashResult file-name consumption.");
+            AssertContains(bridgeWuiHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
+            AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
+
+            AssertContains(bridgeUwpHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 UWP bridge header does not yet accept HashResult file-name consumption.");
+            AssertContains(bridgeUwpHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 UWP bridge helper does not yet narrow to HashResult.");
+            AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
         }, failures);
 
         if (failures.Count > 0)

@@ -31,7 +31,7 @@ String^ UIBridgeUwp::ConvertManagedResultText(const TCHAR* resultText)
 	return ConvertToPlatStr(resultText);
 }
 
-void UIBridgeUwp::DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase)
+void UIBridgeUwp::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)
 {
 	DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)
 	{
@@ -99,22 +99,22 @@ void UIBridgeUwp::calcFinish()
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
 }
 
-void UIBridgeUwp::showFileName(const ResultData& result)
+void UIBridgeUwp::showFileName(const HashResult& result)
 {
 	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);
 }
 
-void UIBridgeUwp::showFileMeta(const ResultData& result)
+void UIBridgeUwp::showFileMeta(const HashResult& result)
 {
 	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);
 }
 
-void UIBridgeUwp::showFileHash(const ResultData& result, bool uppercase)
+void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)
 {
 	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_HASH, uppercase);
 }
 
-void UIBridgeUwp::showFileErr(const ResultData& result)
+void UIBridgeUwp::showFileErr(const HashResult& result)
 {
 	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_ERROR);
 }

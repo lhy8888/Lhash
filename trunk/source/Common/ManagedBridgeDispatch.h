@@ -1,7 +1,7 @@
 #ifndef _MANAGED_BRIDGE_DISPATCH_H_
 #define _MANAGED_BRIDGE_DISPATCH_H_
 
-#include "Common/ResultDataProjection.h"
+#include "Common/HashResultProjection.h"
 
 enum ManagedResultDispatchType
 {
@@ -84,6 +84,13 @@ template<typename TResultDataNet, typename TResultStateNet, typename TStringConv
 static inline void DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase, TStringConverter convertString, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
 {
 	TResultDataNet resultDataNet = ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString);
+	DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);
+}
+
+template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
+static inline void DispatchManagedBridgeResultByType(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase, TStringConverter convertString, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
+{
+	TResultDataNet resultDataNet = ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString);
 	DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);
 }
 

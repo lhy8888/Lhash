@@ -76,36 +76,40 @@ void UIBridgeMacSwift::calcFinish()
     });
 }
 
-void UIBridgeMacSwift::showFileName(const ResultData& result)
+void UIBridgeMacSwift::showFileName(const HashResult& result)
 {
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(result);
+    ResultData compatibilityResult = CreateCompatibilityResultData(result);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileName:resultSwift];
     });
 }
 
-void UIBridgeMacSwift::showFileMeta(const ResultData& result)
+void UIBridgeMacSwift::showFileMeta(const HashResult& result)
 {
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(result);
+    ResultData compatibilityResult = CreateCompatibilityResultData(result);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileMeta:resultSwift];
     });
 }
 
-void UIBridgeMacSwift::showFileHash(const ResultData& result, bool uppercase)
+void UIBridgeMacSwift::showFileHash(const HashResult& result, bool uppercase)
 {
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(result);
+    ResultData compatibilityResult = CreateCompatibilityResultData(result);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileHash:resultSwift uppercase:uppercase];
     });
 }
 
-void UIBridgeMacSwift::showFileErr(const ResultData& result)
+void UIBridgeMacSwift::showFileErr(const HashResult& result)
 {
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(result);
+    ResultData compatibilityResult = CreateCompatibilityResultData(result);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileErr:resultSwift];

@@ -11,6 +11,7 @@
 
 #include "OsUtils/OsThread.h"
 #include "Common/HashEngineBridge.h"
+#include "Common/HashResultCompatibility.h"
 
 #import "MacUtils.h"
 
@@ -31,10 +32,10 @@ public:
     virtual void calcStop();
     virtual void calcFinish();
 
-    virtual void showFileName(const ResultData& result);
-    virtual void showFileMeta(const ResultData& result);
-    virtual void showFileHash(const ResultData& result, bool uppercase);
-    virtual void showFileErr(const ResultData& result);
+    virtual void showFileName(const HashResult& result);
+    virtual void showFileMeta(const HashResult& result);
+    virtual void showFileHash(const HashResult& result, bool uppercase);
+    virtual void showFileErr(const HashResult& result);
 
     virtual int getProgMax();
     virtual void updateProg(int value);

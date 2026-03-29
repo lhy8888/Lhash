@@ -23,10 +23,10 @@ namespace FilesHashUwp
 		virtual void calcStop();
 		virtual void calcFinish();
 
-		virtual void showFileName(const ResultData& result);
-		virtual void showFileMeta(const ResultData& result);
-		virtual void showFileHash(const ResultData& result, bool uppercase);
-		virtual void showFileErr(const ResultData& result);
+		virtual void showFileName(const HashResult& result);
+		virtual void showFileMeta(const HashResult& result);
+		virtual void showFileHash(const HashResult& result, bool uppercase);
+		virtual void showFileErr(const HashResult& result);
 
 		virtual int getProgMax();
 		virtual void updateProg(int value);
@@ -37,7 +37,7 @@ namespace FilesHashUwp
 
 	private:
 		static Platform::String^ ConvertManagedResultText(const TCHAR* resultText);
-		void DispatchProjectedResultToDelegate(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
+		void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
 		void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);
 		int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);
 
