@@ -8,9 +8,7 @@
 #include "Common/strhelper.h"
 #include "OsUtils/OsThread.h"
 #include "Common/Global.h"
-#include "Common/HashResultCompatibility.h"
-#include "Common/ResultDataRender.h"
-#include "Common/ResultDigestRender.h"
+#include "Common/HashResultRender.h"
 #include "HyperEditHash.h"
 
 class UIBridgeMFC: public HashEngineBridge
@@ -71,6 +69,8 @@ public:
 											CHyperEditHash *hyperEdit);
 	static ResultMetaLineDisplayInfo GetResultMetaLineDisplayInfo(const ResultData& result,
 																ResultMetaLineType metaLine);
+	static ResultMetaLineDisplayInfo GetHashResultMetaLineDisplayInfo(const HashResult& result,
+																	ResultMetaLineType metaLine);
 	static void AppendResultMetaLineDisplayInfoToHyperEdit(const ResultMetaLineDisplayInfo& metaLineDisplayInfo,
 															CHyperEditHash *hyerEdit);
 	static void AppendResultDigestDisplayInfoToHyperEdit(const ResultDigestDisplayInfo& digestDisplayInfo,
@@ -89,18 +89,34 @@ public:
 												CHyperEditHash *hyerEdit);
 	static void AppendFileNameToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit);
+	static void AppendFileNameToHyperEdit(const HashResult& result,
+											CHyperEditHash *hyerEdit);
 	static void AppendFileMetaToHyperEdit(const ResultData& result,
+											CHyperEditHash *hyerEdit);
+	static void AppendFileMetaToHyperEdit(const HashResult& result,
 											CHyperEditHash *hyerEdit);
 	static void AppendFileHashToHyperEdit(const ResultData& result,
 											bool uppercase,
 											CHyperEditHash *hyerEdit);
+	static void AppendFileHashToHyperEdit(const HashResult& result,
+											bool uppercase,
+											CHyperEditHash *hyerEdit);
 	static void AppendFileErrToHyperEdit(const ResultData& result,
+											CHyperEditHash *hyerEdit);
+	static void AppendFileErrToHyperEdit(const HashResult& result,
 											CHyperEditHash *hyerEdit);
 	static void AppendResultRenderSectionToHyperEdit(const ResultData& result,
 													ResultRenderSectionType renderSection,
 													bool uppercase,
 													CHyperEditHash *hyerEdit);
+	static void AppendResultRenderSectionToHyperEdit(const HashResult& result,
+													ResultRenderSectionType renderSection,
+													bool uppercase,
+													CHyperEditHash *hyerEdit);
 	static void AppendResultToHyperEdit(const ResultData& result,
+										bool uppercase,
+										CHyperEditHash *hyerEdit);
+	static void AppendResultToHyperEdit(const HashResult& result,
 										bool uppercase,
 										CHyperEditHash *hyerEdit);
 
@@ -137,6 +153,16 @@ private:
 	}
 
 	void AppendResultSectionAndRefresh(const ResultData& result,
+										ResultRenderSectionType renderSection,
+										bool uppercase)
+	{
+		AppendToMainHyperEditAndRefresh([&](CHyperEditHash *hyperEdit)
+		{
+			AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyperEdit);
+		});
+	}
+
+	void AppendResultSectionAndRefresh(const HashResult& result,
 										ResultRenderSectionType renderSection,
 										bool uppercase)
 	{

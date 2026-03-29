@@ -202,8 +202,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("ShowFileHashHandler(hashResultNet, uppercase);", uwpDelegateSource, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", mfcHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
-        Assert.Contains("ResultData compatibilityResult = CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMFC::showFileHash(const HashResult& result, bool uppercase)", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("VisitHashResultDigestDisplayValues(result, uppercase", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", mfcSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", wuiHeader, StringComparison.Ordinal);
         Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", wuiHeader, StringComparison.Ordinal);

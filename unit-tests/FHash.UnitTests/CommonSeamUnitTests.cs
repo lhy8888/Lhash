@@ -98,6 +98,20 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void HashResultRender_OwnsSharedRealtimeRenderPrimitives()
+    {
+        string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
+        string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
+
+        Assert.Contains("#include \"Common/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("GetHashResultSizeDisplayInfo(const HashResult& result)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("VisitRenderableHashResultMetaLines(const HashResult& result, TResultMetaLineVisitor visitor)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");

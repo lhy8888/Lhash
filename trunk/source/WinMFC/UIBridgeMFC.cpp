@@ -79,26 +79,22 @@ void UIBridgeMFC::calcFinish()
 
 void UIBridgeMFC::showFileName(const HashResult& result)
 {
-	ResultData compatibilityResult = CreateCompatibilityResultData(result);
-	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_FILE_NAME, false);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
 }
 
 void UIBridgeMFC::showFileMeta(const HashResult& result)
 {
-	ResultData compatibilityResult = CreateCompatibilityResultData(result);
-	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_META, false);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
 }
 
 void UIBridgeMFC::showFileHash(const HashResult& result, bool uppercase)
 {
-	ResultData compatibilityResult = CreateCompatibilityResultData(result);
-	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_HASH, uppercase);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);
 }
 
 void UIBridgeMFC::showFileErr(const HashResult& result)
 {
-	ResultData compatibilityResult = CreateCompatibilityResultData(result);
-	AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_ERROR, false);
+	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
 }
 
 int UIBridgeMFC::getProgMax()
@@ -211,6 +207,38 @@ UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetResultMetaLineDisplayInfo
 	return metaLineDisplayInfo;
 }
 
+UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetHashResultMetaLineDisplayInfo(const HashResult& result,
+																					ResultMetaLineType metaLine)
+{
+	ResultMetaLineDisplayInfo metaLineDisplayInfo;
+
+	DispatchResultMetaLineByType(metaLine, [&]()
+	{
+		ResultSizeDisplayInfo resultSizeDisplayInfo = GetHashResultSizeDisplayInfo(result);
+
+		metaLineDisplayInfo.label = GetStringByKey(FILESIZE_STRING);
+		metaLineDisplayInfo.value = resultSizeDisplayInfo.sizeText;
+		metaLineDisplayInfo.suffix = _T(" ");
+		metaLineDisplayInfo.suffix += GetStringByKey(BYTE_STRING);
+		if (resultSizeDisplayInfo.shortSizeText.length() > 0)
+		{
+			metaLineDisplayInfo.suffix += _T(" (");
+			metaLineDisplayInfo.suffix += resultSizeDisplayInfo.shortSizeText;
+			metaLineDisplayInfo.suffix += _T(")");
+		}
+	}, [&]()
+	{
+		metaLineDisplayInfo.label = GetStringByKey(MODIFYTIME_STRING);
+		metaLineDisplayInfo.value = result.meta.modifiedDate;
+	}, [&]()
+	{
+		metaLineDisplayInfo.label = GetStringByKey(VERSION_STRING);
+		metaLineDisplayInfo.value = result.meta.version;
+	});
+
+	return metaLineDisplayInfo;
+}
+
 void UIBridgeMFC::AppendResultMetaLineDisplayInfoToHyperEdit(const ResultMetaLineDisplayInfo& metaLineDisplayInfo,
 															CHyperEditHash *hyerEdit)
 {
@@ -243,6 +271,14 @@ void UIBridgeMFC::AppendFileNameToHyperEdit(const ResultData& result,
 									hyerEdit);
 }
 
+void UIBridgeMFC::AppendFileNameToHyperEdit(const HashResult& result,
+											CHyperEditHash *hyerEdit)
+{
+	AppendLabelValueLineToHyperEdit(GetStringByKey(FILENAME_STRING),
+									result.path,
+									hyerEdit);
+}
+
 void UIBridgeMFC::AppendFileMetaToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit)
 {
@@ -256,6 +292,24 @@ void UIBridgeMFC::AppendFileMetaToHyperEdit(const ResultData& result,
 		}
 
 		AppendResultMetaLineDisplayInfoToHyperEdit(metaLineDisplayInfo, hyerEdit);
+		appendLineBreak = true;
+		return true;
+	});
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
+void UIBridgeMFC::AppendFileMetaToHyperEdit(const HashResult& result,
+											CHyperEditHash *hyerEdit)
+{
+	bool appendLineBreak = false;
+	VisitRenderableHashResultMetaLines(result, [&](ResultMetaLineType metaLine)
+	{
+		if (appendLineBreak)
+		{
+			AppendLineBreakToHyperEdit(hyerEdit);
+		}
+
+		AppendResultMetaLineDisplayInfoToHyperEdit(GetHashResultMetaLineDisplayInfo(result, metaLine), hyerEdit);
 		appendLineBreak = true;
 		return true;
 	});
@@ -276,6 +330,20 @@ void UIBridgeMFC::AppendFileHashToHyperEdit(const ResultData& result,
 	AppendLineBreakToHyperEdit(hyerEdit);
 }
 
+void UIBridgeMFC::AppendFileHashToHyperEdit(const HashResult& result,
+											bool uppercase,
+											CHyperEditHash *hyerEdit)
+{
+	VisitHashResultDigestDisplayValues(result, uppercase, [&](int index, const HashDigestResult& digestResult, const ResultDigestDisplayInfo& digestDisplayInfo)
+	{
+		(void)index;
+		(void)digestResult;
+		AppendResultDigestDisplayInfoToHyperEdit(digestDisplayInfo, hyerEdit);
+		return true;
+	});
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
 void UIBridgeMFC::AppendFileErrToHyperEdit(const ResultData& result,
 											CHyperEditHash *hyerEdit)
 {
@@ -283,7 +351,34 @@ void UIBridgeMFC::AppendFileErrToHyperEdit(const ResultData& result,
 	AppendLineBreakToHyperEdit(hyerEdit);
 }
 
+void UIBridgeMFC::AppendFileErrToHyperEdit(const HashResult& result,
+											CHyperEditHash *hyerEdit)
+{
+	AppendTextLineToHyperEdit(result.error, hyerEdit);
+	AppendLineBreakToHyperEdit(hyerEdit);
+}
+
 void UIBridgeMFC::AppendResultRenderSectionToHyperEdit(const ResultData& result,
+													ResultRenderSectionType renderSection,
+													bool uppercase,
+													CHyperEditHash *hyerEdit)
+{
+	DispatchResultRenderSectionByType(renderSection, [&]()
+	{
+		AppendFileNameToHyperEdit(result, hyerEdit);
+	}, [&]()
+	{
+		AppendFileMetaToHyperEdit(result, hyerEdit);
+	}, [&]()
+	{
+		AppendFileHashToHyperEdit(result, uppercase, hyerEdit);
+	}, [&]()
+	{
+		AppendFileErrToHyperEdit(result, hyerEdit);
+	});
+}
+
+void UIBridgeMFC::AppendResultRenderSectionToHyperEdit(const HashResult& result,
 													ResultRenderSectionType renderSection,
 													bool uppercase,
 													CHyperEditHash *hyerEdit)
@@ -318,6 +413,25 @@ void UIBridgeMFC::AppendResultToHyperEdit(const ResultData& result,
 	});
 
 	if (ShouldAppendResultTrailingLineBreak(resultState))
+	{
+		AppendLineBreakToHyperEdit(hyerEdit);
+	}
+}
+
+void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,
+											bool uppercase,
+											CHyperEditHash *hyerEdit)
+{
+	if (IsResultStateNone(result.state))
+		return;
+
+	VisitRenderableResultSections(result.state, [&](ResultRenderSectionType renderSection)
+	{
+		AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyerEdit);
+		return true;
+	});
+
+	if (ShouldAppendResultTrailingLineBreak(result.state))
 	{
 		AppendLineBreakToHyperEdit(hyerEdit);
 	}

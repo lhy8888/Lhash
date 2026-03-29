@@ -1094,10 +1094,10 @@ internal static class Program
             AssertContains(bridgeMfcHeader, "void AppendResultSectionAndRefresh(const ResultData& result,", "UIBridgeMFC does not yet expose the section-and-refresh helper.");
             AssertContains(bridgeMfcHeader, "AppendResultRenderSectionToHyperEdit(result, renderSection, uppercase, hyperEdit);", "UIBridgeMFC section-and-refresh helper does not yet dispatch through the centralized render-section helper.");
 
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_FILE_NAME, false);", "UIBridgeMFC does not yet route file-name rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_META, false);", "UIBridgeMFC does not yet route file-meta rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_HASH, uppercase);", "UIBridgeMFC does not yet route file-hash rendering through the dedicated refresh helper.");
-            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(compatibilityResult, RESULT_RENDER_SECTION_ERROR, false);", "UIBridgeMFC does not yet route file-error rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);", "UIBridgeMFC does not yet route file-name rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);", "UIBridgeMFC does not yet route file-meta rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);", "UIBridgeMFC does not yet route file-hash rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);", "UIBridgeMFC does not yet route file-error rendering through the dedicated refresh helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_WORKING);", "UIBridgeMFC does not yet route preparing-state notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_STOPPED);", "UIBridgeMFC does not yet route stop notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_FINISHED);", "UIBridgeMFC does not yet route finish notifications through the thread-info helper.");
@@ -2081,8 +2081,7 @@ internal static class Program
             AssertContains(digestRender, "VisitResultDigestDisplayValues(const ResultData& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "ResultDigestRender does not yet own digest display traversal.");
 
             AssertContains(managedBridgeDispatch, "#include \"Common/HashResultProjection.h\"", "ManagedBridgeDispatch does not yet consume the split HashResult projection seam.");
-            AssertContains(bridgeMfcHeader, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge header does not yet consume the split result-data render seam.");
-            AssertContains(bridgeMfcHeader, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge header does not yet consume the split digest render seam.");
+            AssertContains(bridgeMfcHeader, "#include \"Common/HashResultRender.h\"", "Legacy MFC bridge header does not yet consume the HashResult render seam layered on top of the split render helpers.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge implementation does not yet consume the split result-data render seam.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
@@ -3260,9 +3259,7 @@ internal static class Program
             AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 36 managed bridge dispatch does not yet expose HashResult-based projection dispatch.");
             AssertContains(managedDispatch, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", "Phase 36 managed bridge dispatch does not yet project HashResult directly.");
 
-            AssertContains(bridgeMfcHeader, "#include \"Common/HashResultCompatibility.h\"", "Phase 36 MFC bridge does not yet consume HashResultCompatibility.");
             AssertContains(bridgeMfcHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 MFC bridge header does not yet accept HashResult file-name consumption.");
-            AssertContains(bridgeMfcSource, "ResultData compatibilityResult = CreateCompatibilityResultData(result);", "Phase 36 MFC bridge does not yet rebuild compatibility ResultData for its legacy renderer.");
 
             AssertContains(bridgeWuiHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 WinUI bridge header does not yet accept HashResult file-name consumption.");
             AssertContains(bridgeWuiHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
@@ -3419,6 +3416,26 @@ internal static class Program
             AssertDoesNotContain(hashEngineObserver, "void onFileMetaReady(const ResultData& result)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-meta wrapper.");
             AssertDoesNotContain(hashEngineObserver, "void onFileHashReady(const ResultData& result, bool uppercase)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-hash wrapper.");
             AssertDoesNotContain(hashEngineObserver, "void onFileFailed(const ResultData& result)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-error wrapper.");
+        }, failures);
+
+        Run("Phase 43 makes the MFC bridge render HashResult directly without rebuilding compatibility ResultData", () =>
+        {
+            string hashResultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultRender.h");
+            string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
+            string bridgeMfcSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+
+            AssertContains(hashResultRender, "GetHashResultSizeDisplayInfo(const HashResult& result)", "Phase 43 HashResultRender does not yet expose HashResult size formatting.");
+            AssertContains(hashResultRender, "VisitRenderableHashResultMetaLines(const HashResult& result, TResultMetaLineVisitor visitor)", "Phase 43 HashResultRender does not yet expose HashResult meta traversal.");
+            AssertContains(hashResultRender, "VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", "Phase 43 HashResultRender does not yet expose HashResult digest rendering traversal.");
+
+            AssertContains(bridgeMfcHeader, "#include \"Common/HashResultRender.h\"", "Phase 43 MFC bridge header does not yet depend on HashResultRender.");
+            AssertDoesNotContain(bridgeMfcHeader, "#include \"Common/HashResultCompatibility.h\"", "Phase 43 MFC bridge header still depends on HashResultCompatibility.");
+            AssertContains(bridgeMfcHeader, "static void AppendResultToHyperEdit(const HashResult& result,", "Phase 43 MFC bridge header does not yet expose HashResult rendering helpers.");
+
+            AssertContains(bridgeMfcSource, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);", "Phase 43 MFC bridge realtime hash rendering does not yet consume HashResult directly.");
+            AssertContains(bridgeMfcSource, "VisitHashResultDigestDisplayValues(result, uppercase", "Phase 43 MFC bridge does not yet render digest values directly from HashResult.");
+            AssertContains(bridgeMfcSource, "void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", "Phase 43 MFC bridge does not yet expose HashResult whole-result rendering.");
+            AssertDoesNotContain(bridgeMfcSource, "CreateCompatibilityResultData(result);", "Phase 43 MFC bridge still rebuilds compatibility ResultData.");
         }, failures);
 
         if (failures.Count > 0)
