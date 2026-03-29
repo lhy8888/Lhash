@@ -598,9 +598,10 @@ internal static class Program
             AssertDoesNotContain(uwpMgmt, "CreateCompatibilityResultDataNetArray(", "UWP bridge search still keeps the legacy ResultDataNet compatibility array helper instead of returning HashResultNet directly.");
             AssertDoesNotContain(uwpMgmt, "FindResult(String^ pstrHashToFind)", "UWP bridge search still exposes the legacy ResultDataNet find API instead of using HashResultNet directly.");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
+            string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
-            AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultString>", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
-            AssertContains(resultProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment helper.");
+            AssertContains(resultNetProjection, "template<typename TResultDataNet, typename TResultString>", "ResultNetProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
+            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "ResultNetProjection does not yet expose the centralized ResultDataNet digest-assignment helper.");
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>", "ResultDataProjection does not yet expose the centralized ResultDataNet projection template.");
             AssertContains(resultProjection, "static inline TResultDataNet ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized ResultDataNet projection helper.");
             AssertContains(resultProjection, "for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)", "ResultDataProjection does not yet route managed digest projection through the centralized digest loop.");
@@ -1123,7 +1124,7 @@ internal static class Program
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultHandler>", "ResultDataProjection does not yet expose the centralized project-and-dispatch helper template.");
             AssertContains(resultProjection, "ProjectAndDispatchResult(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "ResultDataProjection does not yet expose the centralized project-and-dispatch helper.");
             AssertContains(resultProjection, "resultHandler(ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection project-and-dispatch helper does not yet compose projection and dispatch through the centralized projection seam.");
-            AssertContains(managedDispatch, "TResultDataNet resultDataNet = ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString);", "Common managed-bridge dispatch header does not yet materialize projected managed results through the centralized projection seam.");
+            AssertContains(managedDispatch, "TResultDataNet resultDataNet = ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString);", "Common managed-bridge dispatch header does not yet materialize projected managed results through the centralized projection seam.");
             AssertDoesNotContain(managedDispatch, "ProjectManagedBridgeResultAndDispatch(const ResultData& result, TStringConverter convertString, TResultHandler resultHandler)", "Common managed-bridge dispatch header still keeps the redundant managed projection-dispatch wrapper.");
 
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
@@ -1157,7 +1158,7 @@ internal static class Program
 
             AssertContains(managedDispatch, "enum ManagedResultDispatchType", "Common managed-bridge dispatch header does not yet expose the dedicated managed result-dispatch type.");
             AssertContains(managedDispatch, "DispatchManagedResultByType(ManagedResultDispatchType dispatchType, TResultDataNet resultDataNet, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase", "Common managed-bridge dispatch header does not yet expose the shared managed result-dispatch wrapper.");
+            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase", "Common managed-bridge dispatch header still exposes the deprecated ResultData-based managed result-dispatch wrapper.");
             AssertContains(managedDispatch, "DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still includes the deprecated managed-bridge helper header.");
@@ -1545,8 +1546,10 @@ internal static class Program
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(resultProjection, "template<typename TResultStateNet>", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
-            AssertContains(resultProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
+            string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
+
+            AssertContains(resultNetProjection, "template<typename TResultStateNet>", "ResultNetProjection does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
+            AssertContains(resultNetProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultNetProjection does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
             AssertContains(resultProjection, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataProjection does not yet route ResultStateNet assignment through the centralized helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeWui, "switch (GetResultState(result))", "WinUI bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
@@ -1561,14 +1564,15 @@ internal static class Program
         {
             string resultRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataRender.h");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
+            string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
             AssertContains(resultRender, "DispatchResultStateByType(ResultState resultState, TNoneAction onNone, TPathAction onPath, TMetaAction onMeta, TAllAction onAll, TErrorAction onError)", "ResultDataRender does not yet expose the grouped ResultState dispatch helper.");
             AssertContains(resultRender, "DispatchResultStateByType(resultState,", "ResultDataRender does not yet route ResultState render-policy through the grouped dispatch helper.");
-            AssertContains(resultProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultDataProjection does not yet expose the grouped digest-type dispatch helper.");
-            AssertContains(resultProjection, "switch (resultState)", "ResultDataProjection ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
-            AssertContains(resultProjection, "return TResultStateNet::ResultPath;", "ResultDataProjection ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
-            AssertContains(resultProjection, "switch (digestType)", "ResultDataProjection digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
-            AssertContains(resultProjection, "resultDataNet.MD5 = digestValue;", "ResultDataProjection digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultNetProjection does not yet expose the grouped digest-type dispatch helper.");
+            AssertContains(resultNetProjection, "switch (resultState)", "ResultNetProjection ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
+            AssertContains(resultNetProjection, "return TResultStateNet::ResultPath;", "ResultNetProjection ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
+            AssertContains(resultNetProjection, "switch (digestType)", "ResultNetProjection digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
+            AssertContains(resultNetProjection, "resultDataNet.MD5 = digestValue;", "ResultNetProjection digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
 
             AssertDoesNotContain(resultRender, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataRender render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
         }, failures);
@@ -3374,6 +3378,23 @@ internal static class Program
             AssertContains(uwpHashMgmtHeader, "Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", "Phase 40 UWP HashMgmt no longer exposes the HashResultNet query API.");
             AssertDoesNotContain(uwpHashMgmtHeader, "FindResult(Platform::String^ pstrHashToFind)", "Phase 40 UWP HashMgmt still exposes the legacy ResultDataNet query wrapper.");
             AssertDoesNotContain(uwpHashMgmt, "CreateCompatibilityResultDataNetArray(", "Phase 40 UWP HashMgmt still keeps the legacy ResultDataNet compatibility array helper.");
+        }, failures);
+
+        Run("Phase 41 extracts neutral managed projection primitives into ResultNetProjection and removes ResultData-based managed dispatch", () =>
+        {
+            string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
+            string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
+            string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
+            string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
+
+            AssertContains(resultNetProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "Phase 41 ResultNetProjection does not yet own the shared ResultStateNet conversion helper.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "Phase 41 ResultNetProjection does not yet own the shared digest-type dispatch helper.");
+            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "Phase 41 ResultNetProjection does not yet own the shared managed digest assignment helper.");
+            AssertContains(resultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 ResultDataProjection does not yet depend on the neutral ResultNetProjection seam.");
+            AssertContains(hashResultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 HashResultProjection does not yet depend on the neutral ResultNetProjection seam.");
+            AssertDoesNotContain(hashResultProjection, "#include \"Common/ResultDataProjection.h\"", "Phase 41 HashResultProjection still depends on the legacy ResultDataProjection header.");
+            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result", "Phase 41 ManagedBridgeDispatch still exposes the deprecated ResultData-based managed dispatch overload.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 41 ManagedBridgeDispatch does not yet expose the HashResult-only managed dispatch overload.");
         }, failures);
 
         if (failures.Count > 0)

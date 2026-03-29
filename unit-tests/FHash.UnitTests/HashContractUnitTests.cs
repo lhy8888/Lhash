@@ -23,6 +23,7 @@ public sealed class HashContractUnitTests
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
         string compatibility = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultCompatibility.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
+        string resultNetProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultNetProjection.h");
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
@@ -34,9 +35,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("ProjectHashResult(const ResultData& result)", result, StringComparison.Ordinal);
         Assert.Contains("PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", compatibility, StringComparison.Ordinal);
         Assert.Contains("CreateCompatibilityResultData(const HashResult& hashResult)", compatibility, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/ResultNetProjection.h\"", projection, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/ResultDataProjection.h\"", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultCoreToNet", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultDigestsToNet", projection, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", projection, StringComparison.Ordinal);
+        Assert.Contains("AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
+        Assert.Contains("ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", projection, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText", projection, StringComparison.Ordinal);
         Assert.Contains("HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
@@ -158,6 +163,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", managedDispatch, StringComparison.Ordinal);
+        Assert.DoesNotContain("DispatchManagedBridgeResultByType(const ResultData& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", managedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", managedHashMgmtAccess, StringComparison.Ordinal);

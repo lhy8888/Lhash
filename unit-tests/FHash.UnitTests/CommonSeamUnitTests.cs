@@ -78,6 +78,26 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void ResultNetProjection_OwnsSharedManagedProjectionPrimitives()
+    {
+        string resultNetProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultNetProjection.h");
+        string resultDataProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDataProjection.h");
+        string hashResultProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultProjection.h");
+
+        Assert.Contains("static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
+        Assert.Contains("DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultNetProjection, StringComparison.Ordinal);
+        Assert.Contains("static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Common/ResultNetProjection.h\"", resultDataProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", resultDataProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultDataProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultDataProjection, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Common/ResultNetProjection.h\"", hashResultProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/ResultDataProjection.h\"", hashResultProjection, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");

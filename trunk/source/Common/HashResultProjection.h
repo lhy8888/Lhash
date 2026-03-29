@@ -3,7 +3,7 @@
 
 #include "Common/HashResult.h"
 #include "Common/HashResultSearch.h"
-#include "Common/ResultDataProjection.h"
+#include "Common/ResultNetProjection.h"
 
 template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>
 static inline TResultDataNet AssignHashResultCoreToNet(TResultDataNet resultDataNet, const HashResult& result, TStringConverter convertString)
