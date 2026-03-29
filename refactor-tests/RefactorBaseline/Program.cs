@@ -603,8 +603,8 @@ internal static class Program
             AssertContains(resultProjection, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataProjection does not yet resolve digest projection order through the centralized digest metadata seam.");
             AssertContains(resultProjection, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataProjection does not yet read digest projection values through the centralized digest access seam.");
             AssertContains(resultProjection, "resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));", "ResultDataProjection does not yet compose digest projection through the centralized digest-assignment seam.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the centralized projection helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultDataNet projection through the dedicated managed bridge helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the centralized projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeWui, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "WinUI bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
             AssertDoesNotContain(bridgeWui, "static void AssignDigestToNet(ResultDataNet% resultDataNet, ResultDigestType digestType, String^ digestValue)", "WinUI bridge still keeps a local digest-assignment helper instead of using the centralized ResultDataNet seam.");
             AssertDoesNotContain(bridgeWui, "resultDataNet.MD5 = digestValue;\r\n\t\t\tbreak;", "WinUI bridge still inlines MD5 digest assignment inside the iteration path instead of using the bridge-local assignment helper.");
@@ -616,8 +616,8 @@ internal static class Program
             AssertDoesNotContain(bridgeWui, "GetResultDigest(result, RESULT_DIGEST_SHA256)", "WinUI bridge still hardcodes the SHA256 digest slot instead of iterating through the neutral digest seam.");
             AssertDoesNotContain(bridgeWui, "GetResultDigest(result, RESULT_DIGEST_SHA512)", "WinUI bridge still hardcodes the SHA512 digest slot instead of iterating through the neutral digest seam.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route ResultDataNet projection through the centralized projection helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route ResultDataNet projection through the dedicated managed bridge helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the centralized projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeUwp, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "UWP bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
             AssertDoesNotContain(bridgeUwp, "static void AssignDigestToNet(ResultDataNet& resultDataNet, ResultDigestType digestType, String^ digestValue)", "UWP bridge still keeps a local digest-assignment helper instead of using the centralized ResultDataNet seam.");
             AssertDoesNotContain(bridgeUwp, "resultDataNet.MD5 = digestValue;\r\n\t\t\tbreak;", "UWP bridge still inlines MD5 digest assignment inside the iteration path instead of using the bridge-local assignment helper.");
@@ -819,10 +819,10 @@ internal static class Program
             AssertContains(resultProjection, "ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);", "ResultDataProjection does not yet resolve digest order through the centralized digest metadata seam when projecting managed result data.");
             AssertContains(resultProjection, "const tstring& digestValueTstr = GetResultDigest(result, digestType);", "ResultDataProjection does not yet read digest values through the centralized digest access seam when projecting managed result data.");
             AssertContains(resultProjection, "convertString(digestValueTstr.c_str())", "ResultDataProjection does not yet convert digest values from the digest-value visitor payload when projecting managed result data.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet consume digest values through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeWui, "String^ digestValue = ConvertTstrToSystemString(GetResultDigest(result, digestType).c_str());", "WinUI bridge still performs inline digest lookup instead of consuming the digest-value visitor payload.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet consume digest values through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeUwp, "String^ digestValue = ConvertToPlatStr(GetResultDigest(result, digestType).c_str());", "UWP bridge still performs inline digest lookup instead of consuming the digest-value visitor payload.");
         }, failures);
 
@@ -935,9 +935,9 @@ internal static class Program
             AssertContains(resultProjection, "TResultDataNet resultDataNet = AssignResultCoreToNet<TResultDataNet, TResultStateNet>(TResultDataNet(), result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized core assignment helper.");
             AssertContains(resultProjection, "return AssignResultDigestsToNet(resultDataNet, result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized digest assignment helper.");
 
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route non-digest reads through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
 
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
@@ -994,8 +994,8 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "if (result.enumState == RESULT_NONE)", "Legacy MFC renderer still branches directly on ResultData::enumState.");
 
             AssertContains(resultProjection, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataProjection does not yet route managed ResultState projection through the centralized ResultDataNet projection helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet read ResultState through the centralized ResultDataNet projection helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet read ResultState through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
         }, failures);
 
         Run("Phase 5 routes MFC result-section rendering policy through dedicated ResultDataAccess helpers", () =>
@@ -1124,21 +1124,21 @@ internal static class Program
 
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still depends on the deprecated managed-bridge helper header.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileName(resultDataNet);", "WinUI bridge no longer forwards projected file-name results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileMeta(resultDataNet);", "WinUI bridge no longer forwards projected file-meta results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileHash(resultDataNet, hashUppercase);", "WinUI bridge no longer forwards projected file-hash results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileErr(resultDataNet);", "WinUI bridge no longer forwards projected file-error results through the current delegate path.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
+            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileName(hashResultNet);", "WinUI bridge no longer forwards projected file-name results through the current delegate path.");
+            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileMeta(hashResultNet);", "WinUI bridge no longer forwards projected file-meta results through the current delegate path.");
+            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", "WinUI bridge no longer forwards projected file-hash results through the current delegate path.");
+            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileErr(hashResultNet);", "WinUI bridge no longer forwards projected file-error results through the current delegate path.");
             AssertDoesNotContain(bridgeWuiHeader, "void ProjectManagedResultAndDispatch(const ResultData& result, TResultHandler resultHandler)", "WinUI bridge still keeps the local managed projection-dispatch template instead of using the centralized seam.");
             AssertDoesNotContain(bridgeWui, "ResultDataNet resultDataNet = ConvertResultDataToNet(result);", "WinUI bridge still inlines projected result creation inside showFile* methods instead of using the dedicated helper.");
 
             AssertContains(bridgeUwpHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "UWP bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "UWP bridge header still depends on the deprecated managed-bridge helper header.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileName(resultDataNet);", "UWP bridge no longer forwards projected file-name results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileMeta(resultDataNet);", "UWP bridge no longer forwards projected file-meta results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileHash(resultDataNet, hashUppercase);", "UWP bridge no longer forwards projected file-hash results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileErr(resultDataNet);", "UWP bridge no longer forwards projected file-error results through the current delegate path.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
+            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileName(hashResultNet);", "UWP bridge no longer forwards projected file-name results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileMeta(hashResultNet);", "UWP bridge no longer forwards projected file-meta results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", "UWP bridge no longer forwards projected file-hash results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileErr(hashResultNet);", "UWP bridge no longer forwards projected file-error results through the current delegate path.");
             AssertDoesNotContain(bridgeUwpHeader, "void ProjectManagedResultAndDispatch(const ResultData& result, TResultHandler resultHandler)", "UWP bridge still keeps the local managed projection-dispatch template instead of using the centralized seam.");
             AssertDoesNotContain(bridgeUwp, "ResultDataNet resultDataNet = ConvertResultDataToNet(result);", "UWP bridge still inlines projected result creation inside showFile* methods instead of using the dedicated helper.");
         }, failures);
@@ -1159,7 +1159,7 @@ internal static class Program
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still includes the deprecated managed-bridge helper header.");
             AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);", "WinUI bridge does not yet route file-name forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);", "WinUI bridge does not yet route file-meta forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_HASH, uppercase);", "WinUI bridge does not yet route file-hash forwarding through the dedicated managed result-dispatch helper.");
@@ -1173,7 +1173,7 @@ internal static class Program
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "UWP bridge header still includes the deprecated managed-bridge helper header.");
             AssertContains(bridgeUwpHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);", "UWP bridge does not yet route file-name forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);", "UWP bridge does not yet route file-meta forwarding through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_HASH, uppercase);", "UWP bridge does not yet route file-hash forwarding through the dedicated managed result-dispatch helper.");
@@ -1544,11 +1544,11 @@ internal static class Program
             AssertContains(resultProjection, "template<typename TResultStateNet>", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
             AssertContains(resultProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultDataProjection does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
             AssertContains(resultProjection, "resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));", "ResultDataProjection does not yet route ResultStateNet assignment through the centralized helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route ResultStateNet assignment through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeWui, "switch (GetResultState(result))", "WinUI bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeWui, "static ResultStateNet ConvertResultStateToNet(ResultState resultState)", "WinUI bridge still keeps a local ResultStateNet conversion helper instead of using the centralized ResultDataAccess helper.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route ResultStateNet assignment through the centralized ResultDataNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeUwp, "switch (GetResultState(result))", "UWP bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeUwp, "static ResultStateNet ConvertResultStateToNet(ResultState resultState)", "UWP bridge still keeps a local ResultStateNet conversion helper instead of using the centralized ResultDataAccess helper.");
         }, failures);
@@ -3254,11 +3254,11 @@ internal static class Program
 
             AssertContains(bridgeWuiHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 WinUI bridge header does not yet accept HashResult file-name consumption.");
             AssertContains(bridgeWuiHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
-            AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
+            AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
 
             AssertContains(bridgeUwpHeader, "virtual void showFileName(const HashResult& result);", "Phase 36 UWP bridge header does not yet accept HashResult file-name consumption.");
             AssertContains(bridgeUwpHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 UWP bridge helper does not yet narrow to HashResult.");
-            AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
+            AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
         }, failures);
 
         Run("Phase 37 routes managed digest-search projection through HashResult search and projection seams", () =>
@@ -3314,11 +3314,44 @@ internal static class Program
 
             AssertContains(winUiPage, "HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", "Phase 38 WinUI page does not yet consume FindHashResults.");
             AssertContains(winUiPage, "private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", "Phase 38 WinUI page does not yet switch the find-result surface to HashResultNet.");
-            AssertContains(winUiPage, "AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);", "Phase 38 WinUI page does not yet keep a thin compatibility render path for HashResultNet results.");
+            AssertContains(winUiPage, "AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", "Phase 38 WinUI page does not yet render HashResultNet query results directly.");
 
             AssertContains(winUwpPage, "HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);", "Phase 38 UWP page does not yet consume FindHashResults.");
             AssertContains(winUwpPage, "private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", "Phase 38 UWP page does not yet switch the find-result surface to HashResultNet.");
-            AssertContains(winUwpPage, "AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);", "Phase 38 UWP page does not yet keep a thin compatibility render path for HashResultNet results.");
+            AssertContains(winUwpPage, "AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", "Phase 38 UWP page does not yet render HashResultNet query results directly.");
+        }, failures);
+
+        Run("Phase 39 promotes managed realtime bridge delegates and page rendering onto HashResultNet", () =>
+        {
+            string clrDelegatesHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeDelegates.h");
+            string clrDelegatesSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeDelegates.cpp");
+            string uwpDelegateHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeDelegate.h");
+            string uwpDelegateSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeDelegate.cpp");
+            string bridgeWuiSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
+            string winUwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+
+            AssertContains(clrDelegatesHeader, "#include \"HashResultNet.h\"", "Phase 39 CLR delegate header does not yet consume HashResultNet.");
+            AssertContains(clrDelegatesHeader, "public delegate void HashResultEventHandler(HashResultNet);", "Phase 39 CLR delegate header does not yet expose HashResultNet event handlers.");
+            AssertContains(clrDelegatesHeader, "void ShowFileHash(HashResultNet hashResultNet, bool uppercase);", "Phase 39 CLR delegate header does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(clrDelegatesSource, "void UIBridgeDelegates::ShowFileHash(HashResultNet hashResultNet, bool uppercase)", "Phase 39 CLR delegate implementation does not yet switch ShowFileHash to HashResultNet.");
+
+            AssertContains(uwpDelegateHeader, "#include \"HashResultNet.h\"", "Phase 39 UWP delegate header does not yet consume HashResultNet.");
+            AssertContains(uwpDelegateHeader, "public delegate void HashResultEventHandler(HashResultNet);", "Phase 39 UWP delegate header does not yet expose HashResultNet event handlers.");
+            AssertContains(uwpDelegateHeader, "void ShowFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", "Phase 39 UWP delegate header does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(uwpDelegateSource, "void UIBridgeDelegate::ShowFileHash(HashResultNet hashResultNet, Boolean uppercase)", "Phase 39 UWP delegate implementation does not yet switch ShowFileHash to HashResultNet.");
+
+            AssertContains(bridgeWuiSource, "m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", "Phase 39 WinUI bridge does not yet forward realtime hash events as HashResultNet.");
+            AssertContains(bridgeUwpSource, "m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", "Phase 39 UWP bridge does not yet forward realtime hash events as HashResultNet.");
+
+            AssertContains(winUiPage, "private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", "Phase 39 WinUI page does not yet render realtime results directly from HashResultNet.");
+            AssertContains(winUiPage, "private void UIBridgeHandlers_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 WinUI page does not yet accept realtime HashResultNet hash events.");
+            AssertDoesNotContain(winUiPage, "CreateCompatibilityResultData(", "Phase 39 WinUI page still rebuilds compatibility ResultDataNet for managed rendering.");
+
+            AssertContains(winUwpPage, "private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet render realtime results directly from HashResultNet.");
+            AssertContains(winUwpPage, "private void UIBridgeDelegate_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet accept realtime HashResultNet hash events.");
+            AssertDoesNotContain(winUwpPage, "CreateCompatibilityResultData(", "Phase 39 UWP page still rebuilds compatibility ResultDataNet for managed rendering.");
         }, failures);
 
         if (failures.Count > 0)

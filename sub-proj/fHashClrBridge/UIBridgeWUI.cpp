@@ -34,21 +34,21 @@ String^ UIBridgeWUI::ConvertManagedResultText(const TCHAR* resultText)
 
 void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)
 {
-	DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)
+	DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)
 	{
 		return ConvertManagedResultText(resultText);
-	}, [&](ResultDataNet resultDataNet)
+	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileName(resultDataNet);
-	}, [&](ResultDataNet resultDataNet)
+		m_uiBridgeDelegates->ShowFileName(hashResultNet);
+	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileMeta(resultDataNet);
-	}, [&](ResultDataNet resultDataNet, bool hashUppercase)
+		m_uiBridgeDelegates->ShowFileMeta(hashResultNet);
+	}, [&](HashResultNet hashResultNet, bool hashUppercase)
 	{
-		m_uiBridgeDelegates->ShowFileHash(resultDataNet, hashUppercase);
-	}, [&](ResultDataNet resultDataNet)
+		m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);
+	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileErr(resultDataNet);
+		m_uiBridgeDelegates->ShowFileErr(hashResultNet);
 	});
 }
 

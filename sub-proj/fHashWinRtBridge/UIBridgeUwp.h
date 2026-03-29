@@ -5,7 +5,7 @@
 #include "Common/ManagedBridgeDispatch.h"
 
 #include "UIBridgeDelegate.h"
-#include "ResultDataNet.h"
+#include "HashResultNet.h"
 
 namespace FilesHashUwp
 {

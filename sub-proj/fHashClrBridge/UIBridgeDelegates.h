@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ResultDataNet.h"
+#include "HashResultNet.h"
 
 namespace FilesHashWUI
 {
 	public delegate void CalcEventHandler();
-	public delegate void ResultEventHandler(ResultDataNet);
-	public delegate void ResultHashEventHandler(ResultDataNet, bool);
+	public delegate void HashResultEventHandler(HashResultNet);
+	public delegate void HashResultHashEventHandler(HashResultNet, bool);
 	public delegate void CalcProgEventHandler(System::Int32);
 
 	public ref class UIBridgeDelegates sealed
@@ -21,10 +21,10 @@ namespace FilesHashWUI
 		void CalcStop();
 		void CalcFinish();
 
-		void ShowFileName(ResultDataNet resultDataNet);
-		void ShowFileMeta(ResultDataNet resultDataNet);
-		void ShowFileHash(ResultDataNet resultDataNet, bool uppercase);
-		void ShowFileErr(ResultDataNet resultDataNet);
+		void ShowFileName(HashResultNet hashResultNet);
+		void ShowFileMeta(HashResultNet hashResultNet);
+		void ShowFileHash(HashResultNet hashResultNet, bool uppercase);
+		void ShowFileErr(HashResultNet hashResultNet);
 
 		void UpdateProgWhole(System::Int32 value);
 
@@ -33,10 +33,10 @@ namespace FilesHashWUI
 		event CalcEventHandler^ CalcStopHandler;
 		event CalcEventHandler^ CalcFinishHandler;
 
-		event ResultEventHandler^ ShowFileNameHandler;
-		event ResultEventHandler^ ShowFileMetaHandler;
-		event ResultHashEventHandler^ ShowFileHashHandler;
-		event ResultEventHandler^ ShowFileErrHandler;
+		event HashResultEventHandler^ ShowFileNameHandler;
+		event HashResultEventHandler^ ShowFileMetaHandler;
+		event HashResultHashEventHandler^ ShowFileHashHandler;
+		event HashResultEventHandler^ ShowFileErrHandler;
 
 		event CalcProgEventHandler^ UpdateProgWholeHandler;
 	};

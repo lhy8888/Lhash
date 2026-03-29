@@ -33,24 +33,24 @@ void UIBridgeDelegates::CalcFinish()
 	CalcFinishHandler();
 }
 
-void UIBridgeDelegates::ShowFileName(ResultDataNet resultDataNet)
+void UIBridgeDelegates::ShowFileName(HashResultNet hashResultNet)
 {
-	ShowFileNameHandler(resultDataNet);
+	ShowFileNameHandler(hashResultNet);
 }
 
-void UIBridgeDelegates::ShowFileMeta(ResultDataNet resultDataNet)
+void UIBridgeDelegates::ShowFileMeta(HashResultNet hashResultNet)
 {
-	ShowFileMetaHandler(resultDataNet);
+	ShowFileMetaHandler(hashResultNet);
 }
 
-void UIBridgeDelegates::ShowFileHash(ResultDataNet resultDataNet, bool uppercase)
+void UIBridgeDelegates::ShowFileHash(HashResultNet hashResultNet, bool uppercase)
 {
-	ShowFileHashHandler(resultDataNet, uppercase);
+	ShowFileHashHandler(hashResultNet, uppercase);
 }
 
-void UIBridgeDelegates::ShowFileErr(ResultDataNet resultDataNet)
+void UIBridgeDelegates::ShowFileErr(HashResultNet hashResultNet)
 {
-	ShowFileErrHandler(resultDataNet);
+	ShowFileErrHandler(hashResultNet);
 }
 
 void UIBridgeDelegates::UpdateProgWhole(Int32 value)
