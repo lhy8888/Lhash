@@ -92,4 +92,38 @@ public sealed class CommonSeamUnitTests
             "- security-regression",
             "- unit-tests");
     }
+
+    [Fact]
+    public void WinUiNativeStack_ReusesNativeCore_InsteadOfRecompilingCoreSources()
+    {
+        string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+        string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+
+        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\sha256.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\sha512.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEngine.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEnginePreparation.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEngineResult.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\Common\strhelper.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\OsUtils\OsFileWinApi.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\OsUtils\OsThreadWinApi.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"..\..\trunk\source\WinCommon\WindowsComm.cpp", winUiNativeProject, StringComparison.Ordinal);
+
+        Assert.Contains(@"..\..\trunk\source\WinCommon\AdvTaskbar.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"..\..\trunk\source\WinCommon\ClipboardHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
+
+        Assert.Contains("fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", clrBridgeProject, StringComparison.Ordinal);
+
+        RepositoryTestContext.AssertContainsInOrder(
+            workflow,
+            "build-winui-bridge-x64:",
+            "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj",
+            "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
+            "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore");
+    }
 }

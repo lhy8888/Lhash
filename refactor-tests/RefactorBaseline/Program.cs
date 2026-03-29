@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 internal static class Program
 {
@@ -1860,17 +1860,18 @@ internal static class Program
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32", "fileshash15.sln is missing the desktop native core Win32 debug mapping.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.Build.0 = Release|x64", "fileshash15.sln is missing the desktop native core x64 release build mapping.");
 
-            AssertContains(nativeProject, "..\\..\\trunk\\source\\Algorithms\\MD5.cpp", "WUINative no longer compiles MD5.cpp in the baseline layout.");
-            AssertContains(nativeProject, "..\\..\\trunk\\source\\Common\\HashEngine.cpp", "WUINative no longer compiles HashEngine.cpp in the baseline layout.");
-            AssertContains(nativeProject, "..\\..\\trunk\\source\\OsUtils\\OsFileWinApi.cpp", "WUINative no longer compiles OsFileWinApi.cpp in the baseline layout.");
+            AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\AdvTaskbar.cpp", "WUINative no longer keeps its platform-specific AdvTaskbar layer in the baseline layout.");
+            AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\ClipboardHelper.cpp", "WUINative no longer keeps its platform-specific ClipboardHelper layer in the baseline layout.");
+            AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\FileVersionHelper.cpp", "WUINative no longer keeps its platform-specific FileVersionHelper layer in the baseline layout.");
         }, failures);
 
         Run("CLR bridge still depends on the native library through linker configuration in the baseline", () =>
         {
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
 
-            AssertContains(clrBridge, "<AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>", "CLR bridge no longer links the native library through AdditionalDependencies in the baseline layout.");
-            AssertContains(clrBridge, "<AdditionalLibraryDirectories>$(ProjectDir)..\\fHashWUINative\\$(Platform)\\$(Configuration)\\fHashWUINative\\;$(SolutionDir)$(Platform)\\$(Configuration)\\fHashWUINative\\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>", "CLR bridge no longer resolves the native library through the current output-path coupling.");
+            AssertContains(clrBridge, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "CLR bridge no longer links the WinUI platform layer and native core through AdditionalDependencies in the baseline layout.");
+            AssertContains(clrBridge, @"$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\", "CLR bridge no longer resolves the WinUI platform layer through the current output-path coupling.");
+            AssertContains(clrBridge, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "CLR bridge no longer resolves the native core through the current output-path coupling.");
         }, failures);
 
         Run("Phase 7 routes platform bridges through HashEngineBridge while leaving UIBridgeBase as a compatibility shim", () =>
@@ -2119,8 +2120,8 @@ internal static class Program
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
 
-            AssertContains(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project does not yet compile HashEnginePreparation.cpp.");
-            AssertContains(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project does not yet compile HashEngineResult.cpp.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project still compiles HashEngineResult.cpp instead of consuming fHashNativeCore.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "UWP native project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "UWP native project does not yet compile HashEngineResult.cpp.");
         }, failures);
@@ -3071,6 +3072,42 @@ internal static class Program
             AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "HashEngine does not yet emit hash-ready progress events.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCancelledProgressEvent());", "HashEngine does not yet emit cancellation progress events.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCompletedProgressEvent());", "HashEngine does not yet emit completion progress events.");
+        }, failures);
+
+        Run("Phase 32 routes the WinUI native stack through fHashNativeCore instead of recompiling the core", () =>
+        {
+            string winUiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\SHA1.cpp", "Phase 32 WinUI native project still recompiles SHA1 instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha256.cpp", "Phase 32 WinUI native project still recompiles SHA256 instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha512.cpp", "Phase 32 WinUI native project still recompiles SHA512 instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngine.cpp", "Phase 32 WinUI native project still recompiles HashEngine instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Phase 32 WinUI native project still recompiles HashEnginePreparation instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Phase 32 WinUI native project still recompiles HashEngineResult instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\strhelper.cpp", "Phase 32 WinUI native project still recompiles strhelper instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsFileWinApi.cpp", "Phase 32 WinUI native project still recompiles OsFileWinApi instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsThreadWinApi.cpp", "Phase 32 WinUI native project still recompiles OsThreadWinApi instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\WinCommon\WindowsComm.cpp", "Phase 32 WinUI native project still recompiles WindowsComm instead of consuming fHashNativeCore.");
+
+            AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\AdvTaskbar.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific AdvTaskbar layer.");
+            AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\ClipboardHelper.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific ClipboardHelper layer.");
+            AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific FileVersionHelper layer.");
+
+            AssertContains(clrBridgeProject, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 32 CLR bridge does not yet link both the WinUI platform layer and fHashNativeCore.");
+            AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
+
+            AssertInOrder(
+                workflow,
+                [
+                    "build-winui-bridge-x64:",
+                    "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj",
+                    "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
+                    "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore"
+                ],
+                "Phase 32 workflow does not yet build fHashNativeCore before the WinUI native layer and CLR bridge.");
         }, failures);
 
         if (failures.Count > 0)

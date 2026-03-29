@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="源文件">
@@ -83,35 +83,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Common\strhelper.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\trunk\source\WinCommon\FileVersionHelper.cpp">
       <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\WinCommon\WindowsComm.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\OsUtils\OsFileWinApi.cpp">
-      <Filter>OsUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\OsUtils\OsThreadWinApi.cpp">
-      <Filter>OsUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp">
-      <Filter>算法</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\WinCommon\AdvTaskbar.cpp">
       <Filter>Common</Filter>

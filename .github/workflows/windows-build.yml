@@ -1,4 +1,4 @@
-﻿name: Windows Build
+name: Windows Build
 
 on:
   workflow_dispatch:
@@ -252,8 +252,16 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $coreLogPath = Join-Path $artifactRoot 'build-native-core-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
+
+          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+            Tee-Object -FilePath $coreLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashNativeCore. See artifacts/build-native-core-x64.log for details."
+          }
 
           & msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
             Tee-Object -FilePath $nativeLogPath
@@ -275,6 +283,7 @@ jobs:
         with:
           name: LHash-WinUI-bridge-x64
           path: |
+            artifacts/build-native-core-x64.log
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
           if-no-files-found: warn

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
@@ -126,8 +126,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -142,8 +142,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -180,8 +180,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -196,8 +196,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>fHashWUINative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
