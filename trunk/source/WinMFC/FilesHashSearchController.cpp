@@ -2,7 +2,7 @@
 
 #include "FilesHashSearchController.h"
 
-#include "Common/ResultDataSearch.h"
+#include "Common/HashResultSearch.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataResultAccess.h"
 #include "UIBridgeMFC.h"
@@ -121,9 +121,9 @@ void FilesHashSearchController::RebuildResultList()
 		return;
 	}
 
-	VisitThreadDataResults(*m_threadData, [&](const ResultData& result)
+	VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)
 	{
-		AppendResult(ProjectHashResult(result));
+		AppendResult(result);
 	});
 }
 
@@ -143,12 +143,12 @@ void FilesHashSearchController::RebuildSearchResults()
 	m_mainEdit->AppendTextToBuffer(GetStringByKey(MAINDLG_RESULT));
 	m_mainEdit->AppendTextToBuffer(_T("\r\n\r\n"));
 
-	tstring tstrFileToFind = NormalizeResultPathSearchText(m_strFindFile.GetString());
-	tstring tstrHashToFind = NormalizeDigestSearchText(m_strFindHash.GetString());
+	tstring tstrFileToFind = NormalizeHashResultPathSearchText(m_strFindFile.GetString());
+	tstring tstrHashToFind = NormalizeHashResultDigestSearchText(m_strFindHash.GetString());
 
-	size_t count = VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)
+	size_t count = VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)
 	{
-		AppendResult(ProjectHashResult(result));
+		AppendResult(result);
 	});
 
 	if (count == 0)

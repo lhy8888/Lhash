@@ -98,6 +98,25 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void HashResultSearch_OwnsSharedTraversalAndMatchingPrimitives()
+    {
+        string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
+        string threadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ThreadDataResultAccess.h");
+
+        Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathText(const HashResult& result, const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathAndDigestText(const HashResult& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("VisitHashResults(const ResultList& resultList, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("VisitMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("VisitDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("VisitPathAndDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", threadResultAccess, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", threadResultAccess, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashResultRender_OwnsSharedRealtimeRenderPrimitives()
     {
         string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
@@ -125,12 +144,15 @@ public sealed class CommonSeamUnitTests
 
         Assert.False(File.Exists(compatibilityPath));
         Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
-        Assert.Contains("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", bridgeMacHeader, StringComparison.Ordinal);
         Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", bridgeMacHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", bridgeMacSource, StringComparison.Ordinal);
         Assert.Contains("ConvertHashResultToSwift(const HashResult& result)", bridgeMacSource, StringComparison.Ordinal);
-        Assert.Contains("ConvertHashResultToSwift(ProjectHashResult(*itr));", hashBridgeMac, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", hashBridgeMac, StringComparison.Ordinal);
+        Assert.Contains("ConvertHashResultToSwift(result);", hashBridgeMac, StringComparison.Ordinal);
     }
 
     [Fact]

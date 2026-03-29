@@ -15,6 +15,7 @@
 #include "Common/Global.h"
 #include "Common/HashEngine.h"
 #include "Common/HashResult.h"
+#include "Common/ThreadDataResultAccess.h"
 
 #import <Cocoa/Cocoa.h>
 #import "fHash-Swift-Header.h"
@@ -108,12 +109,11 @@ using namespace sunjwbase;
 - (NSArray *)getResults {
     NSMutableArray *results = [[NSMutableArray alloc] init];
 
-    ResultList::iterator itr = _thrdData->resultList.begin();
-    for(; itr != _thrdData->resultList.end(); ++itr)
+    VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)
     {
-        ResultDataSwift *resultData = UIBridgeMacSwift::ConvertHashResultToSwift(ProjectHashResult(*itr));
+        ResultDataSwift *resultData = UIBridgeMacSwift::ConvertHashResultToSwift(result);
         [results addObject:resultData];
-    }
+    });
 
     return results;
 }

@@ -1,36 +1,21 @@
 #ifndef _RESULT_DATA_SEARCH_H_
 #define _RESULT_DATA_SEARCH_H_
 
-#include "Common/ResultDataAccess.h"
+#include "Common/HashResultSearch.h"
 
 static inline bool ResultMatchesDigestText(const ResultData& result, const sunjwbase::tstring& digestText)
 {
-	return digestText.size() > 0 &&
-		ResultContainsDigest(result, digestText);
-}
-
-static inline sunjwbase::tstring NormalizeResultPathSearchText(const sunjwbase::tstring& pathText)
-{
-	return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));
+	return HashResultMatchesDigestText(ProjectHashResult(result), digestText);
 }
 
 static inline bool ResultMatchesPathText(const ResultData& result, const sunjwbase::tstring& pathText)
 {
-	return NormalizeResultPathSearchText(GetResultPath(result)).find(pathText) != sunjwbase::tstring::npos;
+	return HashResultMatchesPathText(ProjectHashResult(result), pathText);
 }
 
 static inline bool ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)
 {
-	return ResultMatchesPathText(result, pathText) &&
-		ResultMatchesDigestText(result, digestText);
-}
-
-static inline sunjwbase::tstring NormalizeDigestSearchText(const sunjwbase::tstring& digestText)
-{
-	sunjwbase::tstring normalizedDigestText = digestText;
-	normalizedDigestText = sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(normalizedDigestText)));
-	normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);
-	return normalizedDigestText;
+	return HashResultMatchesPathAndDigestText(ProjectHashResult(result), pathText, digestText);
 }
 
 template<typename TResultPredicate, typename TResultVisitor>

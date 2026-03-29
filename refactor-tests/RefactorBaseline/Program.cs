@@ -527,8 +527,8 @@ internal static class Program
             AssertContains(mfcDialogAndMessage, "IsThreadDataWorking(*m_threadData)", "MFC dialog does not yet route working-state checks through ThreadDataAccess.");
             AssertContains(mfcDialogAndSearch, "GetThreadDataUppercase(*m_threadData)", "MFC search flow does not yet route uppercase reads through ThreadDataAccess.");
             AssertContains(mfcDialogAndLifecycle, "GetThreadDataTotalSize(*m_threadData)", "MFC dialog does not yet route total-size reads through ThreadDataAccess.");
-            AssertContains(mfcDialogAndSearch, "GetThreadDataResults(*m_threadData)", "MFC search flow does not yet route grouped result-list reads through ThreadDataAccess.");
-            AssertContains(mfcDialogAndSearch, "VisitThreadDataResults(*m_threadData, [&](const ResultData& result)", "MFC search flow does not yet route grouped result iteration through ThreadDataAccess.");
+            AssertContains(mfcDialogAndSearch, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "MFC search flow does not yet route grouped result traversal through ThreadDataAccess.");
+            AssertContains(mfcDialogAndSearch, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "MFC search flow does not yet route grouped HashResult iteration through ThreadDataAccess.");
             AssertContains(mfcSessionController, "SetThreadDataStop(*m_threadData, false);", "MFC session flow does not yet route work-thread start stop-flag resets through ThreadDataAccess.");
             AssertContains(mfcSessionController, "SetThreadDataStop(*m_threadData, true);", "MFC session flow does not yet route work-thread stop requests through ThreadDataAccess.");
             AssertContains(mfcDialogAndInput, "ResetThreadDataInputFiles(*m_threadData);", "MFC file-input flow does not yet route file-path clearing through ThreadDataAccess.");
@@ -592,7 +592,7 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "AppendTextToBuffer(_T(\"\\r\\nSHA512: \"))", "UIBridgeMFC still hardcodes digest label emission instead of using the digest seam.");
 
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
-            AssertContains(mfcSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "MFC search controller no longer routes digest search through the neutral digest seam.");
+            AssertContains(mfcSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "MFC search controller no longer routes digest search through the HashResult visitor seam.");
             AssertContains(clrMgmt, "CreateProjectedHashResultNetArray(size_t resultCount)", "CLR bridge search does not yet expose the compile-safe managed hash-result array factory.");
             AssertContains(clrMgmt, "SetProjectedHashResultNet(cli::array<HashResultNet>^ projectedResults, size_t index, HashResultNet hashResultNet)", "CLR bridge search does not yet expose the compile-safe managed hash-result array setter.");
             AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", "CLR bridge search no longer routes through the centralized managed hash-result projection seam.");
@@ -949,8 +949,8 @@ internal static class Program
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
 
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
-            AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
-            AssertContains(filesHashSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet read result paths through the neutral ResultDataAccess path-match seam.");
+            AssertContains(filesHashSearchController, "#include \"Common/HashResultSearch.h\"", "Legacy MFC search flow does not yet consume the shared HashResult search seam.");
+            AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Legacy MFC search flow does not yet read result paths through the shared HashResult path-match seam.");
         }, failures);
 
         Run("Phase 4 routes non-digest ResultData writes through dedicated ResultDataAccess setters", () =>
@@ -1359,6 +1359,7 @@ internal static class Program
         Run("Phase 5 routes result-list matching through a centralized ResultDataAccess helper", () =>
         {
             string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
+            string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
@@ -1367,19 +1368,18 @@ internal static class Program
             AssertContains(resultSearch, "CountMatchingResults(const ResultList& resultList, TResultPredicate predicate)", "ResultDataSearch does not yet expose the centralized result-list match-count helper.");
             AssertContains(resultSearch, "CountDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-match count helper.");
             AssertContains(resultSearch, "ResultMatchesDigestText(const ResultData& result, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-match predicate helper.");
-            AssertContains(resultSearch, "NormalizeResultPathSearchText(const sunjwbase::tstring& pathText)", "ResultDataSearch does not yet expose the centralized path-search normalization helper.");
+            AssertContains(hashResultSearch, "NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", "HashResultSearch does not yet expose the centralized HashResult path-search normalization helper.");
             AssertContains(resultSearch, "ResultMatchesPathText(const ResultData& result, const sunjwbase::tstring& pathText)", "ResultDataSearch does not yet expose the centralized path-match predicate helper.");
-            AssertContains(resultSearch, "NormalizeDigestSearchText(const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized digest-search normalization helper.");
+            AssertContains(hashResultSearch, "NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", "HashResultSearch does not yet expose the centralized HashResult digest-search normalization helper.");
             AssertContains(resultSearch, "if (predicate(*itr))", "ResultDataSearch matching helper does not yet gate result visits through the supplied predicate.");
             AssertContains(resultSearch, "visitor(*itr);", "ResultDataSearch matching helper does not yet forward matched results through the supplied visitor.");
             AssertContains(resultSearch, "++matchCount;", "ResultDataSearch matching helper does not yet return the number of matched results.");
             AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataSearch match-count helper does not yet reuse the centralized matching visitor seam.");
-            AssertContains(resultSearch, "return digestText.size() > 0 &&", "ResultDataSearch digest-match predicate helper does not yet guard empty search text through the centralized seam.");
-            AssertContains(resultSearch, "ResultContainsDigest(result, digestText);", "ResultDataSearch digest-match predicate helper does not yet reuse the centralized digest seam.");
-            AssertContains(resultSearch, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));", "ResultDataSearch path-search normalization helper does not yet lowercase through the centralized seam.");
-            AssertContains(resultSearch, "return NormalizeResultPathSearchText(GetResultPath(result)).find(pathText) != sunjwbase::tstring::npos;", "ResultDataSearch path-match predicate helper does not yet reuse the centralized path-search normalization seam.");
-            AssertContains(resultSearch, "normalizedDigestText = sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(normalizedDigestText)));", "ResultDataSearch digest-search normalization helper does not yet uppercase through the centralized seam.");
-            AssertContains(resultSearch, "normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);", "ResultDataSearch digest-search normalization helper does not yet trim through the centralized seam.");
+            AssertContains(resultSearch, "return HashResultMatchesDigestText(ProjectHashResult(result), digestText);", "ResultDataSearch digest-match predicate helper does not yet reuse the centralized HashResult digest seam.");
+            AssertContains(hashResultSearch, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));", "HashResultSearch path-search normalization helper does not yet lowercase through the centralized seam.");
+            AssertContains(resultSearch, "return HashResultMatchesPathText(ProjectHashResult(result), pathText);", "ResultDataSearch path-match predicate helper does not yet reuse the centralized HashResult path-search seam.");
+            AssertContains(hashResultSearch, "normalizedDigestText = sunjwbase::strtotstr(sunjwbase::str_upper(sunjwbase::tstrtostr(normalizedDigestText)));", "HashResultSearch digest-search normalization helper does not yet uppercase through the centralized seam.");
+            AssertContains(hashResultSearch, "normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);", "HashResultSearch digest-search normalization helper does not yet trim through the centralized seam.");
             AssertContains(resultSearch, "return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)", "ResultDataSearch digest-match count helper does not yet reuse the centralized digest-match visitor seam.");
 
             AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", "CLR bridge management layer does not yet route digest-search and projection through the centralized managed helper.");
@@ -1426,15 +1426,14 @@ internal static class Program
 
             AssertContains(resultSearch, "ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized path+digest-match predicate helper.");
             AssertContains(resultSearch, "VisitPathAndDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized path+digest matching visitor helper.");
-            AssertContains(resultSearch, "return ResultMatchesPathText(result, pathText) &&", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared path-match seam.");
-            AssertContains(resultSearch, "ResultMatchesDigestText(result, digestText);", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared digest-match seam.");
+            AssertContains(resultSearch, "return HashResultMatchesPathAndDigestText(ProjectHashResult(result), pathText, digestText);", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared HashResult path+digest seam.");
             AssertContains(resultSearch, "return VisitMatchingResults(resultList, [&](const ResultData& result)", "ResultDataSearch path+digest matching helper does not yet reuse the centralized matching visitor seam.");
             AssertContains(resultSearch, "return ResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataSearch path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
 
-            AssertContains(filesHashSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet route result iteration through the centralized path+digest matching helper.");
-            AssertContains(filesHashSearchController, "tstring tstrFileToFind = NormalizeResultPathSearchText(m_strFindFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized ResultDataAccess helper.");
-            AssertContains(filesHashSearchController, "tstring tstrHashToFind = NormalizeDigestSearchText(m_strFindHash.GetString());", "Legacy MFC search flow does not yet normalize digest search text through the centralized ResultDataAccess helper.");
-            AssertContains(filesHashSearchController, "AppendResult(ProjectHashResult(result));", "Legacy MFC search flow does not yet project matched ResultData into HashResult before rendering.");
+            AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Legacy MFC search flow does not yet route result iteration through the centralized HashResult path+digest matching helper.");
+            AssertContains(filesHashSearchController, "tstring tstrFileToFind = NormalizeHashResultPathSearchText(m_strFindFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized HashResult search seam.");
+            AssertContains(filesHashSearchController, "tstring tstrHashToFind = NormalizeHashResultDigestSearchText(m_strFindHash.GetString());", "Legacy MFC search flow does not yet normalize digest search text through the centralized HashResult search seam.");
+            AssertContains(filesHashSearchController, "AppendResult(result);", "Legacy MFC search flow does not yet render matched HashResult values directly.");
             AssertDoesNotContain(filesHashSearchController, "strHash.MakeUpper();", "Legacy MFC search flow still uppercases digest search text inline instead of using the centralized normalization seam.");
             AssertDoesNotContain(filesHashSearchController, "strFile.MakeLower();", "Legacy MFC search flow still lowercases path search text inline instead of using the centralized normalization seam.");
             AssertDoesNotContain(filesHashSearchController, "CString strPathLower = CString(GetResultPath(result).c_str());", "Legacy MFC search flow still lowercases result paths inline instead of using the centralized path-match seam.");
@@ -2062,7 +2061,7 @@ internal static class Program
             AssertDoesNotContain(resultAccess, "ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataAccess still owns managed projection after the phase 9 seam split.");
             AssertDoesNotContain(resultAccess, "struct ResultRenderPolicy", "ResultDataAccess still owns render policy state after the phase 9 seam split.");
 
-            AssertContains(resultSearch, "#include \"Common/ResultDataAccess.h\"", "ResultDataSearch does not yet layer on top of the core ResultData access seam.");
+            AssertContains(resultSearch, "#include \"Common/HashResultSearch.h\"", "ResultDataSearch does not yet layer on top of the shared HashResult search seam.");
             AssertContains(resultSearch, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataSearch does not yet own result-list traversal.");
             AssertContains(resultSearch, "VisitDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet own digest-match traversal.");
 
@@ -2085,7 +2084,7 @@ internal static class Program
             AssertContains(bridgeMfc, "#include \"Common/ResultDataRender.h\"", "Legacy MFC bridge implementation does not yet consume the split result-data render seam.");
             AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
-            AssertContains(filesHashSearchController, "#include \"Common/ResultDataSearch.h\"", "Legacy MFC search flow does not yet consume the split result-data search seam.");
+            AssertContains(filesHashSearchController, "#include \"Common/HashResultSearch.h\"", "Legacy MFC search flow does not yet consume the shared HashResult search seam.");
             AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
             AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
         }, failures);
@@ -2362,8 +2361,8 @@ internal static class Program
             AssertContains(searchControllerHeader, "BOOL BeginSearch", "Phase 16 search controller is missing the begin-search entry point.");
             AssertContains(searchControllerHeader, "void ClearSearch", "Phase 16 search controller is missing the search-clear entry point.");
             AssertContains(searchControllerHeader, "void RebuildCurrentView", "Phase 16 search controller is missing the view-rebuild entry point.");
-            AssertContains(searchControllerCpp, "VisitPathAndDigestMatchingResults", "Phase 16 search controller does not yet route search matching through the shared result-search seam.");
-            AssertContains(searchControllerCpp, "VisitThreadDataResults", "Phase 16 search controller does not yet rebuild list mode through the shared thread-data result seam.");
+            AssertContains(searchControllerCpp, "VisitThreadDataPathAndDigestMatchingHashResults", "Phase 16 search controller does not yet route search matching through the shared HashResult search seam.");
+            AssertContains(searchControllerCpp, "VisitThreadDataHashResults", "Phase 16 search controller does not yet rebuild list mode through the shared ThreadData HashResult seam.");
             AssertContains(searchControllerCpp, "UIBridgeMFC::AppendResultToHyperEdit", "Phase 16 search controller does not yet route result rendering through the shared MFC bridge seam.");
 
             AssertContains(dlgHeader, "#include \"FilesHashSearchController.h\"", "FilesHashDlg.h does not yet include the phase 16 search controller.");
@@ -3276,11 +3275,11 @@ internal static class Program
 
             AssertContains(hashResultProjection, "#include \"Common/HashResultSearch.h\"", "Phase 37 HashResult projection seam does not yet layer on top of HashResultSearch.");
             AssertContains(hashResultProjection, "VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose whole-list HashResult projection.");
-            AssertContains(hashResultProjection, "CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)", "Phase 37 does not yet expose HashResult match counting.");
+            AssertContains(hashResultSearch, "CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)", "Phase 45 does not yet expose HashResult match counting through the shared search seam.");
             AssertContains(hashResultProjection, "VisitProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose HashResult matching projection traversal.");
             AssertContains(hashResultProjection, "CreateProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based materialized projection.");
             AssertContains(hashResultProjection, "CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based digest-search materialization.");
-            AssertContains(hashResultProjection, "HashResult hashResult = ProjectHashResult(*itr);", "Phase 37 HashResult projection seam does not yet project ResultData into HashResult before matching.");
+            AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResult projection seam does not yet reuse shared HashResult whole-list traversal.");
             AssertContains(hashResultProjection, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString)", "Phase 37 HashResult projection seam does not yet route materialized net projection through ProjectHashResultToNet.");
 
             AssertContains(managedHashMgmtAccess, "#include \"Common/HashResultProjection.h\"", "Phase 37 managed hash-management seam does not yet consume HashResultProjection.");
@@ -3446,7 +3445,8 @@ internal static class Program
             }
 
             AssertContains(searchHeader, "void AppendResult(const HashResult& result);", "Phase 44 MFC search controller does not yet accept HashResult as its render subject.");
-            AssertContains(searchSource, "AppendResult(ProjectHashResult(result));", "Phase 44 MFC search controller does not yet project ResultData into HashResult before rendering.");
+            AssertContains(searchSource, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route history traversal through the shared HashResult visitor seam.");
+            AssertContains(searchSource, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route search traversal through the shared HashResult visitor seam.");
             AssertContains(searchSource, "UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", "Phase 44 MFC search controller does not yet render search/history results directly from HashResult.");
 
             AssertDoesNotContain(bridgeMacHeader, "#include \"Common/HashResultCompatibility.h\"", "Phase 44 Mac bridge header still depends on HashResultCompatibility.");
@@ -3454,7 +3454,35 @@ internal static class Program
             AssertContains(bridgeMacSource, "ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", "Phase 44 Mac bridge realtime path does not yet project HashResult directly.");
             AssertDoesNotContain(bridgeMacSource, "CreateCompatibilityResultData(result);", "Phase 44 Mac bridge still rebuilds compatibility ResultData.");
             AssertContains(bridgeMacSource, "ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", "Phase 44 Mac bridge does not yet expose direct HashResult-to-Swift projection.");
-            AssertContains(hashBridgeMac, "ConvertHashResultToSwift(ProjectHashResult(*itr));", "Phase 44 Mac history bridge does not yet project stored ResultData through HashResult before Swift conversion.");
+            AssertContains(hashBridgeMac, "VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", "Phase 45 Mac history bridge does not yet route stored results through the shared HashResult visitor seam.");
+            AssertContains(hashBridgeMac, "ConvertHashResultToSwift(result);", "Phase 45 Mac history bridge does not yet consume shared HashResult traversal directly.");
+        }, failures);
+
+        Run("Phase 45 routes shared search and history traversal through HashResult visitor seams", () =>
+        {
+            string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
+            string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
+            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
+
+            AssertContains(hashResultSearch, "VisitHashResults(const ResultList& resultList, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose whole-list HashResult traversal.");
+            AssertContains(hashResultSearch, "VisitMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared HashResult matching traversal.");
+            AssertContains(hashResultSearch, "VisitPathAndDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared path+digest HashResult traversal.");
+            AssertContains(hashResultSearch, "NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", "Phase 45 HashResultSearch does not yet own path normalization.");
+            AssertContains(hashResultSearch, "NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", "Phase 45 HashResultSearch does not yet own digest normalization.");
+
+            AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult traversal.");
+            AssertContains(hashResultProjection, "VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult matching traversal.");
+
+            AssertContains(threadResultAccess, "VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult traversal.");
+            AssertContains(threadResultAccess, "VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult path+digest traversal.");
+
+            AssertContains(managedHashMgmtAccess, "NormalizeHashResultDigestSearchText(hashToFind)", "Phase 45 managed hash management does not yet normalize digest queries through HashResultSearch.");
+            AssertContains(filesHashSearchController, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route history traversal through ThreadData HashResult visitors.");
+            AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route search traversal through ThreadData HashResult visitors.");
+            AssertContains(hashBridgeMac, "VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", "Phase 45 Mac history bridge does not yet route history traversal through ThreadData HashResult visitors.");
         }, failures);
 
         if (failures.Count > 0)

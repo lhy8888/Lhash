@@ -40,46 +40,22 @@ template<typename TResultDataNet, typename TResultStateNet, typename TStringConv
 static inline void VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)
 {
 	size_t matchIndex = 0;
-	ResultList::const_iterator itr = resultList.begin();
-	for (; itr != resultList.end(); ++itr)
+	VisitHashResults(resultList, [&](const HashResult& hashResult)
 	{
-		HashResult hashResult = ProjectHashResult(*itr);
 		visitor(matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
 		++matchIndex;
-	}
-}
-
-template<typename THashResultPredicate>
-static inline size_t CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)
-{
-	size_t matchCount = 0;
-	ResultList::const_iterator itr = resultList.begin();
-	for (; itr != resultList.end(); ++itr)
-	{
-		HashResult hashResult = ProjectHashResult(*itr);
-		if (predicate(hashResult))
-		{
-			++matchCount;
-		}
-	}
-
-	return matchCount;
+	});
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename THashResultPredicate, typename TStringConverter, typename TResultVisitor>
 static inline void VisitProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)
 {
 	size_t matchIndex = 0;
-	ResultList::const_iterator itr = resultList.begin();
-	for (; itr != resultList.end(); ++itr)
+	VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)
 	{
-		HashResult hashResult = ProjectHashResult(*itr);
-		if (predicate(hashResult))
-		{
-			visitor(matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
-			++matchIndex;
-		}
-	}
+		visitor(matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
+		++matchIndex;
+	});
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename THashResultPredicate, typename TResultArrayFactory, typename TStringConverter, typename TResultArraySetter>
@@ -87,16 +63,11 @@ static inline TResultArray CreateProjectedMatchingHashResults(const ResultList& 
 {
 	TResultArray projectedResults = createResultArray(CountMatchingHashResults(resultList, predicate));
 	size_t matchIndex = 0;
-	ResultList::const_iterator itr = resultList.begin();
-	for (; itr != resultList.end(); ++itr)
+	VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)
 	{
-		HashResult hashResult = ProjectHashResult(*itr);
-		if (predicate(hashResult))
-		{
-			setProjectedResult(projectedResults, matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
-			++matchIndex;
-		}
-	}
+		setProjectedResult(projectedResults, matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString));
+		++matchIndex;
+	});
 
 	return projectedResults;
 }

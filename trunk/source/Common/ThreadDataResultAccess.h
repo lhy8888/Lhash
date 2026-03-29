@@ -2,6 +2,7 @@
 #define _THREAD_DATA_RESULT_ACCESS_H_
 
 #include "Common/Global.h"
+#include "Common/HashResultSearch.h"
 #include "Common/ThreadDataExecutionAccess.h"
 
 static inline ResultList& GetMutableThreadDataResults(ThreadData& threadData)
@@ -42,6 +43,24 @@ static inline size_t VisitThreadDataResults(const ThreadData& threadData, TResul
 		visitCount++;
 	}
 	return visitCount;
+}
+
+template<typename THashResultVisitor>
+static inline size_t VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)
+{
+	return VisitHashResults(GetThreadDataResults(threadData), visitor);
+}
+
+template<typename THashResultVisitor>
+static inline size_t VisitThreadDataDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& digestText, THashResultVisitor visitor)
+{
+	return VisitDigestMatchingHashResults(GetThreadDataResults(threadData), digestText, visitor);
+}
+
+template<typename THashResultVisitor>
+static inline size_t VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)
+{
+	return VisitPathAndDigestMatchingHashResults(GetThreadDataResults(threadData), pathText, digestText, visitor);
 }
 
 #endif

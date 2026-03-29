@@ -3,7 +3,7 @@
 
 #include "Common/HashAlgorithmRegistry.h"
 #include "Common/HashResultProjection.h"
-#include "Common/ResultDataSearch.h"
+#include "Common/HashResultSearch.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
@@ -98,7 +98,7 @@ static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(
 	TStringConverter convertText,
 	TResultSetter setResult)
 {
-	sunjwbase::tstring normalizedHashToFind = NormalizeDigestSearchText(hashToFind);
+	sunjwbase::tstring normalizedHashToFind = NormalizeHashResultDigestSearchText(hashToFind);
 	return CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(
 		GetThreadDataResults(threadData),
 		normalizedHashToFind,

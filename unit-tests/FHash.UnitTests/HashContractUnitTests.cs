@@ -39,10 +39,18 @@ public sealed class HashContractUnitTests
         Assert.Contains("ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", projection, StringComparison.Ordinal);
         Assert.Contains("AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", search, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
         Assert.Contains("VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", projection, StringComparison.Ordinal);
+        Assert.Contains("VisitHashResults(resultList, [&](const HashResult& hashResult)", projection, StringComparison.Ordinal);
+        Assert.Contains("VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)", projection, StringComparison.Ordinal);
+        Assert.Contains("CountMatchingHashResults(resultList, predicate)", projection, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText", projection, StringComparison.Ordinal);
         Assert.Contains("HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
         Assert.Contains("HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathText(const HashResult& result, const sunjwbase::tstring& pathText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathAndDigestText(const HashResult& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("VisitPathAndDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", search, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(result", result, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
     }
@@ -212,7 +220,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", mfcSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
         Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
-        Assert.Contains("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.Contains("UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", searchSource, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", wuiHeader, StringComparison.Ordinal);
@@ -232,7 +241,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", macSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", macSource, StringComparison.Ordinal);
         Assert.Contains("ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", macSource, StringComparison.Ordinal);
-        Assert.Contains("ConvertHashResultToSwift(ProjectHashResult(*itr));", hashBridgeMac, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", hashBridgeMac, StringComparison.Ordinal);
+        Assert.Contains("ConvertHashResultToSwift(result);", hashBridgeMac, StringComparison.Ordinal);
 
         Assert.Contains("HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", winUiPage, StringComparison.Ordinal);
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
