@@ -339,6 +339,7 @@
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h" />
     <ClInclude Include="CxHelper.h" />
     <ClInclude Include="HashMgmt.h" />
+    <ClInclude Include="HashResultNet.h" />
     <ClInclude Include="NativeHelper.h" />
     <ClInclude Include="ResultDataNet.h" />
     <ClInclude Include="stdafx.h" />

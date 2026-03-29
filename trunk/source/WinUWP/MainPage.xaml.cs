@@ -737,7 +737,24 @@ namespace FilesHashUwp
             }
         }
 
-        private void ShowFindResult(string strHashToFind, ResultDataNet[] resultDataNetArray)
+        private static ResultDataNet CreateCompatibilityResultData(HashResultNet hashResult)
+        {
+            return new ResultDataNet
+            {
+                EnumState = (ResultStateNet)hashResult.EnumState,
+                Path = hashResult.Path,
+                Size = hashResult.Size,
+                ModifiedDate = hashResult.ModifiedDate,
+                Version = hashResult.Version,
+                MD5 = hashResult.MD5,
+                SHA1 = hashResult.SHA1,
+                SHA256 = hashResult.SHA256,
+                SHA512 = hashResult.SHA512,
+                Error = hashResult.Error
+            };
+        }
+
+        private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)
         {
             // Switch m_paragraphMain
             RichTextMain.Blocks.Clear();
@@ -760,7 +777,7 @@ namespace FilesHashUwp
             inlines.Add(UwpHelper.GenRunFromString("\r\n\r\n"));
             AppendInlinesToTextMain(inlines);
 
-            if (resultDataNetArray == null || resultDataNetArray.Length == 0)
+            if (hashResultNetArray == null || hashResultNetArray.Length == 0)
             {
                 // No match
                 List<Inline> inlinesResult = new List<Inline>();
@@ -772,9 +789,9 @@ namespace FilesHashUwp
             else
             {
                 // Found some
-                foreach (ResultDataNet resultData in resultDataNetArray)
+                foreach (HashResultNet hashResult in hashResultNetArray)
                 {
-                    AppendFileResultToTextMain(resultData, m_uppercaseChecked);
+                    AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);
                 }
             }
 
@@ -964,8 +981,8 @@ namespace FilesHashUwp
             if (result == ContentDialogResult.Primary)
             {
                 string strHashToFind = m_textBoxFindHash.Text;
-                ResultDataNet[] resultDataNetArray = m_hashMgmt.FindResult(strHashToFind);
-                ShowFindResult(strHashToFind, resultDataNetArray);
+                HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);
+                ShowFindResult(strHashToFind, hashResultNetArray);
             }
         }
 

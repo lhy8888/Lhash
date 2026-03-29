@@ -32,14 +32,46 @@ static Array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDescripto
 		ConvertToPlatStr);
 }
 
-static Array<ResultDataNet>^ CreateProjectedResultDataNetArray(size_t resultCount)
+static Array<HashResultNet>^ CreateProjectedHashResultNetArray(size_t resultCount)
 {
-	return ref new Array<ResultDataNet>(static_cast<unsigned int>(resultCount));
+	return ref new Array<HashResultNet>(static_cast<unsigned int>(resultCount));
 }
 
-static void SetProjectedResultDataNet(Array<ResultDataNet>^ projectedResults, size_t index, ResultDataNet resultDataNet)
+static void SetProjectedHashResultNet(Array<HashResultNet>^ projectedResults, size_t index, HashResultNet hashResultNet)
 {
-	projectedResults[static_cast<unsigned int>(index)] = resultDataNet;
+	projectedResults[static_cast<unsigned int>(index)] = hashResultNet;
+}
+
+static ResultDataNet CreateCompatibilityResultDataNet(HashResultNet hashResultNet)
+{
+	ResultDataNet resultDataNet;
+	resultDataNet.EnumState = static_cast<ResultStateNet>(hashResultNet.EnumState);
+	resultDataNet.Path = hashResultNet.Path;
+	resultDataNet.Size = hashResultNet.Size;
+	resultDataNet.ModifiedDate = hashResultNet.ModifiedDate;
+	resultDataNet.Version = hashResultNet.Version;
+	resultDataNet.MD5 = hashResultNet.MD5;
+	resultDataNet.SHA1 = hashResultNet.SHA1;
+	resultDataNet.SHA256 = hashResultNet.SHA256;
+	resultDataNet.SHA512 = hashResultNet.SHA512;
+	resultDataNet.Error = hashResultNet.Error;
+	return resultDataNet;
+}
+
+static Array<ResultDataNet>^ CreateCompatibilityResultDataNetArray(Array<HashResultNet>^ hashResultNetArray)
+{
+	if (hashResultNetArray == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto compatibilityResults = ref new Array<ResultDataNet>(hashResultNetArray->Length);
+	for (unsigned int resultIndex = 0; resultIndex < hashResultNetArray->Length; ++resultIndex)
+	{
+		compatibilityResults[resultIndex] = CreateCompatibilityResultDataNet(hashResultNetArray[resultIndex]);
+	}
+
+	return compatibilityResults;
 }
 
 HashMgmt::HashMgmt(UIBridgeDelegate^ uiBridgeDelegate)
@@ -128,12 +160,17 @@ void HashMgmt::StartHashThread()
 										(unsigned int*)&thredID);
 }
 
-Array<ResultDataNet>^ HashMgmt::FindResult(String^ pstrHashToFind)
+Array<HashResultNet>^ HashMgmt::FindHashResults(String^ pstrHashToFind)
 {
-	return CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(
+	return CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(
 		m_threadData,
 		tstring(pstrHashToFind->Data()),
-		CreateProjectedResultDataNetArray,
+		CreateProjectedHashResultNetArray,
 		ConvertToPlatStr,
-		SetProjectedResultDataNet);
+		SetProjectedHashResultNet);
+}
+
+Array<ResultDataNet>^ HashMgmt::FindResult(String^ pstrHashToFind)
+{
+	return CreateCompatibilityResultDataNetArray(FindHashResults(pstrHashToFind));
 }

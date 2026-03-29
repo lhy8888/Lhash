@@ -694,6 +694,23 @@ namespace FilesHashWUI
             }
         }
 
+        private static ResultDataNet CreateCompatibilityResultData(HashResultNet hashResult)
+        {
+            return new ResultDataNet
+            {
+                EnumState = (ResultStateNet)hashResult.EnumState,
+                Path = hashResult.Path,
+                Size = hashResult.Size,
+                ModifiedDate = hashResult.ModifiedDate,
+                Version = hashResult.Version,
+                MD5 = hashResult.MD5,
+                SHA1 = hashResult.SHA1,
+                SHA256 = hashResult.SHA256,
+                SHA512 = hashResult.SHA512,
+                Error = hashResult.Error
+            };
+        }
+
         private async void ShowFindDialog()
         {
             m_textBoxFindHash.Text = "";
@@ -701,12 +718,12 @@ namespace FilesHashWUI
             if (result == ContentDialogResult.Primary)
             {
                 string strHashToFind = m_textBoxFindHash.Text;
-                ResultDataNet[] resultDataNetArray = m_mainWindow.HashMgmt.FindResult(strHashToFind);
-                DispatcherQueue.TryEnqueue(() => ShowFindResult(strHashToFind, resultDataNetArray));
+                HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);
+                DispatcherQueue.TryEnqueue(() => ShowFindResult(strHashToFind, hashResultNetArray));
             }
         }
 
-        private void ShowFindResult(string strHashToFind, ResultDataNet[] resultDataNetArray)
+        private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)
         {
             // Fix strange behavior
             ScrollViewerMain.ChangeView(null, 0.0, null, true);
@@ -734,7 +751,7 @@ namespace FilesHashWUI
             inlines.Add(WinUIHelper.GenRunFromString("\r\n\r\n"));
             AppendInlinesToTextMain(inlines);
 
-            if (resultDataNetArray == null || resultDataNetArray.Length == 0)
+            if (hashResultNetArray == null || hashResultNetArray.Length == 0)
             {
                 // No match
                 List<Inline> inlinesResult = [];
@@ -746,9 +763,9 @@ namespace FilesHashWUI
             else
             {
                 // Found some
-                foreach (ResultDataNet resultData in resultDataNetArray)
+                foreach (HashResultNet hashResult in hashResultNetArray)
                 {
-                    AppendFileResultToTextMain(resultData, m_uppercaseChecked);
+                    AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);
                 }
             }
 

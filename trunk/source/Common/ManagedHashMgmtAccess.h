@@ -90,6 +90,23 @@ static inline void ReplaceThreadDataInputFilesFromManagedArray(
 	}
 }
 
+template<typename THashResultNet, typename THashResultStateNet, typename TResultArray, typename TThreadData, typename TArrayFactory, typename TStringConverter, typename TResultSetter>
+static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(
+	const TThreadData& threadData,
+	const sunjwbase::tstring& hashToFind,
+	TArrayFactory createArray,
+	TStringConverter convertText,
+	TResultSetter setResult)
+{
+	sunjwbase::tstring normalizedHashToFind = NormalizeDigestSearchText(hashToFind);
+	return CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(
+		GetThreadDataResults(threadData),
+		normalizedHashToFind,
+		createArray,
+		convertText,
+		setResult);
+}
+
 template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TThreadData, typename TArrayFactory, typename TStringConverter, typename TResultSetter>
 static inline TResultArray CreateProjectedManagedDigestMatchingResults(
 	const TThreadData& threadData,
@@ -98,10 +115,9 @@ static inline TResultArray CreateProjectedManagedDigestMatchingResults(
 	TStringConverter convertText,
 	TResultSetter setResult)
 {
-	sunjwbase::tstring normalizedHashToFind = NormalizeDigestSearchText(hashToFind);
-	return CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(
-		GetThreadDataResults(threadData),
-		normalizedHashToFind,
+	return CreateProjectedManagedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(
+		threadData,
+		hashToFind,
 		createArray,
 		convertText,
 		setResult);

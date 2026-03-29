@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "Common/Global.h"
+#include "HashResultNet.h"
 #include "UIBridgeDelegate.h"
 #include "UIBridgeUwp.h"
 
@@ -44,6 +45,7 @@ public:
 		void AddFiles(const Platform::Array<Platform::String^>^ filePaths);
 		void StartHashThread();
 
+		Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);
 		Platform::Array<ResultDataNet>^ FindResult(Platform::String^ pstrHashToFind);
 
 	private:

@@ -214,6 +214,7 @@
     <ClInclude Include="AdvTaskbarHelper.h" />
     <ClInclude Include="ClrHelper.h" />
     <ClInclude Include="HashMgmtClr.h" />
+    <ClInclude Include="HashResultNet.h" />
     <ClInclude Include="NativeHelper.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ResultDataNet.h" />

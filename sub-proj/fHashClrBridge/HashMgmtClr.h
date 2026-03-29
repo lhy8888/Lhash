@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Global.h"
+#include "HashResultNet.h"
 #include "UIBridgeDelegates.h"
 #include "UIBridgeWUI.h"
 
@@ -57,6 +58,7 @@ public:
 		void AddFiles(cli::array<System::String^>^ filePaths);
 		void StartHashThread();
 
+		cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);
 		cli::array<ResultDataNet>^ FindResult(System::String^ sstrHashToFind);
 		System::UInt64 GetResultCount();
 

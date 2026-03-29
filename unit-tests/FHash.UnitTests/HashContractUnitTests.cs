@@ -136,22 +136,39 @@ public sealed class HashContractUnitTests
     {
         string managedDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedBridgeDispatch.h");
         string managedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedHashMgmtAccess.h");
+        string clrHashResultNet = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashResultNet.h");
         string clrMgmt = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+        string clrMgmtHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.h");
+        string uwpHashResultNet = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\HashResultNet.h");
         string uwpMgmt = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+        string uwpMgmtHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\HashMgmt.h");
         string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string wuiHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\UIBridgeWUI.h");
         string wuiSource = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
         string uwpHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
         string uwpSource = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+        string winUiPage = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUI\MainPage.xaml.cs");
+        string winUwpPage = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUWP\MainPage.xaml.cs");
 
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(", managedHashMgmtAccess, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", uwpMgmt, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", managedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", managedHashMgmtAccess, StringComparison.Ordinal);
+
+        Assert.Contains("public enum class HashResultStateNet", clrHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("return CreateCompatibilityResultDataNetArray(FindHashResults(sstrHashToFind));", clrMgmt, StringComparison.Ordinal);
+
+        Assert.Contains("public enum class HashResultStateNet", uwpHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("public value struct HashResultNet", uwpHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", uwpMgmt, StringComparison.Ordinal);
+        Assert.Contains("return CreateCompatibilityResultDataNetArray(FindHashResults(pstrHashToFind));", uwpMgmt, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", mfcHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
@@ -166,5 +183,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", uwpHeader, StringComparison.Ordinal);
         Assert.Contains("void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)", uwpSource, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", uwpSource, StringComparison.Ordinal);
+
+        Assert.Contains("HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);", winUiPage, StringComparison.Ordinal);
+
+        Assert.Contains("HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("AppendFileResultToTextMain(CreateCompatibilityResultData(hashResult), m_uppercaseChecked);", winUwpPage, StringComparison.Ordinal);
     }
 }
