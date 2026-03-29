@@ -102,6 +102,7 @@ public sealed class CommonSeamUnitTests
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)", nativeCoreProject, StringComparison.Ordinal);
 
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);
