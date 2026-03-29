@@ -256,7 +256,7 @@ jobs:
           $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
 
-          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true 2>&1 |
             Tee-Object -FilePath $coreLogPath
 
           if ($LASTEXITCODE -ne 0) {

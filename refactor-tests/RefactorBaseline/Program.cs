@@ -2118,7 +2118,10 @@ internal static class Program
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core project does not yet compile HashEngineResult.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineInternal.h", "Desktop native core project does not yet include HashEngineInternal.h.");
             AssertContains(nativeProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "Desktop native core project is missing the standalone SolutionDir fallback required by the direct CI build.");
+            AssertContains(nativeProject, "<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", "Desktop native core project is missing the runtime-variant suffix required for CLR-compatible WinUI builds.");
             AssertContains(nativeProject, @"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)", "Desktop native core project is missing the standalone include-root fallback required by the direct CI build.");
+            AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
+            AssertContains(nativeProject, @"$(MSBuildProjectName)$(FHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
 
@@ -3099,13 +3102,14 @@ internal static class Program
             AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific FileVersionHelper layer.");
 
             AssertContains(clrBridgeProject, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 32 CLR bridge does not yet link both the WinUI platform layer and fHashNativeCore.");
+            AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", "Phase 32 CLR bridge does not yet search the CLR-compatible fHashNativeCore-md output directory.");
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
 
             AssertInOrder(
                 workflow,
                 [
                     "build-winui-bridge-x64:",
-                    "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj",
+                    "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
                     "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
                     "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore"
                 ],

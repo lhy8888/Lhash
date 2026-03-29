@@ -102,7 +102,10 @@ public sealed class CommonSeamUnitTests
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(MSBuildProjectName)$(FHashRuntimeSuffix)", nativeCoreProject, StringComparison.Ordinal);
 
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);
@@ -121,12 +124,13 @@ public sealed class CommonSeamUnitTests
         Assert.Contains(@"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
 
         Assert.Contains("fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", clrBridgeProject, StringComparison.Ordinal);
         Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", clrBridgeProject, StringComparison.Ordinal);
 
         RepositoryTestContext.AssertContainsInOrder(
             workflow,
             "build-winui-bridge-x64:",
-            "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj",
+            "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
             "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
             "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore");
     }
