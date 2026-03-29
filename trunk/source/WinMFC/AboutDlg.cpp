@@ -1,4 +1,4 @@
-// AboutDlg.cpp : ÊµÏÖÎÄ¼ş
+ï»¿// AboutDlg.cpp : å®ç°æ–‡ä»¶
 // SUN Junwen
 
 #include "stdafx.h"
@@ -12,7 +12,7 @@
 #include "WinCommon/WindowsComm.h"
 #include "WinCommon/WindowsStrings.h"
 
-// CAboutDlg ¶Ô»°¿ò
+// CAboutDlg å¯¹è¯æ¡†
 
 IMPLEMENT_DYNAMIC(CAboutDlg, CDialog)
 CAboutDlg::CAboutDlg(CWnd* pParent /*=NULL*/)
@@ -29,7 +29,7 @@ BOOL CAboutDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	SetWindowText(GetStringByKey(ABOUTDLG_TITLE)); // ÉèÖÃ±êÌâ
+	SetWindowText(GetStringByKey(ABOUTDLG_TITLE)); // è®¾ç½®æ ‡é¢˜
 
 	CWnd* pWnd;
 	pWnd = GetDlgItem(IDOK);
@@ -38,6 +38,10 @@ BOOL CAboutDlg::OnInitDialog()
 	pWnd->SetWindowText(GetStringByKey(ABOUTDLG_PROJECT_SITE));
 
 	CString fHashVersion = _T(STR_VERSION_LEGACY); //GetExeFileVersion(exeFullPath);
+	if (fHashVersion.Right(2) == _T(".0"))
+	{
+		fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);
+	}
 
 	sunjwbase::tstring tstrOsinfo = WindowsComm::GetWindowsInfo();
 	m_about = GetStringByKey(ABOUTDLG_INFO_TITLE);
@@ -57,7 +61,7 @@ BOOL CAboutDlg::OnInitDialog()
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SHA512));
 	m_about.Append(_T("\r\n\r\n"));
 
-	//m_about = m_about + "µ±Ç°²Ù×÷ÏµÍ³:\r\n" + osinfo;
+	//m_about = m_about + "å½“å‰æ“ä½œç³»ç»Ÿ:\r\n" + osinfo;
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_OSTITLE));
 	m_about.Append(_T("\r\n"));
 	m_about.Append(tstrOsinfo.c_str());
@@ -80,18 +84,18 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CAboutDlg ÏûÏ¢´¦Àí³ÌĞò
+// CAboutDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 void CAboutDlg::OnBnClickedOk()
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 	OnOK();
 	EndDialog(0);
 }
 
 void CAboutDlg::OnNMClickSyslinkSite(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 	WindowsUtils::OpenURL(GetStringByKey(ABOUTDLG_PROJECT_URL));
 
 	*pResult = 0;

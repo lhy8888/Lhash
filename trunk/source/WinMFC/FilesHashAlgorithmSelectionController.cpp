@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 #include "FilesHashAlgorithmSelectionController.h"
 
@@ -16,9 +16,12 @@ namespace
 		IDC_CHECK_SHA512
 	};
 
-	const int HASH_ALGORITHM_CHECK_BOX_SPACING_X = 6;
-	const int HASH_ALGORITHM_CHECK_BOX_SPACING_Y = 4;
-	const int HASH_ALGORITHM_CHECK_BOX_PADDING_X = 18;
+	const int HASH_ALGORITHM_CHECK_BOX_SPACING_X = 18;
+	const int HASH_ALGORITHM_CHECK_BOX_SPACING_Y = 8;
+	const int HASH_ALGORITHM_CHECK_BOX_PADDING_X = 26;
+	const int HASH_ALGORITHM_CHECK_BOX_MIN_WIDTH = 84;
+	const int HASH_ALGORITHM_CHECK_BOX_MIN_HEIGHT = 18;
+	const int HASH_ALGORITHM_LAYOUT_MAX_COLUMNS = 2;
 }
 
 FilesHashAlgorithmSelectionController::HashAlgorithmCheckBox::HashAlgorithmCheckBox()
@@ -128,10 +131,30 @@ void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
 	CDC* pDC = m_parentWnd->GetDC();
 	CFont* oldFont = (pDC != NULL && font != NULL) ? pDC->SelectObject(font) : NULL;
 
-	int currentX = layoutRect.left;
-	int currentY = layoutRect.top;
-	int maxRight = layoutRect.right;
-	int checkBoxHeight = layoutRect.Height();
+	int availableWidth = layoutRect.Width();
+	int checkBoxHeight = max(layoutRect.Height(), HASH_ALGORITHM_CHECK_BOX_MIN_HEIGHT);
+	int algorithmCount = GetRegisteredHashAlgorithmCount();
+	int columnCount = min(HASH_ALGORITHM_LAYOUT_MAX_COLUMNS, max(1, algorithmCount));
+	while (columnCount > 1)
+	{
+		int proposedColumnWidth = (availableWidth - ((columnCount - 1) * HASH_ALGORITHM_CHECK_BOX_SPACING_X)) / columnCount;
+		if (proposedColumnWidth >= HASH_ALGORITHM_CHECK_BOX_MIN_WIDTH)
+		{
+			break;
+		}
+
+		--columnCount;
+	}
+
+	int columnWidth = (availableWidth - ((columnCount - 1) * HASH_ALGORITHM_CHECK_BOX_SPACING_X)) / columnCount;
+	if (columnCount == 1)
+	{
+		columnWidth = max(columnWidth, availableWidth);
+	}
+	else
+	{
+		columnWidth = max(columnWidth, HASH_ALGORITHM_CHECK_BOX_MIN_WIDTH);
+	}
 
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
@@ -146,12 +169,12 @@ void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
 		{
 			checkBoxWidth = pDC->GetTextExtent(label.c_str()).cx + HASH_ALGORITHM_CHECK_BOX_PADDING_X;
 		}
+		checkBoxWidth = min(max(checkBoxWidth, HASH_ALGORITHM_CHECK_BOX_MIN_WIDTH), columnWidth);
 
-		if (currentX > layoutRect.left && (currentX + checkBoxWidth) > maxRight)
-		{
-			currentX = layoutRect.left;
-			currentY += checkBoxHeight + HASH_ALGORITHM_CHECK_BOX_SPACING_Y;
-		}
+		int columnIndex = index % columnCount;
+		int rowIndex = index / columnCount;
+		int currentX = layoutRect.left + (columnIndex * (columnWidth + HASH_ALGORITHM_CHECK_BOX_SPACING_X));
+		int currentY = layoutRect.top + (rowIndex * (checkBoxHeight + HASH_ALGORITHM_CHECK_BOX_SPACING_Y));
 
 		CRect checkBoxRect(currentX, currentY, currentX + checkBoxWidth, currentY + checkBoxHeight);
 		if (!checkBoxEntry.checkBox->Create(
@@ -171,7 +194,6 @@ void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
 		}
 
 		m_checkBoxes.push_back(checkBoxEntry);
-		currentX += checkBoxWidth + HASH_ALGORITHM_CHECK_BOX_SPACING_X;
 		return true;
 	});
 

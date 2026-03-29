@@ -1,4 +1,4 @@
-name: Windows Build
+﻿name: Windows Build
 
 on:
   workflow_dispatch:
@@ -82,6 +82,9 @@ jobs:
       - security-regression
       - unit-tests
     runs-on: windows-2022
+    env:
+      LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
+      LHASH_SIGN_PFX_PASSWORD: ${{ secrets.LHASH_SIGN_PFX_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -124,6 +127,27 @@ jobs:
             throw 'MSBuild succeeded, but no executable was found in trunk\\x64\\Release.'
           }
 
+      - name: Sign legacy Windows app (optional)
+        if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $pfxPath = Join-Path $artifactRoot 'legacy-signing-cert.pfx'
+          $exePath = 'trunk\\x64\\Release\\LHash.exe'
+
+          [System.IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:LHASH_SIGN_PFX_BASE64))
+          try {
+            & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
+            if ($LASTEXITCODE -ne 0) {
+              throw "Legacy signing script failed with exit code $LASTEXITCODE."
+            }
+          }
+          finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
       - name: Package legacy x64 build
         if: always()
         shell: powershell
@@ -141,6 +165,13 @@ jobs:
             $packagedExe = Join-Path $bundleRoot 'LHash.exe'
             Copy-Item $exePath -Destination $packagedExe -ErrorAction Stop
             $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
+            $signature = Get-AuthenticodeSignature $packagedExe
+            $signatureSubject = ''
+            $signatureThumbprint = ''
+            if ($signature.SignerCertificate) {
+              $signatureSubject = $signature.SignerCertificate.Subject
+              $signatureThumbprint = $signature.SignerCertificate.Thumbprint
+            }
             $readme = @"
           LHash legacy x64 build
 
@@ -154,6 +185,7 @@ jobs:
 
           Usage:
           - Double-click LHash.exe to run the app.
+          - 'Publisher unknown' is removed only after the executable is Authenticode-signed with a trusted code-signing certificate.
           - Shell extension packaging is intentionally skipped in CI.
           "@
 
@@ -163,6 +195,9 @@ jobs:
           source_exe=$exePath
           packaged_exe=LHash.exe
           sha256=$exeHash
+          signature_status=$($signature.Status)
+          signature_subject=$signatureSubject
+          signature_thumbprint=$signatureThumbprint
           "@
 
             Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII

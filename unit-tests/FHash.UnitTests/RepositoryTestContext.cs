@@ -1,15 +1,26 @@
-using System.Text;
+﻿using System.Text;
 
 namespace FHash.UnitTests;
 
 internal static class RepositoryTestContext
 {
+    static RepositoryTestContext()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+
     public static string RepoRoot { get; } = FindRepoRoot();
 
     public static string ReadUtf8File(string relativePath)
     {
         string path = Path.Combine(RepoRoot, relativePath);
         return File.ReadAllText(path, Encoding.UTF8);
+    }
+
+    public static string ReadTextFile(string relativePath)
+    {
+        string path = Path.Combine(RepoRoot, relativePath);
+        return File.ReadAllText(path, DetectEncoding(path));
     }
 
     public static void AssertContainsInOrder(string content, params string[] fragments)
@@ -39,5 +50,19 @@ internal static class RepositoryTestContext
         }
 
         throw new DirectoryNotFoundException("Unable to locate the repository root for unit tests.");
+    }
+
+    private static Encoding DetectEncoding(string path)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        if (bytes.Length >= 3 &&
+            bytes[0] == 0xEF &&
+            bytes[1] == 0xBB &&
+            bytes[2] == 0xBF)
+        {
+            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+        }
+
+        return Encoding.GetEncoding(936);
     }
 }
