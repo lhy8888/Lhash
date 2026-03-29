@@ -58,15 +58,22 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string threadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string preparation = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEnginePreparation.cpp");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
+        Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *observer;", global, StringComparison.Ordinal);
+        Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", threadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", engine, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *observer = GetThreadDataObserver(*thrdData);", engine, StringComparison.Ordinal);
         Assert.Contains("return RunHashRequest(thrdData, request, observer);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestFiles(request", engine, StringComparison.Ordinal);

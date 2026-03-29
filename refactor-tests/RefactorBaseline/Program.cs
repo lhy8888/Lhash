@@ -25,11 +25,11 @@ internal static class Program
             AssertContains(global, "sunjwbase::tstring sha512;", "ResultData no longer carries the fixed SHA512 field in the baseline contract.");
             AssertContains(global, "sunjwbase::tstring error;", "ResultData no longer carries the error string in the baseline contract.");
 
-            AssertContains(global, "class HashEngineObserver;", "Global.h is missing the new phase-1 observer forward declaration.");
+            AssertContains(global, "class HashProgressSink;", "Global.h is missing the new phase-34 progress-sink forward declaration.");
             AssertContains(global, "struct ThreadData", "ThreadData baseline struct is missing.");
             AssertContains(global, "struct ThreadDataInputState", "ThreadData baseline struct is missing the grouped input-state seam.");
             AssertContains(global, "struct ThreadDataExecutionState", "ThreadData baseline struct is missing the grouped execution-state seam.");
-            AssertContains(global, "HashEngineObserver *observer;", "ThreadData is not yet narrowed to a neutral HashEngineObserver observer in the phase-1 contract.");
+            AssertContains(global, "HashProgressSink *observer;", "ThreadData is not yet narrowed to a neutral HashProgressSink observer in the phase-34 contract.");
             AssertContains(global, "ThreadDataInputState inputState;", "ThreadData no longer carries the grouped input-state field in the baseline contract.");
             AssertContains(global, "ThreadDataExecutionState executionState;", "ThreadData no longer carries the grouped execution-state field in the baseline contract.");
             AssertDoesNotContain(global, "HashEngineObserver *uiBridge;", "ThreadData still uses the UI-specific uiBridge field name in the phase-1 contract.");
@@ -95,9 +95,9 @@ internal static class Program
             string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(engine, "#include \"Common/HashEngineObserver.h\"", "HashEngine.cpp is not yet including the phase-1 observer seam.");
+            AssertDoesNotContain(engine, "#include \"Common/HashEngineObserver.h\"", "HashEngine.cpp still directly includes HashEngineObserver after the progress-sink refactor.");
             AssertDoesNotContain(engine, "#include \"Common/UIBridgeBase.h\"", "HashEngine.cpp still directly includes UIBridgeBase in phase 1.");
-            AssertContains(engine, "HashEngineObserver *observer", "HashEngine.cpp is not yet narrowed to HashEngineObserver.");
+            AssertContains(engine, "HashProgressSink *observer", "HashEngine.cpp is not yet narrowed to HashProgressSink.");
             AssertContains(engineImpl, "ResultData& BeginFileResult(", "HashEngine implementation set does not yet expose a tiny file-begin helper.");
             AssertContains(engineImpl, "uint64_t PrepareFileMetaResult(", "HashEngine implementation set does not yet expose a tiny file-meta helper.");
             AssertContains(engineImpl, "AccumulatePreScannedFileSize(", "HashEngine implementation set does not yet expose a tiny pre-scan file-size helper.");
@@ -420,7 +420,7 @@ internal static class Program
             string mfcResultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
             string mfcResultLifecycle = string.Join("\r\n", mfcDialog, mfcResultViewController);
 
-            AssertContains(threadAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "ThreadData access seams do not yet expose the observer-assignment helper.");
+            AssertContains(threadAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "ThreadData access seams do not yet expose the progress-sink assignment helper.");
             AssertContains(threadAccess, "GetThreadDataObserver(const ThreadData& threadData)", "ThreadData access seams do not yet expose the observer getter helper.");
             AssertContains(threadAccess, "GetThreadDataInputState(const ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped input-state getter helper.");
             AssertContains(threadAccess, "GetMutableThreadDataInputState(ThreadData& threadData)", "ThreadData access seams do not yet expose the grouped mutable input-state helper.");
@@ -2443,7 +2443,7 @@ internal static class Program
             AssertDoesNotContain(threadAccess, "AppendThreadDataInputFile(ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns input-file helpers after the seam split.");
             AssertDoesNotContain(threadAccess, "VisitThreadDataResults(const ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns result traversal after the seam split.");
 
-            AssertContains(threadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)", "Phase 18 execution seam does not yet own observer wiring.");
+            AssertContains(threadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "Phase 18 execution seam does not yet own progress-sink wiring.");
             AssertContains(threadExecutionAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "Phase 18 execution seam does not yet own working-state writes.");
             AssertContains(threadExecutionAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "Phase 18 execution seam does not yet own algorithm enablement.");
             AssertContains(threadExecutionAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "Phase 18 execution seam does not yet own counted-size reads.");
@@ -3168,7 +3168,7 @@ internal static class Program
 
             AssertContains(hashEngine, "HashProgressSink *observer, FileProgressState *progressState", "Phase 34 engine progress updates do not yet route through HashProgressSink.");
             AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", "Phase 34 HashEngine does not yet narrow the request-driven core entry onto HashProgressSink.");
-            AssertContains(hashEngine, "HashEngineObserver *observer = GetThreadDataObserver(*thrdData);", "Phase 34 HashThreadFunc no longer preserves the compatibility observer bridge.");
+            AssertContains(hashEngine, "HashProgressSink *observer = GetThreadDataObserver(*thrdData);", "Phase 34 HashThreadFunc does not yet narrow ThreadData lookup onto HashProgressSink.");
         }, failures);
 
         if (failures.Count > 0)

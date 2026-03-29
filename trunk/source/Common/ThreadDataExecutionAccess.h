@@ -4,12 +4,12 @@
 #include "Common/Global.h"
 #include "Common/HashAlgorithmRegistry.h"
 
-static inline void SetThreadDataObserver(ThreadData& threadData, HashEngineObserver *observer)
+static inline void SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)
 {
 	threadData.observer = observer;
 }
 
-static inline HashEngineObserver *GetThreadDataObserver(const ThreadData& threadData)
+static inline HashProgressSink *GetThreadDataObserver(const ThreadData& threadData)
 {
 	return threadData.observer;
 }

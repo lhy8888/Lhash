@@ -16,7 +16,6 @@
 #include <sched.h>
 #endif
 
-#include "Common/HashEngineObserver.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestAccess.h"
@@ -391,7 +390,7 @@ int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgres
 int WINAPI HashThreadFunc(void *param)
 {
 	ThreadData *thrdData = (ThreadData *)param;
-	HashEngineObserver *observer = GetThreadDataObserver(*thrdData);
+	HashProgressSink *observer = GetThreadDataObserver(*thrdData);
 	HashRequest request = CreateHashRequest(*thrdData);
 
 	return RunHashRequest(thrdData, request, observer);

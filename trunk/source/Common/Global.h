@@ -32,7 +32,7 @@
 
 #include "Common/strhelper.h"
 
-class HashEngineObserver;
+class HashProgressSink;
 
 struct ResultData;
 
@@ -109,7 +109,7 @@ struct ThreadDataExecutionState
 
 struct ThreadData // Thread execution context
 {
-	HashEngineObserver *observer;
+	HashProgressSink *observer;
 	ThreadDataInputState inputState;
 	ThreadDataExecutionState executionState;
 };
