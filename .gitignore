@@ -13,3 +13,5 @@ security-tests/**/bin/
 security-tests/**/obj/
 refactor-tests/**/bin/
 refactor-tests/**/obj/
+unit-tests/**/bin/
+unit-tests/**/obj/

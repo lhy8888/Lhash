@@ -41,8 +41,46 @@ jobs:
       - name: Run refactor baseline harness
         run: dotnet refactor-tests/RefactorBaseline/bin/Release/net10.0/RefactorBaseline.dll
 
+  unit-tests:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore unit test project
+        run: dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj
+
+      - name: Run unit tests
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+
+          & dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=FHash.UnitTests.trx" --results-directory $artifactRoot
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "dotnet test failed with exit code $LASTEXITCODE. See artifacts/FHash.UnitTests.trx for details."
+          }
+
+      - name: Upload unit test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FHash-unit-tests
+          path: |
+            artifacts/FHash.UnitTests.trx
+          if-no-files-found: warn
+
   build-legacy-x64:
-    needs: security-regression
+    needs:
+      - security-regression
+      - unit-tests
     runs-on: windows-2022
 
     steps:
@@ -157,7 +195,9 @@ jobs:
           if-no-files-found: warn
 
   build-winui-bridge-x64:
-    needs: security-regression
+    needs:
+      - security-regression
+      - unit-tests
     runs-on: windows-2022
 
     steps:
@@ -205,7 +245,9 @@ jobs:
           if-no-files-found: warn
 
   build-uwp-bridge-x64:
-    needs: security-regression
+    needs:
+      - security-regression
+      - unit-tests
     runs-on: windows-2022
 
     steps:
@@ -248,7 +290,9 @@ jobs:
           if-no-files-found: warn
 
   build-wui-shell-ext-x64:
-    needs: security-regression
+    needs:
+      - security-regression
+      - unit-tests
     runs-on: windows-2022
 
     steps:
@@ -282,7 +326,9 @@ jobs:
           if-no-files-found: warn
 
   build-uwp-shell-ext-x64:
-    needs: security-regression
+    needs:
+      - security-regression
+      - unit-tests
     runs-on: windows-2022
 
     steps:

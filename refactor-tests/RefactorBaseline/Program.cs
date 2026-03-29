@@ -3005,6 +3005,35 @@ internal static class Program
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ResultDigestAccess.h\"", "HashEngineInternal.h still depends on the umbrella ResultDigestAccess header after phase 29.");
         }, failures);
 
+        Run("Phase 30 introduces an independent xUnit unit-test framework and runs it in CI", () =>
+        {
+            string unitTestProject = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\FHash.UnitTests.csproj");
+            string unitTestContext = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\RepositoryTestContext.cs");
+            string unitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\CommonSeamUnitTests.cs");
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+
+            AssertContains(unitTestProject, "<PackageReference Include=\"Microsoft.NET.Test.Sdk\"", "Phase 30 unit test project is missing Microsoft.NET.Test.Sdk.");
+            AssertContains(unitTestProject, "<PackageReference Include=\"xunit\"", "Phase 30 unit test project is missing xUnit.");
+            AssertContains(unitTestProject, "<PackageReference Include=\"xunit.runner.visualstudio\"", "Phase 30 unit test project is missing the xUnit VS runner.");
+            AssertContains(unitTests, "[Fact]", "Phase 30 unit test project does not yet contain xUnit facts.");
+            AssertContains(unitTests, "HashAlgorithmRegistry_DefinesStableCompatibilityOrder", "Phase 30 unit tests do not yet cover the hash-algorithm registry seam.");
+            AssertContains(unitTests, "ResultDigestAccess_UmbrellaShimDependsOnDedicatedSeams", "Phase 30 unit tests do not yet cover the digest umbrella seam.");
+            AssertContains(unitTests, "Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds", "Phase 30 unit tests do not yet cover CI gating for the new unit framework.");
+            AssertContains(unitTestContext, "FindRepoRoot()", "Phase 30 unit test helper is missing repository-root discovery.");
+            AssertContains(workflow, "unit-tests:", "Workflow does not yet declare the phase 30 unit-tests job.");
+            AssertContains(workflow, "dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", "Workflow does not yet restore the phase 30 unit test project.");
+            AssertContains(workflow, "dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore", "Workflow does not yet run the phase 30 unit test project.");
+            AssertInOrder(
+                workflow,
+                [
+                    "build-legacy-x64:",
+                    "needs:",
+                    "- security-regression",
+                    "- unit-tests"
+                ],
+                "Workflow does not yet gate the legacy native build on both regression and unit-test jobs.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
