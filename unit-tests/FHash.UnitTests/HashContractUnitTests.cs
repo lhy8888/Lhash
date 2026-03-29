@@ -23,6 +23,7 @@ public sealed class HashContractUnitTests
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
         string compatibility = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultCompatibility.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
+        string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
         Assert.Contains("struct HashDigestResult", result, StringComparison.Ordinal);
@@ -36,6 +37,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("AssignHashResultCoreToNet", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultDigestsToNet", projection, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", projection, StringComparison.Ordinal);
+        Assert.Contains("VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", projection, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText", projection, StringComparison.Ordinal);
+        Assert.Contains("HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(result", result, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
     }
@@ -130,6 +135,9 @@ public sealed class HashContractUnitTests
     public void BridgeConsumers_NowConsumeHashResultAcrossManagedAndCompatibilityAdapters()
     {
         string managedDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedBridgeDispatch.h");
+        string managedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedHashMgmtAccess.h");
+        string clrMgmt = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+        string uwpMgmt = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
         string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string wuiHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\UIBridgeWUI.h");
@@ -140,6 +148,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", managedDispatch, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultProjection.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(", managedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", uwpMgmt, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", mfcHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);

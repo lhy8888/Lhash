@@ -3261,6 +3261,34 @@ internal static class Program
             AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<ResultDataNet, ResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
         }, failures);
 
+        Run("Phase 37 routes managed digest-search projection through HashResult search and projection seams", () =>
+        {
+            string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
+            string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
+            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+
+            AssertContains(hashResultSearch, "HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", "Phase 37 does not yet expose HashResult digest-search matching.");
+            AssertContains(hashResultSearch, "HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", "Phase 37 does not yet expose HashResult digest-search predicate matching.");
+
+            AssertContains(hashResultProjection, "#include \"Common/HashResultSearch.h\"", "Phase 37 HashResult projection seam does not yet layer on top of HashResultSearch.");
+            AssertContains(hashResultProjection, "VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose whole-list HashResult projection.");
+            AssertContains(hashResultProjection, "CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)", "Phase 37 does not yet expose HashResult match counting.");
+            AssertContains(hashResultProjection, "VisitProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose HashResult matching projection traversal.");
+            AssertContains(hashResultProjection, "CreateProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based materialized projection.");
+            AssertContains(hashResultProjection, "CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based digest-search materialization.");
+            AssertContains(hashResultProjection, "HashResult hashResult = ProjectHashResult(*itr);", "Phase 37 HashResult projection seam does not yet project ResultData into HashResult before matching.");
+            AssertContains(hashResultProjection, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString)", "Phase 37 HashResult projection seam does not yet route materialized net projection through ProjectHashResultToNet.");
+
+            AssertContains(managedHashMgmtAccess, "#include \"Common/HashResultProjection.h\"", "Phase 37 managed hash-management seam does not yet consume HashResultProjection.");
+            AssertContains(managedHashMgmtAccess, "CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(", "Phase 37 managed hash-management seam does not yet route digest-search projection through HashResultProjection.");
+            AssertDoesNotContain(managedHashMgmtAccess, "#include \"Common/ResultDataProjection.h\"", "Phase 37 managed hash-management seam still depends directly on ResultDataProjection.");
+
+            AssertContains(hashMgmtClr, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, cli::array<ResultDataNet>^>(", "Phase 37 CLR HashMgmt no longer routes digest-search projection through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "CreateProjectedManagedDigestMatchingResults<ResultDataNet, ResultStateNet, Array<ResultDataNet>^>(", "Phase 37 UWP HashMgmt no longer routes digest-search projection through the shared managed helper.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

@@ -2,7 +2,7 @@
 #define _MANAGED_HASH_MGMT_ACCESS_H_
 
 #include "Common/HashAlgorithmRegistry.h"
-#include "Common/ResultDataProjection.h"
+#include "Common/HashResultProjection.h"
 #include "Common/ResultDataSearch.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/ThreadDataExecutionAccess.h"
@@ -99,7 +99,7 @@ static inline TResultArray CreateProjectedManagedDigestMatchingResults(
 	TResultSetter setResult)
 {
 	sunjwbase::tstring normalizedHashToFind = NormalizeDigestSearchText(hashToFind);
-	return CreateProjectedDigestMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(
+	return CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(
 		GetThreadDataResults(threadData),
 		normalizedHashToFind,
 		createArray,
