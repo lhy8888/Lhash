@@ -21,6 +21,7 @@ public sealed class HashContractUnitTests
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
+        string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
         Assert.Contains("struct HashDigestResult", result, StringComparison.Ordinal);
         Assert.Contains("struct HashFileMeta", result, StringComparison.Ordinal);
@@ -29,6 +30,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("std::vector<HashDigestResult> digests;", result, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResult(const ResultData& result)", result, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(result", result, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
     }
 
     [Fact]

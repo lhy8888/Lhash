@@ -15,6 +15,11 @@ static inline sunjwbase::tstring GetResultDigestMetadataDisplayLabel(const Resul
 	return GetHashAlgorithmDescriptorDisplayLabel(digestMetadata);
 }
 
+static inline sunjwbase::tstring GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)
+{
+	return GetHashAlgorithmDescriptorStableName(digestMetadata);
+}
+
 static inline sunjwbase::tstring ResultDigestCompatibilityFields::*GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)
 {
 	return GetHashAlgorithmDescriptorCompatibilityValueField(digestMetadata);
