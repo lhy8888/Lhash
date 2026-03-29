@@ -64,10 +64,7 @@ static inline size_t VisitPathAndDigestMatchingResults(const ResultList& resultL
 
 static inline size_t CountDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText)
 {
-	return VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)
-	{
-		(void)result;
-	});
+	return CountDigestMatchingHashResults(resultList, digestText);
 }
 
 #endif

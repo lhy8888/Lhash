@@ -156,6 +156,21 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void ResultDataCompatibilityShims_NowLayerOnHashResultProjectionAndSearchSeams()
+    {
+        string resultDataProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDataProjection.h");
+        string resultDataSearch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDataSearch.h");
+
+        Assert.Contains("#include \"Common/HashResultProjection.h\"", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("AssignHashResultCoreToNet<TResultDataNet, TResultStateNet>(resultDataNet, ProjectHashResult(result), convertString);", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("VisitProjectedHashResults<TResultDataNet, TResultStateNet>(resultList, convertString, visitor);", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("VisitProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet>(resultList, digestText, convertString, visitor);", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, digestText, createResultArray, convertString, setProjectedResult);", resultDataProjection, StringComparison.Ordinal);
+        Assert.Contains("return CountDigestMatchingHashResults(resultList, digestText);", resultDataSearch, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");

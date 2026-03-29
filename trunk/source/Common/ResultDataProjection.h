@@ -1,31 +1,20 @@
 #ifndef _RESULT_DATA_PROJECTION_H_
 #define _RESULT_DATA_PROJECTION_H_
 
+#include "Common/HashResultProjection.h"
 #include "Common/ResultDataSearch.h"
 #include "Common/ResultNetProjection.h"
 
 template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>
 static inline TResultDataNet AssignResultCoreToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)
 {
-	resultDataNet.EnumState = ConvertResultStateToNet<TResultStateNet>(GetResultState(result));
-	resultDataNet.Path = convertString(GetResultPath(result).c_str());
-	resultDataNet.Size = GetResultSize(result);
-	resultDataNet.ModifiedDate = convertString(GetResultModifiedDate(result).c_str());
-	resultDataNet.Version = convertString(GetResultVersion(result).c_str());
-	resultDataNet.Error = convertString(GetResultError(result).c_str());
-	return resultDataNet;
+	return AssignHashResultCoreToNet<TResultDataNet, TResultStateNet>(resultDataNet, ProjectHashResult(result), convertString);
 }
 
 template<typename TResultDataNet, typename TStringConverter>
 static inline TResultDataNet AssignResultDigestsToNet(TResultDataNet resultDataNet, const ResultData& result, TStringConverter convertString)
 {
-	for (int digestIndex = 0; digestIndex < GetResultDigestCount(); digestIndex++)
-	{
-		ResultDigestType digestType = GetResultDigestTypeAt(digestIndex);
-		const tstring& digestValueTstr = GetResultDigest(result, digestType);
-		resultDataNet = AssignResultDigestToNet(resultDataNet, digestType, convertString(digestValueTstr.c_str()));
-	}
-	return resultDataNet;
+	return AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename TResultPredicate, typename TStringConverter, typename TResultVisitor>
@@ -47,11 +36,7 @@ static inline void ProjectAndDispatchResult(const ResultData& result, TStringCon
 template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultVisitor>
 static inline void VisitProjectedResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)
 {
-	VisitProjectedMatchingResults<TResultDataNet, TResultStateNet>(resultList, [&](const ResultData& result)
-	{
-		(void)result;
-		return true;
-	}, convertString, visitor);
+	VisitProjectedHashResults<TResultDataNet, TResultStateNet>(resultList, convertString, visitor);
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename TResultPredicate, typename TStringConverter, typename TResultVisitor>
@@ -86,21 +71,13 @@ static inline TResultArray CreateProjectedMatchingResults(const ResultList& resu
 template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultVisitor>
 static inline void VisitProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TStringConverter convertString, TResultVisitor visitor)
 {
-	size_t matchIndex = 0;
-	VisitDigestMatchingResults(resultList, digestText, [&](const ResultData& result)
-	{
-		visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));
-		++matchIndex;
-	});
+	VisitProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet>(resultList, digestText, convertString, visitor);
 }
 
 template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TResultArrayFactory, typename TStringConverter, typename TResultArraySetter>
 static inline TResultArray CreateProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)
 {
-	return CreateProjectedMatchingResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, [&](const ResultData& result)
-	{
-		return ResultMatchesDigestText(result, digestText);
-	}, createResultArray, convertString, setProjectedResult);
+	return CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, digestText, createResultArray, convertString, setProjectedResult);
 }
 
 #endif
