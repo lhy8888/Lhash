@@ -29,38 +29,6 @@ static void SetProjectedHashResultNet(cli::array<HashResultNet>^ projectedResult
 	projectedResults[static_cast<int>(index)] = hashResultNet;
 }
 
-static ResultDataNet CreateCompatibilityResultDataNet(HashResultNet hashResultNet)
-{
-	ResultDataNet resultDataNet;
-	resultDataNet.EnumState = static_cast<ResultStateNet>(hashResultNet.EnumState);
-	resultDataNet.Path = hashResultNet.Path;
-	resultDataNet.Size = hashResultNet.Size;
-	resultDataNet.ModifiedDate = hashResultNet.ModifiedDate;
-	resultDataNet.Version = hashResultNet.Version;
-	resultDataNet.MD5 = hashResultNet.MD5;
-	resultDataNet.SHA1 = hashResultNet.SHA1;
-	resultDataNet.SHA256 = hashResultNet.SHA256;
-	resultDataNet.SHA512 = hashResultNet.SHA512;
-	resultDataNet.Error = hashResultNet.Error;
-	return resultDataNet;
-}
-
-static cli::array<ResultDataNet>^ CreateCompatibilityResultDataNetArray(cli::array<HashResultNet>^ hashResultNetArray)
-{
-	if (hashResultNetArray == nullptr)
-	{
-		return nullptr;
-	}
-
-	cli::array<ResultDataNet>^ compatibilityResults = gcnew cli::array<ResultDataNet>(hashResultNetArray->Length);
-	for (int resultIndex = 0; resultIndex < hashResultNetArray->Length; ++resultIndex)
-	{
-		compatibilityResults[resultIndex] = CreateCompatibilityResultDataNet(hashResultNetArray[resultIndex]);
-	}
-
-	return compatibilityResults;
-}
-
 static sunjwbase::tstring ConvertManagedFilePathToTstr(String^ filePath)
 {
 	return tstring(ConvertSystemStringToTstr(filePath));
@@ -180,11 +148,6 @@ cli::array<HashResultNet>^ HashMgmtClr::FindHashResults(String^ sstrHashToFind)
 		CreateProjectedHashResultNetArray,
 		ConvertTstrToSystemString,
 		SetProjectedHashResultNet);
-}
-
-cli::array<ResultDataNet>^ HashMgmtClr::FindResult(String^ sstrHashToFind)
-{
-	return CreateCompatibilityResultDataNetArray(FindHashResults(sstrHashToFind));
 }
 
 UInt64 HashMgmtClr::GetResultCount()

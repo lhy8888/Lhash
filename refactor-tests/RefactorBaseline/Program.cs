@@ -592,7 +592,11 @@ internal static class Program
             AssertContains(clrMgmt, "CreateProjectedHashResultNetArray(size_t resultCount)", "CLR bridge search does not yet expose the compile-safe managed hash-result array factory.");
             AssertContains(clrMgmt, "SetProjectedHashResultNet(cli::array<HashResultNet>^ projectedResults, size_t index, HashResultNet hashResultNet)", "CLR bridge search does not yet expose the compile-safe managed hash-result array setter.");
             AssertContains(clrMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", "CLR bridge search no longer routes through the centralized managed hash-result projection seam.");
+            AssertDoesNotContain(clrMgmt, "CreateCompatibilityResultDataNetArray(", "CLR bridge search still keeps the legacy ResultDataNet compatibility array helper instead of returning HashResultNet directly.");
+            AssertDoesNotContain(clrMgmt, "FindResult(String^ sstrHashToFind)", "CLR bridge search still exposes the legacy ResultDataNet find API instead of using HashResultNet directly.");
             AssertContains(uwpMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", "UWP bridge search no longer routes through the centralized managed hash-result projection seam.");
+            AssertDoesNotContain(uwpMgmt, "CreateCompatibilityResultDataNetArray(", "UWP bridge search still keeps the legacy ResultDataNet compatibility array helper instead of returning HashResultNet directly.");
+            AssertDoesNotContain(uwpMgmt, "FindResult(String^ pstrHashToFind)", "UWP bridge search still exposes the legacy ResultDataNet find API instead of using HashResultNet directly.");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultString>", "ResultDataProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
@@ -3286,7 +3290,7 @@ internal static class Program
             AssertDoesNotContain(managedHashMgmtAccess, "#include \"Common/ResultDataProjection.h\"", "Phase 37 managed hash-management seam still depends directly on ResultDataProjection.");
         }, failures);
 
-        Run("Phase 38 promotes managed query results onto HashResultNet while retaining compatibility wrappers", () =>
+        Run("Phase 38 promotes managed query results onto HashResultNet as the primary managed query contract", () =>
         {
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string clrHashResultNet = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashResultNet.h");
@@ -3304,13 +3308,15 @@ internal static class Program
             AssertContains(clrHashResultNet, "public value struct HashResultNet", "Phase 38 CLR bridge does not yet define HashResultNet.");
             AssertContains(clrHashMgmtHeader, "cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", "Phase 38 CLR HashMgmt does not yet expose FindHashResults.");
             AssertContains(clrHashMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", "Phase 38 CLR HashMgmt does not yet route queries through HashResultNet projection.");
-            AssertContains(clrHashMgmt, "return CreateCompatibilityResultDataNetArray(FindHashResults(sstrHashToFind));", "Phase 38 CLR compatibility FindResult no longer delegates to FindHashResults.");
+            AssertDoesNotContain(clrHashMgmtHeader, "FindResult(System::String^ sstrHashToFind)", "Phase 38 CLR HashMgmt still exposes the legacy ResultDataNet find API.");
+            AssertDoesNotContain(clrHashMgmt, "CreateCompatibilityResultDataNetArray(", "Phase 38 CLR HashMgmt still keeps the legacy ResultDataNet compatibility array helper.");
 
             AssertContains(uwpHashResultNet, "public enum class HashResultStateNet", "Phase 38 UWP bridge does not yet define HashResultStateNet.");
             AssertContains(uwpHashResultNet, "public value struct HashResultNet", "Phase 38 UWP bridge does not yet define HashResultNet.");
             AssertContains(uwpHashMgmtHeader, "Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", "Phase 38 UWP HashMgmt does not yet expose FindHashResults.");
             AssertContains(uwpHashMgmt, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", "Phase 38 UWP HashMgmt does not yet route queries through HashResultNet projection.");
-            AssertContains(uwpHashMgmt, "return CreateCompatibilityResultDataNetArray(FindHashResults(pstrHashToFind));", "Phase 38 UWP compatibility FindResult no longer delegates to FindHashResults.");
+            AssertDoesNotContain(uwpHashMgmtHeader, "FindResult(Platform::String^ pstrHashToFind)", "Phase 38 UWP HashMgmt still exposes the legacy ResultDataNet find API.");
+            AssertDoesNotContain(uwpHashMgmt, "CreateCompatibilityResultDataNetArray(", "Phase 38 UWP HashMgmt still keeps the legacy ResultDataNet compatibility array helper.");
 
             AssertContains(winUiPage, "HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", "Phase 38 WinUI page does not yet consume FindHashResults.");
             AssertContains(winUiPage, "private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", "Phase 38 WinUI page does not yet switch the find-result surface to HashResultNet.");
@@ -3352,6 +3358,22 @@ internal static class Program
             AssertContains(winUwpPage, "private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet render realtime results directly from HashResultNet.");
             AssertContains(winUwpPage, "private void UIBridgeDelegate_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet accept realtime HashResultNet hash events.");
             AssertDoesNotContain(winUwpPage, "CreateCompatibilityResultData(", "Phase 39 UWP page still rebuilds compatibility ResultDataNet for managed rendering.");
+        }, failures);
+
+        Run("Phase 40 removes managed ResultDataNet query compatibility wrappers in favor of HashResultNet-only query APIs", () =>
+        {
+            string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string clrHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string uwpHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+
+            AssertContains(clrHashMgmtHeader, "cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", "Phase 40 CLR HashMgmt no longer exposes the HashResultNet query API.");
+            AssertDoesNotContain(clrHashMgmtHeader, "FindResult(System::String^ sstrHashToFind)", "Phase 40 CLR HashMgmt still exposes the legacy ResultDataNet query wrapper.");
+            AssertDoesNotContain(clrHashMgmt, "CreateCompatibilityResultDataNetArray(", "Phase 40 CLR HashMgmt still keeps the legacy ResultDataNet compatibility array helper.");
+
+            AssertContains(uwpHashMgmtHeader, "Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", "Phase 40 UWP HashMgmt no longer exposes the HashResultNet query API.");
+            AssertDoesNotContain(uwpHashMgmtHeader, "FindResult(Platform::String^ pstrHashToFind)", "Phase 40 UWP HashMgmt still exposes the legacy ResultDataNet query wrapper.");
+            AssertDoesNotContain(uwpHashMgmt, "CreateCompatibilityResultDataNetArray(", "Phase 40 UWP HashMgmt still keeps the legacy ResultDataNet compatibility array helper.");
         }, failures);
 
         if (failures.Count > 0)

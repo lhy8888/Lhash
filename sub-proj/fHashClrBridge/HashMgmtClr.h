@@ -59,7 +59,6 @@ public:
 		void StartHashThread();
 
 		cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);
-		cli::array<ResultDataNet>^ FindResult(System::String^ sstrHashToFind);
 		System::UInt64 GetResultCount();
 
 	private:

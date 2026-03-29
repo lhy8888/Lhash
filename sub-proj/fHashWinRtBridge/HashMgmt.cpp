@@ -42,38 +42,6 @@ static void SetProjectedHashResultNet(Array<HashResultNet>^ projectedResults, si
 	projectedResults[static_cast<unsigned int>(index)] = hashResultNet;
 }
 
-static ResultDataNet CreateCompatibilityResultDataNet(HashResultNet hashResultNet)
-{
-	ResultDataNet resultDataNet;
-	resultDataNet.EnumState = static_cast<ResultStateNet>(hashResultNet.EnumState);
-	resultDataNet.Path = hashResultNet.Path;
-	resultDataNet.Size = hashResultNet.Size;
-	resultDataNet.ModifiedDate = hashResultNet.ModifiedDate;
-	resultDataNet.Version = hashResultNet.Version;
-	resultDataNet.MD5 = hashResultNet.MD5;
-	resultDataNet.SHA1 = hashResultNet.SHA1;
-	resultDataNet.SHA256 = hashResultNet.SHA256;
-	resultDataNet.SHA512 = hashResultNet.SHA512;
-	resultDataNet.Error = hashResultNet.Error;
-	return resultDataNet;
-}
-
-static Array<ResultDataNet>^ CreateCompatibilityResultDataNetArray(Array<HashResultNet>^ hashResultNetArray)
-{
-	if (hashResultNetArray == nullptr)
-	{
-		return nullptr;
-	}
-
-	auto compatibilityResults = ref new Array<ResultDataNet>(hashResultNetArray->Length);
-	for (unsigned int resultIndex = 0; resultIndex < hashResultNetArray->Length; ++resultIndex)
-	{
-		compatibilityResults[resultIndex] = CreateCompatibilityResultDataNet(hashResultNetArray[resultIndex]);
-	}
-
-	return compatibilityResults;
-}
-
 HashMgmt::HashMgmt(UIBridgeDelegate^ uiBridgeDelegate)
 	:m_hWorkThread(NULL)
 {
@@ -168,9 +136,4 @@ Array<HashResultNet>^ HashMgmt::FindHashResults(String^ pstrHashToFind)
 		CreateProjectedHashResultNetArray,
 		ConvertToPlatStr,
 		SetProjectedHashResultNet);
-}
-
-Array<ResultDataNet>^ HashMgmt::FindResult(String^ pstrHashToFind)
-{
-	return CreateCompatibilityResultDataNetArray(FindHashResults(pstrHashToFind));
 }

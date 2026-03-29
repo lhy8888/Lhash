@@ -46,7 +46,6 @@ public:
 		void StartHashThread();
 
 		Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);
-		Platform::Array<ResultDataNet>^ FindResult(Platform::String^ pstrHashToFind);
 
 	private:
 		std::shared_ptr<UIBridgeUwp> m_spUiBridgeUwp;
