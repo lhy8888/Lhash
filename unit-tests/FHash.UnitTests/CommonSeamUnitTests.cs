@@ -102,6 +102,7 @@ public sealed class CommonSeamUnitTests
     {
         string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
         string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string bridgeMacHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
 
         Assert.Contains("#include \"Common/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("GetHashResultSizeDisplayInfo(const HashResult& result)", hashResultRender, StringComparison.Ordinal);
@@ -109,6 +110,27 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", bridgeMacHeader, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashResultCompatibility_IsRemoved_AfterRealtimeAndHistoryConsumersSwitchToHashResult()
+    {
+        string compatibilityPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultCompatibility.h");
+        string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
+        string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
+        string bridgeMacHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
+        string bridgeMacSource = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.mm");
+        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\HashBridge.mm");
+
+        Assert.False(File.Exists(compatibilityPath));
+        Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
+        Assert.Contains("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", bridgeMacHeader, StringComparison.Ordinal);
+        Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", bridgeMacHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateCompatibilityResultData(result);", bridgeMacSource, StringComparison.Ordinal);
+        Assert.Contains("ConvertHashResultToSwift(const HashResult& result)", bridgeMacSource, StringComparison.Ordinal);
+        Assert.Contains("ConvertHashResultToSwift(ProjectHashResult(*itr));", hashBridgeMac, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1434,7 +1434,7 @@ internal static class Program
             AssertContains(filesHashSearchController, "VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)", "Legacy MFC search flow does not yet route result iteration through the centralized path+digest matching helper.");
             AssertContains(filesHashSearchController, "tstring tstrFileToFind = NormalizeResultPathSearchText(m_strFindFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized ResultDataAccess helper.");
             AssertContains(filesHashSearchController, "tstring tstrHashToFind = NormalizeDigestSearchText(m_strFindHash.GetString());", "Legacy MFC search flow does not yet normalize digest search text through the centralized ResultDataAccess helper.");
-            AssertContains(filesHashSearchController, "AppendResult(result);", "Legacy MFC search flow no longer appends matched results through the current path.");
+            AssertContains(filesHashSearchController, "AppendResult(ProjectHashResult(result));", "Legacy MFC search flow does not yet project matched ResultData into HashResult before rendering.");
             AssertDoesNotContain(filesHashSearchController, "strHash.MakeUpper();", "Legacy MFC search flow still uppercases digest search text inline instead of using the centralized normalization seam.");
             AssertDoesNotContain(filesHashSearchController, "strFile.MakeLower();", "Legacy MFC search flow still lowercases path search text inline instead of using the centralized normalization seam.");
             AssertDoesNotContain(filesHashSearchController, "CString strPathLower = CString(GetResultPath(result).c_str());", "Legacy MFC search flow still lowercases result paths inline instead of using the centralized path-match seam.");
@@ -3057,7 +3057,6 @@ internal static class Program
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
-            string hashResultCompatibility = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
@@ -3074,8 +3073,6 @@ internal static class Program
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy compatibility link back to ResultData.");
             AssertContains(hashResult, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
             AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 31 does not yet project ResultData into HashResult.");
-            AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility reconstruction from HashResult.");
-            AssertContains(hashResultCompatibility, "CreateCompatibilityResultData(const HashResult& hashResult)", "Phase 35 does not yet expose compatibility result reconstruction.");
 
             AssertContains(progressEvent, "enum ProgressEventType", "Phase 31 does not yet define a stable ProgressEventType surface.");
             AssertContains(progressEvent, "struct ProgressEvent", "Phase 31 does not yet define a stable ProgressEvent contract.");
@@ -3207,7 +3204,6 @@ internal static class Program
         Run("Phase 35 routes semantic result events through HashResult while narrowing observer compatibility to thin wrappers", () =>
         {
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
-            string hashResultCompatibility = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
@@ -3217,9 +3213,6 @@ internal static class Program
             AssertContains(progressEvent, "CreateFileMetaReadyProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-meta events directly from HashResult.");
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose file-hash events directly from HashResult.");
             AssertContains(progressEvent, "CreateFileFailedProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-failed events directly from HashResult.");
-
-            AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility hydration from HashResult.");
-            AssertContains(hashResultCompatibility, "SetResultDigest(compatibilityResult, digestResult.type, digestResult.value);", "Phase 35 compatibility hydration does not yet rebuild digest values from HashResult.");
 
             AssertContains(hashEngineObserver, "void onFileStarted(const HashResult& result)", "Phase 35 HashEngineObserver does not yet expose HashResult-based file-start compatibility.");
             AssertDoesNotContain(hashEngineObserver, "onFileStarted(ProjectHashResult(result));", "Phase 42 HashEngineObserver still keeps the legacy ResultData-to-HashResult wrapper.");
@@ -3436,6 +3429,32 @@ internal static class Program
             AssertContains(bridgeMfcSource, "VisitHashResultDigestDisplayValues(result, uppercase", "Phase 43 MFC bridge does not yet render digest values directly from HashResult.");
             AssertContains(bridgeMfcSource, "void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", "Phase 43 MFC bridge does not yet expose HashResult whole-result rendering.");
             AssertDoesNotContain(bridgeMfcSource, "CreateCompatibilityResultData(result);", "Phase 43 MFC bridge still rebuilds compatibility ResultData.");
+        }, failures);
+
+        Run("Phase 44 removes HashResultCompatibility and routes MFC search plus Mac bridge consumption directly through HashResult", () =>
+        {
+            string searchHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.h");
+            string searchSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
+            string bridgeMacHeader = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.h");
+            string bridgeMacSource = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.mm");
+            string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
+            string compatibilityPath = Path.Combine(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
+
+            if (File.Exists(compatibilityPath))
+            {
+                throw new InvalidOperationException("Phase 44 still keeps the deprecated HashResultCompatibility header.");
+            }
+
+            AssertContains(searchHeader, "void AppendResult(const HashResult& result);", "Phase 44 MFC search controller does not yet accept HashResult as its render subject.");
+            AssertContains(searchSource, "AppendResult(ProjectHashResult(result));", "Phase 44 MFC search controller does not yet project ResultData into HashResult before rendering.");
+            AssertContains(searchSource, "UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", "Phase 44 MFC search controller does not yet render search/history results directly from HashResult.");
+
+            AssertDoesNotContain(bridgeMacHeader, "#include \"Common/HashResultCompatibility.h\"", "Phase 44 Mac bridge header still depends on HashResultCompatibility.");
+            AssertContains(bridgeMacHeader, "static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", "Phase 44 Mac bridge header does not yet expose direct HashResult-to-Swift projection.");
+            AssertContains(bridgeMacSource, "ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", "Phase 44 Mac bridge realtime path does not yet project HashResult directly.");
+            AssertDoesNotContain(bridgeMacSource, "CreateCompatibilityResultData(result);", "Phase 44 Mac bridge still rebuilds compatibility ResultData.");
+            AssertContains(bridgeMacSource, "ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", "Phase 44 Mac bridge does not yet expose direct HashResult-to-Swift projection.");
+            AssertContains(hashBridgeMac, "ConvertHashResultToSwift(ProjectHashResult(*itr));", "Phase 44 Mac history bridge does not yet project stored ResultData through HashResult before Swift conversion.");
         }, failures);
 
         if (failures.Count > 0)

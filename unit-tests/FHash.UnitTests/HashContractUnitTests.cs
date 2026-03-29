@@ -21,7 +21,6 @@ public sealed class HashContractUnitTests
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
-        string compatibility = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultCompatibility.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
         string resultNetProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultNetProjection.h");
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
@@ -33,8 +32,6 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("const ResultData *sourceResult;", result, StringComparison.Ordinal);
         Assert.Contains("std::vector<HashDigestResult> digests;", result, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResult(const ResultData& result)", result, StringComparison.Ordinal);
-        Assert.Contains("PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", compatibility, StringComparison.Ordinal);
-        Assert.Contains("CreateCompatibilityResultData(const HashResult& hashResult)", compatibility, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/ResultNetProjection.h\"", projection, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ResultDataProjection.h\"", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultCoreToNet", projection, StringComparison.Ordinal);
@@ -164,6 +161,11 @@ public sealed class HashContractUnitTests
         string wuiSource = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
         string uwpHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
         string uwpSource = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+        string macHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
+        string macSource = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.mm");
+        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\HashBridge.mm");
+        string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
+        string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
         string winUiPage = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUI\MainPage.xaml.cs");
         string winUwpPage = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUWP\MainPage.xaml.cs");
 
@@ -209,6 +211,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitHashResultDigestDisplayValues(result, uppercase", mfcSource, StringComparison.Ordinal);
         Assert.Contains("void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", mfcSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
+        Assert.Contains("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
+        Assert.Contains("UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", searchSource, StringComparison.Ordinal);
 
         Assert.Contains("virtual void showFileName(const HashResult& result);", wuiHeader, StringComparison.Ordinal);
         Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", wuiHeader, StringComparison.Ordinal);
@@ -221,6 +226,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)", uwpSource, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", uwpSource, StringComparison.Ordinal);
         Assert.Contains("m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", uwpSource, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", macHeader, StringComparison.Ordinal);
+        Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", macHeader, StringComparison.Ordinal);
+        Assert.Contains("ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", macSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateCompatibilityResultData(result);", macSource, StringComparison.Ordinal);
+        Assert.Contains("ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", macSource, StringComparison.Ordinal);
+        Assert.Contains("ConvertHashResultToSwift(ProjectHashResult(*itr));", hashBridgeMac, StringComparison.Ordinal);
 
         Assert.Contains("HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", winUiPage, StringComparison.Ordinal);
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);

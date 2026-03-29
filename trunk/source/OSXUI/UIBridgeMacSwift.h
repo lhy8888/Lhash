@@ -11,7 +11,7 @@
 
 #include "OsUtils/OsThread.h"
 #include "Common/HashEngineBridge.h"
-#include "Common/HashResultCompatibility.h"
+#include "Common/HashResult.h"
 
 #import "MacUtils.h"
 
@@ -45,9 +45,9 @@ public:
     virtual void fileFinish();
 
     /**
-     * Convert ResultData to ResultDataSwift
+     * Convert HashResult to ResultDataSwift
      */
-    static ResultDataSwift *ConvertResultDataToSwift(const ResultData& result);
+    static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);
 
 private:
     MacUtils::ObjcWeakPtr<MainViewController> _mainViewControllerPtr;

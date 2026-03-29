@@ -14,6 +14,7 @@
 #include "Common/strhelper.h"
 #include "Common/Global.h"
 #include "Common/HashEngine.h"
+#include "Common/HashResult.h"
 
 #import <Cocoa/Cocoa.h>
 #import "fHash-Swift-Header.h"
@@ -110,7 +111,7 @@ using namespace sunjwbase;
     ResultList::iterator itr = _thrdData->resultList.begin();
     for(; itr != _thrdData->resultList.end(); ++itr)
     {
-        ResultDataSwift *resultData = UIBridgeMacSwift::ConvertResultDataToSwift(*itr);
+        ResultDataSwift *resultData = UIBridgeMacSwift::ConvertHashResultToSwift(ProjectHashResult(*itr));
         [results addObject:resultData];
     }
 

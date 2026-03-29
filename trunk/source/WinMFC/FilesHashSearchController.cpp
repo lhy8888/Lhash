@@ -123,7 +123,7 @@ void FilesHashSearchController::RebuildResultList()
 
 	VisitThreadDataResults(*m_threadData, [&](const ResultData& result)
 	{
-		AppendResult(result);
+		AppendResult(ProjectHashResult(result));
 	});
 }
 
@@ -148,7 +148,7 @@ void FilesHashSearchController::RebuildSearchResults()
 
 	size_t count = VisitPathAndDigestMatchingResults(GetThreadDataResults(*m_threadData), tstrFileToFind, tstrHashToFind, [&](const ResultData& result)
 	{
-		AppendResult(result);
+		AppendResult(ProjectHashResult(result));
 	});
 
 	if (count == 0)
@@ -157,7 +157,7 @@ void FilesHashSearchController::RebuildSearchResults()
 	}
 }
 
-void FilesHashSearchController::AppendResult(const ResultData& result)
+void FilesHashSearchController::AppendResult(const HashResult& result)
 {
 	if (m_threadData == NULL || m_mainEdit == NULL)
 	{

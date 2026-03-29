@@ -78,8 +78,7 @@ void UIBridgeMacSwift::calcFinish()
 
 void UIBridgeMacSwift::showFileName(const HashResult& result)
 {
-    ResultData compatibilityResult = CreateCompatibilityResultData(result);
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileName:resultSwift];
@@ -88,8 +87,7 @@ void UIBridgeMacSwift::showFileName(const HashResult& result)
 
 void UIBridgeMacSwift::showFileMeta(const HashResult& result)
 {
-    ResultData compatibilityResult = CreateCompatibilityResultData(result);
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileMeta:resultSwift];
@@ -98,8 +96,7 @@ void UIBridgeMacSwift::showFileMeta(const HashResult& result)
 
 void UIBridgeMacSwift::showFileHash(const HashResult& result, bool uppercase)
 {
-    ResultData compatibilityResult = CreateCompatibilityResultData(result);
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileHash:resultSwift uppercase:uppercase];
@@ -108,8 +105,7 @@ void UIBridgeMacSwift::showFileHash(const HashResult& result, bool uppercase)
 
 void UIBridgeMacSwift::showFileErr(const HashResult& result)
 {
-    ResultData compatibilityResult = CreateCompatibilityResultData(result);
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertResultDataToSwift(compatibilityResult);
+    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
         [mainViewController onShowFileErr:resultSwift];
@@ -141,10 +137,10 @@ void UIBridgeMacSwift::fileFinish()
 {
 }
 
-ResultDataSwift *UIBridgeMacSwift::ConvertResultDataToSwift(const ResultData& result)
+ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)
 {
     ResultDataSwift *resultDataSwift = [[ResultDataSwift alloc] init];
-    switch (result.enumState)
+    switch (result.state)
     {
         case ResultState::RESULT_NONE:
             resultDataSwift.state = ResultDataSwift.RESULT_NONE;
@@ -162,15 +158,32 @@ ResultDataSwift *UIBridgeMacSwift::ConvertResultDataToSwift(const ResultData& re
             resultDataSwift.state = ResultDataSwift.RESULT_ERROR;
             break;
     }
-    resultDataSwift.strPath = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrPath));
-    resultDataSwift.ulSize = result.ulSize;
-    resultDataSwift.strMDate = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrMDate));
-    resultDataSwift.strVersion = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrVersion));
-    resultDataSwift.strMD5 = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrMD5));
-    resultDataSwift.strSHA1 = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrSHA1));
-    resultDataSwift.strSHA256 = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrSHA256));
-    resultDataSwift.strSHA512 = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrSHA512));
-    resultDataSwift.strError = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.tstrError));
+    resultDataSwift.strPath = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.path));
+    resultDataSwift.ulSize = result.meta.size;
+    resultDataSwift.strMDate = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.meta.modifiedDate));
+    resultDataSwift.strVersion = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.meta.version));
+    resultDataSwift.strError = MacUtils::ConvertUTF8StringToNSString(tstrtostr(result.error));
+
+    for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
+    {
+        const HashDigestResult& digestResult = result.digests[digestIndex];
+        NSString *digestValue = MacUtils::ConvertUTF8StringToNSString(tstrtostr(digestResult.value));
+        switch (digestResult.type)
+        {
+            case RESULT_DIGEST_MD5:
+                resultDataSwift.strMD5 = digestValue;
+                break;
+            case RESULT_DIGEST_SHA1:
+                resultDataSwift.strSHA1 = digestValue;
+                break;
+            case RESULT_DIGEST_SHA256:
+                resultDataSwift.strSHA256 = digestValue;
+                break;
+            case RESULT_DIGEST_SHA512:
+                resultDataSwift.strSHA512 = digestValue;
+                break;
+        }
+    }
 
     return resultDataSwift;
 }

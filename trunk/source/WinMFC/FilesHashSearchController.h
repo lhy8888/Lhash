@@ -3,6 +3,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
+#include "Common/HashResult.h"
 #include "HyperEditHash.h"
 
 class FilesHashSearchController
@@ -27,7 +28,7 @@ public:
 private:
 	void RebuildResultList();
 	void RebuildSearchResults();
-	void AppendResult(const ResultData& result);
+	void AppendResult(const HashResult& result);
 
 	ThreadData* m_threadData;
 	CHyperEditHash* m_mainEdit;
