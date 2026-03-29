@@ -35,12 +35,10 @@ struct HashFileMeta
 struct HashResult
 {
 	HashResult()
-		: sourceResult(NULL),
-		state(RESULT_NONE)
+		: state(RESULT_NONE)
 	{
 	}
 
-	const ResultData *sourceResult;
 	ResultState state;
 	sunjwbase::tstring path;
 	HashFileMeta meta;
@@ -51,7 +49,6 @@ struct HashResult
 static inline HashResult ProjectHashResult(const ResultData& result)
 {
 	HashResult projectedResult;
-	projectedResult.sourceResult = &result;
 	projectedResult.state = GetResultState(result);
 	projectedResult.path = GetResultPath(result);
 	projectedResult.meta.size = GetResultSize(result);

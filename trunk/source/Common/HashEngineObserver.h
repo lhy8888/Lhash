@@ -29,19 +29,9 @@ public:
 		calcFinish();
 	}
 
-	void onFileStarted(const ResultData& result)
-	{
-		onFileStarted(ProjectHashResult(result));
-	}
-
 	void onFileStarted(const HashResult& result)
 	{
 		showFileName(result);
-	}
-
-	void onFileMetaReady(const ResultData& result)
-	{
-		onFileMetaReady(ProjectHashResult(result));
 	}
 
 	void onFileMetaReady(const HashResult& result)
@@ -49,19 +39,9 @@ public:
 		showFileMeta(result);
 	}
 
-	void onFileHashReady(const ResultData& result, bool uppercase)
-	{
-		onFileHashReady(ProjectHashResult(result), uppercase);
-	}
-
 	void onFileHashReady(const HashResult& result, bool uppercase)
 	{
 		showFileHash(result, uppercase);
-	}
-
-	void onFileFailed(const ResultData& result)
-	{
-		onFileFailed(ProjectHashResult(result));
 	}
 
 	void onFileFailed(const HashResult& result)

@@ -73,10 +73,14 @@ internal static class Program
             AssertContains(observer, "void onPreparationFinished()", "HashEngineObserver does not yet offer a neutral preparation-finished wrapper.");
             AssertContains(observer, "void onCancelled()", "HashEngineObserver does not yet offer a neutral cancellation wrapper.");
             AssertContains(observer, "void onCompleted()", "HashEngineObserver does not yet offer a neutral completion wrapper.");
-            AssertContains(observer, "void onFileStarted(const ResultData& result)", "HashEngineObserver does not yet offer a neutral file-start wrapper.");
-            AssertContains(observer, "void onFileMetaReady(const ResultData& result)", "HashEngineObserver does not yet offer a neutral file-metadata wrapper.");
-            AssertContains(observer, "void onFileHashReady(const ResultData& result, bool uppercase)", "HashEngineObserver does not yet offer a neutral file-hash wrapper.");
-            AssertContains(observer, "void onFileFailed(const ResultData& result)", "HashEngineObserver does not yet offer a neutral file-error wrapper.");
+            AssertContains(observer, "void onFileStarted(const HashResult& result)", "HashEngineObserver does not yet offer a HashResult-based file-start wrapper.");
+            AssertContains(observer, "void onFileMetaReady(const HashResult& result)", "HashEngineObserver does not yet offer a HashResult-based file-metadata wrapper.");
+            AssertContains(observer, "void onFileHashReady(const HashResult& result, bool uppercase)", "HashEngineObserver does not yet offer a HashResult-based file-hash wrapper.");
+            AssertContains(observer, "void onFileFailed(const HashResult& result)", "HashEngineObserver does not yet offer a HashResult-based file-error wrapper.");
+            AssertDoesNotContain(observer, "void onFileStarted(const ResultData& result)", "HashEngineObserver still keeps the legacy ResultData file-start wrapper.");
+            AssertDoesNotContain(observer, "void onFileMetaReady(const ResultData& result)", "HashEngineObserver still keeps the legacy ResultData file-metadata wrapper.");
+            AssertDoesNotContain(observer, "void onFileHashReady(const ResultData& result, bool uppercase)", "HashEngineObserver still keeps the legacy ResultData file-hash wrapper.");
+            AssertDoesNotContain(observer, "void onFileFailed(const ResultData& result)", "HashEngineObserver still keeps the legacy ResultData file-error wrapper.");
             AssertContains(observer, "int progressMax()", "HashEngineObserver does not yet offer a neutral progress-max wrapper.");
             AssertContains(observer, "void onFileProgress(int value)", "HashEngineObserver does not yet offer a neutral file-progress wrapper.");
             AssertContains(observer, "void onTotalProgress(int value)", "HashEngineObserver does not yet offer a neutral total-progress wrapper.");
@@ -3068,7 +3072,7 @@ internal static class Program
             AssertContains(hashRequest, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 HashRequest does not yet own algorithm iteration.");
 
             AssertContains(hashResult, "struct HashResult", "Phase 31 does not yet define a stable HashResult contract.");
-            AssertContains(hashResult, "const ResultData *sourceResult;", "Phase 31 HashResult does not yet keep a compatibility link back to ResultData.");
+            AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy compatibility link back to ResultData.");
             AssertContains(hashResult, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
             AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 31 does not yet project ResultData into HashResult.");
             AssertContains(hashResultCompatibility, "PopulateCompatibilityResultData(ResultData& compatibilityResult, const HashResult& hashResult)", "Phase 35 does not yet expose compatibility reconstruction from HashResult.");
@@ -3076,7 +3080,7 @@ internal static class Program
 
             AssertContains(progressEvent, "enum ProgressEventType", "Phase 31 does not yet define a stable ProgressEventType surface.");
             AssertContains(progressEvent, "struct ProgressEvent", "Phase 31 does not yet define a stable ProgressEvent contract.");
-            AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 31 does not yet define hash-ready progress events.");
+            AssertDoesNotContain(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 42 still keeps the legacy ResultData-based hash-ready progress event overload.");
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose hash-ready progress events directly from HashResult.");
 
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 31 does not yet define a neutral hash progress sink contract.");
@@ -3219,7 +3223,7 @@ internal static class Program
             AssertContains(hashResultCompatibility, "SetResultDigest(compatibilityResult, digestResult.type, digestResult.value);", "Phase 35 compatibility hydration does not yet rebuild digest values from HashResult.");
 
             AssertContains(hashEngineObserver, "void onFileStarted(const HashResult& result)", "Phase 35 HashEngineObserver does not yet expose HashResult-based file-start compatibility.");
-            AssertContains(hashEngineObserver, "onFileStarted(ProjectHashResult(result));", "Phase 35 HashEngineObserver does not yet keep the thin ResultData-to-HashResult wrapper.");
+            AssertDoesNotContain(hashEngineObserver, "onFileStarted(ProjectHashResult(result));", "Phase 42 HashEngineObserver still keeps the legacy ResultData-to-HashResult wrapper.");
             AssertContains(hashEngineObserver, "onFileStarted(progressEvent.result);", "Phase 35 HashEngineObserver does not yet dispatch file-start events through HashResult.");
             AssertContains(hashEngineObserver, "onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver does not yet dispatch hash-ready events through HashResult.");
             AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
@@ -3395,6 +3399,26 @@ internal static class Program
             AssertDoesNotContain(hashResultProjection, "#include \"Common/ResultDataProjection.h\"", "Phase 41 HashResultProjection still depends on the legacy ResultDataProjection header.");
             AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result", "Phase 41 ManagedBridgeDispatch still exposes the deprecated ResultData-based managed dispatch overload.");
             AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 41 ManagedBridgeDispatch does not yet expose the HashResult-only managed dispatch overload.");
+        }, failures);
+
+        Run("Phase 42 removes ResultData-based progress and observer compatibility overloads so HashResult stays a pure event contract", () =>
+        {
+            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
+            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+
+            AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy ResultData back-pointer.");
+
+            AssertDoesNotContain(progressEvent, "CreateResultProgressEvent(ProgressEventType eventType, const ResultData& result)", "Phase 42 ProgressEvent still keeps the legacy ResultData result overload.");
+            AssertDoesNotContain(progressEvent, "CreateFileStartedProgressEvent(const ResultData& result)", "Phase 42 ProgressEvent still keeps the legacy ResultData file-start overload.");
+            AssertDoesNotContain(progressEvent, "CreateFileMetaReadyProgressEvent(const ResultData& result)", "Phase 42 ProgressEvent still keeps the legacy ResultData file-meta overload.");
+            AssertDoesNotContain(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 42 ProgressEvent still keeps the legacy ResultData file-hash overload.");
+            AssertDoesNotContain(progressEvent, "CreateFileFailedProgressEvent(const ResultData& result)", "Phase 42 ProgressEvent still keeps the legacy ResultData file-error overload.");
+
+            AssertDoesNotContain(hashEngineObserver, "void onFileStarted(const ResultData& result)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-start wrapper.");
+            AssertDoesNotContain(hashEngineObserver, "void onFileMetaReady(const ResultData& result)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-meta wrapper.");
+            AssertDoesNotContain(hashEngineObserver, "void onFileHashReady(const ResultData& result, bool uppercase)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-hash wrapper.");
+            AssertDoesNotContain(hashEngineObserver, "void onFileFailed(const ResultData& result)", "Phase 42 HashEngineObserver still keeps the legacy ResultData file-error wrapper.");
         }, failures);
 
         if (failures.Count > 0)
