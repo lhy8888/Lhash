@@ -3117,6 +3117,17 @@ internal static class Program
                 "Phase 32 workflow does not yet build fHashNativeCore before the WinUI native layer and CLR bridge.");
         }, failures);
 
+        Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
+        {
+            string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
+            string hashEngine = ReadHashEngineImplementation(repoRoot);
+
+            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer);", "Phase 33 HashEngine header does not yet expose the request-driven core entry.");
+            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)", "Phase 33 HashEngine implementation does not yet define the request-driven core entry.");
+            AssertContains(hashEngine, "return RunHashRequest(thrdData, request, observer);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest.");
+            AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest before dispatch.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

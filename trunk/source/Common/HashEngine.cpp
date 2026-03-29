@@ -321,12 +321,8 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 	return false;
 }
 
-int WINAPI HashThreadFunc(void *param)
+int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)
 {
-	ThreadData *thrdData = (ThreadData *)param;
-	HashEngineObserver *observer = GetThreadDataObserver(*thrdData);
-	HashRequest request = CreateHashRequest(*thrdData);
-
 	SetThreadDataWorking(*thrdData, true);
 
 	ResetThreadDataTotalSize(*thrdData);
@@ -390,4 +386,13 @@ int WINAPI HashThreadFunc(void *param)
 	}
 
 	return CompleteHashing(thrdData, observer);
+}
+
+int WINAPI HashThreadFunc(void *param)
+{
+	ThreadData *thrdData = (ThreadData *)param;
+	HashEngineObserver *observer = GetThreadDataObserver(*thrdData);
+	HashRequest request = CreateHashRequest(*thrdData);
+
+	return RunHashRequest(thrdData, request, observer);
 }

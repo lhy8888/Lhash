@@ -7,6 +7,10 @@
 #include <WinDef.h>
 #endif
 
+struct HashRequest;
+class HashEngineObserver;
+
+int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer);
 int WINAPI HashThreadFunc(void *param);
 
 #endif

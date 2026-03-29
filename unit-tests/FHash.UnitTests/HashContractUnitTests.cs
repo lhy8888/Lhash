@@ -52,12 +52,16 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
+        string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string preparation = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEnginePreparation.cpp");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
+        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer);", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashEngineObserver *observer)", engine, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
+        Assert.Contains("return RunHashRequest(thrdData, request, observer);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestFiles(request", engine, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", engine, StringComparison.Ordinal);
