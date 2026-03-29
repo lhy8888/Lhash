@@ -137,9 +137,9 @@ internal static class Program
             AssertContains(engine, "ThreadPool threadPool(5);", "HashEngine no longer uses the current fixed-size thread pool in the baseline implementation.");
             AssertContains(engineImpl, "if (GetHashRequestFileCount(request) < 200)", "HashEngine no longer performs the current small-batch pre-scan in the baseline implementation.");
             AssertContains(engine, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "HashEngine no longer routes input-file iteration through the HashRequest contract seam.");
-            AssertContains(engineImpl, "AccumulatePreScannedFileSize(thrdData, request, fSizes, fileIndex);", "HashEngine no longer routes the small-batch pre-scan loop body through the tiny helper.");
+            AssertContains(engineImpl, "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);", "HashEngine no longer routes the small-batch pre-scan loop body through the tiny helper.");
             AssertContains(engine, "bool wasCancelled = false;", "HashEngine no longer tracks small-batch pre-scan cancellation through the local helper contract.");
-            AssertContains(engine, "isSizeCaled = PrepareHashingWork(thrdData, request, observer, fSizes, &wasCancelled);", "HashEngine no longer routes the preparation phase through the tiny helper.");
+            AssertContains(engine, "isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);", "HashEngine no longer routes the preparation phase through the tiny helper.");
             AssertContains(engine, "if (wasCancelled)", "HashEngine no longer handles small-batch pre-scan cancellation via the helper result.");
             AssertContains(engine, "YieldHashThread();", "HashEngine no longer routes per-file scheduler yielding through the tiny helper.");
             AssertContains(engine, "future<void> taskSHA512Update", "HashEngine no longer fans out SHA512 updates in the baseline implementation.");
@@ -147,18 +147,18 @@ internal static class Program
             AssertContains(engine, "future<void> taskSHA1Update", "HashEngine no longer fans out SHA1 updates in the baseline implementation.");
             AssertContains(engine, "future<void> taskMD5Update", "HashEngine no longer fans out MD5 updates in the baseline implementation.");
             AssertContains(engine, "FileExecutionState executionState = { 0 };", "HashEngine no longer creates the grouped file-execution state bundle.");
-            AssertContains(engine, "ResultData& result = BeginFileHashAttempt(thrdData, observer, fullPath, &executionState, &path);", "HashEngine no longer routes the file-attempt setup through the grouped file-execution helper.");
+            AssertContains(engine, "ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);", "HashEngine no longer routes the file-attempt setup through the grouped file-execution helper.");
             AssertContains(engine, "InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);", "HashEngine no longer routes file-attempt state initialization through the grouped execution helper.");
             AssertContains(engine, "OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);", "HashEngine no longer routes the file-open attempt through the grouped execution helper.");
-            AssertContains(engine, "bool wasStopped = ProcessOpenedFileHashing(thrdData, request, observer, result, fileIndex, isSizeCaled, fSizes, &executionState", "HashEngine no longer routes the opened-file processing loop through the grouped execution helper.");
-            AssertContains(engine, "CompleteFileAttempt(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);", "HashEngine no longer routes the file-attempt terminal path through the grouped execution bundle.");
-            AssertContains(engineImpl, "EmitReadFileError(observer, result);", "HashEngine no longer routes read-file failures through the tiny helper.");
-            AssertContains(engineImpl, "FinishFileProcessing(observer);", "HashEngine no longer routes file-finished callbacks through the tiny helper.");
-            AssertContains(engineImpl, "EmitErrorResult(observer, result);", "HashEngine no longer emits errors through the tiny error-result helper in the baseline implementation.");
+            AssertContains(engine, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState", "HashEngine no longer routes the opened-file processing loop through the grouped execution helper.");
+            AssertContains(engine, "CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "HashEngine no longer routes the file-attempt terminal path through the grouped execution bundle.");
+            AssertContains(engineImpl, "EmitReadFileError(executionContext, result);", "HashEngine no longer routes read-file failures through the tiny helper.");
+            AssertContains(engineImpl, "FinishFileProcessing(executionContext);", "HashEngine no longer routes file-finished callbacks through the tiny helper.");
+            AssertContains(engineImpl, "EmitErrorResult(executionContext, result);", "HashEngine no longer emits errors through the tiny error-result helper in the baseline implementation.");
             AssertContains(engineImpl, "SetResultError(result, errorText);", "HashEngine error-message helper no longer writes the error text before emitting.");
-            AssertContains(engineImpl, "EmitErrorMessageResult(observer, result,", "HashEngine no longer routes error-text emission through the tiny error-message helper.");
-            AssertContains(engine, "return CancelHashing(thrdData, observer);", "HashEngine no longer routes cancellation exits through the tiny cancellation helper.");
-            AssertContains(engine, "return CompleteHashing(thrdData, observer);", "HashEngine no longer routes the successful exit through the tiny completion helper.");
+            AssertContains(engineImpl, "EmitErrorMessageResult(executionContext, result,", "HashEngine no longer routes error-text emission through the tiny error-message helper.");
+            AssertContains(engine, "return CancelHashing(executionContext);", "HashEngine no longer routes cancellation exits through the tiny cancellation helper.");
+            AssertContains(engine, "return CompleteHashing(executionContext);", "HashEngine no longer routes the successful exit through the tiny completion helper.");
             AssertInOrder(engine,
                 [
                     "static bool ProcessOpenedFileHashing(",
@@ -174,7 +174,7 @@ internal static class Program
                 [
                     "BeginFileHashAttempt(",
                     "ResetFileProgressState(&executionState->progressState);",
-                    "ResultData& result = BeginFileResult(thrdData, observer, path);",
+                    "ResultData& result = BeginFileResult(executionContext, path);",
                     "*resultPath = GetResultPath(result).c_str();",
                     "return result;"
                 ],
@@ -227,7 +227,7 @@ internal static class Program
                 [
                     "PrepareHashingWork(",
                     "observer->onProgressEvent(CreatePreparingProgressEvent());",
-                    "bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, request, fSizes, wasCancelled);",
+                    "bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, fSizes, wasCancelled);",
                     "if (*wasCancelled)",
                     "observer->onProgressEvent(CreatePreparationFinishedProgressEvent());",
                     "return isSizeCaled;"
@@ -238,7 +238,7 @@ internal static class Program
                     "TryPreScanSmallBatchFileSizes(",
                     "if (GetHashRequestFileCount(request) < 200)",
                     "*wasCancelled = true;",
-                    "AccumulatePreScannedFileSize(thrdData, request, fSizes, fileIndex);",
+                    "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);",
                     "return true;"
                 ],
                 "HashEngine small-batch pre-scan helper no longer preserves the expected control flow.");
@@ -247,14 +247,14 @@ internal static class Program
                     "AccumulatePreScannedFileSize(",
                     "OsFile osFile(path);",
                     "fSizes[fileIndex] = fSize;",
-                    "AddThreadDataTotalSize(*thrdData, fSize);"
+                    "AddHashExecutionTotalSize(*executionContext, fSize);"
                 ],
                 "HashEngine pre-scan helper no longer preserves the expected size-accumulation order.");
             AssertInOrder(engineImpl,
                 [
                     "PrepareFileMetaResult(",
                     "SetResultModifiedDate(result, osFile.getModifiedTimeFormat());",
-                    "EmitMetaResult(observer, result);",
+                    "EmitMetaResult(executionContext, result);",
                     "return fsize;"
                 ],
                 "HashEngine file-meta helper no longer preserves the expected metadata-emission order.");
@@ -262,7 +262,7 @@ internal static class Program
                 [
                     "static int CompleteHashing(",
                     "observer->onProgressEvent(CreateCompletedProgressEvent());",
-                    "SetThreadDataWorking(*thrdData, false);",
+                    "SetHashExecutionWorking(*executionContext, false);",
                     "return 0;"
                 ],
                 "HashEngine completion helper no longer preserves the expected completion order.");
@@ -325,16 +325,16 @@ internal static class Program
                 [
                     "CompleteOpenedFileAttempt(",
                     "if (executionState.fileAttemptState.readFailed)",
-                    "EmitReadFileError(observer, result);",
+                    "EmitReadFileError(executionContext, result);",
                     "CompleteSuccessfulFileHashing(",
-                    "FinishFileProcessing(observer);"
+                    "FinishFileProcessing(executionContext);"
                 ],
                 "HashEngine opened-file completion helper no longer preserves the expected branching order.");
             AssertInOrder(engineImpl,
                 [
                     "CompleteOpenedFileAttempt(",
-                    "CompleteSuccessfulFileHashing(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);",
-                    "FinishFileProcessing(observer);"
+                    "CompleteSuccessfulFileHashing(executionContext, request, result, fileIndex, isSizeCaled, executionState);",
+                    "FinishFileProcessing(executionContext);"
                 ],
                 "HashEngine no longer routes the successful opened-file path through the tiny helper.");
             AssertInOrder(engineImpl,
@@ -342,20 +342,20 @@ internal static class Program
                     "CompleteFileAttempt(",
                     "if (executionState.fileAttemptState.isFileOpened)",
                     "CompleteOpenedFileAttempt(",
-                    "EmitOpenFileError(observer, result, executionState.fileAttemptState.openErrorText);",
-                    "FinishFileProcessing(observer);"
+                    "EmitOpenFileError(executionContext, result, executionState.fileAttemptState.openErrorText);",
+                    "FinishFileProcessing(executionContext);"
                 ],
                 "HashEngine file-attempt helper no longer preserves the expected branching order.");
             AssertInOrder(engineImpl,
                 [
                     "EmitOpenFileError(",
-                    "EmitErrorMessageResult(observer, result, tstring(errorText));"
+                    "EmitErrorMessageResult(executionContext, result, tstring(errorText));"
                 ],
                 "HashEngine open-file error helper no longer preserves the expected emission order.");
             AssertInOrder(engineImpl,
                 [
                     "EmitReadFileError(",
-                    "EmitErrorMessageResult(observer, result, strtotstr(string(\"Failed to read file while hashing.\")));"
+                    "EmitErrorMessageResult(executionContext, result, strtotstr(string(\"Failed to read file while hashing.\")));"
                 ],
                 "HashEngine read-file error helper no longer preserves the expected emission order.");
             AssertInOrder(engineImpl,
@@ -371,19 +371,19 @@ internal static class Program
             AssertInOrder(engine,
                 [
                     "bool wasCancelled = false;",
-                    "isSizeCaled = PrepareHashingWork(thrdData, request, observer, fSizes, &wasCancelled);",
+                    "isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);",
                     "if (wasCancelled)",
                     "FileExecutionState executionState = { 0 };",
                     "bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)",
                     "YieldHashThread();",
-                    "ResultData& result = BeginFileHashAttempt(thrdData, observer, fullPath, &executionState, &path);",
+                    "ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);",
                     "InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);",
                     "OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);",
                     "if (executionState.fileAttemptState.isFileOpened)",
-                    "bool wasStopped = ProcessOpenedFileHashing(thrdData, request, observer, result, fileIndex, isSizeCaled, fSizes, &executionState",
+                    "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState",
                     "if (wasStopped)",
-                    "CompleteFileAttempt(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);",
-                    "return CompleteHashing(thrdData, observer);"
+                    "CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);",
+                    "return CompleteHashing(executionContext);"
                 ],
                 "HashEngine lifecycle callbacks no longer follow the current baseline order.");
         }, failures);
@@ -675,11 +675,11 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendThreadDataResult(*thrdData);",
+                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
                     "ResetResultData(result);",
                     "SetResultState(result, RESULT_NONE);",
                     "SetResultPath(result, path);",
-                    "EmitPathResult(observer, result);"
+                    "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer resets digest storage before publishing the file path.");
         }, failures);
@@ -1502,11 +1502,11 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendThreadDataResult(*thrdData);",
+                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
                     "ResetResultData(result);",
                     "SetResultState(result, RESULT_NONE);",
                     "SetResultPath(result, path);",
-                    "EmitPathResult(observer, result);"
+                    "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer resets grouped core state before publishing the file path.");
         }, failures);
@@ -1526,11 +1526,11 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendThreadDataResult(*thrdData);",
+                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
                     "ResetResultData(result);",
                     "SetResultState(result, RESULT_NONE);",
                     "SetResultPath(result, path);",
-                    "EmitPathResult(observer, result);"
+                    "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer routes grouped result reset through the dedicated helper before publishing the file path.");
         }, failures);
@@ -1937,7 +1937,7 @@ internal static class Program
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(threadData);", "New ThreadData sessions do not yet reset hash algorithms to the default enabled set.");
             AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);", "ThreadDataAccess does not yet default the current algorithms to enabled.");
 
-            AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashProgressSink *observer, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
+            AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
             AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
             AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "PopulateDigestResult(request, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the request-scoped algorithm-selection seam.");
@@ -3124,12 +3124,17 @@ internal static class Program
 
         Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
         {
+            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", "Phase 33 HashEngine header does not yet expose the request-driven core entry.");
-            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", "Phase 33 HashEngine implementation does not yet define the request-driven core entry.");
-            AssertContains(hashEngine, "return RunHashRequest(thrdData, request, observer);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest.");
+            AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
+            AssertContains(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context does not yet project ThreadData into the execution context.");
+            AssertContains(hashEngineHeader, "struct HashExecutionContext;", "Phase 33 HashEngine header does not yet forward declare HashExecutionContext.");
+            AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
+            AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
+            AssertContains(hashEngine, "HashExecutionContext executionContext = CreateHashExecutionContext(*thrdData);", "Phase 35 HashThreadFunc does not yet project ThreadData into HashExecutionContext before dispatch.");
+            AssertContains(hashEngine, "return RunHashRequest(&executionContext, request);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest through HashExecutionContext.");
             AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest before dispatch.");
         }, failures);
 
@@ -3137,6 +3142,7 @@ internal static class Program
         {
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
@@ -3151,24 +3157,36 @@ internal static class Program
             AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "Phase 34 HashEngineObserver is not yet narrowed into a compatibility adapter on top of HashProgressSink.");
             AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashEngineObserver no longer satisfies the progress-max sink contract.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashEngineObserver no longer satisfies the semantic progress-event sink contract.");
+            AssertContains(hashExecutionContext, "HashProgressSink *progressSink;", "Phase 35 hash execution context does not yet carry the neutral progress sink.");
+            AssertContains(hashExecutionContext, "bool *workingFlag;", "Phase 35 hash execution context does not yet carry the working-flag seam.");
+            AssertContains(hashExecutionContext, "bool *stopRequestedFlag;", "Phase 35 hash execution context does not yet carry the cancellation seam.");
+            AssertContains(hashExecutionContext, "uint64_t *countedSize;", "Phase 35 hash execution context does not yet carry the counted-size seam.");
+            AssertContains(hashExecutionContext, "ResultList *results;", "Phase 35 hash execution context does not yet carry the result-list seam.");
+            AssertContains(hashExecutionContext, "GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose progress-sink reads.");
+            AssertContains(hashExecutionContext, "ShouldStopHashExecution(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose cancellation reads.");
+            AssertContains(hashExecutionContext, "AppendHashExecutionResult(HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose result publication.");
 
-            AssertContains(hashEngineHeader, "class HashProgressSink;", "Phase 34 HashEngine header does not yet forward declare HashProgressSink.");
+            AssertDoesNotContain(hashEngineHeader, "class HashProgressSink;", "Phase 35 HashEngine header still forward declares HashProgressSink after switching to HashExecutionContext.");
             AssertDoesNotContain(hashEngineHeader, "class HashEngineObserver;", "Phase 34 HashEngine header still directly depends on HashEngineObserver.");
-            AssertContains(hashEngineHeader, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);", "Phase 34 HashEngine header does not yet narrow the request-driven core entry onto HashProgressSink.");
+            AssertDoesNotContain(hashEngineHeader, "HashProgressSink *observer", "Phase 35 HashEngine header still routes the core entry through the older progress-sink argument.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashEngineInternal does not yet consume HashProgressSink.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashExecutionContext.h\"", "Phase 35 HashEngineInternal does not yet consume HashExecutionContext.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/HashEngineObserver.h\"", "Phase 34 HashEngineInternal still directly depends on HashEngineObserver.");
-            AssertContains(hashEngineInternal, "HashProgressSink *observer", "Phase 34 HashEngineInternal does not yet route execution seams through HashProgressSink.");
+            AssertContains(hashEngineInternal, "HashExecutionContext *executionContext", "Phase 35 HashEngineInternal does not yet route execution seams through HashExecutionContext.");
 
-            AssertContains(hashEnginePreparation, "PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer", "Phase 34 preparation seam does not yet consume HashProgressSink.");
-            AssertContains(hashEnginePreparation, "EmitPathResult(HashProgressSink *observer, ResultData& result)", "Phase 34 preparation seam does not yet publish file-start events through HashProgressSink.");
+            AssertContains(hashEnginePreparation, "PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request", "Phase 35 preparation seam does not yet consume HashExecutionContext.");
+            AssertContains(hashEnginePreparation, "EmitPathResult(HashExecutionContext *executionContext, ResultData& result)", "Phase 35 preparation seam does not yet publish file-start events through HashExecutionContext.");
+            AssertContains(hashEnginePreparation, "AppendHashExecutionResult(*executionContext)", "Phase 35 preparation seam does not yet publish results through HashExecutionContext.");
 
-            AssertContains(hashEngineResult, "PrepareFileMetaResult(ThreadData *thrdData, HashProgressSink *observer, ResultData& result", "Phase 34 result seam does not yet consume HashProgressSink.");
-            AssertContains(hashEngineResult, "EmitHashResult(HashProgressSink *observer, ResultData& result, bool uppercase)", "Phase 34 result seam does not yet publish hash results through HashProgressSink.");
+            AssertContains(hashEngineResult, "PrepareFileMetaResult(HashExecutionContext *executionContext, ResultData& result", "Phase 35 result seam does not yet consume HashExecutionContext.");
+            AssertContains(hashEngineResult, "EmitHashResult(HashExecutionContext *executionContext, ResultData& result, bool uppercase)", "Phase 35 result seam does not yet publish hash results through HashExecutionContext.");
+            AssertContains(hashEngineResult, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 35 result seam does not yet route counted-size replacement through HashExecutionContext.");
 
-            AssertContains(hashEngine, "HashProgressSink *observer, FileProgressState *progressState", "Phase 34 engine progress updates do not yet route through HashProgressSink.");
-            AssertContains(hashEngine, "int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)", "Phase 34 HashEngine does not yet narrow the request-driven core entry onto HashProgressSink.");
-            AssertContains(hashEngine, "HashProgressSink *observer = GetThreadDataObserver(*thrdData);", "Phase 34 HashThreadFunc does not yet narrow ThreadData lookup onto HashProgressSink.");
+            AssertContains(hashEngine, "HashExecutionContext *executionContext, uint64_t fsize", "Phase 35 engine progress updates do not yet route through HashExecutionContext.");
+            AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 35 HashEngine does not yet narrow the request-driven core entry onto HashExecutionContext.");
+            AssertContains(hashEngine, "ShouldStopHashExecution(*executionContext)", "Phase 35 HashEngine does not yet read stop state through HashExecutionContext.");
+            AssertContains(hashEngine, "ResetHashExecutionTotalSize(*executionContext);", "Phase 35 HashEngine does not yet reset counted size through HashExecutionContext.");
         }, failures);
 
         if (failures.Count > 0)

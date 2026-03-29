@@ -8,9 +8,9 @@
 #endif
 
 struct HashRequest;
-class HashProgressSink;
+struct HashExecutionContext;
 
-int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer);
+int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);
 int WINAPI HashThreadFunc(void *param);
 
 #endif

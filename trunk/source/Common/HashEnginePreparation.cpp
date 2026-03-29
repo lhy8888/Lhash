@@ -6,7 +6,7 @@ using namespace sunjwbase;
 
 namespace HashEngineInternal
 {
-	void AccumulatePreScannedFileSize(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex)
+	void AccumulatePreScannedFileSize(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex)
 	{
 		uint64_t fSize = 0;
 
@@ -19,23 +19,23 @@ namespace HashEngineInternal
 		}
 
 		fSizes[fileIndex] = fSize;
-		AddThreadDataTotalSize(*thrdData, fSize);
+		AddHashExecutionTotalSize(*executionContext, fSize);
 	}
 
-	bool TryPreScanSmallBatchFileSizes(ThreadData *thrdData, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
+	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
 	{
 		if (GetHashRequestFileCount(request) < 200)
 		{
 			VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 			{
 				(void)fullPath;
-				if (ShouldStopThreadData(*thrdData))
+				if (ShouldStopHashExecution(*executionContext))
 				{
 					*wasCancelled = true;
 					return false;
 				}
 
-				AccumulatePreScannedFileSize(thrdData, request, fSizes, fileIndex);
+				AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);
 				return true;
 			});
 
@@ -45,10 +45,11 @@ namespace HashEngineInternal
 		return false;
 	}
 
-	bool PrepareHashingWork(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer, ULLongVector& fSizes, bool *wasCancelled)
+	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
 	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		observer->onProgressEvent(CreatePreparingProgressEvent());
-		bool isSizeCaled = TryPreScanSmallBatchFileSizes(thrdData, request, fSizes, wasCancelled);
+		bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, fSizes, wasCancelled);
 		if (*wasCancelled)
 		{
 			return isSizeCaled;
@@ -82,29 +83,30 @@ namespace HashEngineInternal
 		progressState->position = 0;
 	}
 
-	void EmitPathResult(HashProgressSink *observer, ResultData& result)
+	void EmitPathResult(HashExecutionContext *executionContext, ResultData& result)
 	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		SetResultState(result, RESULT_PATH);
 		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
 	}
 
-	ResultData& BeginFileResult(ThreadData *thrdData, HashProgressSink *observer, const tstring& path)
+	ResultData& BeginFileResult(HashExecutionContext *executionContext, const tstring& path)
 	{
-		ResultData& result = AppendThreadDataResult(*thrdData);
+		ResultData& result = AppendHashExecutionResult(*executionContext);
 
 		ResetResultData(result);
 		SetResultState(result, RESULT_NONE);
 		SetResultPath(result, path);
 
-		EmitPathResult(observer, result);
+		EmitPathResult(executionContext, result);
 		return result;
 	}
 
-	ResultData& BeginFileHashAttempt(ThreadData *thrdData, HashProgressSink *observer, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
+	ResultData& BeginFileHashAttempt(HashExecutionContext *executionContext, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
 	{
 		ResetFileProgressState(&executionState->progressState);
 
-		ResultData& result = BeginFileResult(thrdData, observer, path);
+		ResultData& result = BeginFileResult(executionContext, path);
 		*resultPath = GetResultPath(result).c_str();
 		return result;
 	}

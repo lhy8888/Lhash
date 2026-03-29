@@ -16,6 +16,7 @@
 #include <sched.h>
 #endif
 
+#include "Common/HashExecutionContext.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestAccess.h"
@@ -64,9 +65,10 @@ static void SHA512UpdateWrapper(SHA512_CTX *context, void *datain, size_t len)
 	SHA512_Update(context, datain, len);
 }
 
-static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSizeCaled, unsigned int dataBufLen,
-	HashProgressSink *observer, FileProgressState *progressState)
+static void UpdateProgressWrapper(HashExecutionContext *executionContext, uint64_t fsize, bool isSizeCaled, unsigned int dataBufLen,
+	FileProgressState *progressState)
 {
+	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 	progressState->finishedSize += dataBufLen;
 
 	int progressMax = observer->progressMax();
@@ -89,6 +91,7 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 
 	progressState->finishedSizeWhole += dataBufLen;
 	int positionWholeNew;
+	uint64_t totalSize = GetHashExecutionTotalSize(*executionContext);
 	if (totalSize == 0)
 	{
 		positionWholeNew = progressMax;
@@ -104,17 +107,19 @@ static void UpdateProgressWrapper(uint64_t fsize, uint64_t totalSize, bool isSiz
 	}
 }
 
-static int CancelHashing(ThreadData *thrdData, HashProgressSink *observer)
+static int CancelHashing(HashExecutionContext *executionContext)
 {
-	SetThreadDataWorking(*thrdData, false);
+	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+	SetHashExecutionWorking(*executionContext, false);
 	observer->onProgressEvent(CreateCancelledProgressEvent());
 	return 0;
 }
 
-static int CompleteHashing(ThreadData *thrdData, HashProgressSink *observer)
+static int CompleteHashing(HashExecutionContext *executionContext)
 {
+	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 	observer->onProgressEvent(CreateCompletedProgressEvent());
-	SetThreadDataWorking(*thrdData, false);
+	SetHashExecutionWorking(*executionContext, false);
 	return 0;
 }
 
@@ -132,16 +137,16 @@ static uint64_t CalculateFileChunkIterations(uint64_t fsize)
 	return fsize / DataBuffer::preflen + 1;
 }
 
-static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer, ResultData& result, uint32_t fileIndex,
+static bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, ResultData& result, uint32_t fileIndex,
 	bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	, ThreadPool *threadPool
 #endif
 )
 {
-	InitializeFileHashing(request, observer, &executionState->hashContexts);
+	InitializeFileHashing(request, executionContext, &executionState->hashContexts);
 
-	uint64_t fsize = PrepareFileMetaResult(thrdData, observer, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path, isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
+	uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path, isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
 	uint64_t times = CalculateFileChunkIterations(fsize);
 	(void)times;
 
@@ -163,7 +168,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 				unique_lock<mutex> lock(mtxQueue);
 				cvCalc.wait(lock, [&]
 				{
-					return (!queueDataBuffer.empty() || isFileFinished || ShouldStopThreadData(*thrdData));
+					return (!queueDataBuffer.empty() || isFileFinished || ShouldStopHashExecution(*executionContext));
 				});
 
 				if (queueDataBuffer.empty() && isFileFinished)
@@ -177,7 +182,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 			}
 			cvFile.notify_all();
 
-			if (ShouldStopThreadData(*thrdData))
+			if (ShouldStopHashExecution(*executionContext))
 				break;
 
 			if (!ptrDataBufCalc)
@@ -226,8 +231,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 				taskMD5Update.wait();
 			}
 
-			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, ptrDataBufCalc->datalen,
-				observer, &executionState->progressState);
+			UpdateProgressWrapper(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);
 		}
 		cvFile.notify_all();
 	});
@@ -237,7 +241,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 
 	do
 	{
-		if (ShouldStopThreadData(*thrdData))
+		if (ShouldStopHashExecution(*executionContext))
 			break;
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
@@ -260,7 +264,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 			unique_lock<mutex> lock(mtxQueue);
 			cvFile.wait(lock, [&]
 			{
-				return (queueDataBuffer.size() < 4 || ShouldStopThreadData(*thrdData));
+				return (queueDataBuffer.size() < 4 || ShouldStopHashExecution(*executionContext));
 			});
 			queueDataBuffer.push(std::move(ptrDataBufFile));
 		}
@@ -296,8 +300,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 				SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen);
 			}
 
-			UpdateProgressWrapper(fsize, GetThreadDataTotalSize(*thrdData), isSizeCaled, databuf.datalen,
-				observer, &executionState->progressState);
+			UpdateProgressWrapper(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
 		}
 
 		isFileFinished = (databuf.datalen < DataBuffer::preflen);
@@ -311,7 +314,7 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 	taskHash.wait();
 #endif
 
-	if (ShouldStopThreadData(*thrdData))
+	if (ShouldStopHashExecution(*executionContext))
 	{
 		executionState->fileAttemptState.osFile->close();
 		return true;
@@ -320,11 +323,12 @@ static bool ProcessOpenedFileHashing(ThreadData *thrdData, const HashRequest& re
 	return false;
 }
 
-int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgressSink *observer)
+int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)
 {
-	SetThreadDataWorking(*thrdData, true);
+	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+	SetHashExecutionWorking(*executionContext, true);
 
-	ResetThreadDataTotalSize(*thrdData);
+	ResetHashExecutionTotalSize(*executionContext);
 	bool isSizeCaled = false;
 	ULLongVector fSizes(GetHashRequestFileCount(request));
 
@@ -333,17 +337,17 @@ int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgres
 #endif
 
 	bool wasCancelled = false;
-	isSizeCaled = PrepareHashingWork(thrdData, request, observer, fSizes, &wasCancelled);
+	isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);
 	if (wasCancelled)
 	{
-		return CancelHashing(thrdData, observer);
+		return CancelHashing(executionContext);
 	}
 
 	FileExecutionState executionState = { 0 };
 
 	bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 	{
-		if (ShouldStopThreadData(*thrdData))
+		if (ShouldStopHashExecution(*executionContext))
 		{
 			return false;
 		}
@@ -352,7 +356,7 @@ int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgres
 
 		const TCHAR *path = fullPath.c_str();
 
-		ResultData& result = BeginFileHashAttempt(thrdData, observer, fullPath, &executionState, &path);
+		ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);
 
 #if defined (_WIN32)
 		TCHAR fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
@@ -364,7 +368,7 @@ int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgres
 		OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);
 		if (executionState.fileAttemptState.isFileOpened)
 		{
-			bool wasStopped = ProcessOpenedFileHashing(thrdData, request, observer, result, fileIndex, isSizeCaled, fSizes, &executionState
+			bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 				, &threadPool
 #endif
@@ -375,23 +379,23 @@ int RunHashRequest(ThreadData *thrdData, const HashRequest& request, HashProgres
 			}
 		}
 
-		CompleteFileAttempt(observer, thrdData, request, result, fileIndex, isSizeCaled, executionState);
+		CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);
 		return true;
 	});
 
 	if (!completedAllFiles)
 	{
-		return CancelHashing(thrdData, observer);
+		return CancelHashing(executionContext);
 	}
 
-	return CompleteHashing(thrdData, observer);
+	return CompleteHashing(executionContext);
 }
 
 int WINAPI HashThreadFunc(void *param)
 {
 	ThreadData *thrdData = (ThreadData *)param;
-	HashProgressSink *observer = GetThreadDataObserver(*thrdData);
+	HashExecutionContext executionContext = CreateHashExecutionContext(*thrdData);
 	HashRequest request = CreateHashRequest(*thrdData);
 
-	return RunHashRequest(thrdData, request, observer);
+	return RunHashRequest(&executionContext, request);
 }
