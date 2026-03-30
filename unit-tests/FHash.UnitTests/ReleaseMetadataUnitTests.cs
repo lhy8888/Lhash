@@ -1,4 +1,4 @@
-﻿namespace FHash.UnitTests;
+namespace FHash.UnitTests;
 
 public sealed class ReleaseMetadataUnitTests
 {
@@ -69,5 +69,26 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("signtool.exe", signingScript, StringComparison.Ordinal);
         Assert.Contains("sign", signingScript, StringComparison.Ordinal);
         Assert.Contains("verify", signingScript, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Workflow_PublishRelease_RunsRehearsal_OnBranches_AndPublishes_OnTags()
+    {
+        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+
+        Assert.Contains("publish-release:", workflow, StringComparison.Ordinal);
+        Assert.Contains("if: github.event_name != 'pull_request'", workflow, StringComparison.Ordinal);
+        Assert.Contains("pattern: LHash-*", workflow, StringComparison.Ordinal);
+        Assert.Contains("merge-multiple: true", workflow, StringComparison.Ordinal);
+        Assert.Contains("Stage release rehearsal bundle", workflow, StringComparison.Ordinal);
+        Assert.Contains("release_mode=\"rehearsal\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("release_mode=\"tagged-release\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHash-release-rehearsal", workflow, StringComparison.Ordinal);
+        Assert.Contains("tar -czf \"$PWD/LHash-release-rehearsal-$short_sha.tar.gz\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("if: startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
+        Assert.Contains("softprops/action-gh-release@v2", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-assets/LHash-legacy-x64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
     }
 }

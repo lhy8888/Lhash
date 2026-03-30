@@ -3533,6 +3533,25 @@ internal static class Program
                 "Phase 47 build-legacy-x64 is not yet gated by native-runtime-tests.");
         }, failures);
 
+        Run("Phase 48 exercises the publish-release chain on branches while reserving GitHub releases for version tags", () =>
+        {
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+
+            AssertContains(workflow, "publish-release:", "Phase 48 workflow does not yet define a publish-release job.");
+            AssertContains(workflow, "if: github.event_name != 'pull_request'", "Phase 48 publish-release is not yet enabled for non-PR rehearsal runs.");
+            AssertContains(workflow, "pattern: LHash-*", "Phase 48 publish-release does not yet download all packaged release artifacts.");
+            AssertContains(workflow, "merge-multiple: true", "Phase 48 publish-release does not yet merge downloaded artifacts into a single release-assets directory.");
+            AssertContains(workflow, "Stage release rehearsal bundle", "Phase 48 publish-release does not yet stage a rehearsal bundle.");
+            AssertContains(workflow, "RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet emit a release manifest.");
+            AssertContains(workflow, "LHash-release-rehearsal", "Phase 48 publish-release does not yet upload a release rehearsal artifact.");
+            AssertContains(workflow, "release_mode=\"rehearsal\"", "Phase 48 publish-release rehearsal mode is not yet recorded.");
+            AssertContains(workflow, "release_mode=\"tagged-release\"", "Phase 48 publish-release tag mode is not yet recorded.");
+            AssertContains(workflow, "if: startsWith(github.ref, 'refs/tags/v')", "Phase 48 publish-release does not yet reserve GitHub release publishing for version tags.");
+            AssertContains(workflow, "softprops/action-gh-release@v2", "Phase 48 publish-release does not yet invoke the GitHub release publisher.");
+            AssertContains(workflow, "release-assets/LHash-legacy-x64-*.zip", "Phase 48 publish-release does not yet publish the packaged legacy zip.");
+            AssertContains(workflow, "release-staging/RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet attach the release manifest.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

@@ -460,7 +460,7 @@ jobs:
           if-no-files-found: warn
 
   publish-release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name != 'pull_request'
     needs:
       - build-legacy-x64
       - build-winui-bridge-x64
@@ -470,15 +470,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download legacy x64 artifact
+      - name: Download packaged artifacts
         uses: actions/download-artifact@v4
         with:
-          name: LHash-legacy-x64
+          pattern: LHash-*
           path: release-assets
+          merge-multiple: true
+
+      - name: Stage release rehearsal bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          artifact_root="$PWD/release-assets"
+          staging_root="$PWD/release-staging"
+          mkdir -p "$staging_root"
+
+          if ! compgen -G "$artifact_root/LHash-legacy-x64-*.zip" > /dev/null; then
+            echo "Expected packaged legacy release zip was not downloaded into release-assets." >&2
+            exit 1
+          fi
+
+          short_sha="${GITHUB_SHA::7}"
+          release_mode="rehearsal"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            release_mode="tagged-release"
+          fi
+
+          cat > "$staging_root/RELEASE_MANIFEST.txt" <<EOF
+          release_mode=$release_mode
+          ref=$GITHUB_REF
+          commit=$GITHUB_SHA
+          short_sha=$short_sha
+          workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          legacy_bundle=$(basename $(ls "$artifact_root"/LHash-legacy-x64-*.zip | head -n 1))
+          EOF
+
+          cp "$artifact_root"/LHash-legacy-x64-*.zip "$staging_root"/
+          find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
+          tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
+
+      - name: Upload release rehearsal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-release-rehearsal
+          path: |
+            release-staging/RELEASE_MANIFEST.txt
+            LHash-release-rehearsal-*.tar.gz
+          if-no-files-found: error
 
       - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             release-assets/LHash-legacy-x64-*.zip
+            release-staging/RELEASE_MANIFEST.txt
 
