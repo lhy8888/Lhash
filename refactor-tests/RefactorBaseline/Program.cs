@@ -3488,6 +3488,44 @@ internal static class Program
             AssertContains(resultSearch, "return CountDigestMatchingHashResults(resultList, digestText);", "Phase 46 ResultDataSearch digest-count helper does not yet defer to HashResultSearch.");
         }, failures);
 
+        Run("Phase 47 introduces a native C++ runtime test project and gates all native builds on it", () =>
+        {
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeMain = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestMain.cpp");
+            string solution = ReadRepoFile(repoRoot, @"trunk\fileshash15.sln");
+            string gitignore = ReadRepoFile(repoRoot, @".gitignore");
+
+            AssertContains(nativeRuntimeProject, "<ProjectName>FHash.NativeRuntimeTests</ProjectName>", "Phase 47 native runtime test project does not yet exist.");
+            AssertContains(nativeRuntimeProject, "<ConfigurationType>Application</ConfigurationType>", "Phase 47 native runtime test project is not a standalone executable.");
+            AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference fHashNativeCore.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForSingleFile", "Phase 47 native runtime tests do not yet cover the main HashThreadFunc runtime path.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_RespectsSelectedAlgorithms", "Phase 47 native runtime tests do not yet cover algorithm selection.");
+            AssertContains(nativeRuntimeSource, "HashResultSearch_FindsMatchingRuntimeDigests", "Phase 47 native runtime tests do not yet cover runtime digest search.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_ReportsMissingFileAsErrorResult", "Phase 47 native runtime tests do not yet cover the missing-file error path.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsWhenStopRequestedBeforeStart", "Phase 47 native runtime tests do not yet cover cooperative cancellation.");
+            AssertContains(nativeRuntimeMain, "All native runtime tests passed", "Phase 47 native runtime test main does not yet report aggregate success.");
+
+            AssertContains(solution, "FHash.NativeRuntimeTests", "Phase 47 fileshash15.sln does not yet include the native runtime test project.");
+            AssertContains(gitignore, "native-runtime-tests/**/x64/", "Phase 47 .gitignore does not yet ignore native runtime test build outputs.");
+
+            AssertContains(workflow, "native-runtime-tests:", "Phase 47 workflow does not yet define a native-runtime-tests job.");
+            AssertContains(workflow, "msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", "Phase 47 workflow does not yet build the native runtime test project.");
+            AssertContains(workflow, @"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
+            AssertInOrder(
+                workflow,
+                new[]
+                {
+                    "build-legacy-x64:",
+                    "needs:",
+                    "- security-regression",
+                    "- unit-tests",
+                    "- native-runtime-tests"
+                },
+                "Phase 47 build-legacy-x64 is not yet gated by native-runtime-tests.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

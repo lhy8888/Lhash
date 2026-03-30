@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashNativeCore", "..\sub-p
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashShlExt", "..\sub-proj\fHashShlExt\fHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FHash.NativeRuntimeTests", "..\native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj", "{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -43,6 +45,14 @@ Global
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Release|Win32.Build.0 = Release|Win32
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Release|x64.ActiveCfg = Release|x64
 		{853488C2-0156-427B-BD20-FD6ECF3782EC}.Release|x64.Build.0 = Release|x64
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Debug|Win32.Build.0 = Debug|Win32
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Debug|x64.ActiveCfg = Debug|x64
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Debug|x64.Build.0 = Debug|x64
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Release|Win32.ActiveCfg = Release|Win32
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Release|Win32.Build.0 = Release|Win32
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Release|x64.ActiveCfg = Release|x64
+		{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

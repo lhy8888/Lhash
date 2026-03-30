@@ -15,3 +15,7 @@ refactor-tests/**/bin/
 refactor-tests/**/obj/
 unit-tests/**/bin/
 unit-tests/**/obj/
+native-runtime-tests/**/Debug/
+native-runtime-tests/**/Release/
+native-runtime-tests/**/x64/
+native-runtime-tests/**/Win32/

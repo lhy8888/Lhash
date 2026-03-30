@@ -178,12 +178,16 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("unit-tests:", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore", workflow, StringComparison.Ordinal);
+        Assert.Contains("native-runtime-tests:", workflow, StringComparison.Ordinal);
+        Assert.Contains("msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", workflow, StringComparison.Ordinal);
+        Assert.Contains(@"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", workflow, StringComparison.Ordinal);
         RepositoryTestContext.AssertContainsInOrder(
             workflow,
             "build-legacy-x64:",
             "needs:",
             "- security-regression",
-            "- unit-tests");
+            "- unit-tests",
+            "- native-runtime-tests");
     }
 
     [Fact]

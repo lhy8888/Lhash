@@ -77,10 +77,60 @@ jobs:
             artifacts/FHash.UnitTests.trx
           if-no-files-found: warn
 
+  native-runtime-tests:
+    needs:
+      - security-regression
+      - unit-tests
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build and run native runtime tests
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-x64.log'
+          $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
+
+          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true 2>&1 |
+            Tee-Object -FilePath $buildLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building FHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
+          }
+
+          $exePath = 'native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe'
+          if (-not (Test-Path $exePath)) {
+            throw 'Native runtime test executable was not produced in native-runtime-tests\\FHash.NativeRuntimeTests\\x64\\Release.'
+          }
+
+          & $exePath 2>&1 | Tee-Object -FilePath $runLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Native runtime tests failed with exit code $LASTEXITCODE. See artifacts/run-native-runtime-tests-x64.log for details."
+          }
+
+      - name: Upload native runtime test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FHash-native-runtime-tests
+          path: |
+            artifacts/build-native-runtime-tests-x64.log
+            artifacts/run-native-runtime-tests-x64.log
+          if-no-files-found: warn
+
   build-legacy-x64:
     needs:
       - security-regression
       - unit-tests
+      - native-runtime-tests
     runs-on: windows-2022
     env:
       LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
@@ -233,6 +283,7 @@ jobs:
     needs:
       - security-regression
       - unit-tests
+      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
@@ -292,6 +343,7 @@ jobs:
     needs:
       - security-regression
       - unit-tests
+      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
@@ -337,6 +389,7 @@ jobs:
     needs:
       - security-regression
       - unit-tests
+      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
@@ -373,6 +426,7 @@ jobs:
     needs:
       - security-regression
       - unit-tests
+      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
