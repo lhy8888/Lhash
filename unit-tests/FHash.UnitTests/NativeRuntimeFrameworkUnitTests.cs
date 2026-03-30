@@ -16,6 +16,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains(@"$(ProjectDir)..\..\trunk\source\", project, StringComparison.Ordinal);
         Assert.Contains(@"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", project, StringComparison.Ordinal);
         Assert.Contains("<LinkLibraryDependencies>true</LinkLibraryDependencies>", project, StringComparison.Ordinal);
+        Assert.Contains("Version.lib;%(AdditionalDependencies)", project, StringComparison.Ordinal);
         Assert.Contains("HashEngineRuntimeTests.cpp", project, StringComparison.Ordinal);
         Assert.Contains("NativeTestMain.cpp", project, StringComparison.Ordinal);
         Assert.Contains("NativeTestHarness.h", project, StringComparison.Ordinal);

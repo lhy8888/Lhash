@@ -3500,6 +3500,7 @@ internal static class Program
             AssertContains(nativeRuntimeProject, "<ProjectName>FHash.NativeRuntimeTests</ProjectName>", "Phase 47 native runtime test project does not yet exist.");
             AssertContains(nativeRuntimeProject, "<ConfigurationType>Application</ConfigurationType>", "Phase 47 native runtime test project is not a standalone executable.");
             AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference fHashNativeCore.");
+            AssertContains(nativeRuntimeProject, "Version.lib;%(AdditionalDependencies)", "Phase 47 native runtime test project does not yet link Version.lib for WindowsComm version helpers.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForSingleFile", "Phase 47 native runtime tests do not yet cover the main HashThreadFunc runtime path.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_RespectsSelectedAlgorithms", "Phase 47 native runtime tests do not yet cover algorithm selection.");
             AssertContains(nativeRuntimeSource, "HashResultSearch_FindsMatchingRuntimeDigests", "Phase 47 native runtime tests do not yet cover runtime digest search.");
