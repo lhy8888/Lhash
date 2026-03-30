@@ -2,121 +2,98 @@
 
 ![LHash Logo](trunk/source/WinUI/Assets/StoreLogo.scale-400.png)
 
-![Windows Build](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml/badge.svg?branch=future-winui-was2)
+![Windows Build](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 
-LHash is a secondary-development Windows hash utility based on [fHash](https://github.com/sunjw/fhash).
-This fork focuses on Windows security hardening, robustness fixes, safer desktop delivery, and reproducible cloud builds.
+LHash is a maintained Windows-focused hash utility forked from [fHash](https://github.com/sunjw/fhash).
+The current release line starts at `1.10.0` and focuses on secure desktop delivery, testable core architecture, and reproducible GitHub-based releases.
 
-[中文说明](#中文说明)
+- English changelog: [CHANGELOG.md](CHANGELOG.md)
+- 涓枃鏇存柊鏃ュ織: [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)
+- Privacy: [PRIVACY.md](PRIVACY.md)
+- License: [LICENSE](LICENSE)
+- Releases: [GitHub Releases](https://github.com/lhy8888/fhash/releases)
+- CI: [Windows Build workflow](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml)
 
-## Quick Links
-
-- Repository: [https://github.com/lhy8888/fhash](https://github.com/lhy8888/fhash)
-- Actions Builds: [Windows Build](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml)
-- Releases: [https://github.com/lhy8888/fhash/releases](https://github.com/lhy8888/fhash/releases)
-- Upstream Reference: [https://github.com/sunjw/fhash](https://github.com/sunjw/fhash)
-
-## Highlights
+## What LHash Provides
 
 - MD5, SHA1, SHA256, and SHA512
-- Drag and drop file hashing
-- Windows Explorer context menu integration
+- Drag and drop hashing
+- Explorer context menu integration
 - English and Simplified Chinese UI
-- Hardened Windows file handling and input validation
-- Reduced attack surface and removed third-party hash lookup entry points
-- GitHub Actions Windows packaging with downloadable artifacts
+- Packaged legacy desktop build from CI
+- Native runtime tests, .NET unit tests, security regression tests, and release-chain rehearsal in GitHub Actions
 
-## Security Focus In LHash
+## Current Product Shape
 
-- Safer Windows file error handling to prevent incorrect partial-hash results after read failures
-- Hardened command-line and `WM_COPYDATA` input validation in the legacy MFC path
-- Hardened shell integration around long paths, privilege scope, and handle/resource lifetime
-- Removed hash submission entry points to third-party websites
-- Kept Windows attack surface smaller by removing unnecessary capabilities and unused dependencies
+The repository contains multiple Windows-era stacks, but the current maintained release target is the packaged legacy desktop executable.
+WinUI, CLR bridge, UWP bridge, and shell-extension projects are still built in CI so the shared native core stays healthy.
 
-## Security And Reliability Improvements
+## Security Position
 
-- Fixed a Windows read-failure path that could previously be treated as EOF and risk publishing an incorrect partial hash
-- Hardened legacy MFC command-line parsing and `WM_COPYDATA` validation to reduce malformed-input and local crash risk
-- Hardened shell integrations by improving long-path handling, reducing requested process privilege, and closing leaked handles/resources
-- Removed Windows UI entry points that sent hash values to third-party websites
-- Reduced unnecessary Windows app attack surface by removing unneeded capabilities and unused dependencies where applicable
+LHash is designed as a local hash tool first.
+The Windows release line in this repository:
 
-## Validation Performed
+- does not require an account
+- does not include telemetry
+- does not automatically upload file content or hashes to third-party services
+- hardens command-line, `WM_COPYDATA`, and shell-entry validation
+- keeps release packaging reproducible in GitHub Actions
 
-- Security regression suite for input validation, error propagation, shell hardening, and package consistency
-- Real-file hash smoke tests with empty, text, Unicode, and binary samples
-- GitHub Actions Windows build workflow with packaged desktop artifacts
+## Validation In This Repository
 
+Every maintained release candidate is expected to pass:
 
-## Secondary Development Statement
+- .NET unit tests
+- native C++ runtime tests
+- refactor baseline checks
+- security regression checks
+- the Windows build matrix
+- the release-chain rehearsal job
 
-This repository is a maintained Windows-focused fork built on top of the original `fHash` project.
-The current work mainly targets the Windows code path and includes:
+## Build And Release Notes
 
-- security hardening
-- defect fixing
-- test expansion
-- packaging and CI improvements
+- The current maintained release line starts at `v1.10.0`.
+- Branch builds produce rehearsal release bundles.
+- Version tags named `v*` trigger the formal GitHub release publishing step.
+- Authenticode signing is supported by CI, but requires a real code-signing certificate configured in repository secrets.
 
-## License And Upstream Credit
+## Upstream Credit
 
-- License: GPL-2.0
-- Upstream project: [fHash](https://github.com/sunjw/fhash)
-- Original upstream author: Sun Junwen
+LHash is built on top of the original [fHash](https://github.com/sunjw/fhash) project by Sun Junwen.
+This fork keeps upstream credit and GPL-2.0 licensing intact while maintaining a separate release line and delivery process.
 
 ---
 
-## 中文说明
+## 涓枃璇存槑
 
-LHash 是基于 [fHash](https://github.com/sunjw/fhash) 持续维护的 Windows 文件 Hash 工具分支。
-当前版本重点围绕 Windows 路线做了安全加固、稳定性修复、测试补强和云端交付优化，更适合继续维护和分发。
+LHash 鏄熀浜?[fHash](https://github.com/sunjw/fhash) 鎸佺画缁存姢鐨?Windows 鏂囦欢 Hash 宸ュ叿鍒嗘敮銆?褰撳墠缁存姢鐨勫彂琛岀嚎浠?`1.10.0` 閲嶆柊寮€濮嬶紝閲嶇偣鏀惧湪锛?
+- Windows 鏈湴瀹夊叏鍔犲浐
+- 鍙祴璇曠殑鏍稿績鏋舵瀯
+- GitHub Actions 鍙鐜版瀯寤轰笌鍙戝竷
 
-### 产品定位
+### 褰撳墠鑳藉姏
 
-- 面向 Windows 的文件 Hash 校验工具
-- 支持 `MD5`、`SHA1`、`SHA256`、`SHA512`
-- 支持拖拽计算
-- 支持资源管理器右键菜单
-- 支持英文和简体中文界面
+- 鏀寔 `MD5`銆乣SHA1`銆乣SHA256`銆乣SHA512`
+- 鏀寔鎷栨嫿鏂囦欢璁＄畻
+- 鏀寔璧勬簮绠＄悊鍣ㄥ彸閿彍鍗?- 鏀寔鑻辨枃鍜岀畝浣撲腑鏂囩晫闈?- CI 鎻愪緵鍙笅杞界殑妗岄潰鏋勫缓浜х墿
 
-### 当前版本重点
+### 褰撳墠鍙戝竷绛栫暐
 
-#### 1. 安全强化
+- 鍒嗘敮鏋勫缓浼氱敓鎴愬彂甯冩紨缁冨寘
+- `v*` 鐗堟湰鏍囩浼氳Е鍙戞寮?GitHub Release
+- 鐩墠姝ｅ紡鍙戝竷鐩爣鏄?legacy 妗岄潰绋嬪簭
+- 鍏朵粬 WinUI / bridge / shell extension 宸ョ▼缁х画鍦?CI 涓繚娲伙紝鐢ㄤ簬淇濊瘉鍏变韩鍘熺敓鏍稿績涓嶆紓绉?
+### 闅愮涓庡畨鍏?
+LHash 鏄湰鍦板伐鍏凤紝涓嶈姹傝处鍙凤紝涔熶笉榛樿涓婁紶鏂囦欢鍐呭鎴栧搱甯屽€笺€?褰撳墠浠撳簱涓殑 Windows 鐗堟湰宸茬粡鍘绘帀鑷姩鎶婂搱甯屾彁浜ゅ埌绗笁鏂圭珯鐐圭殑鍏ュ彛锛屽苟鎸佺画瀵瑰懡浠よ銆乣WM_COPYDATA`銆乻hell 鍚姩閾惧仛杈撳叆鏍￠獙鍔犲浐銆?
+### 浠撳簱楠岃瘉鍩虹嚎
 
-- 修复 Windows 读文件失败被误当作 EOF 的问题，避免在异常场景下产生错误 Hash 结果
-- 加固旧版 MFC 命令行解析和 `WM_COPYDATA` 输入校验，降低恶意或畸形输入导致异常的风险
-- 加固 Shell Extension 的长路径处理、权限申请和句柄释放，减少本地攻击面
-- 禁止把 Hash 值直接提交到第三方网站，避免不必要的信息外泄
-- 收缩 Windows 应用攻击面，移除不必要能力和未使用依赖
+褰撳墠浠撳簱涓殑姝ｅ紡鍙戝竷鍊欓€夊簲閫氳繃锛?
+- .NET 鍗曞厓娴嬭瘯
+- 鍘熺敓 C++ 杩愯鏃舵祴璇?- 鏋舵瀯鍩虹嚎妫€鏌?- 瀹夊叏鍥炲綊妫€鏌?- Windows 鏋勫缓鐭╅樀
+- 鍙戝竷閾炬紨缁?
+濡傞渶鏌ョ湅鐗堟湰鍙樺寲锛岃鍒嗗埆鍙傝€冿細
 
-#### 2. 缺陷修复与稳定性优化
-
-- 修复云端构建中的资源文件结尾问题
-- 修复 Windows CI 中中文源码字符集编译问题
-- 修复打包脚本路径识别问题，确保输出的就是可运行的 `LHash.exe`
-- 统一云端产物命名，避免旧包和新包混淆
-
-### 已完成的验证
-
-- 安全回归测试已实际执行并通过
-- 真实文件 Hash 样本测试已实际执行并通过
-- GitHub Actions Windows 打包链路已打通，可直接下载构建产物
-
-
-### 维护方向说明
-
-本仓库基于原项目 `fHash` 持续维护，当前重点主要集中在 Windows 路线，包括：
-
-- 安全加固
-- 缺陷修复
-- 测试补强
-- 自动构建与打包
-
-### 许可与致谢
-
-- 开源协议：GPL-2.0
-- 上游项目：[`fHash`](https://github.com/sunjw/fhash)
-- 保留对原项目及原作者的致谢与署名
+- 鑻辨枃鏇存柊鏃ュ織锛歔CHANGELOG.md](CHANGELOG.md)
+- 涓枃鏇存柊鏃ュ織锛歔CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)
