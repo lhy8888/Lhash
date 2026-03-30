@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "HashEngine.h"
 
@@ -137,7 +137,7 @@ static uint64_t CalculateFileChunkIterations(uint64_t fsize)
 	return fsize / DataBuffer::preflen + 1;
 }
 
-static bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, ResultData& result, uint32_t fileIndex,
+static bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,
 	bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	, ThreadPool *threadPool
@@ -356,7 +356,7 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 
 		const TCHAR *path = fullPath.c_str();
 
-		ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);
+		HashResult& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);
 
 #if defined (_WIN32)
 		TCHAR fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };

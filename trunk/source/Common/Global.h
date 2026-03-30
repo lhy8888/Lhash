@@ -1,49 +1,38 @@
 #ifndef _GLOBAL_H_
 #define _GLOBAL_H_
-
 #include <stdint.h>
-
 #include <vector>
 #include <list>
-
 #if defined (_WIN32)
-
 #include <atlbase.h>
 #include <WinUser.h>
 #include <WinDef.h>
 #include <WinNT.h>
-
-#define WM_THREAD_INFO		WM_USER + 1 // 线程发出消息
-#define WP_WORKING			WM_USER + 2 // 开始工作
-#define WP_FINISHED			WM_USER + 3 // 线程完成
-#define WP_STOPPED			WM_USER + 4 // 线程停止(未完成)
-#define WP_REFRESH_TEXT		WM_USER + 5 // 刷新文本框
-#define WP_PROG				WM_USER + 6 // 文件进度条
-#define WP_PROG_WHOLE		WM_USER + 7 // 全局进度条
-
-#define WM_CUSTOM_MSG		WM_USER + 16 // 自定义消息
-#define WM_HYPEREDIT_MENU	WM_USER + 17 // HyperEdit 弹出菜单消息
-
+#define WM_THREAD_INFO		WM_USER + 1 // ??????
+#define WP_WORKING			WM_USER + 2 // ????
+#define WP_FINISHED			WM_USER + 3 // ????
+#define WP_STOPPED			WM_USER + 4 // ????(???)
+#define WP_REFRESH_TEXT		WM_USER + 5 // ?????
+#define WP_PROG			WM_USER + 6 // ?????
+#define WP_PROG_WHOLE		WM_USER + 7 // ?????
+#define WM_CUSTOM_MSG		WM_USER + 16 // ?????
+#define WM_HYPEREDIT_MENU	WM_USER + 17 // HyperEdit ??????
 #else
-
 #define WINAPI
-
 #endif
-
 #include "Common/strhelper.h"
-
 class HashProgressSink;
-
-struct ResultData;
-
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
-typedef std::list<ResultData> ResultList;
-
+enum ResultDigestType
+{
+	RESULT_DIGEST_MD5 = 0,
+	RESULT_DIGEST_SHA1,
+	RESULT_DIGEST_SHA256,
+	RESULT_DIGEST_SHA512
+};
 enum { HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT };
-
 #define MAX_FILES_NUM 8192
-
 enum ResultState
 {
 	RESULT_NONE = 0,
@@ -52,25 +41,21 @@ enum ResultState
 	RESULT_ALL,
 	RESULT_ERROR
 };
-
 struct ResultDigestStorage
 {
-	sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT]; // Internal digest storage
+	sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];
 };
-
 struct HashAlgorithmSelectionState
 {
-	bool enabled[HASH_ALGORITHM_REGISTRY_COUNT]; // Enabled hash algorithms for the current session
+	bool enabled[HASH_ALGORITHM_REGISTRY_COUNT];
 };
-
 struct ResultDigestCompatibilityFields
 {
-	sunjwbase::tstring md5; // MD5
-	sunjwbase::tstring sha1; // SHA1
-	sunjwbase::tstring sha256; // SHA256
-	sunjwbase::tstring sha512; // SHA512
+	sunjwbase::tstring md5;
+	sunjwbase::tstring sha1;
+	sunjwbase::tstring sha256;
+	sunjwbase::tstring sha512;
 };
-
 struct ResultDigestState
 {
 	ResultDigestStorage storage;
@@ -78,40 +63,71 @@ struct ResultDigestState
 };
 struct ResultCoreState
 {
-	ResultState state; // State
-	sunjwbase::tstring path; // 路径
-	uint64_t size; // 大小
-	sunjwbase::tstring modifiedDate; // 修改日期
-	sunjwbase::tstring version; // 版本
-	sunjwbase::tstring error; // Error string
+	ResultState state;
+	sunjwbase::tstring path;
+	uint64_t size;
+	sunjwbase::tstring modifiedDate;
+	sunjwbase::tstring version;
+	sunjwbase::tstring error;
 };
-
-struct ResultData // 计算结果
+struct ResultData
 {
 	ResultCoreState coreState;
 	ResultDigestState digestState;
 };
+struct HashDigestResult
+{
+	HashDigestResult()
+		: type(RESULT_DIGEST_MD5)
+	{
+	}
+	ResultDigestType type;
+	sunjwbase::tstring stableName;
+	sunjwbase::tstring displayLabel;
+	sunjwbase::tstring value;
+};
+struct HashFileMeta
+{
+	HashFileMeta()
+		: size(0)
+	{
+	}
+	uint64_t size;
+	sunjwbase::tstring modifiedDate;
+	sunjwbase::tstring version;
+};
+struct HashResult
+{
+	HashResult()
+		: state(RESULT_NONE)
+	{
+	}
+	ResultState state;
+	sunjwbase::tstring path;
+	HashFileMeta meta;
+	sunjwbase::tstring error;
+	std::vector<HashDigestResult> digests;
+};
+typedef std::list<HashResult> HashResultList;
+typedef HashResultList ResultList;
 struct ThreadDataInputState
 {
-	uint32_t fileCount; // File count
-	TStrVector inputFiles; // Input file paths
+	uint32_t fileCount;
+	TStrVector inputFiles;
 };
-
 struct ThreadDataExecutionState
 {
-	bool working; // Working flag
-	bool stopRequested; // Stop request flag
-	bool uppercaseDigest; // Uppercase digest output
-	HashAlgorithmSelectionState hashAlgorithms; // Enabled hash algorithms
-	uint64_t countedSize; // Counted total size
-	ResultList results;
+	bool working;
+	bool stopRequested;
+	bool uppercaseDigest;
+	HashAlgorithmSelectionState hashAlgorithms;
+	uint64_t countedSize;
+	HashResultList results;
 };
-
-struct ThreadData // Thread execution context
+struct ThreadData
 {
 	HashProgressSink *observer;
 	ThreadDataInputState inputState;
 	ThreadDataExecutionState executionState;
 };
-
 #endif

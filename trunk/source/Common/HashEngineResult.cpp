@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
 #include "Common/strhelper.h"
@@ -15,14 +15,14 @@ using namespace sunjwbase;
 
 namespace HashEngineInternal
 {
-	uint64_t PrepareFileMetaResult(HashExecutionContext *executionContext, ResultData& result,
+	uint64_t PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result,
 		OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, tstring& tstrFileVersion)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		SetResultModifiedDate(result, osFile.getModifiedTimeFormat());
+		result.meta.modifiedDate = osFile.getModifiedTimeFormat();
 
 		uint64_t fsize = osFile.getLength();
-		SetResultSize(result, fsize);
+		result.meta.size = fsize;
 
 		if (!isSizeCaled)
 		{
@@ -38,11 +38,11 @@ namespace HashEngineInternal
 #if (defined (FHASH_UWP_LIB) || defined(FHASH_WUI_LIB))
 		WindowsComm::FileVersionHelper fvHelper(osFile);
 		tstrFileVersion = fvHelper.Find();
-		SetResultVersion(result, tstrFileVersion);
+		result.meta.version = tstrFileVersion;
 		osFile.seek(0, OsFile::OsFileSeekFrom::OF_SEEK_BEGIN);
 #else
 		tstrFileVersion = WindowsComm::GetExeFileVersion((TCHAR *)path);
-		SetResultVersion(result, tstrFileVersion);
+		result.meta.version = tstrFileVersion;
 #endif
 #endif
 
@@ -104,11 +104,24 @@ namespace HashEngineInternal
 		SetDigestStorageValue(digestBundle, digestType, digestValue);
 	}
 
-	void PopulateDigestResult(const HashRequest& request, ResultData& result, const FinalizedDigestBundle& digestBundle)
+	void PopulateDigestResult(const HashRequest& request, HashResult& result, const FinalizedDigestBundle& digestBundle)
 	{
+		result.digests.clear();
 		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
-			SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));
+			const tstring& digestValue = GetFinalizedDigestValue(digestBundle, digestType);
+			if (digestValue.empty())
+			{
+				return true;
+			}
+
+			const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);
+			HashDigestResult digestResult;
+			digestResult.type = digestType;
+			digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
+			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
+			digestResult.value = digestValue;
+			result.digests.push_back(digestResult);
 			return true;
 		});
 	}
@@ -198,7 +211,7 @@ namespace HashEngineInternal
 		});
 	}
 
-	void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
@@ -210,13 +223,13 @@ namespace HashEngineInternal
 		executionState.fileAttemptState.osFile->close();
 
 		PopulateDigestResult(request, result, executionState.digestBundle);
-		if (HasAnyResultDigests(result))
+		if (!result.digests.empty())
 		{
 			EmitHashResult(executionContext, result, GetHashRequestUppercaseDigest(request));
 		}
 	}
 
-	void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
@@ -233,39 +246,39 @@ namespace HashEngineInternal
 		FinishFileProcessing(executionContext);
 	}
 
-	void EmitMetaResult(HashExecutionContext *executionContext, ResultData& result)
+	void EmitMetaResult(HashExecutionContext *executionContext, HashResult& result)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		SetResultState(result, RESULT_META);
-		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(ProjectHashResult(result)));
+		result.state = RESULT_META;
+		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
 	}
 
-	void EmitHashResult(HashExecutionContext *executionContext, ResultData& result, bool uppercase)
+	void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		SetResultState(result, RESULT_ALL);
-		observer->onProgressEvent(CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase));
+		result.state = RESULT_ALL;
+		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
 	}
 
-	void EmitErrorResult(HashExecutionContext *executionContext, ResultData& result)
+	void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		SetResultState(result, RESULT_ERROR);
-		observer->onProgressEvent(CreateFileFailedProgressEvent(ProjectHashResult(result)));
+		result.state = RESULT_ERROR;
+		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
 	}
 
-	void EmitErrorMessageResult(HashExecutionContext *executionContext, ResultData& result, const tstring& errorText)
+	void EmitErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const tstring& errorText)
 	{
-		SetResultError(result, errorText);
+		result.error = errorText;
 		EmitErrorResult(executionContext, result);
 	}
 
-	void EmitOpenFileError(HashExecutionContext *executionContext, ResultData& result, const TCHAR *errorText)
+	void EmitOpenFileError(HashExecutionContext *executionContext, HashResult& result, const TCHAR *errorText)
 	{
 		EmitErrorMessageResult(executionContext, result, tstring(errorText));
 	}
 
-	void EmitReadFileError(HashExecutionContext *executionContext, ResultData& result)
+	void EmitReadFileError(HashExecutionContext *executionContext, HashResult& result)
 	{
 		EmitErrorMessageResult(executionContext, result, strtotstr(string("Failed to read file while hashing.")));
 	}
@@ -276,7 +289,7 @@ namespace HashEngineInternal
 		observer->onProgressEvent(CreateFileFinishedProgressEvent());
 	}
 
-	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, ResultData& result, uint32_t fileIndex, bool isSizeCaled,
+	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
 		if (executionState.fileAttemptState.isFileOpened)

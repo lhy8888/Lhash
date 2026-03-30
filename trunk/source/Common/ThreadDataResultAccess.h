@@ -5,19 +5,19 @@
 #include "Common/HashResultSearch.h"
 #include "Common/ThreadDataExecutionAccess.h"
 
-static inline ResultList& GetMutableThreadDataResults(ThreadData& threadData)
+static inline HashResultList& GetMutableThreadDataResults(ThreadData& threadData)
 {
 	return GetMutableThreadDataExecutionState(threadData).results;
 }
 
-static inline const ResultList& GetThreadDataResults(const ThreadData& threadData)
+static inline const HashResultList& GetThreadDataResults(const ThreadData& threadData)
 {
 	return GetThreadDataExecutionState(threadData).results;
 }
 
-static inline ResultData& AppendThreadDataResult(ThreadData& threadData)
+static inline HashResult& AppendThreadDataResult(ThreadData& threadData)
 {
-	ResultData resultNew;
+	HashResult resultNew;
 	GetMutableThreadDataResults(threadData).push_back(resultNew);
 	return GetMutableThreadDataResults(threadData).back();
 }
@@ -36,7 +36,7 @@ template<typename TResultVisitor>
 static inline size_t VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)
 {
 	size_t visitCount = 0;
-	ResultList::const_iterator itr = GetThreadDataResults(threadData).begin();
+	HashResultList::const_iterator itr = GetThreadDataResults(threadData).begin();
 	for (; itr != GetThreadDataResults(threadData).end(); ++itr)
 	{
 		visitor(*itr);

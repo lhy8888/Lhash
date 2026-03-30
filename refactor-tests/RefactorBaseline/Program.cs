@@ -40,7 +40,8 @@ internal static class Program
             AssertContains(global, "uint64_t countedSize;", "ThreadData no longer carries totalSize in the baseline contract.");
             AssertContains(global, "uint32_t fileCount;", "ThreadData no longer carries nFiles in the baseline contract.");
             AssertContains(global, "TStrVector inputFiles;", "ThreadData no longer carries fullPaths in the baseline contract.");
-            AssertContains(global, "ResultList results;", "ThreadData no longer carries resultList in the baseline contract.");
+            AssertContains(global, "HashResultList results;", "ThreadData no longer carries the HashResultList execution store in the baseline contract.");
+            AssertContains(global, "typedef HashResultList ResultList;", "Global.h no longer preserves the temporary ResultList compatibility alias while the legacy seams are being retired.");
             AssertDoesNotContain(global, "bool threadWorking;", "ThreadData still exposes the legacy threadWorking field name.");
             AssertDoesNotContain(global, "bool stop;", "ThreadData still exposes the legacy stop field name.");
             AssertDoesNotContain(global, "bool uppercase;", "ThreadData still exposes the legacy uppercase field name.");
@@ -102,7 +103,7 @@ internal static class Program
             AssertDoesNotContain(engine, "#include \"Common/HashEngineObserver.h\"", "HashEngine.cpp still directly includes HashEngineObserver after the progress-sink refactor.");
             AssertDoesNotContain(engine, "#include \"Common/UIBridgeBase.h\"", "HashEngine.cpp still directly includes UIBridgeBase in phase 1.");
             AssertContains(engine, "HashProgressSink *observer", "HashEngine.cpp is not yet narrowed to HashProgressSink.");
-            AssertContains(engineImpl, "ResultData& BeginFileResult(", "HashEngine implementation set does not yet expose a tiny file-begin helper.");
+            AssertContains(engineImpl, "HashResult& BeginFileResult(", "HashEngine implementation set does not yet expose a tiny file-begin helper.");
             AssertContains(engineImpl, "uint64_t PrepareFileMetaResult(", "HashEngine implementation set does not yet expose a tiny file-meta helper.");
             AssertContains(engineImpl, "AccumulatePreScannedFileSize(", "HashEngine implementation set does not yet expose a tiny pre-scan file-size helper.");
             AssertContains(engineImpl, "TryPreScanSmallBatchFileSizes(", "HashEngine implementation set does not yet expose a tiny small-batch pre-scan helper.");
@@ -151,7 +152,7 @@ internal static class Program
             AssertContains(engine, "future<void> taskSHA1Update", "HashEngine no longer fans out SHA1 updates in the baseline implementation.");
             AssertContains(engine, "future<void> taskMD5Update", "HashEngine no longer fans out MD5 updates in the baseline implementation.");
             AssertContains(engine, "FileExecutionState executionState = { 0 };", "HashEngine no longer creates the grouped file-execution state bundle.");
-            AssertContains(engine, "ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);", "HashEngine no longer routes the file-attempt setup through the grouped file-execution helper.");
+            AssertContains(engine, "HashResult& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);", "HashEngine no longer routes the file-attempt setup through the grouped file-execution helper.");
             AssertContains(engine, "InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);", "HashEngine no longer routes file-attempt state initialization through the grouped execution helper.");
             AssertContains(engine, "OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);", "HashEngine no longer routes the file-open attempt through the grouped execution helper.");
             AssertContains(engine, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState", "HashEngine no longer routes the opened-file processing loop through the grouped execution helper.");
@@ -159,7 +160,7 @@ internal static class Program
             AssertContains(engineImpl, "EmitReadFileError(executionContext, result);", "HashEngine no longer routes read-file failures through the tiny helper.");
             AssertContains(engineImpl, "FinishFileProcessing(executionContext);", "HashEngine no longer routes file-finished callbacks through the tiny helper.");
             AssertContains(engineImpl, "EmitErrorResult(executionContext, result);", "HashEngine no longer emits errors through the tiny error-result helper in the baseline implementation.");
-            AssertContains(engineImpl, "SetResultError(result, errorText);", "HashEngine error-message helper no longer writes the error text before emitting.");
+            AssertContains(engineImpl, "result.error = errorText;", "HashEngine error-message helper no longer writes the HashResult error text before emitting.");
             AssertContains(engineImpl, "EmitErrorMessageResult(executionContext, result,", "HashEngine no longer routes error-text emission through the tiny error-message helper.");
             AssertContains(engine, "return CancelHashing(executionContext);", "HashEngine no longer routes cancellation exits through the tiny cancellation helper.");
             AssertContains(engine, "return CompleteHashing(executionContext);", "HashEngine no longer routes the successful exit through the tiny completion helper.");
@@ -178,8 +179,8 @@ internal static class Program
                 [
                     "BeginFileHashAttempt(",
                     "ResetFileProgressState(&executionState->progressState);",
-                    "ResultData& result = BeginFileResult(executionContext, path);",
-                    "*resultPath = GetResultPath(result).c_str();",
+                    "HashResult& result = BeginFileResult(executionContext, path);",
+                    "*resultPath = result.path.c_str();",
                     "return result;"
                 ],
                 "HashEngine file-attempt-begin helper no longer preserves the expected setup order.");
@@ -257,7 +258,7 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "PrepareFileMetaResult(",
-                    "SetResultModifiedDate(result, osFile.getModifiedTimeFormat());",
+                    "result.meta.modifiedDate = osFile.getModifiedTimeFormat();",
                     "EmitMetaResult(executionContext, result);",
                     "return fsize;"
                 ],
@@ -380,7 +381,7 @@ internal static class Program
                     "FileExecutionState executionState = { 0 };",
                     "bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)",
                     "YieldHashThread();",
-                    "ResultData& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);",
+                    "HashResult& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);",
                     "InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);",
                     "OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);",
                     "if (executionState.fileAttemptState.isFileOpened)",
@@ -538,6 +539,7 @@ internal static class Program
 
         Run("Phase 2 routes digest access through a neutral ResultData seam while keeping the fixed four-digest contract", () =>
         {
+            string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
@@ -552,11 +554,11 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(hashAlgorithmRegistry, "enum ResultDigestType", "HashAlgorithmRegistry is missing the neutral digest enum.");
-            AssertContains(hashAlgorithmRegistry, "RESULT_DIGEST_MD5", "HashAlgorithmRegistry no longer exposes the MD5 digest slot.");
-            AssertContains(hashAlgorithmRegistry, "RESULT_DIGEST_SHA1", "HashAlgorithmRegistry no longer exposes the SHA1 digest slot.");
-            AssertContains(hashAlgorithmRegistry, "RESULT_DIGEST_SHA256", "HashAlgorithmRegistry no longer exposes the SHA256 digest slot.");
-            AssertContains(hashAlgorithmRegistry, "RESULT_DIGEST_SHA512", "HashAlgorithmRegistry no longer exposes the SHA512 digest slot.");
+            AssertContains(global, "enum ResultDigestType", "Global.h is missing the neutral digest enum that now anchors the mainline result contract.");
+            AssertContains(global, "RESULT_DIGEST_MD5", "Global.h no longer exposes the MD5 digest slot.");
+            AssertContains(global, "RESULT_DIGEST_SHA1", "Global.h no longer exposes the SHA1 digest slot.");
+            AssertContains(global, "RESULT_DIGEST_SHA256", "Global.h no longer exposes the SHA256 digest slot.");
+            AssertContains(global, "RESULT_DIGEST_SHA512", "Global.h no longer exposes the SHA512 digest slot.");
             AssertContains(digestAccess, "GetResultDigestCount()", "ResultDigestAccess is missing the neutral digest count helper.");
             AssertContains(digestAccess, "GetResultDigestTypeAt(int index)", "ResultDigestAccess is missing the neutral digest order helper.");
             AssertContains(digestAccess, "GetResultDigestLabel(ResultDigestType digestType)", "ResultDigestAccess is missing the neutral digest label helper.");
@@ -571,7 +573,9 @@ internal static class Program
             AssertContains(engineImpl, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine does not yet centralize finalized digest strings through the finalized digest bundle.");
             AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine no longer routes digest publishing through the neutral digest iteration helper.");
             AssertContains(engineImpl, "GetFinalizedDigestValue(digestBundle, digestType)", "HashEngine does not yet read finalized digest strings through the finalized digest seam.");
-            AssertContains(engineImpl, "SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));", "HashEngine no longer writes finalized digests through the neutral seam.");
+            AssertContains(engineImpl, "HashDigestResult digestResult;", "HashEngine no longer materializes finalized digests through the neutral HashResult digest seam.");
+            AssertContains(engineImpl, "digestResult.value = digestValue;", "HashEngine no longer assigns finalized digest text through the neutral HashResult digest seam.");
+            AssertContains(engineImpl, "result.digests.push_back(digestResult);", "HashEngine no longer writes finalized digests through the HashResult digest collection seam.");
             AssertDoesNotContain(engine, "SetResultDigest(result, RESULT_DIGEST_MD5, tstrFileMD5);", "HashEngine still hardcodes the MD5 digest slot instead of iterating through the neutral seam.");
             AssertDoesNotContain(engine, "SetResultDigest(result, RESULT_DIGEST_SHA1, tstrFileSHA1);", "HashEngine still hardcodes the SHA1 digest slot instead of iterating through the neutral seam.");
             AssertDoesNotContain(engine, "SetResultDigest(result, RESULT_DIGEST_SHA256, tstrFileSHA256);", "HashEngine still hardcodes the SHA256 digest slot instead of iterating through the neutral seam.");
@@ -663,7 +667,8 @@ internal static class Program
             AssertContains(digestAccess, "return GetMutableStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet expose mutable access through the internal digest storage in phase 3.");
             AssertContains(digestAccess, "GetMutableCompatibilityResultDigest(result, digestType) = digestValue;", "ResultDigestAccess does not yet mirror the new digest storage back into the compatibility fields in phase 3.");
 
-            AssertContains(engineImpl, "SetResultDigest(result, digestType, GetFinalizedDigestValue(digestBundle, digestType));", "HashEngine no longer routes finalized digest writes through the phase-3 digest seam.");
+            AssertContains(engineImpl, "const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);", "HashEngine no longer routes finalized digest metadata lookup through the phase-3 digest seam.");
+            AssertContains(engineImpl, "result.digests.push_back(digestResult);", "HashEngine no longer routes finalized digest writes through the HashResult digest seam.");
             AssertContains(bridgeMfc, "VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)", "MFC digest rendering no longer reads through the phase-5 formatted digest-display visitor seam.");
         }, failures);
 
@@ -677,14 +682,13 @@ internal static class Program
             AssertContains(digestAccess, "ClearStoredResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper does not yet clear internal digest storage.");
             AssertContains(digestAccess, "ClearCompatibilityResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper does not yet clear the digest compatibility fields.");
 
-            AssertContains(engineImpl, "ResetResultData(result);", "HashEngine does not yet reset digest storage through the grouped reset seam when a file result is created.");
+            AssertContains(engineImpl, "result = HashResult();", "HashEngine does not yet reset HashResult storage through the grouped reset seam when a file result is created.");
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
-                    "ResetResultData(result);",
-                    "SetResultState(result, RESULT_NONE);",
-                    "SetResultPath(result, path);",
+                    "HashResult& result = AppendHashExecutionResult(*executionContext);",
+                    "result = HashResult();",
+                    "result.path = path;",
                     "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer resets digest storage before publishing the file path.");
@@ -961,12 +965,12 @@ internal static class Program
             AssertContains(resultAccess, "GetMutableResultCoreState(result).error = errorText;", "ResultDataAccess error setter does not yet route through the current ResultData field.");
 
             AssertContains(engine, "#include \"Common/ResultDataAccess.h\"", "HashEngine.cpp does not yet consume the neutral ResultData access seam.");
-            AssertContains(engineImpl, "SetResultPath(result, path);", "HashEngine does not yet route result path writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultModifiedDate(result, osFile.getModifiedTimeFormat());", "HashEngine does not yet route modified-date writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultSize(result, fsize);", "HashEngine does not yet route size writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultVersion(result, tstrFileVersion);", "HashEngine does not yet route version writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultError(result, errorText);", "HashEngine does not yet route error writes through ResultDataAccess.");
-            AssertContains(engineImpl, "*resultPath = GetResultPath(result).c_str();", "HashEngine does not yet route file-attempt path binding through ResultDataAccess.");
+            AssertContains(engineImpl, "result.path = path;", "HashEngine does not yet route result path writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine does not yet route modified-date writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.meta.size = fsize;", "HashEngine does not yet route size writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.meta.version = tstrFileVersion;", "HashEngine does not yet route version writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.error = errorText;", "HashEngine does not yet route error writes through the HashResult contract.");
+            AssertContains(engineImpl, "*resultPath = result.path.c_str();", "HashEngine does not yet route file-attempt path binding through the HashResult contract.");
         }, failures);
 
         Run("Phase 4 routes ResultState reads and writes through the neutral ResultDataAccess seam", () =>
@@ -983,11 +987,10 @@ internal static class Program
             AssertContains(resultAccess, "return GetResultCoreState(result).state;", "ResultDataAccess ResultState getter does not yet route through the current ResultData field.");
             AssertContains(resultAccess, "GetMutableResultCoreState(result).state = resultState;", "ResultDataAccess ResultState setter does not yet route through the current ResultData field.");
 
-            AssertContains(engineImpl, "SetResultState(result, RESULT_PATH);", "HashEngine does not yet route path-state writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultState(result, RESULT_NONE);", "HashEngine does not yet route none-state writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultState(result, RESULT_META);", "HashEngine does not yet route meta-state writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultState(result, RESULT_ALL);", "HashEngine does not yet route hash-state writes through ResultDataAccess.");
-            AssertContains(engineImpl, "SetResultState(result, RESULT_ERROR);", "HashEngine does not yet route error-state writes through ResultDataAccess.");
+            AssertContains(engineImpl, "result.state = RESULT_PATH;", "HashEngine does not yet route path-state writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.state = RESULT_META;", "HashEngine does not yet route meta-state writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.state = RESULT_ALL;", "HashEngine does not yet route hash-state writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.state = RESULT_ERROR;", "HashEngine does not yet route error-state writes through the HashResult contract.");
 
             AssertContains(bridgeMfc, "ResultState resultState = GetResultState(result);", "Legacy MFC renderer does not yet read ResultState through ResultDataAccess.");
             AssertDoesNotContain(bridgeMfc, "if (result.enumState == RESULT_NONE)", "Legacy MFC renderer still branches directly on ResultData::enumState.");
@@ -1325,12 +1328,12 @@ internal static class Program
             AssertContains(resultProjection, "VisitProjectedHashResults<TResultDataNet, TResultStateNet>(resultList, convertString, visitor);", "ResultDataProjection does not yet route full result-list projection through HashResultProjection.");
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TResultPredicate, typename TStringConverter, typename TResultVisitor>", "ResultDataProjection does not yet expose the centralized matching-result projection visitor template.");
             AssertContains(resultProjection, "VisitProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized matching-result projection helper.");
-            AssertContains(resultProjection, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection does not yet route matching-result projection through the centralized single-result projection helper.");
+            AssertContains(resultProjection, "visitor(matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection does not yet route matching-result projection through the centralized HashResult projection helper.");
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TResultArray, typename TResultPredicate, typename TResultArrayFactory, typename TStringConverter, typename TResultArraySetter>", "ResultDataProjection does not yet expose the centralized projected-match collection helper template.");
             AssertContains(resultProjection, "CreateProjectedMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataProjection does not yet expose the centralized projected-match collection helper.");
             AssertContains(resultProjection, "TResultArray projectedResults = createResultArray(CountMatchingResults(resultList, predicate));", "ResultDataProjection projected-match collection helper does not yet size the target collection through the centralized match-count seam.");
             AssertContains(resultProjection, "ResultList::const_iterator itr = resultList.begin();", "ResultDataProjection projected-match collection helper does not yet expose the compile-safe explicit traversal used for materialized projections.");
-            AssertContains(resultProjection, "setProjectedResult(projectedResults, matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(*itr, convertString));", "ResultDataProjection projected-match collection helper does not yet route projected writes through the supplied collection setter.");
+            AssertContains(resultProjection, "setProjectedResult(projectedResults, matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection projected-match collection helper does not yet route projected writes through the supplied collection setter.");
             AssertContains(resultProjection, "CreateProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "ResultDataProjection does not yet expose the centralized managed digest-match array projection helper.");
             AssertContains(resultProjection, "return CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, digestText, createResultArray, convertString, setProjectedResult);", "ResultDataProjection managed digest-match array projection helper does not yet defer to the shared HashResult digest materialization seam.");
 
@@ -1363,7 +1366,7 @@ internal static class Program
             AssertContains(resultSearch, "if (predicate(*itr))", "ResultDataSearch matching helper does not yet gate result visits through the supplied predicate.");
             AssertContains(resultSearch, "visitor(*itr);", "ResultDataSearch matching helper does not yet forward matched results through the supplied visitor.");
             AssertContains(resultSearch, "++matchCount;", "ResultDataSearch matching helper does not yet return the number of matched results.");
-            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataSearch match-count helper does not yet reuse the centralized matching visitor seam.");
+            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const HashResult& result)", "ResultDataSearch match-count helper does not yet reuse the centralized matching visitor seam.");
             AssertContains(resultSearch, "return HashResultMatchesDigestText(ProjectHashResult(result), digestText);", "ResultDataSearch digest-match predicate helper does not yet reuse the centralized HashResult digest seam.");
             AssertContains(hashResultSearch, "return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));", "HashResultSearch path-search normalization helper does not yet lowercase through the centralized seam.");
             AssertContains(resultSearch, "return HashResultMatchesPathText(ProjectHashResult(result), pathText);", "ResultDataSearch path-match predicate helper does not yet reuse the centralized HashResult path-search seam.");
@@ -1415,8 +1418,8 @@ internal static class Program
             AssertContains(resultSearch, "ResultMatchesPathAndDigestText(const ResultData& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", "ResultDataSearch does not yet expose the centralized path+digest-match predicate helper.");
             AssertContains(resultSearch, "VisitPathAndDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized path+digest matching visitor helper.");
             AssertContains(resultSearch, "return HashResultMatchesPathAndDigestText(ProjectHashResult(result), pathText, digestText);", "ResultDataSearch path+digest-match predicate helper does not yet compose through the shared HashResult path+digest seam.");
-            AssertContains(resultSearch, "return VisitMatchingResults(resultList, [&](const ResultData& result)", "ResultDataSearch path+digest matching helper does not yet reuse the centralized matching visitor seam.");
-            AssertContains(resultSearch, "return ResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataSearch path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
+            AssertContains(resultSearch, "return VisitMatchingResults(resultList, [&](const HashResult& result)", "ResultDataSearch path+digest matching helper does not yet reuse the centralized matching visitor seam.");
+            AssertContains(resultSearch, "return HashResultMatchesPathAndDigestText(result, pathText, digestText);", "ResultDataSearch path+digest matching helper does not yet reuse the centralized combined match predicate seam.");
 
             AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Legacy MFC search flow does not yet route result iteration through the centralized HashResult path+digest matching helper.");
             AssertContains(filesHashSearchController, "tstring tstrFileToFind = NormalizeHashResultPathSearchText(m_strFindFile.GetString());", "Legacy MFC search flow does not yet normalize path search text through the centralized HashResult search seam.");
@@ -1494,14 +1497,13 @@ internal static class Program
             AssertContains(resultAccess, "GetMutableResultCoreState(result).version.clear();", "ResultDataAccess core-state reset helper does not yet clear the version field.");
             AssertContains(resultAccess, "GetMutableResultCoreState(result).error.clear();", "ResultDataAccess core-state reset helper does not yet clear the error field.");
 
-            AssertContains(engineImpl, "ResetResultData(result);", "HashEngine does not yet reset the grouped ResultCoreState before publishing a new file result.");
+            AssertContains(engineImpl, "result = HashResult();", "HashEngine does not yet reset the grouped HashResult state before publishing a new file result.");
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
-                    "ResetResultData(result);",
-                    "SetResultState(result, RESULT_NONE);",
-                    "SetResultPath(result, path);",
+                    "HashResult& result = AppendHashExecutionResult(*executionContext);",
+                    "result = HashResult();",
+                    "result.path = path;",
                     "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer resets grouped core state before publishing the file path.");
@@ -1517,15 +1519,13 @@ internal static class Program
             AssertContains(resultAccess, "ResetResultCoreState(result);", "ResultDataAccess grouped ResultData reset helper does not yet reset grouped core state.");
             AssertContains(resultAccess, "ResetResultDigests(result);", "ResultDataAccess grouped ResultData reset helper does not yet reset digest state through the existing digest seam.");
 
-            AssertContains(engineImpl, "ResetResultData(result);", "HashEngine does not yet route new ResultData initialization through the grouped reset helper.");
-            AssertDoesNotContain(engineImpl, "ResetResultCoreState(result);\r\n\tResetResultDigests(result);", "HashEngine still manually sequences the separate core and digest reset helpers instead of using the grouped result reset helper.");
+            AssertContains(engineImpl, "result = HashResult();", "HashEngine does not yet route new HashResult initialization through the grouped reset helper.");
             AssertInOrder(engineImpl,
                 [
                     "BeginFileResult(",
-                    "ResultData& result = AppendHashExecutionResult(*executionContext);",
-                    "ResetResultData(result);",
-                    "SetResultState(result, RESULT_NONE);",
-                    "SetResultPath(result, path);",
+                    "HashResult& result = AppendHashExecutionResult(*executionContext);",
+                    "result = HashResult();",
+                    "result.path = path;",
                     "EmitPathResult(executionContext, result);"
                 ],
                 "HashEngine file-result begin helper no longer routes grouped result reset through the dedicated helper before publishing the file path.");
@@ -1746,8 +1746,8 @@ internal static class Program
             string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
-            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const ResultData& result)", "ResultDataSearch does not yet route projected matching traversal through the existing matching-results seam.");
-            AssertContains(resultProjection, "visitor(matchIndex, ProjectResultDataToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection projected matching traversal does not yet reuse the shared matching seam before projecting each result.");
+            AssertContains(resultSearch, "VisitMatchingResults(resultList, predicate, [&](const HashResult& result)", "ResultDataSearch does not yet route projected matching traversal through the existing matching-results seam.");
+            AssertContains(resultProjection, "visitor(matchIndex, ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString));", "ResultDataProjection projected matching traversal does not yet reuse the shared matching seam before projecting each result.");
         }, failures);
 
         Run("Phase 5 centralizes MFC label and text emission through dedicated hyperedit append helpers", () =>
@@ -1944,7 +1944,7 @@ internal static class Program
             AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1)", "HashEngine does not yet gate SHA1 updates through the algorithm-selection seam.");
             AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "HashEngine does not yet gate SHA256 updates through the algorithm-selection seam.");
             AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512)", "HashEngine does not yet gate SHA512 updates through the algorithm-selection seam.");
-            AssertContains(engineImpl, "if (HasAnyResultDigests(result))", "HashEngine does not yet suppress hash-result publication when no algorithms are enabled.");
+            AssertContains(engineImpl, "if (!result.digests.empty())", "HashEngine does not yet suppress hash-result publication when no algorithms are enabled.");
 
             AssertContains(digestAccess, "HasResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the result-digest presence helper needed for selective rendering.");
             AssertContains(digestAccess, "HasAnyResultDigests(const ResultData& result)", "ResultDigestAccess does not yet expose the grouped result-digest presence helper.");
@@ -2103,8 +2103,8 @@ internal static class Program
 
             AssertContains(enginePreparation, "void AccumulatePreScannedFileSize(", "HashEnginePreparation.cpp does not yet own the pre-scan size helper.");
             AssertContains(enginePreparation, "bool PrepareHashingWork(", "HashEnginePreparation.cpp does not yet own the preparation helper.");
-            AssertContains(enginePreparation, "ResultData& BeginFileResult(", "HashEnginePreparation.cpp does not yet own the file-result begin helper.");
-            AssertContains(enginePreparation, "ResultData& BeginFileHashAttempt(", "HashEnginePreparation.cpp does not yet own the file-attempt begin helper.");
+            AssertContains(enginePreparation, "HashResult& BeginFileResult(", "HashEnginePreparation.cpp does not yet own the file-result begin helper.");
+            AssertContains(enginePreparation, "HashResult& BeginFileHashAttempt(", "HashEnginePreparation.cpp does not yet own the file-attempt begin helper.");
 
             AssertContains(engineResult, "uint64_t PrepareFileMetaResult(", "HashEngineResult.cpp does not yet own the file-metadata helper.");
             AssertContains(engineResult, "void InitializeFileHashing(", "HashEngineResult.cpp does not yet own the file-hashing initialization helper.");
@@ -3042,6 +3042,7 @@ internal static class Program
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
         {
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
@@ -3056,9 +3057,9 @@ internal static class Program
             AssertContains(hashRequest, "VisitHashRequestFiles(const HashRequest& request", "Phase 31 HashRequest does not yet own file iteration.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 HashRequest does not yet own algorithm iteration.");
 
-            AssertContains(hashResult, "struct HashResult", "Phase 31 does not yet define a stable HashResult contract.");
+            AssertContains(global, "struct HashResult", "Phase 31 does not yet define a stable HashResult contract.");
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy compatibility link back to ResultData.");
-            AssertContains(hashResult, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
+            AssertContains(global, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
             AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 31 does not yet project ResultData into HashResult.");
 
             AssertContains(progressEvent, "enum ProgressEventType", "Phase 31 does not yet define a stable ProgressEventType surface.");
@@ -3078,8 +3079,8 @@ internal static class Program
             AssertContains(hashEngine, "VisitHashRequestFiles(request", "HashEngine does not yet iterate files through HashRequest.");
             AssertContains(hashEngine, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "HashEngine does not yet read selected algorithms through HashRequest.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreatePreparingProgressEvent());", "HashEngine preparation does not yet emit semantic progress events.");
-            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileStartedProgressEvent(ProjectHashResult(result)));", "Phase 35 HashEngine does not yet emit file-started progress events through HashResult.");
-            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase));", "Phase 35 HashEngine does not yet emit hash-ready progress events through HashResult.");
+            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileStartedProgressEvent(result));", "Phase 35 HashEngine does not yet emit file-started progress events through HashResult.");
+            AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "Phase 35 HashEngine does not yet emit hash-ready progress events through HashResult.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCancelledProgressEvent());", "HashEngine does not yet emit cancellation progress events.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCompletedProgressEvent());", "HashEngine does not yet emit completion progress events.");
         }, failures);
@@ -3160,7 +3161,7 @@ internal static class Program
             AssertContains(hashExecutionContext, "bool *workingFlag;", "Phase 35 hash execution context does not yet carry the working-flag seam.");
             AssertContains(hashExecutionContext, "bool *stopRequestedFlag;", "Phase 35 hash execution context does not yet carry the cancellation seam.");
             AssertContains(hashExecutionContext, "uint64_t *countedSize;", "Phase 35 hash execution context does not yet carry the counted-size seam.");
-            AssertContains(hashExecutionContext, "ResultList *results;", "Phase 35 hash execution context does not yet carry the result-list seam.");
+            AssertContains(hashExecutionContext, "HashResultList *results;", "Phase 35 hash execution context does not yet carry the HashResultList seam.");
             AssertContains(hashExecutionContext, "GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose progress-sink reads.");
             AssertContains(hashExecutionContext, "ShouldStopHashExecution(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose cancellation reads.");
             AssertContains(hashExecutionContext, "AppendHashExecutionResult(HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose result publication.");
@@ -3175,11 +3176,11 @@ internal static class Program
             AssertContains(hashEngineInternal, "HashExecutionContext *executionContext", "Phase 35 HashEngineInternal does not yet route execution seams through HashExecutionContext.");
 
             AssertContains(hashEnginePreparation, "PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request", "Phase 35 preparation seam does not yet consume HashExecutionContext.");
-            AssertContains(hashEnginePreparation, "EmitPathResult(HashExecutionContext *executionContext, ResultData& result)", "Phase 35 preparation seam does not yet publish file-start events through HashExecutionContext.");
+            AssertContains(hashEnginePreparation, "EmitPathResult(HashExecutionContext *executionContext, HashResult& result)", "Phase 35 preparation seam does not yet publish file-start events through HashExecutionContext.");
             AssertContains(hashEnginePreparation, "AppendHashExecutionResult(*executionContext)", "Phase 35 preparation seam does not yet publish results through HashExecutionContext.");
 
-            AssertContains(hashEngineResult, "PrepareFileMetaResult(HashExecutionContext *executionContext, ResultData& result", "Phase 35 result seam does not yet consume HashExecutionContext.");
-            AssertContains(hashEngineResult, "EmitHashResult(HashExecutionContext *executionContext, ResultData& result, bool uppercase)", "Phase 35 result seam does not yet publish hash results through HashExecutionContext.");
+            AssertContains(hashEngineResult, "PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", "Phase 35 result seam does not yet consume HashExecutionContext.");
+            AssertContains(hashEngineResult, "EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", "Phase 35 result seam does not yet publish hash results through HashExecutionContext.");
             AssertContains(hashEngineResult, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 35 result seam does not yet route counted-size replacement through HashExecutionContext.");
 
             AssertContains(hashEngine, "HashExecutionContext *executionContext, uint64_t fsize", "Phase 35 engine progress updates do not yet route through HashExecutionContext.");
@@ -3208,10 +3209,10 @@ internal static class Program
             AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
             AssertDoesNotContain(hashEngineObserver, "CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver still rebuilds ResultData instead of staying as a thin HashResult wrapper.");
 
-            AssertContains(hashEnginePreparation, "CreateFileStartedProgressEvent(ProjectHashResult(result))", "Phase 35 preparation seam does not yet emit file-start events through HashResult.");
-            AssertContains(hashEngineResult, "CreateFileMetaReadyProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-meta events through HashResult.");
-            AssertContains(hashEngineResult, "CreateFileHashReadyProgressEvent(ProjectHashResult(result), uppercase)", "Phase 35 result seam does not yet emit file-hash events through HashResult.");
-            AssertContains(hashEngineResult, "CreateFileFailedProgressEvent(ProjectHashResult(result))", "Phase 35 result seam does not yet emit file-failed events through HashResult.");
+            AssertContains(hashEnginePreparation, "CreateFileStartedProgressEvent(result)", "Phase 35 preparation seam does not yet emit file-start events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileMetaReadyProgressEvent(result)", "Phase 35 result seam does not yet emit file-meta events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileHashReadyProgressEvent(result, uppercase)", "Phase 35 result seam does not yet emit file-hash events through HashResult.");
+            AssertContains(hashEngineResult, "CreateFileFailedProgressEvent(result)", "Phase 35 result seam does not yet emit file-failed events through HashResult.");
         }, failures);
 
         Run("Phase 36 makes HashResult the bridge-facing result contract across MFC and managed adapters", () =>
@@ -3262,11 +3263,11 @@ internal static class Program
             AssertContains(hashResultSearch, "HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", "Phase 37 does not yet expose HashResult digest-search predicate matching.");
 
             AssertContains(hashResultProjection, "#include \"Common/HashResultSearch.h\"", "Phase 37 HashResult projection seam does not yet layer on top of HashResultSearch.");
-            AssertContains(hashResultProjection, "VisitProjectedHashResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose whole-list HashResult projection.");
-            AssertContains(hashResultSearch, "CountMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate)", "Phase 45 does not yet expose HashResult match counting through the shared search seam.");
-            AssertContains(hashResultProjection, "VisitProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose HashResult matching projection traversal.");
-            AssertContains(hashResultProjection, "CreateProjectedMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based materialized projection.");
-            AssertContains(hashResultProjection, "CreateProjectedDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based digest-search materialization.");
+            AssertContains(hashResultProjection, "VisitProjectedHashResults(const HashResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose whole-list HashResult projection.");
+            AssertContains(hashResultSearch, "CountMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate)", "Phase 45 does not yet expose HashResult match counting through the shared search seam.");
+            AssertContains(hashResultProjection, "VisitProjectedMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate, TStringConverter convertString, TResultVisitor visitor)", "Phase 37 does not yet expose HashResult matching projection traversal.");
+            AssertContains(hashResultProjection, "CreateProjectedMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based materialized projection.");
+            AssertContains(hashResultProjection, "CreateProjectedDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& digestText, TResultArrayFactory createResultArray, TStringConverter convertString, TResultArraySetter setProjectedResult)", "Phase 37 does not yet expose HashResult-based digest-search materialization.");
             AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResult projection seam does not yet reuse shared HashResult whole-list traversal.");
             AssertContains(hashResultProjection, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString)", "Phase 37 HashResult projection seam does not yet route materialized net projection through ProjectHashResultToNet.");
 
@@ -3455,9 +3456,9 @@ internal static class Program
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
 
-            AssertContains(hashResultSearch, "VisitHashResults(const ResultList& resultList, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose whole-list HashResult traversal.");
-            AssertContains(hashResultSearch, "VisitMatchingHashResults(const ResultList& resultList, THashResultPredicate predicate, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared HashResult matching traversal.");
-            AssertContains(hashResultSearch, "VisitPathAndDigestMatchingHashResults(const ResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared path+digest HashResult traversal.");
+            AssertContains(hashResultSearch, "VisitHashResults(const HashResultList& resultList, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose whole-list HashResult traversal.");
+            AssertContains(hashResultSearch, "VisitMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared HashResult matching traversal.");
+            AssertContains(hashResultSearch, "VisitPathAndDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared path+digest HashResult traversal.");
             AssertContains(hashResultSearch, "NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", "Phase 45 HashResultSearch does not yet own path normalization.");
             AssertContains(hashResultSearch, "NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", "Phase 45 HashResultSearch does not yet own digest normalization.");
 

@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
 
@@ -83,31 +83,29 @@ namespace HashEngineInternal
 		progressState->position = 0;
 	}
 
-	void EmitPathResult(HashExecutionContext *executionContext, ResultData& result)
+	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		SetResultState(result, RESULT_PATH);
-		observer->onProgressEvent(CreateFileStartedProgressEvent(ProjectHashResult(result)));
+		result.state = RESULT_PATH;
+		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
 	}
 
-	ResultData& BeginFileResult(HashExecutionContext *executionContext, const tstring& path)
+	HashResult& BeginFileResult(HashExecutionContext *executionContext, const tstring& path)
 	{
-		ResultData& result = AppendHashExecutionResult(*executionContext);
-
-		ResetResultData(result);
-		SetResultState(result, RESULT_NONE);
-		SetResultPath(result, path);
+		HashResult& result = AppendHashExecutionResult(*executionContext);
+		result = HashResult();
+		result.path = path;
 
 		EmitPathResult(executionContext, result);
 		return result;
 	}
 
-	ResultData& BeginFileHashAttempt(HashExecutionContext *executionContext, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
+	HashResult& BeginFileHashAttempt(HashExecutionContext *executionContext, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
 	{
 		ResetFileProgressState(&executionState->progressState);
 
-		ResultData& result = BeginFileResult(executionContext, path);
-		*resultPath = GetResultPath(result).c_str();
+		HashResult& result = BeginFileResult(executionContext, path);
+		*resultPath = result.path.c_str();
 		return result;
 	}
 }
