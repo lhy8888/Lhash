@@ -1,6 +1,7 @@
 #include "..\..\trunk\source\stdafx.h"
 
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 #include "NativeTestHarness.h"
@@ -15,11 +16,16 @@
 
 namespace
 {
+	static const size_t kHashEngineBufferSize = 1048576;
+
 	class CapturingProgressSink : public HashProgressSink
 	{
 	public:
 		explicit CapturingProgressSink(int progressMaximum = 100)
-			: progressMaximum_(progressMaximum)
+			: progressMaximum_(progressMaximum),
+			stopRequestedFlag_(NULL),
+			stopEventType_(PROGRESS_EVENT_NONE),
+			stopEventMinimumValue_(0)
 		{
 		}
 
@@ -30,15 +36,54 @@ namespace
 
 		virtual void onProgressEvent(const ProgressEvent& progressEvent)
 		{
-			events.push_back(progressEvent);
+			{
+				std::lock_guard<std::mutex> lock(eventsMutex_);
+				events_.push_back(progressEvent);
+			}
+
+			if (stopRequestedFlag_ != NULL &&
+				progressEvent.type == stopEventType_ &&
+				progressEvent.value >= stopEventMinimumValue_)
+			{
+				*stopRequestedFlag_ = true;
+			}
+		}
+
+		void ConfigureStopOnEvent(bool *stopRequestedFlag, ProgressEventType eventType, int minimumValue)
+		{
+			stopRequestedFlag_ = stopRequestedFlag;
+			stopEventType_ = eventType;
+			stopEventMinimumValue_ = minimumValue;
 		}
 
 		bool HasEvent(ProgressEventType eventType) const
 		{
-			for (size_t eventIndex = 0; eventIndex < events.size(); ++eventIndex)
+			return CountEvents(eventType) > 0;
+		}
+
+		size_t CountEvents(ProgressEventType eventType) const
+		{
+			size_t eventCount = 0;
+			std::lock_guard<std::mutex> lock(eventsMutex_);
+			for (size_t eventIndex = 0; eventIndex < events_.size(); ++eventIndex)
 			{
-				if (events[eventIndex].type == eventType)
+				if (events_[eventIndex].type == eventType)
 				{
+					++eventCount;
+				}
+			}
+
+			return eventCount;
+		}
+
+		bool TryGetFirstEvent(ProgressEventType eventType, ProgressEvent *progressEvent) const
+		{
+			std::lock_guard<std::mutex> lock(eventsMutex_);
+			for (size_t eventIndex = 0; eventIndex < events_.size(); ++eventIndex)
+			{
+				if (events_[eventIndex].type == eventType)
+				{
+					*progressEvent = events_[eventIndex];
 					return true;
 				}
 			}
@@ -46,10 +91,42 @@ namespace
 			return false;
 		}
 
-		std::vector<ProgressEvent> events;
+		int GetFirstEventIndex(ProgressEventType eventType) const
+		{
+			std::lock_guard<std::mutex> lock(eventsMutex_);
+			for (size_t eventIndex = 0; eventIndex < events_.size(); ++eventIndex)
+			{
+				if (events_[eventIndex].type == eventType)
+				{
+					return static_cast<int>(eventIndex);
+				}
+			}
+
+			return -1;
+		}
+
+		int GetLastValue(ProgressEventType eventType, int defaultValue = -1) const
+		{
+			int lastValue = defaultValue;
+			std::lock_guard<std::mutex> lock(eventsMutex_);
+			for (size_t eventIndex = 0; eventIndex < events_.size(); ++eventIndex)
+			{
+				if (events_[eventIndex].type == eventType)
+				{
+					lastValue = events_[eventIndex].value;
+				}
+			}
+
+			return lastValue;
+		}
 
 	private:
 		int progressMaximum_;
+		bool *stopRequestedFlag_;
+		ProgressEventType stopEventType_;
+		int stopEventMinimumValue_;
+		mutable std::mutex eventsMutex_;
+		std::vector<ProgressEvent> events_;
 	};
 
 	class ScopedTempDirectory
@@ -135,17 +212,48 @@ namespace
 		});
 	}
 
-	static void ConfigureThreadData(ThreadData& threadData, CapturingProgressSink& progressSink, const sunjwbase::tstring& filePath, const std::vector<ResultDigestType>& enabledAlgorithms)
+	static void ConfigureThreadDataFiles(ThreadData& threadData, CapturingProgressSink& progressSink, const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
 	{
 		ResetThreadDataForNewSession(threadData);
 		SetThreadDataObserver(threadData, &progressSink);
-		AppendThreadDataInputFile(threadData, filePath);
+		SetThreadDataUppercase(threadData, uppercaseDigest);
+		for (size_t fileIndex = 0; fileIndex < filePaths.size(); ++fileIndex)
+		{
+			AppendThreadDataInputFile(threadData, filePaths[fileIndex]);
+		}
 
 		DisableAllAlgorithms(threadData);
 		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithms.size(); ++algorithmIndex)
 		{
 			SetThreadDataHashAlgorithmEnabled(threadData, enabledAlgorithms[algorithmIndex], true);
 		}
+	}
+
+	static void ConfigureThreadData(ThreadData& threadData, CapturingProgressSink& progressSink, const sunjwbase::tstring& filePath, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
+	{
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		ConfigureThreadDataFiles(threadData, progressSink, filePaths, enabledAlgorithms, uppercaseDigest);
+	}
+
+	static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, bool& workingFlag, bool& stopRequestedFlag, uint64_t& countedSize, HashResultList& results)
+	{
+		HashExecutionContext executionContext;
+		executionContext.progressSink = &progressSink;
+		executionContext.workingFlag = &workingFlag;
+		executionContext.stopRequestedFlag = &stopRequestedFlag;
+		executionContext.countedSize = &countedSize;
+		executionContext.results = &results;
+		return executionContext;
+	}
+
+	static HashRequest CreateRequest(const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
+	{
+		HashRequest request;
+		request.files = filePaths;
+		request.algorithms = enabledAlgorithms;
+		request.uppercaseDigest = uppercaseDigest;
+		return request;
 	}
 
 	static sunjwbase::tstring FindDigestValue(const HashResult& result, ResultDigestType digestType)
@@ -159,6 +267,19 @@ namespace
 		}
 
 		return sunjwbase::tstring();
+	}
+
+	static const HashResult *FindHashResultByPath(const HashResultList& results, const sunjwbase::tstring& path)
+	{
+		for (HashResultList::const_iterator itr = results.begin(); itr != results.end(); ++itr)
+		{
+			if (itr->path == path)
+			{
+				return &(*itr);
+			}
+		}
+
+		return NULL;
 	}
 
 	static void HashThreadFunc_ComputesExpectedDigestsForSingleFile()
@@ -196,6 +317,48 @@ namespace
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_META_READY), "The runtime path should emit a file-meta event.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "The runtime path should emit a file-hash event.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "The runtime path should emit a completed event.");
+	}
+
+	static void HashThreadFunc_ProcessesMultipleFilesAndWholeProgress()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring abcPath = tempDirectory.WriteTextFile(_T("abc.txt"), "abc");
+		sunjwbase::tstring helloPath = tempDirectory.WriteTextFile(_T("hello.txt"), "hello");
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		algorithms.push_back(RESULT_DIGEST_SHA256);
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(abcPath);
+		filePaths.push_back(helloPath);
+		ConfigureThreadDataFiles(threadData, progressSink, filePaths, algorithms);
+
+		int exitCode = HashThreadFunc(&threadData);
+		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a multi-file request.");
+		NativeAssertEqual(static_cast<uint64_t>(2), GetThreadDataResultCount(threadData), "A two-file request should append two results.");
+		NativeAssertEqual(static_cast<uint64_t>(8), GetThreadDataTotalSize(threadData), "The counted runtime size should match the sum of the two input files.");
+
+		const HashResultList& results = GetThreadDataResults(threadData);
+		const HashResult *abcResult = FindHashResultByPath(results, abcPath);
+		const HashResult *helloResult = FindHashResultByPath(results, helloPath);
+		NativeAssertTrue(abcResult != NULL, "The multi-file runtime path should preserve the first file result.");
+		NativeAssertTrue(helloResult != NULL, "The multi-file runtime path should preserve the second file result.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), FindDigestValue(*abcResult, RESULT_DIGEST_MD5), "The first file MD5 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("5D41402ABC4B2A76B9719D911017C592")), FindDigestValue(*helloResult, RESULT_DIGEST_MD5), "The second file MD5 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), FindDigestValue(*abcResult, RESULT_DIGEST_SHA256), "The first file SHA256 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824")), FindDigestValue(*helloResult, RESULT_DIGEST_SHA256), "The second file SHA256 digest did not match the known vector.");
+
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_STARTED), "The multi-file runtime path should emit one file-started event per input file.");
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_META_READY), "The multi-file runtime path should emit one file-meta event per input file.");
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "The multi-file runtime path should emit one file-hash event per input file.");
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_CALCULATED), "The multi-file runtime path should emit one file-calculated event per input file.");
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_FINISHED), "The multi-file runtime path should emit one file-finished event per input file.");
+		NativeAssertEqual(progressSink.progressMax(), progressSink.GetLastValue(PROGRESS_EVENT_TOTAL_PROGRESS), "The total progress should finish at progressMax for a completed multi-file run.");
+		NativeAssertTrue(progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARING) < progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARATION_FINISHED), "Preparing should happen before preparation-finished.");
+		NativeAssertTrue(progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARATION_FINISHED) < progressSink.GetFirstEventIndex(PROGRESS_EVENT_FILE_STARTED), "Preparation should finish before file-started events.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "The multi-file runtime path should emit a completed event.");
 	}
 
 	static void HashThreadFunc_RespectsSelectedAlgorithms()
@@ -241,6 +404,71 @@ namespace
 		NativeAssertEqual(static_cast<size_t>(0), CountDigestMatchingHashResults(results, missingQuery), "The runtime digest search should reject non-matching digests.");
 	}
 
+	static void HashResultSearch_MatchesPathAndDigestForRuntimeResults()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring alphaPath = tempDirectory.WriteTextFile(_T("alpha.txt"), "abc");
+		sunjwbase::tstring betaPath = tempDirectory.WriteTextFile(_T("beta.txt"), "hello");
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(alphaPath);
+		filePaths.push_back(betaPath);
+		ConfigureThreadDataFiles(threadData, progressSink, filePaths, algorithms);
+
+		int exitCode = HashThreadFunc(&threadData);
+		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for path+digest runtime search coverage.");
+
+		std::vector<sunjwbase::tstring> matchedPaths;
+		size_t matchCount = VisitPathAndDigestMatchingHashResults(GetThreadDataResults(threadData),
+			NormalizeHashResultPathSearchText(_T("alpha")),
+			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("90015098"))),
+			[&](const HashResult& result)
+		{
+			matchedPaths.push_back(result.path);
+		});
+
+		NativeAssertEqual(static_cast<size_t>(1), matchCount, "The runtime path+digest search should match exactly one result.");
+		NativeAssertEqual(static_cast<size_t>(1), matchedPaths.size(), "The runtime path+digest visitor should receive exactly one result.");
+		NativeAssertEqual(alphaPath, matchedPaths[0], "The runtime path+digest match should select the alpha test file.");
+		NativeAssertEqual(static_cast<size_t>(0), VisitPathAndDigestMatchingHashResults(GetThreadDataResults(threadData),
+			NormalizeHashResultPathSearchText(_T("alpha")),
+			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("5D4140"))),
+			[&](const HashResult& result)
+		{
+			(void)result;
+		}), "The runtime path+digest search should reject digest text that belongs to another file.");
+	}
+
+	static void HashThreadFunc_ComputesExpectedDigestsForEmptyFile()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("empty.txt"), "");
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		algorithms.push_back(RESULT_DIGEST_SHA1);
+		algorithms.push_back(RESULT_DIGEST_SHA256);
+		algorithms.push_back(RESULT_DIGEST_SHA512);
+		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+
+		int exitCode = HashThreadFunc(&threadData);
+		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an empty file.");
+
+		const HashResult& result = GetThreadDataResults(threadData).front();
+		NativeAssertEqual(static_cast<uint64_t>(0), result.meta.size, "The empty-file runtime path should report zero bytes.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("D41D8CD98F00B204E9800998ECF8427E")), FindDigestValue(result, RESULT_DIGEST_MD5), "The empty-file MD5 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("DA39A3EE5E6B4B0D3255BFEF95601890AFD80709")), FindDigestValue(result, RESULT_DIGEST_SHA1), "The empty-file SHA1 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")), FindDigestValue(result, RESULT_DIGEST_SHA256), "The empty-file SHA256 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE47D0D13C5D85F2B0FF8318D2877EEC2F63B931BD47417A81A538327AF927DA3E")), FindDigestValue(result, RESULT_DIGEST_SHA512), "The empty-file SHA512 digest did not match the known vector.");
+		NativeAssertEqual(progressSink.progressMax(), progressSink.GetLastValue(PROGRESS_EVENT_FILE_PROGRESS), "The empty-file runtime path should still complete file progress.");
+	}
+
 	static void RunHashRequest_ReportsMissingFileAsErrorResult()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -276,6 +504,42 @@ namespace
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "A missing file should still emit a completed event.");
 	}
 
+	static void RunHashRequest_ContinuesAfterOpenFileErrorInBatch()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring existingPath = tempDirectory.WriteTextFile(_T("existing.txt"), "abc");
+		sunjwbase::tstring missingPath = tempDirectory.BuildPath(_T("missing.txt"));
+
+		CapturingProgressSink progressSink;
+		bool workingFlag = false;
+		bool stopRequestedFlag = false;
+		uint64_t countedSize = 0;
+		HashResultList results;
+
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(missingPath);
+		filePaths.push_back(existingPath);
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		HashRequest request = CreateRequest(filePaths, algorithms);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "RunHashRequest should continue past an open-file error and complete the batch.");
+		NativeAssertEqual(static_cast<size_t>(2), results.size(), "A mixed missing+existing batch should still append two file results.");
+		const HashResult *missingResult = FindHashResultByPath(results, missingPath);
+		const HashResult *existingResult = FindHashResultByPath(results, existingPath);
+		NativeAssertTrue(missingResult != NULL, "The mixed batch should preserve the missing-file error result.");
+		NativeAssertTrue(existingResult != NULL, "The mixed batch should preserve the later successful file result.");
+		NativeAssertEqual(RESULT_ERROR, missingResult->state, "The missing file should remain RESULT_ERROR inside a mixed batch.");
+		NativeAssertEqual(RESULT_ALL, existingResult->state, "The existing file should still complete successfully inside a mixed batch.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), FindDigestValue(*existingResult, RESULT_DIGEST_MD5), "The successful file in the mixed batch did not produce the expected MD5 digest.");
+		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_FAILED), "The mixed batch should emit exactly one file-failed event.");
+		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "The mixed batch should emit exactly one file-hash event.");
+		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_FINISHED), "The mixed batch should mark both file attempts as finished.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "The mixed batch should still emit a completed event.");
+	}
+
 	static void RunHashRequest_CancelsWhenStopRequestedBeforeStart()
 	{
 		CapturingProgressSink progressSink;
@@ -301,13 +565,78 @@ namespace
 		NativeAssertTrue(!workingFlag, "A cancelled execution should not leave the working flag enabled.");
 		NativeAssertEqual(static_cast<size_t>(0), results.size(), "A cancelled execution should not append any file results.");
 	}
+
+	static void RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("uppercase.txt"), "abc");
+
+		CapturingProgressSink progressSink;
+		bool workingFlag = false;
+		bool stopRequestedFlag = false;
+		uint64_t countedSize = 0;
+		HashResultList results;
+
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		HashRequest request = CreateRequest(filePaths, algorithms, true);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "RunHashRequest should succeed for an uppercase-digest request.");
+
+		ProgressEvent hashReadyEvent;
+		NativeAssertTrue(progressSink.TryGetFirstEvent(PROGRESS_EVENT_FILE_HASH_READY, &hashReadyEvent), "The uppercase-digest runtime path should emit a file-hash-ready event.");
+		NativeAssertTrue(hashReadyEvent.uppercaseDigest, "The file-hash-ready event should preserve the uppercaseDigest request flag.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), FindDigestValue(hashReadyEvent.result, RESULT_DIGEST_MD5), "The uppercase-digest event result should carry the expected MD5 value.");
+	}
+
+	static void RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring largeFilePath = tempDirectory.WriteTextFile(_T("large.bin"), std::string((kHashEngineBufferSize * 3) + 17, 'A'));
+		sunjwbase::tstring secondFilePath = tempDirectory.WriteTextFile(_T("second.txt"), "second");
+
+		CapturingProgressSink progressSink;
+		bool workingFlag = false;
+		bool stopRequestedFlag = false;
+		uint64_t countedSize = 0;
+		HashResultList results;
+
+		progressSink.ConfigureStopOnEvent(&stopRequestedFlag, PROGRESS_EVENT_FILE_PROGRESS, 1);
+
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(largeFilePath);
+		filePaths.push_back(secondFilePath);
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		HashRequest request = CreateRequest(filePaths, algorithms);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "RunHashRequest should cooperatively cancel during file progress.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_CANCELLED), "A mid-run cancellation should emit a cancelled event.");
+		NativeAssertTrue(!progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "A mid-run cancellation should not emit a completed event.");
+		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_STARTED), "Cancellation during the first file should prevent later files from starting.");
+		NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_FINISHED), "Cancellation during file progress should stop before file-finished is emitted.");
+		NativeAssertTrue(FindHashResultByPath(results, secondFilePath) == NULL, "Cancellation during the first file should prevent later file results from being appended.");
+		NativeAssertTrue(!workingFlag, "A mid-run cancellation should clear the working flag.");
+	}
 }
 
 void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 {
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
+	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
+	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });
+	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForEmptyFile", &HashThreadFunc_ComputesExpectedDigestsForEmptyFile });
 	tests.push_back({ "RunHashRequest_ReportsMissingFileAsErrorResult", &RunHashRequest_ReportsMissingFileAsErrorResult });
+	tests.push_back({ "RunHashRequest_ContinuesAfterOpenFileErrorInBatch", &RunHashRequest_ContinuesAfterOpenFileErrorInBatch });
 	tests.push_back({ "RunHashRequest_CancelsWhenStopRequestedBeforeStart", &RunHashRequest_CancelsWhenStopRequestedBeforeStart });
+	tests.push_back({ "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", &RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent });
+	tests.push_back({ "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", &RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles });
 }

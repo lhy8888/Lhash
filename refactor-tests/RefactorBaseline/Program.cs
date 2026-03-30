@@ -3502,10 +3502,16 @@ internal static class Program
             AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference fHashNativeCore.");
             AssertContains(nativeRuntimeProject, "Version.lib;%(AdditionalDependencies)", "Phase 47 native runtime test project does not yet link Version.lib for WindowsComm version helpers.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForSingleFile", "Phase 47 native runtime tests do not yet cover the main HashThreadFunc runtime path.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", "Phase 47 native runtime tests do not yet cover multi-file runtime progress and result storage.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_RespectsSelectedAlgorithms", "Phase 47 native runtime tests do not yet cover algorithm selection.");
             AssertContains(nativeRuntimeSource, "HashResultSearch_FindsMatchingRuntimeDigests", "Phase 47 native runtime tests do not yet cover runtime digest search.");
+            AssertContains(nativeRuntimeSource, "HashResultSearch_MatchesPathAndDigestForRuntimeResults", "Phase 47 native runtime tests do not yet cover combined path+digest runtime search.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForEmptyFile", "Phase 47 native runtime tests do not yet cover the empty-file digest vectors.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_ReportsMissingFileAsErrorResult", "Phase 47 native runtime tests do not yet cover the missing-file error path.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_ContinuesAfterOpenFileErrorInBatch", "Phase 47 native runtime tests do not yet cover mixed success+error file batches.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsWhenStopRequestedBeforeStart", "Phase 47 native runtime tests do not yet cover cooperative cancellation.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", "Phase 47 native runtime tests do not yet cover uppercase digest event propagation.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", "Phase 47 native runtime tests do not yet cover mid-run cancellation.");
             AssertContains(nativeRuntimeMain, "All native runtime tests passed", "Phase 47 native runtime test main does not yet report aggregate success.");
 
             AssertContains(solution, "FHash.NativeRuntimeTests", "Phase 47 fileshash15.sln does not yet include the native runtime test project.");

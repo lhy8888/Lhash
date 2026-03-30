@@ -37,15 +37,25 @@ public sealed class NativeRuntimeFrameworkUnitTests
 
         Assert.Contains("class CapturingProgressSink : public HashProgressSink", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForSingleFile", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_RespectsSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_FindsMatchingRuntimeDigests", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashResultSearch_MatchesPathAndDigestForRuntimeResults", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_ReportsMissingFileAsErrorResult", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_ContinuesAfterOpenFileErrorInBatch", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc(&threadData)", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest(&executionContext, request)", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
+        Assert.Contains("VisitPathAndDigestMatchingHashResults", testSource, StringComparison.Ordinal);
+        Assert.Contains("ConfigureStopOnEvent(&stopRequestedFlag, PROGRESS_EVENT_FILE_PROGRESS, 1)", testSource, StringComparison.Ordinal);
         Assert.Contains("900150983CD24FB0D6963F7D28E17F72", testSource, StringComparison.Ordinal);
         Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", testSource, StringComparison.Ordinal);
+        Assert.Contains("D41D8CD98F00B204E9800998ECF8427E", testSource, StringComparison.Ordinal);
+        Assert.Contains("5D41402ABC4B2A76B9719D911017C592", testSource, StringComparison.Ordinal);
 
         Assert.Contains("struct NativeTestCase", harness, StringComparison.Ordinal);
         Assert.Contains("RunNativeTestCase(const NativeTestCase& testCase)", harness, StringComparison.Ordinal);
