@@ -51,7 +51,9 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("RunHashRequest(&executionContext, request)", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults", testSource, StringComparison.Ordinal);
-        Assert.Contains("ConfigureStopOnEvent(&stopRequestedFlag, PROGRESS_EVENT_FILE_PROGRESS, 1)", testSource, StringComparison.Ordinal);
+        Assert.Contains("std::atomic<bool> *stopRequestedFlag_", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashJobState& jobState, HashCancellationState& cancellationState", testSource, StringComparison.Ordinal);
+        Assert.Contains("ConfigureStopOnEvent(&cancellationState.stopRequested, PROGRESS_EVENT_FILE_PROGRESS, 1)", testSource, StringComparison.Ordinal);
         Assert.Contains("900150983CD24FB0D6963F7D28E17F72", testSource, StringComparison.Ordinal);
         Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", testSource, StringComparison.Ordinal);
         Assert.Contains("D41D8CD98F00B204E9800998ECF8427E", testSource, StringComparison.Ordinal);

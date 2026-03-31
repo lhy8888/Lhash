@@ -1,6 +1,7 @@
 #ifndef _GLOBAL_H_
 #define _GLOBAL_H_
 #include <stdint.h>
+#include <atomic>
 #include <vector>
 #include <list>
 #if defined (_WIN32)
@@ -51,6 +52,38 @@ struct ResultDigestStorage
 struct HashAlgorithmSelectionState
 {
 	std::vector<bool> enabled;
+};
+
+struct HashExecutionPreferenceState
+{
+	HashExecutionPreferenceState()
+		: uppercaseDigest(false)
+	{
+	}
+
+	bool uppercaseDigest;
+	HashAlgorithmSelectionState hashAlgorithms;
+};
+
+struct HashCancellationState
+{
+	HashCancellationState()
+		: stopRequested(false)
+	{
+	}
+
+	HashCancellationState(const HashCancellationState& other)
+		: stopRequested(other.stopRequested.load())
+	{
+	}
+
+	HashCancellationState& operator=(const HashCancellationState& other)
+	{
+		stopRequested.store(other.stopRequested.load());
+		return *this;
+	}
+
+	std::atomic<bool> stopRequested;
 };
 
 struct ResultDigestState
@@ -113,6 +146,34 @@ struct HashResult
 typedef std::list<HashResult> HashResultList;
 typedef HashResultList ResultList;
 
+struct HashJobState
+{
+	HashJobState()
+		: working(false),
+		countedSize(0)
+	{
+	}
+
+	HashJobState(const HashJobState& other)
+		: working(other.working.load()),
+		countedSize(other.countedSize),
+		results(other.results)
+	{
+	}
+
+	HashJobState& operator=(const HashJobState& other)
+	{
+		working.store(other.working.load());
+		countedSize = other.countedSize;
+		results = other.results;
+		return *this;
+	}
+
+	std::atomic<bool> working;
+	uint64_t countedSize;
+	HashResultList results;
+};
+
 struct ThreadDataInputState
 {
 	uint32_t fileCount;
@@ -121,12 +182,9 @@ struct ThreadDataInputState
 
 struct ThreadDataExecutionState
 {
-	bool working;
-	bool stopRequested;
-	bool uppercaseDigest;
-	HashAlgorithmSelectionState hashAlgorithms;
-	uint64_t countedSize;
-	HashResultList results;
+	HashExecutionPreferenceState preferences;
+	HashCancellationState cancellation;
+	HashJobState jobState;
 };
 
 struct ThreadData

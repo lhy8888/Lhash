@@ -38,46 +38,76 @@ static inline ThreadDataExecutionState& GetMutableThreadDataExecutionState(Threa
 	return threadData.executionState;
 }
 
+static inline const HashExecutionPreferenceState& GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)
+{
+	return GetThreadDataExecutionState(threadData).preferences;
+}
+
+static inline HashExecutionPreferenceState& GetMutableThreadDataHashExecutionPreferenceState(ThreadData& threadData)
+{
+	return GetMutableThreadDataExecutionState(threadData).preferences;
+}
+
+static inline const HashCancellationState& GetThreadDataHashCancellationState(const ThreadData& threadData)
+{
+	return GetThreadDataExecutionState(threadData).cancellation;
+}
+
+static inline HashCancellationState& GetMutableThreadDataHashCancellationState(ThreadData& threadData)
+{
+	return GetMutableThreadDataExecutionState(threadData).cancellation;
+}
+
+static inline const HashJobState& GetThreadDataHashJobState(const ThreadData& threadData)
+{
+	return GetThreadDataExecutionState(threadData).jobState;
+}
+
+static inline HashJobState& GetMutableThreadDataHashJobState(ThreadData& threadData)
+{
+	return GetMutableThreadDataExecutionState(threadData).jobState;
+}
+
 static inline const HashAlgorithmSelectionState& GetThreadDataHashAlgorithmSelectionState(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).hashAlgorithms;
+	return GetThreadDataHashExecutionPreferenceState(threadData).hashAlgorithms;
 }
 
 static inline HashAlgorithmSelectionState& GetMutableThreadDataHashAlgorithmSelectionState(ThreadData& threadData)
 {
-	HashAlgorithmSelectionState& hashAlgorithmSelectionState = GetMutableThreadDataExecutionState(threadData).hashAlgorithms;
+	HashAlgorithmSelectionState& hashAlgorithmSelectionState = GetMutableThreadDataHashExecutionPreferenceState(threadData).hashAlgorithms;
 	EnsureThreadDataHashAlgorithmSelectionStateSize(hashAlgorithmSelectionState);
 	return hashAlgorithmSelectionState;
 }
 
 static inline void SetThreadDataWorking(ThreadData& threadData, bool working)
 {
-	GetMutableThreadDataExecutionState(threadData).working = working;
+	GetMutableThreadDataHashJobState(threadData).working.store(working);
 }
 
 static inline bool IsThreadDataWorking(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).working;
+	return GetThreadDataHashJobState(threadData).working.load();
 }
 
 static inline void SetThreadDataStop(ThreadData& threadData, bool stopValue)
 {
-	GetMutableThreadDataExecutionState(threadData).stopRequested = stopValue;
+	GetMutableThreadDataHashCancellationState(threadData).stopRequested.store(stopValue);
 }
 
 static inline bool ShouldStopThreadData(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).stopRequested;
+	return GetThreadDataHashCancellationState(threadData).stopRequested.load();
 }
 
 static inline void SetThreadDataUppercase(ThreadData& threadData, bool uppercase)
 {
-	GetMutableThreadDataExecutionState(threadData).uppercaseDigest = uppercase;
+	GetMutableThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest = uppercase;
 }
 
 static inline bool GetThreadDataUppercase(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).uppercaseDigest;
+	return GetThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest;
 }
 
 static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
@@ -144,22 +174,22 @@ static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 
 static inline uint64_t GetThreadDataTotalSize(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).countedSize;
+	return GetThreadDataHashJobState(threadData).countedSize;
 }
 
 static inline void ResetThreadDataTotalSize(ThreadData& threadData)
 {
-	GetMutableThreadDataExecutionState(threadData).countedSize = 0;
+	GetMutableThreadDataHashJobState(threadData).countedSize = 0;
 }
 
 static inline void AddThreadDataTotalSize(ThreadData& threadData, uint64_t sizeDelta)
 {
-	GetMutableThreadDataExecutionState(threadData).countedSize += sizeDelta;
+	GetMutableThreadDataHashJobState(threadData).countedSize += sizeDelta;
 }
 
 static inline void ReplaceThreadDataCountedFileSize(ThreadData& threadData, uint64_t previousSize, uint64_t currentSize)
 {
-	GetMutableThreadDataExecutionState(threadData).countedSize = GetThreadDataTotalSize(threadData) + currentSize - previousSize;
+	GetMutableThreadDataHashJobState(threadData).countedSize = GetThreadDataTotalSize(threadData) + currentSize - previousSize;
 }
 
 #endif

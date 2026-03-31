@@ -45,11 +45,11 @@ namespace
 				progressEvent.type == stopEventType_ &&
 				progressEvent.value >= stopEventMinimumValue_)
 			{
-				*stopRequestedFlag_ = true;
+				stopRequestedFlag_->store(true);
 			}
 		}
 
-		void ConfigureStopOnEvent(bool *stopRequestedFlag, ProgressEventType eventType, int minimumValue)
+		void ConfigureStopOnEvent(std::atomic<bool> *stopRequestedFlag, ProgressEventType eventType, int minimumValue)
 		{
 			stopRequestedFlag_ = stopRequestedFlag;
 			stopEventType_ = eventType;
@@ -122,7 +122,7 @@ namespace
 
 	private:
 		int progressMaximum_;
-		bool *stopRequestedFlag_;
+		std::atomic<bool> *stopRequestedFlag_;
 		ProgressEventType stopEventType_;
 		int stopEventMinimumValue_;
 		mutable std::mutex eventsMutex_;
@@ -236,14 +236,12 @@ namespace
 		ConfigureThreadDataFiles(threadData, progressSink, filePaths, enabledAlgorithms, uppercaseDigest);
 	}
 
-	static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, bool& workingFlag, bool& stopRequestedFlag, uint64_t& countedSize, HashResultList& results)
+	static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
 	{
 		HashExecutionContext executionContext;
 		executionContext.progressSink = &progressSink;
-		executionContext.workingFlag = &workingFlag;
-		executionContext.stopRequestedFlag = &stopRequestedFlag;
-		executionContext.countedSize = &countedSize;
-		executionContext.results = &results;
+		executionContext.jobState = &jobState;
+		executionContext.cancellationState = &cancellationState;
 		return executionContext;
 	}
 
@@ -475,17 +473,13 @@ namespace
 		sunjwbase::tstring missingPath = tempDirectory.BuildPath(_T("missing.txt"));
 
 		CapturingProgressSink progressSink;
-		bool workingFlag = false;
-		bool stopRequestedFlag = false;
-		uint64_t countedSize = 0;
-		HashResultList results;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
 
 		HashExecutionContext executionContext;
 		executionContext.progressSink = &progressSink;
-		executionContext.workingFlag = &workingFlag;
-		executionContext.stopRequestedFlag = &stopRequestedFlag;
-		executionContext.countedSize = &countedSize;
-		executionContext.results = &results;
+		executionContext.jobState = &jobState;
+		executionContext.cancellationState = &cancellationState;
 
 		HashRequest request;
 		request.files.push_back(missingPath);
@@ -493,10 +487,10 @@ namespace
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should complete even when a file cannot be opened.");
-		NativeAssertTrue(!workingFlag, "RunHashRequest should clear the working flag after a missing-file attempt.");
-		NativeAssertEqual(static_cast<size_t>(1), results.size(), "A missing file should still produce one error result.");
+		NativeAssertTrue(!jobState.working.load(), "RunHashRequest should clear the working flag after a missing-file attempt.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "A missing file should still produce one error result.");
 
-		const HashResult& result = results.front();
+		const HashResult& result = jobState.results.front();
 		NativeAssertEqual(RESULT_ERROR, result.state, "A missing file should produce RESULT_ERROR.");
 		NativeAssertEqual(missingPath, result.path, "The error result should preserve the requested file path.");
 		NativeAssertNotEmpty(result.error, "The missing-file result should expose an error message.");
@@ -511,12 +505,10 @@ namespace
 		sunjwbase::tstring missingPath = tempDirectory.BuildPath(_T("missing.txt"));
 
 		CapturingProgressSink progressSink;
-		bool workingFlag = false;
-		bool stopRequestedFlag = false;
-		uint64_t countedSize = 0;
-		HashResultList results;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
 
-		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(missingPath);
 		filePaths.push_back(existingPath);
@@ -526,9 +518,9 @@ namespace
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should continue past an open-file error and complete the batch.");
-		NativeAssertEqual(static_cast<size_t>(2), results.size(), "A mixed missing+existing batch should still append two file results.");
-		const HashResult *missingResult = FindHashResultByPath(results, missingPath);
-		const HashResult *existingResult = FindHashResultByPath(results, existingPath);
+		NativeAssertEqual(static_cast<size_t>(2), jobState.results.size(), "A mixed missing+existing batch should still append two file results.");
+		const HashResult *missingResult = FindHashResultByPath(jobState.results, missingPath);
+		const HashResult *existingResult = FindHashResultByPath(jobState.results, existingPath);
 		NativeAssertTrue(missingResult != NULL, "The mixed batch should preserve the missing-file error result.");
 		NativeAssertTrue(existingResult != NULL, "The mixed batch should preserve the later successful file result.");
 		NativeAssertEqual(RESULT_ERROR, missingResult->state, "The missing file should remain RESULT_ERROR inside a mixed batch.");
@@ -543,17 +535,14 @@ namespace
 	static void RunHashRequest_CancelsWhenStopRequestedBeforeStart()
 	{
 		CapturingProgressSink progressSink;
-		bool workingFlag = false;
-		bool stopRequestedFlag = true;
-		uint64_t countedSize = 0;
-		HashResultList results;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		cancellationState.stopRequested.store(true);
 
 		HashExecutionContext executionContext;
 		executionContext.progressSink = &progressSink;
-		executionContext.workingFlag = &workingFlag;
-		executionContext.stopRequestedFlag = &stopRequestedFlag;
-		executionContext.countedSize = &countedSize;
-		executionContext.results = &results;
+		executionContext.jobState = &jobState;
+		executionContext.cancellationState = &cancellationState;
 
 		HashRequest request;
 		request.files.push_back(sunjwbase::strtotstr(std::string("should-not-run.txt")));
@@ -562,8 +551,8 @@ namespace
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should return 0 for a cooperative cancellation.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_CANCELLED), "A pre-stopped execution context should emit a cancelled event.");
-		NativeAssertTrue(!workingFlag, "A cancelled execution should not leave the working flag enabled.");
-		NativeAssertEqual(static_cast<size_t>(0), results.size(), "A cancelled execution should not append any file results.");
+		NativeAssertTrue(!jobState.working.load(), "A cancelled execution should not leave the working flag enabled.");
+		NativeAssertEqual(static_cast<size_t>(0), jobState.results.size(), "A cancelled execution should not append any file results.");
 	}
 
 	static void RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent()
@@ -572,12 +561,10 @@ namespace
 		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("uppercase.txt"), "abc");
 
 		CapturingProgressSink progressSink;
-		bool workingFlag = false;
-		bool stopRequestedFlag = false;
-		uint64_t countedSize = 0;
-		HashResultList results;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
 
-		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(filePath);
 		std::vector<ResultDigestType> algorithms;
@@ -600,14 +587,12 @@ namespace
 		sunjwbase::tstring secondFilePath = tempDirectory.WriteTextFile(_T("second.txt"), "second");
 
 		CapturingProgressSink progressSink;
-		bool workingFlag = false;
-		bool stopRequestedFlag = false;
-		uint64_t countedSize = 0;
-		HashResultList results;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
 
-		progressSink.ConfigureStopOnEvent(&stopRequestedFlag, PROGRESS_EVENT_FILE_PROGRESS, 1);
+		progressSink.ConfigureStopOnEvent(&cancellationState.stopRequested, PROGRESS_EVENT_FILE_PROGRESS, 1);
 
-		HashExecutionContext executionContext = CreateExecutionContext(progressSink, workingFlag, stopRequestedFlag, countedSize, results);
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(largeFilePath);
 		filePaths.push_back(secondFilePath);
@@ -621,8 +606,8 @@ namespace
 		NativeAssertTrue(!progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "A mid-run cancellation should not emit a completed event.");
 		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_STARTED), "Cancellation during the first file should prevent later files from starting.");
 		NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_FINISHED), "Cancellation during file progress should stop before file-finished is emitted.");
-		NativeAssertTrue(FindHashResultByPath(results, secondFilePath) == NULL, "Cancellation during the first file should prevent later file results from being appended.");
-		NativeAssertTrue(!workingFlag, "A mid-run cancellation should clear the working flag.");
+		NativeAssertTrue(FindHashResultByPath(jobState.results, secondFilePath) == NULL, "Cancellation during the first file should prevent later file results from being appended.");
+		NativeAssertTrue(!jobState.working.load(), "A mid-run cancellation should clear the working flag.");
 	}
 }
 

@@ -7,12 +7,12 @@
 
 static inline HashResultList& GetMutableThreadDataResults(ThreadData& threadData)
 {
-	return GetMutableThreadDataExecutionState(threadData).results;
+	return GetMutableThreadDataHashJobState(threadData).results;
 }
 
 static inline const HashResultList& GetThreadDataResults(const ThreadData& threadData)
 {
-	return GetThreadDataExecutionState(threadData).results;
+	return GetThreadDataHashJobState(threadData).results;
 }
 
 static inline HashResult& AppendThreadDataResult(ThreadData& threadData)
