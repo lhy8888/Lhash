@@ -7,93 +7,77 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 
 LHash is a maintained Windows-focused hash utility forked from [fHash](https://github.com/sunjw/fhash).
-The current release line starts at `1.10.0` and focuses on secure desktop delivery, testable core architecture, and reproducible GitHub-based releases.
+The current maintained release line starts at `v1.10.0`.
 
-- English changelog: [CHANGELOG.md](CHANGELOG.md)
-- 涓枃鏇存柊鏃ュ織: [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)
-- Privacy: [PRIVACY.md](PRIVACY.md)
-- License: [LICENSE](LICENSE)
-- Releases: [GitHub Releases](https://github.com/lhy8888/fhash/releases)
-- CI: [Windows Build workflow](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml)
+## 涓枃璇存槑
 
-## What LHash Provides
+LHash 鏄熀浜?[fHash](https://github.com/sunjw/fhash) 鎸佺画缁存姢鐨?Windows 鏂囦欢 Hash 宸ュ叿鍒嗘敮銆?褰撳墠杩欎竴鐗堜笉鍐嶆妸閲嶇偣鏀惧湪鈥滃巻鍙插爢鍙犲吋瀹光€濓紝鑰屾槸鍥寸粫涓変釜鏂瑰悜鎸佺画鏀跺彛锛?
+- 瀹夊叏鍔熻兘
+- 鏋舵瀯浼樺寲
+- 鍙獙璇併€佸彲鍙戝竷銆佸彲鎸佺画缁存姢
 
-- MD5, SHA1, SHA256, and SHA512
-- Drag and drop hashing
-- Explorer context menu integration
-- English and Simplified Chinese UI
-- Packaged legacy desktop build from CI
-- Native runtime tests, .NET unit tests, security regression tests, and release-chain rehearsal in GitHub Actions
+## 褰撳墠鐗堟湰
 
-## Current Product Shape
+- 褰撳墠姝ｅ紡鐗堟湰锛歔`v1.10.0`](https://github.com/lhy8888/fhash/releases/tag/v1.10.0)
+- 褰撳墠姝ｅ紡涓嬭浇鍏ュ彛锛歔`GitHub Releases`](https://github.com/lhy8888/fhash/releases)
+- 褰撳墠涓诲垎鏀細`future-winui-was2`
+- 褰撳墠 CI锛歔`Windows Build workflow`](https://github.com/lhy8888/fhash/actions/workflows/windows-build.yml)
 
-The repository contains multiple Windows-era stacks, but the current maintained release target is the packaged legacy desktop executable.
-WinUI, CLR bridge, UWP bridge, and shell-extension projects are still built in CI so the shared native core stays healthy.
+## 瀹夊叏鍔熻兘
 
-## Security Position
+LHash 褰撳墠缁存姢绾块噸鐐瑰仛鐨勬槸鈥滄湰鍦板伐鍏峰畨鍏ㄥ寲鈥濓紝涓昏鍖呮嫭锛?
+- 鍔犲浐鍛戒护琛岃緭鍏ュ鐞嗭紝鍑忓皯寮傚父鍙傛暟瀵艰嚧鐨勫穿婧冩垨閿欒琛屼负
+- 鍔犲浐 `WM_COPYDATA` 杈撳叆鏍￠獙锛岄伩鍏嶇暩褰㈡秷鎭薄鏌撴闈㈣繘绋嬭矾寰?- 鍔犲浐鎷栨嫿銆乻hell 鎷夎捣鍜屽彸閿彍鍗曢摼璺?- 淇 Windows 鏂囦欢璇诲彇澶辫触璺緞锛岄伩鍏嶉敊璇湴鎶婂紓甯稿綋鎴?EOF 骞朵骇鍑洪敊璇?Hash
+- 绉婚櫎缁存姢鐗?Windows 鍙戣绾块噷鑷姩鎶?Hash 鍙戦€佸埌绗笁鏂圭珯鐐圭殑鍏ュ彛
+- 鏀剁揣鎵撳寘銆佹瀯寤恒€佸彂甯冩祦绋嬶紝璁╁彂甯冪墿鍙鐜般€佸彲鍥炴函
 
-LHash is designed as a local hash tool first.
-The Windows release line in this repository:
+褰撳墠缁存姢鐗堥粯璁ゅ畾浣嶆槸锛?
+- 鏈湴杩愯
+- 涓嶈姹傝处鍙?- 涓嶅仛閬ユ祴
+- 涓嶉粯璁や笂浼犳枃浠跺唴瀹?- 涓嶉粯璁や笂浼?Hash 鍒扮涓夋柟鏈嶅姟
 
-- does not require an account
-- does not include telemetry
-- does not automatically upload file content or hashes to third-party services
-- hardens command-line, `WM_COPYDATA`, and shell-entry validation
-- keeps release packaging reproducible in GitHub Actions
+## 鏋舵瀯浼樺寲
 
-## Validation In This Repository
+杩欎竴杞粨搴撳凡缁忎笉鍐嶆槸鏃╂湡閭ｇ鈥滄墍鏈夐€昏緫娣峰湪 UI 鍜岃€佸伐绋嬮噷鈥濈殑鐘舵€併€?鏍稿績涓荤嚎宸茬粡鍋氫簡杩欎簺鏋舵瀯鏀跺彛锛?
+- 寮曞叆 `HashRequest`銆乣HashResult`銆乣ProgressEvent`
+- 寮曞叆 `HashProgressSink` 鍜?`HashExecutionContext`
+- 灏嗘牳蹇冩墽琛岄摼閫愭浠?legacy `ResultData` 涓昏鍒囨崲鍒?`HashResult`
+- 灏?WinUI native 鏋勫缓缁熶竴鏀跺彛鍒?`fHashNativeCore`
+- 灏嗗ぇ閲忔棫鐨?projection / search / compatibility 灞傞檷绾т负鍏煎澹?- 涓?MFC銆乄inUI銆丆LR bridge銆乁WP bridge 淇濈暀缂栬瘧鍋ュ悍锛屼絾鎶婂叡浜牳蹇冨線涓€?contract 鎺ㄨ繘
 
-Every maintained release candidate is expected to pass:
+鐜板湪鏇存帴杩戠殑涓荤嚎鏄細
 
-- .NET unit tests
-- native C++ runtime tests
-- refactor baseline checks
-- security regression checks
-- the Windows build matrix
-- the release-chain rehearsal job
+`HashRequest -> HashExecutionContext -> HashResult -> Progress/Bridge/Projection`
 
-## Build And Release Notes
+鑰屼笉鏄繃鍘婚偅绉嶁€淯I銆佺粨鏋滅粨鏋勩€佹墽琛屼笂涓嬫枃褰兼寮鸿€﹀悎鈥濈殑褰㈡€併€?
+## 娴嬭瘯涓庨獙璇?
+褰撳墠浠撳簱涓嶆槸鈥滆兘缂栬繃灏辩畻瀹屾垚鈥濓紝鑰屾槸甯﹂獙璇侀棬妲涚殑銆?
+姣忎釜姝ｅ紡鍙戝竷鍊欓€夊簲閫氳繃锛?
+- .NET 鍗曞厓娴嬭瘯
+- 鍘熺敓 C++ 杩愯鏃舵祴璇?- 鏋舵瀯鍩虹嚎妫€鏌?- 瀹夊叏鍥炲綊妫€鏌?- Windows 鍘熺敓鏋勫缓鐭╅樀
+- 鍙戝竷閾炬紨缁?
+鐩墠 GitHub Actions 宸茶鐩栵細
 
-- The current maintained release line starts at `v1.10.0`.
-- Branch builds produce rehearsal release bundles.
-- Version tags named `v*` trigger the formal GitHub release publishing step.
-- Authenticode signing is supported by CI, but requires a real code-signing certificate configured in repository secrets.
+- legacy 妗岄潰绋嬪簭鎵撳寘
+- WinUI / CLR bridge 缂栬瘧
+- UWP / WinRT bridge 缂栬瘧
+- shell extension 缂栬瘧
+- publish-release 婕旂粌鍜屾寮?tag 鍙戝竷
+
+## 鍙戝竷璇存槑
+
+- 鍒嗘敮鏋勫缓浼氱敓鎴愬彂甯冩紨缁冨寘
+- `v*` 鏍囩浼氳Е鍙戞寮?GitHub Release
+- 褰撳墠姝ｅ紡鍙戝竷鐩爣鏄?Windows legacy 妗岄潰绋嬪簭
+- 鍙€変唬鐮佺鍚嶆帴鍏ュ凡缁忓湪 CI 閲岀暀濂戒綅缃紝浣嗙湡姝ｆ秷闄も€滃彂甯冭€呮湭鐭モ€濅粛闇€瑕佺湡瀹炵鍚嶈瘉涔?
+## 浠撳簱鏂囨。
+
+- 鑻辨枃鏇存柊鏃ュ織锛歔CHANGELOG.md](CHANGELOG.md)
+- 涓枃鏇存柊鏃ュ織锛歔CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)
+- 闅愮璇存槑锛歔PRIVACY.md](PRIVACY.md)
+- 寮€婧愬崗璁細[LICENSE](LICENSE)
 
 ## Upstream Credit
 
 LHash is built on top of the original [fHash](https://github.com/sunjw/fhash) project by Sun Junwen.
-This fork keeps upstream credit and GPL-2.0 licensing intact while maintaining a separate release line and delivery process.
-
----
-
-## 涓枃璇存槑
-
-LHash 鏄熀浜?[fHash](https://github.com/sunjw/fhash) 鎸佺画缁存姢鐨?Windows 鏂囦欢 Hash 宸ュ叿鍒嗘敮銆?褰撳墠缁存姢鐨勫彂琛岀嚎浠?`1.10.0` 閲嶆柊寮€濮嬶紝閲嶇偣鏀惧湪锛?
-- Windows 鏈湴瀹夊叏鍔犲浐
-- 鍙祴璇曠殑鏍稿績鏋舵瀯
-- GitHub Actions 鍙鐜版瀯寤轰笌鍙戝竷
-
-### 褰撳墠鑳藉姏
-
-- 鏀寔 `MD5`銆乣SHA1`銆乣SHA256`銆乣SHA512`
-- 鏀寔鎷栨嫿鏂囦欢璁＄畻
-- 鏀寔璧勬簮绠＄悊鍣ㄥ彸閿彍鍗?- 鏀寔鑻辨枃鍜岀畝浣撲腑鏂囩晫闈?- CI 鎻愪緵鍙笅杞界殑妗岄潰鏋勫缓浜х墿
-
-### 褰撳墠鍙戝竷绛栫暐
-
-- 鍒嗘敮鏋勫缓浼氱敓鎴愬彂甯冩紨缁冨寘
-- `v*` 鐗堟湰鏍囩浼氳Е鍙戞寮?GitHub Release
-- 鐩墠姝ｅ紡鍙戝竷鐩爣鏄?legacy 妗岄潰绋嬪簭
-- 鍏朵粬 WinUI / bridge / shell extension 宸ョ▼缁х画鍦?CI 涓繚娲伙紝鐢ㄤ簬淇濊瘉鍏变韩鍘熺敓鏍稿績涓嶆紓绉?
-### 闅愮涓庡畨鍏?
-LHash 鏄湰鍦板伐鍏凤紝涓嶈姹傝处鍙凤紝涔熶笉榛樿涓婁紶鏂囦欢鍐呭鎴栧搱甯屽€笺€?褰撳墠浠撳簱涓殑 Windows 鐗堟湰宸茬粡鍘绘帀鑷姩鎶婂搱甯屾彁浜ゅ埌绗笁鏂圭珯鐐圭殑鍏ュ彛锛屽苟鎸佺画瀵瑰懡浠よ銆乣WM_COPYDATA`銆乻hell 鍚姩閾惧仛杈撳叆鏍￠獙鍔犲浐銆?
-### 浠撳簱楠岃瘉鍩虹嚎
-
-褰撳墠浠撳簱涓殑姝ｅ紡鍙戝竷鍊欓€夊簲閫氳繃锛?
-- .NET 鍗曞厓娴嬭瘯
-- 鍘熺敓 C++ 杩愯鏃舵祴璇?- 鏋舵瀯鍩虹嚎妫€鏌?- 瀹夊叏鍥炲綊妫€鏌?- Windows 鏋勫缓鐭╅樀
-- 鍙戝竷閾炬紨缁?
-濡傞渶鏌ョ湅鐗堟湰鍙樺寲锛岃鍒嗗埆鍙傝€冿細
-
-- 鑻辨枃鏇存柊鏃ュ織锛歔CHANGELOG.md](CHANGELOG.md)
-- 涓枃鏇存柊鏃ュ織锛歔CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)
+This fork keeps upstream credit and GPL-2.0 licensing intact while maintaining its own tested Windows release line.
