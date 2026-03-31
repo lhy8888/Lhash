@@ -68,7 +68,8 @@ namespace HashEngineInternal
 	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
 	void ResetFileProgressState(FileProgressState *progressState);
-	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes
+	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,
+		FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		, ThreadPool *threadPool
 #endif

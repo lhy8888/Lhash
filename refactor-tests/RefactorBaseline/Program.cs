@@ -172,12 +172,12 @@ internal static class Program
             AssertContains(fileRunner, "future<void> taskSHA256Update", "HashFileRunner no longer fans out SHA256 updates in the baseline implementation.");
             AssertContains(fileRunner, "future<void> taskSHA1Update", "HashFileRunner no longer fans out SHA1 updates in the baseline implementation.");
             AssertContains(fileRunner, "future<void> taskMD5Update", "HashFileRunner no longer fans out MD5 updates in the baseline implementation.");
-            AssertContains(fileRunner, "FileExecutionState executionState = { 0 };", "HashFileRunner no longer creates the grouped file-execution state bundle.");
-            AssertContains(fileRunner, "HashResult& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);", "HashFileRunner no longer routes the file-attempt setup through the grouped file-execution helper.");
-            AssertContains(fileRunner, "InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);", "HashFileRunner no longer routes file-attempt state initialization through the grouped execution helper.");
-            AssertContains(fileRunner, "OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);", "HashFileRunner no longer routes the file-open attempt through the grouped execution helper.");
-            AssertContains(fileRunner, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState", "HashFileRunner no longer routes the opened-file processing loop through the grouped execution helper.");
-            AssertContains(fileRunner, "CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "HashFileRunner no longer routes the file-attempt terminal path through the grouped execution bundle.");
+            AssertContains(engineImpl, "FileExecutionState executionState = { 0 };", "HashEngine implementation set no longer creates the grouped file-execution state bundle.");
+            AssertContains(fileRunner, "HashResult& result = BeginFileHashAttempt(executionContext, fullPath, executionState, &path);", "HashFileRunner no longer routes the file-attempt setup through the grouped file-execution helper.");
+            AssertContains(fileRunner, "InitializeFileAttemptState(path, &osFile, &executionState->fileAttemptState);", "HashFileRunner no longer routes file-attempt state initialization through the grouped execution helper.");
+            AssertContains(fileRunner, "OpenFileForHashing(&executionState->fileAttemptState, (void *)&fExc);", "HashFileRunner no longer routes the file-open attempt through the grouped execution helper.");
+            AssertContains(fileRunner, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", "HashFileRunner no longer routes the opened-file processing loop through the grouped execution helper.");
+            AssertContains(fileRunner, "CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, *executionState);", "HashFileRunner no longer routes the file-attempt terminal path through the grouped execution bundle.");
             AssertContains(engineImpl, "EmitReadFileError(executionContext, result);", "HashEngine no longer routes read-file failures through the tiny helper.");
             AssertContains(engineImpl, "FinishFileProcessing(executionContext);", "HashEngine no longer routes file-finished callbacks through the tiny helper.");
             AssertContains(engineImpl, "EmitErrorResult(executionContext, result);", "HashEngine no longer emits errors through the tiny error-result helper in the baseline implementation.");
@@ -2122,7 +2122,7 @@ internal static class Program
             AssertContains(engineResult, "void CompleteSuccessfulFileHashing(", "HashEngineResult.cpp does not yet own successful-file completion.");
             AssertContains(engineResult, "void CompleteFileAttempt(", "HashEngineResult.cpp does not yet own file-attempt completion.");
             AssertContains(fileRunner, "bool RunFileHashAttempt(", "HashFileRunner.cpp does not yet own the single-file execution seam.");
-            AssertContains(fileRunner, "FileExecutionState executionState = { 0 };", "HashFileRunner.cpp does not yet localize per-file execution state.");
+            AssertContains(engine, "FileExecutionState executionState = { 0 };", "HashEngine.cpp does not yet preserve grouped file-execution state for the runner seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core project does not yet compile HashFileRunner.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core project does not yet compile HashEnginePreparation.cpp.");
@@ -3576,13 +3576,14 @@ internal static class Program
             string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(hashEngine, "RunFileHashAttempt(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes", "Phase 49 HashEngine.cpp does not yet delegate single-file work to HashFileRunner.");
-            AssertDoesNotContain(hashEngine, "FileExecutionState executionState = { 0 };", "Phase 49 HashEngine.cpp still keeps per-file execution state instead of delegating it to HashFileRunner.");
+            AssertContains(hashEngine, "FileExecutionState executionState = { 0 };", "Phase 49 HashEngine.cpp no longer preserves grouped file-execution state for the runner seam.");
             AssertDoesNotContain(hashEngine, "static bool ProcessOpenedFileHashing(", "Phase 49 HashEngine.cpp still owns the opened-file hashing loop.");
             AssertContains(hashFileRunner, "static bool ProcessOpenedFileHashing(", "Phase 49 HashFileRunner.cpp does not yet own the opened-file hashing loop.");
             AssertContains(hashFileRunner, "bool RunFileHashAttempt(", "Phase 49 HashFileRunner.cpp does not yet expose the single-file execution seam.");
             AssertContains(hashFileRunner, "YieldHashThread();", "Phase 49 HashFileRunner.cpp does not yet own per-file scheduler yielding.");
-            AssertContains(hashFileRunner, "FileExecutionState executionState = { 0 };", "Phase 49 HashFileRunner.cpp does not yet localize per-file execution state.");
-            AssertContains(hashEngineInternal, "bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes", "Phase 49 HashEngineInternal.h does not yet declare the single-file runner seam.");
+            AssertDoesNotContain(hashFileRunner, "FileExecutionState executionState = { 0 };", "Phase 49 HashFileRunner.cpp should reuse grouped execution state from HashEngine.cpp instead of creating a new local bundle.");
+            AssertContains(hashEngineInternal, "bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", "Phase 49 HashEngineInternal.h does not yet declare the single-file runner seam.");
+            AssertContains(hashEngineInternal, "FileExecutionState *executionState", "Phase 49 HashEngineInternal.h does not yet route grouped file execution state into the runner seam.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Phase 49 desktop native core project does not yet compile HashFileRunner.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Phase 49 desktop native core filters do not yet expose HashFileRunner.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Phase 49 UWP native project does not yet compile HashFileRunner.cpp.");

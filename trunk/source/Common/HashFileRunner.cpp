@@ -298,7 +298,8 @@ namespace HashEngineInternal
 		return false;
 	}
 
-	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes
+	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,
+		FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		, ThreadPool *threadPool
 #endif
@@ -311,9 +312,8 @@ namespace HashEngineInternal
 
 		YieldHashThread();
 
-		FileExecutionState executionState = { 0 };
 		const TCHAR *path = fullPath.c_str();
-		HashResult& result = BeginFileHashAttempt(executionContext, fullPath, &executionState, &path);
+		HashResult& result = BeginFileHashAttempt(executionContext, fullPath, executionState, &path);
 
 #if defined (_WIN32)
 		TCHAR fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
@@ -321,11 +321,11 @@ namespace HashEngineInternal
 		char fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 #endif
 		OsFile osFile(path);
-		InitializeFileAttemptState(path, &osFile, &executionState.fileAttemptState);
-		OpenFileForHashing(&executionState.fileAttemptState, (void *)&fExc);
-		if (executionState.fileAttemptState.isFileOpened)
+		InitializeFileAttemptState(path, &osFile, &executionState->fileAttemptState);
+		OpenFileForHashing(&executionState->fileAttemptState, (void *)&fExc);
+		if (executionState->fileAttemptState.isFileOpened)
 		{
-			bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, &executionState
+			bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 				, threadPool
 #endif
@@ -336,7 +336,7 @@ namespace HashEngineInternal
 			}
 		}
 
-		CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);
+		CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, *executionState);
 		return true;
 	}
 }

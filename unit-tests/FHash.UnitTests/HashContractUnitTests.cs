@@ -148,13 +148,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("ResetHashExecutionTotalSize(*executionContext);", engine, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateCancelledProgressEvent());", engine, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateCompletedProgressEvent());", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("FileExecutionState executionState = { 0 };", engine, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState executionState = { 0 };", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("static bool ProcessOpenedFileHashing(", engine, StringComparison.Ordinal);
 
         Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const tstring& fullPath", fileRunner, StringComparison.Ordinal);
         Assert.Contains("static bool ProcessOpenedFileHashing(", fileRunner, StringComparison.Ordinal);
         Assert.Contains("YieldHashThread();", fileRunner, StringComparison.Ordinal);
-        Assert.Contains("FileExecutionState executionState = { 0 };", fileRunner, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileExecutionState executionState = { 0 };", fileRunner, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", fileRunner, StringComparison.Ordinal);
         Assert.Contains("ShouldStopHashExecution(*executionContext)", fileRunner, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", fileRunner, StringComparison.Ordinal);
@@ -179,7 +179,8 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("const HashRequest& request", internalHeader, StringComparison.Ordinal);
-        Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState *executionState", internalHeader, StringComparison.Ordinal);
     }
 
     [Fact]

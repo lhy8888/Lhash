@@ -49,9 +49,12 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 		return CancelHashing(executionContext);
 	}
 
+	FileExecutionState executionState = { 0 };
+
 	bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 	{
 		return RunFileHashAttempt(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes
+			, &executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 			, &threadPool
 #endif
