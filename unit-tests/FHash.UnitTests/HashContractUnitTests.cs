@@ -31,6 +31,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
         Assert.Contains("struct HashFileMeta", global, StringComparison.Ordinal);
         Assert.Contains("struct HashResult", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
         Assert.DoesNotContain("const ResultData *sourceResult;", result, StringComparison.Ordinal);
         Assert.Contains("std::vector<HashDigestResult> digests;", global, StringComparison.Ordinal);
         Assert.Contains("const HashResult& ProjectHashResult(const HashResult& result)", result, StringComparison.Ordinal);
@@ -108,6 +111,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
         Assert.Contains("HashProgressSink *observer;", global, StringComparison.Ordinal);
         Assert.Contains("HashResultList results;", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext", executionContext, StringComparison.Ordinal);
         Assert.Contains("CreateHashExecutionContext(ThreadData& threadData)", executionContext, StringComparison.Ordinal);
         Assert.Contains("GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);

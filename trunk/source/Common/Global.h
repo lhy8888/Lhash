@@ -24,6 +24,7 @@
 class HashProgressSink;
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
+
 enum ResultDigestType
 {
 	RESULT_DIGEST_MD5 = 0,
@@ -31,8 +32,9 @@ enum ResultDigestType
 	RESULT_DIGEST_SHA256,
 	RESULT_DIGEST_SHA512
 };
-enum { HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT };
+
 #define MAX_FILES_NUM 8192
+
 enum ResultState
 {
 	RESULT_NONE = 0,
@@ -43,24 +45,19 @@ enum ResultState
 };
 struct ResultDigestStorage
 {
-	sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];
+	std::vector<sunjwbase::tstring> values;
 };
+
 struct HashAlgorithmSelectionState
 {
-	bool enabled[HASH_ALGORITHM_REGISTRY_COUNT];
+	std::vector<bool> enabled;
 };
-struct ResultDigestCompatibilityFields
-{
-	sunjwbase::tstring md5;
-	sunjwbase::tstring sha1;
-	sunjwbase::tstring sha256;
-	sunjwbase::tstring sha512;
-};
+
 struct ResultDigestState
 {
 	ResultDigestStorage storage;
-	ResultDigestCompatibilityFields compatibilityFields;
 };
+
 struct ResultCoreState
 {
 	ResultState state;
@@ -70,11 +67,13 @@ struct ResultCoreState
 	sunjwbase::tstring version;
 	sunjwbase::tstring error;
 };
+
 struct ResultData
 {
 	ResultCoreState coreState;
 	ResultDigestState digestState;
 };
+
 struct HashDigestResult
 {
 	HashDigestResult()
@@ -86,6 +85,7 @@ struct HashDigestResult
 	sunjwbase::tstring displayLabel;
 	sunjwbase::tstring value;
 };
+
 struct HashFileMeta
 {
 	HashFileMeta()
@@ -96,6 +96,7 @@ struct HashFileMeta
 	sunjwbase::tstring modifiedDate;
 	sunjwbase::tstring version;
 };
+
 struct HashResult
 {
 	HashResult()
@@ -108,13 +109,16 @@ struct HashResult
 	sunjwbase::tstring error;
 	std::vector<HashDigestResult> digests;
 };
+
 typedef std::list<HashResult> HashResultList;
 typedef HashResultList ResultList;
+
 struct ThreadDataInputState
 {
 	uint32_t fileCount;
 	TStrVector inputFiles;
 };
+
 struct ThreadDataExecutionState
 {
 	bool working;
@@ -124,6 +128,7 @@ struct ThreadDataExecutionState
 	uint64_t countedSize;
 	HashResultList results;
 };
+
 struct ThreadData
 {
 	HashProgressSink *observer;

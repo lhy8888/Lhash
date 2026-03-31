@@ -5,12 +5,7 @@
 
 static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result, ResultDigestType digestType)
 {
-	if (HasStoredResultDigest(result, digestType))
-	{
-		return GetStoredResultDigest(result, digestType);
-	}
-
-	return GetCompatibilityResultDigest(result, digestType);
+	return GetStoredResultDigest(result, digestType);
 }
 
 static inline sunjwbase::tstring& GetMutableResultDigest(ResultData& result, ResultDigestType digestType)
@@ -62,7 +57,6 @@ static inline bool HasAnyResultDigests(const ResultData& result)
 static inline void SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
 {
 	SetStoredResultDigest(result, digestType, digestValue);
-	SetCompatibilityResultDigest(result, digestType, digestValue);
 }
 
 static inline void ResetResultDigests(ResultData& result)
@@ -70,7 +64,6 @@ static inline void ResetResultDigests(ResultData& result)
 	VisitResultDigests([&](ResultDigestType digestType)
 	{
 		ClearStoredResultDigest(result, digestType);
-		ClearCompatibilityResultDigest(result, digestType);
 		return true;
 	});
 }

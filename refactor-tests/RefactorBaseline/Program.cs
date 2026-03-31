@@ -19,10 +19,11 @@ internal static class Program
             AssertContains(global, "uint64_t size;", "ResultData no longer carries file size in the baseline contract.");
             AssertContains(global, "sunjwbase::tstring modifiedDate;", "ResultData no longer carries modified time in the baseline contract.");
             AssertContains(global, "sunjwbase::tstring version;", "ResultData no longer carries version info in the baseline contract.");
-            AssertContains(global, "sunjwbase::tstring md5;", "ResultData no longer carries the fixed MD5 field in the baseline contract.");
-            AssertContains(global, "sunjwbase::tstring sha1;", "ResultData no longer carries the fixed SHA1 field in the baseline contract.");
-            AssertContains(global, "sunjwbase::tstring sha256;", "ResultData no longer carries the fixed SHA256 field in the baseline contract.");
-            AssertContains(global, "sunjwbase::tstring sha512;", "ResultData no longer carries the fixed SHA512 field in the baseline contract.");
+            AssertContains(global, "ResultDigestStorage storage;", "ResultData no longer carries digest storage through the grouped digest-state contract.");
+            AssertDoesNotContain(global, "sunjwbase::tstring md5;", "Core ResultData should no longer carry the fixed MD5 field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha1;", "Core ResultData should no longer carry the fixed SHA1 field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha256;", "Core ResultData should no longer carry the fixed SHA256 field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha512;", "Core ResultData should no longer carry the fixed SHA512 field after the algorithm-domain cleanup.");
             AssertContains(global, "sunjwbase::tstring error;", "ResultData no longer carries the error string in the baseline contract.");
 
             AssertContains(global, "class HashProgressSink;", "Global.h is missing the new phase-34 progress-sink forward declaration.");
@@ -648,24 +649,23 @@ internal static class Program
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
             AssertContains(global, "struct ResultDigestStorage", "ResultData digest storage has not yet been wrapped in the dedicated storage struct introduced in phase 3.");
-            AssertContains(global, "sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];", "ResultDigestStorage does not yet expose the internal digest storage introduced in phase 3.");
-            AssertContains(global, "struct ResultDigestState", "ResultData digest compatibility surface has not yet been wrapped in the dedicated digest-state struct introduced in phase 3.");
+            AssertContains(global, "std::vector<sunjwbase::tstring> values;", "ResultDigestStorage does not yet expose the registry-sized internal digest storage introduced in the algorithm-domain cleanup.");
+            AssertContains(global, "struct ResultDigestState", "ResultData digest state is not yet wrapped in the dedicated digest-state struct introduced in phase 3.");
             AssertContains(global, "ResultDigestStorage storage;", "ResultDigestState does not yet route internal digest storage through the dedicated storage struct introduced in phase 3.");
-            AssertContains(global, "struct ResultDigestCompatibilityFields", "ResultData digest compatibility surface has not yet been wrapped in the dedicated compatibility-fields struct introduced in phase 3.");
-            AssertContains(global, "ResultDigestCompatibilityFields compatibilityFields;", "ResultDigestState does not yet route the digest compatibility surface through the dedicated compatibility-fields struct introduced in phase 3.");
+            AssertDoesNotContain(global, "struct ResultDigestCompatibilityFields", "Core digest state still keeps the old fixed four-slot compatibility struct after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "compatibilityFields;", "Core digest state still keeps the old fixed four-slot compatibility field after the algorithm-domain cleanup.");
             AssertContains(global, "ResultDigestState digestState;", "ResultData does not yet route digest storage and legacy compatibility through the dedicated digest-state struct introduced in phase 3.");
-            AssertContains(global, "sunjwbase::tstring md5;", "Phase 3 must still preserve the legacy MD5 compatibility field.");
-            AssertContains(global, "sunjwbase::tstring sha1;", "Phase 3 must still preserve the legacy SHA1 compatibility field.");
-            AssertContains(global, "sunjwbase::tstring sha256;", "Phase 3 must still preserve the legacy SHA256 compatibility field.");
-            AssertContains(global, "sunjwbase::tstring sha512;", "Phase 3 must still preserve the legacy SHA512 compatibility field.");
+            AssertDoesNotContain(global, "sunjwbase::tstring md5;", "Core digest state still keeps the legacy MD5 compatibility field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha1;", "Core digest state still keeps the legacy SHA1 compatibility field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha256;", "Core digest state still keeps the legacy SHA256 compatibility field after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha512;", "Core digest state still keeps the legacy SHA512 compatibility field after the algorithm-domain cleanup.");
 
             AssertContains(digestAccess, "GetResultDigestIndex(ResultDigestType digestType)", "ResultDigestAccess is missing the neutral digest-index helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess is missing the const digest compatibility helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetMutableCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess is missing the mutable digest compatibility helper introduced in phase 3.");
-            AssertContains(digestAccess, "if (HasStoredResultDigest(result, digestType))", "ResultDigestAccess does not yet read through the internal digest storage first in phase 3.");
-            AssertContains(digestAccess, "return GetCompatibilityResultDigest(result, digestType);", "ResultDigestAccess does not yet preserve the compatibility fallback path in phase 3.");
+            AssertDoesNotContain(digestAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "Digest access still exposes the removed compatibility getter after the algorithm-domain cleanup.");
+            AssertDoesNotContain(digestAccess, "GetMutableCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "Digest access still exposes the removed mutable compatibility getter after the algorithm-domain cleanup.");
+            AssertContains(digestAccess, "return GetStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet route digest reads through the registry-sized stored-digest path.");
             AssertContains(digestAccess, "return GetMutableStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet expose mutable access through the internal digest storage in phase 3.");
-            AssertContains(digestAccess, "GetMutableCompatibilityResultDigest(result, digestType) = digestValue;", "ResultDigestAccess does not yet mirror the new digest storage back into the compatibility fields in phase 3.");
+            AssertDoesNotContain(digestAccess, "GetMutableCompatibilityResultDigest(result, digestType) = digestValue;", "Digest writes still mirror back into removed compatibility fields.");
 
             AssertContains(engineImpl, "const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);", "HashEngine no longer routes finalized digest metadata lookup through the phase-3 digest seam.");
             AssertContains(engineImpl, "result.digests.push_back(digestResult);", "HashEngine no longer routes finalized digest writes through the HashResult digest seam.");
@@ -680,7 +680,7 @@ internal static class Program
             AssertContains(digestAccess, "ResetResultDigests(ResultData& result)", "ResultDigestAccess does not yet expose the digest-reset helper introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigests([&](ResultDigestType digestType)", "ResultDigestAccess digest-reset helper does not yet iterate through the centralized visitor helper.");
             AssertContains(digestAccess, "ClearStoredResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper does not yet clear internal digest storage.");
-            AssertContains(digestAccess, "ClearCompatibilityResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper does not yet clear the digest compatibility fields.");
+            AssertDoesNotContain(digestAccess, "ClearCompatibilityResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper still clears removed compatibility fields.");
 
             AssertContains(engineImpl, "result = HashResult();", "HashEngine does not yet reset HashResult storage through the grouped reset seam when a file result is created.");
             AssertInOrder(engineImpl,
@@ -697,10 +697,13 @@ internal static class Program
         Run("Phase 3 centralizes the internal digest storage count instead of duplicating the magic number", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
-            AssertContains(global, "HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT", "Global.h does not yet centralize the internal digest storage count through the registry-count constant in phase 11.");
-            AssertContains(global, "sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];", "ResultData internal digest storage is not yet bound to the centralized storage-count constant.");
+            AssertContains(global, "std::vector<sunjwbase::tstring> values;", "ResultData internal digest storage is not yet routed through a registry-sized vector.");
+            AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptorRegistry", "HashAlgorithmRegistry does not yet wrap the descriptor table in a dedicated registry object.");
+            AssertContains(hashAlgorithmRegistry, "GetHashAlgorithmDescriptorRegistry()", "HashAlgorithmRegistry does not yet expose the centralized descriptor-registry helper.");
+            AssertContains(hashAlgorithmRegistry, "sizeof(algorithmDescriptors) / sizeof(HashAlgorithmDescriptor)", "HashAlgorithmRegistry does not yet derive the registered algorithm count from the descriptor table.");
             AssertContains(digestAccess, "return GetRegisteredHashAlgorithmCount();", "ResultDigestAccess does not yet route digest count through the centralized registry-count helper.");
         }, failures);
 
@@ -720,21 +723,21 @@ internal static class Program
         {
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
-            AssertContains(digestAccess, "SetCompatibilityResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess does not yet expose the digest compatibility write helper introduced in phase 3.");
-            AssertContains(digestAccess, "ClearCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the digest compatibility clear helper introduced in phase 3.");
-            AssertContains(digestAccess, "SetCompatibilityResultDigest(result, digestType, digestValue);", "ResultDigestAccess setter does not yet route compatibility synchronization through the dedicated helper.");
-            AssertContains(digestAccess, "ClearCompatibilityResultDigest(result, digestType);", "ResultDigestAccess digest-reset helper does not yet route compatibility clearing through the dedicated helper.");
+            AssertDoesNotContain(digestAccess, "SetCompatibilityResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "Digest access still exposes the removed compatibility write helper.");
+            AssertDoesNotContain(digestAccess, "ClearCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "Digest access still exposes the removed compatibility clear helper.");
+            AssertDoesNotContain(digestAccess, "SetCompatibilityResultDigest(result, digestType, digestValue);", "Digest writes still synchronize removed compatibility helpers.");
+            AssertDoesNotContain(digestAccess, "ClearCompatibilityResultDigest(result, digestType);", "Digest resets still synchronize removed compatibility helpers.");
         }, failures);
 
         Run("Phase 3 routes legacy digest field selection through a single compatibility-field helper", () =>
         {
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
-            AssertContains(digestAccess, "GetCompatibilityResultDigestField(ResultDigestType digestType)", "ResultDigestAccess does not yet expose the compatibility digest field-selector helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata compatibility-field accessor.");
-            AssertContains(digestAccess, "return GetHashAlgorithmDescriptorCompatibilityValueField(digestMetadata);", "ResultDigestAccess metadata compatibility-field accessor does not yet route through the registry descriptor seam.");
-            AssertContains(digestAccess, "return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));", "ResultDigestAccess compatibility field-selector helper does not yet route through the type-based metadata lookup helper.");
-            AssertContains(digestAccess, "return GetResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);", "ResultDigestAccess compatibility getters do not yet route through the compatibility-field helper and dedicated digest compatibility state.");
+            AssertDoesNotContain(digestAccess, "GetCompatibilityResultDigestField(ResultDigestType digestType)", "Digest access still exposes the removed compatibility field-selector helper.");
+            AssertDoesNotContain(digestAccess, "GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)", "Digest metadata still exposes the removed compatibility-field accessor.");
+            AssertDoesNotContain(digestAccess, "return GetHashAlgorithmDescriptorCompatibilityValueField(digestMetadata);", "Digest metadata still routes through the removed compatibility-field seam.");
+            AssertDoesNotContain(digestAccess, "return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));", "Digest access still routes through the removed compatibility metadata selector.");
+            AssertDoesNotContain(digestAccess, "return GetResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);", "Digest access still reads removed compatibility fields.");
         }, failures);
 
         Run("Phase 3 centralizes digest metadata so type, label, and legacy-field mapping share one source of truth", () =>
@@ -745,10 +748,10 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the centralized algorithm metadata struct introduced in phase 11.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
             AssertContains(digestAccess, "GetResultDigestMetadataAt(int index)", "ResultDigestAccess does not yet expose the centralized digest metadata lookup helper introduced in phase 3.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\", &ResultDigestCompatibilityFields::md5 }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\", &ResultDigestCompatibilityFields::sha1 }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\", &ResultDigestCompatibilityFields::sha256 }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\", &ResultDigestCompatibilityFields::sha512 }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\" }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\" }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\" }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\" }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
             AssertContains(digestAccess, "GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata type accessor.");
             AssertContains(digestAccess, "GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata label accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
@@ -766,8 +769,8 @@ internal static class Program
             AssertContains(digestAccess, "HasStoredResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the stored-digest presence helper introduced in phase 3.");
             AssertContains(digestAccess, "return HasDigestStorageValue(GetResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest presence helper does not yet route through the stored-digest helper.");
             AssertContains(digestAccess, "return GetResultDigestLabel(GetResultDigestMetadata(digestType));", "ResultDigestAccess digest-label helper does not yet route through the metadata-label overload.");
-            AssertContains(digestAccess, "return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));", "ResultDigestAccess compatibility field-selector helper does not yet route through the type-based metadata lookup helper.");
-            AssertContains(digestAccess, "if (HasStoredResultDigest(result, digestType))", "ResultDigestAccess digest getter does not yet route stored-presence checks through the dedicated helper.");
+            AssertDoesNotContain(digestAccess, "GetResultDigestMetadataCompatibilityValueField", "ResultDigestAccess still exposes compatibility-field metadata lookup after the algorithm-domain cleanup.");
+            AssertContains(digestAccess, "return GetStoredResultDigest(result, digestType);", "ResultDigestAccess digest getter does not yet route through the dedicated stored-digest helper.");
         }, failures);
 
         Run("Phase 3 routes stored digest writes and clears through dedicated internal-storage helpers", () =>
@@ -843,7 +846,8 @@ internal static class Program
             AssertContains(digestAccess, "HasDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage presence seam.");
             AssertContains(digestAccess, "SetDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess does not yet expose the reusable digest-storage write seam.");
             AssertContains(digestAccess, "ClearDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage clear seam.");
-            AssertContains(digestAccess, "return digestStorage.values[GetResultDigestIndex(digestType)];", "ResultDigestAccess reusable digest-storage seam does not yet route through the centralized digest index.");
+            AssertContains(digestAccess, "EnsureDigestStorageSize(digestStorage);", "ResultDigestAccess reusable digest-storage seam does not yet size storage from the registry before mutation.");
+            AssertContains(digestAccess, "return digestStorage.values[digestIndex];", "ResultDigestAccess reusable digest-storage seam does not yet route through the centralized digest index.");
             AssertContains(digestAccess, "return GetDigestStorageValue(GetResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest getter does not yet reuse the neutral digest-storage seam.");
             AssertContains(digestAccess, "return GetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType);", "ResultDigestAccess mutable stored-digest getter does not yet reuse the neutral digest-storage seam.");
             AssertContains(digestAccess, "return HasDigestStorageValue(GetResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest presence helper does not yet reuse the neutral digest-storage seam.");
@@ -864,20 +868,18 @@ internal static class Program
             AssertContains(digestAccess, "GetMutableResultDigestState(ResultData& result)", "ResultDigestAccess does not yet expose the mutable digest-state helper introduced in phase 3.");
             AssertContains(digestAccess, "GetResultDigestStorage(const ResultData& result)", "ResultDigestAccess does not yet expose the const result-digest-storage helper introduced in phase 3.");
             AssertContains(digestAccess, "GetMutableResultDigestStorage(ResultData& result)", "ResultDigestAccess does not yet expose the mutable result-digest-storage helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetResultDigestCompatibilityFields(const ResultData& result)", "ResultDigestAccess does not yet expose the const digest-compatibility-fields helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetMutableResultDigestCompatibilityFields(ResultData& result)", "ResultDigestAccess does not yet expose the mutable digest-compatibility-fields helper introduced in phase 3.");
+            AssertDoesNotContain(digestAccess, "GetResultDigestCompatibilityFields(const ResultData& result)", "Core digest access still exposes the removed digest-compatibility-fields helper.");
+            AssertDoesNotContain(digestAccess, "GetMutableResultDigestCompatibilityFields(ResultData& result)", "Core digest access still exposes the removed mutable digest-compatibility-fields helper.");
             AssertContains(digestAccess, "return result.digestState;", "ResultDigestAccess digest-state helpers do not yet route through ResultData::digestState.");
             AssertContains(digestAccess, "return GetResultDigestState(result).storage;", "ResultDigestAccess const digest-storage helper does not yet route through the digest-state seam.");
             AssertContains(digestAccess, "return GetMutableResultDigestState(result).storage;", "ResultDigestAccess mutable digest-storage helper does not yet route through the digest-state seam.");
-            AssertContains(digestAccess, "return GetResultDigestState(result).compatibilityFields;", "ResultDigestAccess const digest-compatibility-fields helper does not yet route through the digest-state seam.");
-            AssertContains(digestAccess, "return GetMutableResultDigestState(result).compatibilityFields;", "ResultDigestAccess mutable digest-compatibility-fields helper does not yet route through the digest-state seam.");
+            AssertDoesNotContain(digestAccess, "compatibilityFields", "Core digest access still routes through removed compatibility fields.");
             AssertContains(digestAccess, "return GetDigestStorageValue(GetResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest getter does not yet route through the result-digest-storage helper.");
             AssertContains(digestAccess, "return GetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType);", "ResultDigestAccess mutable stored-digest getter does not yet route through the result-digest-storage helper.");
             AssertContains(digestAccess, "return HasDigestStorageValue(GetResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest presence helper does not yet route through the result-digest-storage helper.");
             AssertContains(digestAccess, "SetDigestStorageValue(GetMutableResultDigestStorage(result), digestType, digestValue);", "ResultDigestAccess stored-digest setter does not yet route through the result-digest-storage helper.");
             AssertContains(digestAccess, "ClearDigestStorageValue(GetMutableResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest clear helper does not yet route through the result-digest-storage helper.");
-            AssertContains(digestAccess, "return GetResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);", "ResultDigestAccess compatibility getter does not yet route through the digest-compatibility-fields helper.");
-            AssertContains(digestAccess, "return GetMutableResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);", "ResultDigestAccess mutable compatibility getter does not yet route through the digest-compatibility-fields helper.");
+            AssertDoesNotContain(digestAccess, "GetCompatibilityResultDigestField", "Core digest access still exposes the removed compatibility-field selector.");
         }, failures);
 
         Run("Phase 3 routes digest metadata and values through a shared visitor seam for legacy MFC rendering", () =>
@@ -1648,26 +1650,17 @@ internal static class Program
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
-            string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
-            AssertContains(global, "struct ResultDigestCompatibilityFields", "ResultData digest compatibility surface is missing.");
-            AssertContains(global, "sunjwbase::tstring md5;", "ResultDigestCompatibilityFields does not yet expose the neutral MD5 field name.");
-            AssertContains(global, "sunjwbase::tstring sha1;", "ResultDigestCompatibilityFields does not yet expose the neutral SHA1 field name.");
-            AssertContains(global, "sunjwbase::tstring sha256;", "ResultDigestCompatibilityFields does not yet expose the neutral SHA256 field name.");
-            AssertContains(global, "sunjwbase::tstring sha512;", "ResultDigestCompatibilityFields does not yet expose the neutral SHA512 field name.");
-            AssertDoesNotContain(global, "sunjwbase::tstring tstrMD5;", "ResultDigestCompatibilityFields still uses the legacy MD5 field name internally.");
-            AssertDoesNotContain(global, "sunjwbase::tstring tstrSHA1;", "ResultDigestCompatibilityFields still uses the legacy SHA1 field name internally.");
-            AssertDoesNotContain(global, "sunjwbase::tstring tstrSHA256;", "ResultDigestCompatibilityFields still uses the legacy SHA256 field name internally.");
-            AssertDoesNotContain(global, "sunjwbase::tstring tstrSHA512;", "ResultDigestCompatibilityFields still uses the legacy SHA512 field name internally.");
+            AssertDoesNotContain(global, "struct ResultDigestCompatibilityFields", "Core digest compatibility fields should no longer live in Global.h after the algorithm-domain cleanup.");
+            AssertDoesNotContain(global, "sunjwbase::tstring md5;", "Core digest compatibility fields should no longer expose the fixed MD5 slot.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha1;", "Core digest compatibility fields should no longer expose the fixed SHA1 slot.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha256;", "Core digest compatibility fields should no longer expose the fixed SHA256 slot.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha512;", "Core digest compatibility fields should no longer expose the fixed SHA512 slot.");
 
-            AssertContains(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::md5", "HashAlgorithmRegistry metadata does not yet route MD5 through the neutral digest compatibility field name.");
-            AssertContains(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha1", "HashAlgorithmRegistry metadata does not yet route SHA1 through the neutral digest compatibility field name.");
-            AssertContains(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha256", "HashAlgorithmRegistry metadata does not yet route SHA256 through the neutral digest compatibility field name.");
-            AssertContains(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha512", "HashAlgorithmRegistry metadata does not yet route SHA512 through the neutral digest compatibility field name.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultLegacyDigestFields::md5", "HashAlgorithmRegistry still routes MD5 through the legacy digest compatibility struct name.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultLegacyDigestFields::sha1", "HashAlgorithmRegistry still routes SHA1 through the legacy digest compatibility struct name.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultLegacyDigestFields::sha256", "HashAlgorithmRegistry still routes SHA256 through the legacy digest compatibility struct name.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultLegacyDigestFields::sha512", "HashAlgorithmRegistry still routes SHA512 through the legacy digest compatibility struct name.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::md5", "HashAlgorithmRegistry should no longer route MD5 through a compatibility-field pointer.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha1", "HashAlgorithmRegistry should no longer route SHA1 through a compatibility-field pointer.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha256", "HashAlgorithmRegistry should no longer route SHA256 through a compatibility-field pointer.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "&ResultDigestCompatibilityFields::sha512", "HashAlgorithmRegistry should no longer route SHA512 through a compatibility-field pointer.");
         }, failures);
 
         Run("Phase 5 neutralizes the internal ResultDigestStorage field name behind the existing ResultDigestAccess seam", () =>
@@ -1675,11 +1668,11 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
-            AssertContains(global, "sunjwbase::tstring values[RESULT_DIGEST_STORAGE_COUNT];", "ResultDigestStorage does not yet expose the neutral internal storage field name.");
-            AssertDoesNotContain(global, "sunjwbase::tstring tstrDigests[RESULT_DIGEST_STORAGE_COUNT];", "ResultDigestStorage still uses the legacy tstrDigests field name internally.");
+            AssertContains(global, "std::vector<sunjwbase::tstring> values;", "ResultDigestStorage does not yet expose the neutral registry-sized storage vector.");
+            AssertDoesNotContain(global, "tstrDigests", "ResultDigestStorage still uses the legacy tstrDigests field name internally.");
 
-            AssertContains(digestAccess, "return digestStorage.values[GetResultDigestIndex(digestType)];", "ResultDigestAccess digest-storage seam does not yet route through the neutral internal storage field name.");
-            AssertDoesNotContain(digestAccess, "return digestStorage.tstrDigests[GetResultDigestIndex(digestType)];", "ResultDigestAccess digest-storage seam still routes through the legacy internal storage field name.");
+            AssertContains(digestAccess, "return digestStorage.values[digestIndex];", "ResultDigestAccess digest-storage seam does not yet route through the neutral internal storage vector.");
+            AssertDoesNotContain(digestAccess, "digestStorage.tstrDigests", "ResultDigestAccess digest-storage seam still routes through the legacy internal storage field name.");
         }, failures);
 
         Run("Phase 5 neutralizes the internal ResultDigestState field names behind the existing ResultDigestAccess seam", () =>
@@ -1688,14 +1681,13 @@ internal static class Program
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(global, "ResultDigestStorage storage;", "ResultDigestState does not yet expose the neutral internal storage field name.");
-            AssertContains(global, "ResultDigestCompatibilityFields compatibilityFields;", "ResultDigestState does not yet expose the neutral internal compatibility-fields name.");
+            AssertDoesNotContain(global, "compatibilityFields", "ResultDigestState still exposes legacy compatibility fields in the core model.");
             AssertDoesNotContain(global, "ResultDigestStorage digestStorage;", "ResultDigestState still uses the legacy digestStorage field name internally.");
             AssertDoesNotContain(global, "ResultLegacyDigestFields legacyFields;", "ResultDigestState still uses the legacy digest compatibility struct name internally.");
 
             AssertContains(digestAccess, "return GetResultDigestState(result).storage;", "ResultDigestAccess const digest-storage helper does not yet route through the neutral ResultDigestState storage field name.");
             AssertContains(digestAccess, "return GetMutableResultDigestState(result).storage;", "ResultDigestAccess mutable digest-storage helper does not yet route through the neutral ResultDigestState storage field name.");
-            AssertContains(digestAccess, "return GetResultDigestState(result).compatibilityFields;", "ResultDigestAccess const digest-compatibility-fields helper does not yet route through the neutral ResultDigestState compatibility-fields name.");
-            AssertContains(digestAccess, "return GetMutableResultDigestState(result).compatibilityFields;", "ResultDigestAccess mutable digest-compatibility-fields helper does not yet route through the neutral ResultDigestState compatibility-fields name.");
+            AssertDoesNotContain(digestAccess, "compatibilityFields", "ResultDigestAccess still routes through legacy compatibility fields.");
             AssertDoesNotContain(digestAccess, "return GetResultDigestState(result).digestStorage;", "ResultDigestAccess still routes through the legacy ResultDigestState digestStorage field name.");
             AssertDoesNotContain(digestAccess, "return GetMutableResultDigestState(result).digestStorage;", "ResultDigestAccess mutable helpers still route through the legacy ResultDigestState digestStorage field name.");
             AssertDoesNotContain(digestAccess, "return GetResultDigestState(result).legacyDigests;", "ResultDigestAccess still routes through the legacy ResultDigestState legacyDigests field name.");
@@ -1728,15 +1720,14 @@ internal static class Program
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
             AssertContains(hashAlgorithmRegistry, "ResultDigestType type;", "HashAlgorithmRegistry does not yet expose the neutral digest type field name.");
-            AssertContains(hashAlgorithmRegistry, "sunjwbase::tstring ResultDigestCompatibilityFields::*compatibilityValueField;", "HashAlgorithmRegistry does not yet expose the neutral compatibility-field pointer name.");
             AssertDoesNotContain(hashAlgorithmRegistry, "ResultDigestType digestType;", "HashAlgorithmRegistry still uses the legacy digestType field name internally.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "sunjwbase::tstring ResultLegacyDigestFields::*legacyValueField;", "HashAlgorithmRegistry still uses the legacy digest compatibility struct or pointer name internally.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "compatibilityValueField", "HashAlgorithmRegistry still carries compatibility-field pointers in the core descriptor.");
 
             AssertContains(digestAccess, "return visitor(GetResultDigestMetadataType(digestMetadata));", "ResultDigestAccess digest visitor does not yet route through the neutral ResultDigestMetadata type accessor.");
             AssertContains(digestAccess, "return visitor(index, digestMetadata, GetResultDigest(result, GetResultDigestMetadataType(digestMetadata)));", "ResultDigestAccess digest metadata-value visitor does not yet route through the neutral ResultDigestMetadata type accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess digest-index helper does not yet route through the registry index accessor.");
-            AssertContains(digestAccess, "return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));", "ResultDigestAccess compatibility field-selector helper does not yet route through the neutral ResultDigestMetadata compatibility-field accessor.");
+            AssertDoesNotContain(digestAccess, "GetResultDigestMetadataCompatibilityValueField", "ResultDigestAccess still exposes compatibility-field metadata lookup after the algorithm-domain cleanup.");
 
             AssertContains(digestRender, "GetResultDigestLabel(digestMetadata)", "ResultDigestRender does not yet route digest labels through the neutral ResultDigestMetadata seam.");
         }, failures);
@@ -1922,7 +1913,7 @@ internal static class Program
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(global, "struct HashAlgorithmSelectionState", "Global.h does not yet expose the grouped hash-algorithm selection state introduced in phase 8.");
-            AssertContains(global, "bool enabled[HASH_ALGORITHM_REGISTRY_COUNT];", "Hash-algorithm selection state does not yet store the current enabled flags through the registry-count constant.");
+            AssertContains(global, "std::vector<bool> enabled;", "Hash-algorithm selection state does not yet store the current enabled flags through a registry-sized vector.");
             AssertContains(global, "HashAlgorithmSelectionState hashAlgorithms;", "ThreadData execution state does not yet carry the hash-algorithm selection state.");
 
             AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadData access seams do not yet include the hash-algorithm registry seam needed for algorithm selection.");
@@ -1934,7 +1925,7 @@ internal static class Program
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadDataAccess does not yet route algorithm iteration through the registry seam.");
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(ThreadData& threadData)", "ThreadDataAccess does not yet expose the default hash-algorithm reset helper.");
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(threadData);", "New ThreadData sessions do not yet reset hash algorithms to the default enabled set.");
-            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);", "ThreadDataAccess does not yet default the current algorithms to enabled.");
+            AssertContains(threadAccess, "hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, true);", "ThreadDataAccess does not yet default a new algorithm-selection vector to enabled.");
 
             AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
             AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
@@ -2142,7 +2133,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
 
-            AssertContains(global, "HASH_ALGORITHM_REGISTRY_COUNT = 4, RESULT_DIGEST_STORAGE_COUNT = HASH_ALGORITHM_REGISTRY_COUNT", "Global.h does not yet centralize the built-in hash algorithm count through a dedicated registry-count constant.");
+            AssertContains(global, "std::vector<bool> enabled;", "Global.h does not yet route algorithm-selection state through a registry-sized vector.");
 
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the dedicated hash-algorithm descriptor.");
             AssertContains(hashAlgorithmRegistry, "ResultDigestType type;", "HashAlgorithmRegistry does not yet expose the algorithm type field.");
@@ -2150,10 +2141,10 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "const char *displayLabel;", "HashAlgorithmRegistry does not yet expose the display label field.");
             AssertContains(hashAlgorithmRegistry, "GetRegisteredHashAlgorithmCount()", "HashAlgorithmRegistry does not yet expose the registry-count helper.");
             AssertContains(hashAlgorithmRegistry, "VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)", "HashAlgorithmRegistry does not yet expose the algorithm visitor seam.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\", &ResultDigestCompatibilityFields::md5 }", "HashAlgorithmRegistry does not yet register MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\", &ResultDigestCompatibilityFields::sha1 }", "HashAlgorithmRegistry does not yet register SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\", &ResultDigestCompatibilityFields::sha256 }", "HashAlgorithmRegistry does not yet register SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\", &ResultDigestCompatibilityFields::sha512 }", "HashAlgorithmRegistry does not yet register SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\" }", "HashAlgorithmRegistry does not yet register MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\" }", "HashAlgorithmRegistry does not yet register SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\" }", "HashAlgorithmRegistry does not yet register SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\" }", "HashAlgorithmRegistry does not yet register SHA512.");
 
             AssertContains(digestAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
@@ -2993,8 +2984,8 @@ internal static class Program
             AssertContains(digestStateAccess, "GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "Phase 29 state seam does not yet own reusable digest-storage reads.");
             AssertContains(digestStateAccess, "GetResultDigestState(const ResultData& result)", "Phase 29 state seam does not yet own digest-state reads.");
             AssertContains(digestStateAccess, "GetResultDigestStorage(const ResultData& result)", "Phase 29 state seam does not yet own digest-storage reads.");
-            AssertContains(digestStateAccess, "GetResultDigestCompatibilityFields(const ResultData& result)", "Phase 29 state seam does not yet own compatibility-field reads.");
-            AssertContains(digestStateAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 29 state seam does not yet own compatibility-value reads.");
+            AssertDoesNotContain(digestStateAccess, "GetResultDigestCompatibilityFields(const ResultData& result)", "Phase 46 core digest state seam still exposes legacy compatibility-field reads.");
+            AssertDoesNotContain(digestStateAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 46 core digest state seam still exposes legacy compatibility-value reads.");
 
             AssertContains(digestValueAccess, "GetResultDigest(const ResultData& result, ResultDigestType digestType)", "Phase 29 value seam does not yet own digest reads.");
             AssertContains(digestValueAccess, "VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", "Phase 29 value seam does not yet own metadata-value iteration.");

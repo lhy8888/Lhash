@@ -3,13 +3,29 @@
 
 #include "Common/ResultDigestMetadataAccess.h"
 
+static inline void EnsureDigestStorageSize(ResultDigestStorage& digestStorage)
+{
+	size_t digestCount = static_cast<size_t>(GetResultDigestCount());
+	if (digestStorage.values.size() < digestCount)
+	{
+		digestStorage.values.resize(digestCount);
+	}
+}
+
 static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
-	return digestStorage.values[GetResultDigestIndex(digestType)];
+	size_t digestIndex = static_cast<size_t>(GetResultDigestIndex(digestType));
+	if (digestIndex >= digestStorage.values.size())
+	{
+		static const sunjwbase::tstring emptyDigestValue;
+		return emptyDigestValue;
+	}
+	return digestStorage.values[digestIndex];
 }
 
 static inline sunjwbase::tstring& GetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
+	EnsureDigestStorageSize(digestStorage);
 	return digestStorage.values[GetResultDigestIndex(digestType)];
 }
 
@@ -48,16 +64,6 @@ static inline ResultDigestStorage& GetMutableResultDigestStorage(ResultData& res
 	return GetMutableResultDigestState(result).storage;
 }
 
-static inline const ResultDigestCompatibilityFields& GetResultDigestCompatibilityFields(const ResultData& result)
-{
-	return GetResultDigestState(result).compatibilityFields;
-}
-
-static inline ResultDigestCompatibilityFields& GetMutableResultDigestCompatibilityFields(ResultData& result)
-{
-	return GetMutableResultDigestState(result).compatibilityFields;
-}
-
 static inline const sunjwbase::tstring& GetStoredResultDigest(const ResultData& result, ResultDigestType digestType)
 {
 	return GetDigestStorageValue(GetResultDigestStorage(result), digestType);
@@ -81,31 +87,6 @@ static inline void SetStoredResultDigest(ResultData& result, ResultDigestType di
 static inline void ClearStoredResultDigest(ResultData& result, ResultDigestType digestType)
 {
 	ClearDigestStorageValue(GetMutableResultDigestStorage(result), digestType);
-}
-
-static inline sunjwbase::tstring ResultDigestCompatibilityFields::*GetCompatibilityResultDigestField(ResultDigestType digestType)
-{
-	return GetResultDigestMetadataCompatibilityValueField(GetResultDigestMetadata(digestType));
-}
-
-static inline const sunjwbase::tstring& GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)
-{
-	return GetResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);
-}
-
-static inline sunjwbase::tstring& GetMutableCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)
-{
-	return GetMutableResultDigestCompatibilityFields(result).*GetCompatibilityResultDigestField(digestType);
-}
-
-static inline void SetCompatibilityResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
-{
-	GetMutableCompatibilityResultDigest(result, digestType) = digestValue;
-}
-
-static inline void ClearCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)
-{
-	GetMutableCompatibilityResultDigest(result, digestType).clear();
 }
 
 #endif

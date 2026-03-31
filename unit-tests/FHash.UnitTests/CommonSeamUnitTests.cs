@@ -13,6 +13,10 @@ public sealed class CommonSeamUnitTests
             "RESULT_DIGEST_SHA1",
             "RESULT_DIGEST_SHA256",
             "RESULT_DIGEST_SHA512");
+        Assert.Contains("struct HashAlgorithmDescriptorRegistry", registry, StringComparison.Ordinal);
+        Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registry, StringComparison.Ordinal);
+        Assert.Contains("sizeof(algorithmDescriptors) / sizeof(HashAlgorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.DoesNotContain("compatibilityValueField", registry, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -53,15 +57,20 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void ResultDigestStateAccess_OwnsStorageAndCompatibilitySurface()
+    public void ResultDigestStateAccess_OwnsRegistrySizedStorageSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
+        Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
         Assert.Contains("GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", access, StringComparison.Ordinal);
+        Assert.Contains("EnsureDigestStorageSize(ResultDigestStorage& digestStorage)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestState(const ResultData& result)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestStorage(const ResultData& result)", access, StringComparison.Ordinal);
-        Assert.Contains("GetResultDigestCompatibilityFields(const ResultData& result)", access, StringComparison.Ordinal);
-        Assert.Contains("GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetResultDigestCompatibilityFields(const ResultData& result)", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", access, StringComparison.Ordinal);
         Assert.DoesNotContain("HasAnyResultDigests(const ResultData& result)", access, StringComparison.Ordinal);
     }
 
@@ -71,10 +80,13 @@ public sealed class CommonSeamUnitTests
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
 
         Assert.Contains("GetResultDigest(const ResultData& result, ResultDigestType digestType)", access, StringComparison.Ordinal);
+        Assert.Contains("return GetStoredResultDigest(result, digestType);", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", access, StringComparison.Ordinal);
         Assert.Contains("HasAnyResultDigests(const ResultData& result)", access, StringComparison.Ordinal);
         Assert.Contains("SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", access, StringComparison.Ordinal);
         Assert.Contains("ResetResultDigests(ResultData& result)", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetCompatibilityResultDigest(result, digestType, digestValue);", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("ClearCompatibilityResultDigest(result, digestType);", access, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -20,11 +20,6 @@ static inline sunjwbase::tstring GetResultDigestMetadataStableName(const ResultD
 	return GetHashAlgorithmDescriptorStableName(digestMetadata);
 }
 
-static inline sunjwbase::tstring ResultDigestCompatibilityFields::*GetResultDigestMetadataCompatibilityValueField(const ResultDigestMetadata& digestMetadata)
-{
-	return GetHashAlgorithmDescriptorCompatibilityValueField(digestMetadata);
-}
-
 static inline int GetResultDigestCount()
 {
 	return GetRegisteredHashAlgorithmCount();

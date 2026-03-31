@@ -4,6 +4,20 @@
 #include "Common/Global.h"
 #include "Common/HashAlgorithmRegistry.h"
 
+static inline void EnsureThreadDataHashAlgorithmSelectionStateSize(HashAlgorithmSelectionState& hashAlgorithmSelectionState)
+{
+	size_t registeredAlgorithmCount = static_cast<size_t>(GetRegisteredHashAlgorithmCount());
+	if (hashAlgorithmSelectionState.enabled.empty())
+	{
+		hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, true);
+		return;
+	}
+	if (hashAlgorithmSelectionState.enabled.size() < registeredAlgorithmCount)
+	{
+		hashAlgorithmSelectionState.enabled.resize(registeredAlgorithmCount, true);
+	}
+}
+
 static inline void SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)
 {
 	threadData.observer = observer;
@@ -31,7 +45,9 @@ static inline const HashAlgorithmSelectionState& GetThreadDataHashAlgorithmSelec
 
 static inline HashAlgorithmSelectionState& GetMutableThreadDataHashAlgorithmSelectionState(ThreadData& threadData)
 {
-	return GetMutableThreadDataExecutionState(threadData).hashAlgorithms;
+	HashAlgorithmSelectionState& hashAlgorithmSelectionState = GetMutableThreadDataExecutionState(threadData).hashAlgorithms;
+	EnsureThreadDataHashAlgorithmSelectionStateSize(hashAlgorithmSelectionState);
+	return hashAlgorithmSelectionState;
 }
 
 static inline void SetThreadDataWorking(ThreadData& threadData, bool working)
@@ -71,7 +87,13 @@ static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, Res
 
 static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
 {
-	return GetThreadDataHashAlgorithmSelectionState(threadData).enabled[GetHashAlgorithmIndex(digestType)];
+	const HashAlgorithmSelectionState& hashAlgorithmSelectionState = GetThreadDataHashAlgorithmSelectionState(threadData);
+	size_t digestIndex = static_cast<size_t>(GetHashAlgorithmIndex(digestType));
+	if (digestIndex >= hashAlgorithmSelectionState.enabled.size())
+	{
+		return true;
+	}
+	return hashAlgorithmSelectionState.enabled[digestIndex];
 }
 
 template<typename THashAlgorithmVisitor>
