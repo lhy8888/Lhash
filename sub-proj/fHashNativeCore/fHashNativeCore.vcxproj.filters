@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp">
       <Filter>Common</Filter>
     </ClCompile>

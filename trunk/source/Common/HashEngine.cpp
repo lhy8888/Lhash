@@ -2,10 +2,6 @@
 
 #include "HashEngine.h"
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-#include "Common/ThreadPool.h"
-#endif
-
 #include "Common/HashExecutionContext.h"
 #include "Common/ThreadDataAccess.h"
 #include "Common/HashEngineInternal.h"
@@ -38,10 +34,6 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 	bool isSizeCaled = false;
 	ULLongVector fSizes(GetHashRequestFileCount(request));
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-	ThreadPool threadPool(5);
-#endif
-
 	bool wasCancelled = false;
 	isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);
 	if (wasCancelled)
@@ -49,19 +41,7 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 		return CancelHashing(executionContext);
 	}
 
-	FileExecutionState executionState = { 0 };
-
-	bool completedAllFiles = VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
-	{
-		return RunFileHashAttempt(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes
-			, &executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-			, &threadPool
-#endif
-		);
-	});
-
-	if (!completedAllFiles)
+	if (!RunHashScheduler(executionContext, request, isSizeCaled, fSizes))
 	{
 		return CancelHashing(executionContext);
 	}
