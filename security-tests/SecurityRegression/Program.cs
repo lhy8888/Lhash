@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 internal static partial class Program
@@ -62,7 +62,7 @@ internal static partial class Program
             AssertContains(mfcBaseStrings, "About LHash", "Legacy MFC About dialog title still shows the old app name.");
             AssertContains(mfcBaseStrings, "LHash: Files Hash Calculator", "Legacy MFC English About text still shows the old product name.");
             AssertContains(mfcBaseStrings, "Copyright (C) 2026- LHY.", "Legacy MFC English About text still shows the old copyright.");
-            AssertContains(mfcBaseStrings, "https://github.com/lhy8888/fhash", "Legacy MFC English About link still points to the old GitHub repo.");
+            AssertContains(mfcBaseStrings, "https://github.com/lhy8888/Lhash", "Legacy MFC English About link still points to the old GitHub repo.");
             AssertContains(mfcZhStrings, "LHash", "Legacy MFC Chinese About title still shows the old app name.");
             AssertContains(mfcZhStrings, "LHash:", "Legacy MFC Chinese About text still shows the old product name.");
             AssertContains(mfcRc2, "VALUE \"FileDescription\", \"LHash: Files Hash Calculator\"", "Legacy MFC version resources still expose the old product description.");
@@ -74,7 +74,7 @@ internal static partial class Program
             AssertContains(winUiEn, "<value>About LHash</value>", "WinUI English About title still shows the old app name.");
             AssertContains(winUiEn, "<value>LHash: Files Hash Calculator</value>", "WinUI English About text still shows the old product name.");
             AssertContains(winUiEn, "<value>Copyright (C) 2026- LHY.</value>", "WinUI English About text still shows the old copyright.");
-            AssertContains(winUiEn, "https://github.com/lhy8888/fhash", "WinUI English About link still points to the old GitHub repo.");
+            AssertContains(winUiEn, "https://github.com/lhy8888/Lhash", "WinUI English About link still points to the old GitHub repo.");
             AssertContains(winUiZh, "LHash</value>", "WinUI Chinese About title still shows the old app name.");
             AssertContains(winUiZh, "LHash: ", "WinUI Chinese About text still shows the old product name.");
             AssertContains(winUiAssembly, "AssemblyTitle(\"LHashWUI\")", "WinUI assembly title still shows the old product name.");
@@ -91,7 +91,7 @@ internal static partial class Program
             AssertContains(uwpEn, "<value>About LHash UWP</value>", "UWP English About title still shows the old app name.");
             AssertContains(uwpEn, "<value>LHash UWP: Files Hash Calculator</value>", "UWP English About text still shows the old product name.");
             AssertContains(uwpEn, "<value>Copyright (C) 2026- LHY.</value>", "UWP English About text still shows the old copyright.");
-            AssertContains(uwpEn, "https://github.com/lhy8888/fhash", "UWP English About link still points to the old GitHub repo.");
+            AssertContains(uwpEn, "https://github.com/lhy8888/Lhash", "UWP English About link still points to the old GitHub repo.");
             AssertContains(uwpZh, "LHash UWP</value>", "UWP Chinese About title still shows the old app name.");
             AssertContains(uwpZh, "LHash UWP: ", "UWP Chinese About text still shows the old product name.");
             AssertContains(uwpAssembly, "AssemblyTitle(\"LHashUwp\")", "UWP assembly title still shows the old product name.");

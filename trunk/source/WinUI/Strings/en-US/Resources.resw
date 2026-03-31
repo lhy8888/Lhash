@@ -214,7 +214,7 @@
     <value>GitHub</value>
   </data>
   <data name="HyperlinkButtonGithub.NavigateUri" xml:space="preserve">
-    <value>https://github.com/lhy8888/fhash</value>
+    <value>https://github.com/lhy8888/Lhash</value>
   </data>
   <data name="ResultWaitingStart" xml:space="preserve">
     <value>Prepare to start calculation.</value>

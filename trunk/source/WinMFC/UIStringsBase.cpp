@@ -60,6 +60,6 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("More details are on Project Site.");
 	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("Operating System:");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_SITE")] = _T("<a>Hosted on GitHub</a>");
-	m_stringsMap[_T("ABOUTDLG_PROJECT_URL")] = _T("https://github.com/lhy8888/fhash");
+	m_stringsMap[_T("ABOUTDLG_PROJECT_URL")] = _T("https://github.com/lhy8888/Lhash");
 
 }

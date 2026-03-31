@@ -1,27 +1,37 @@
-# 鏇存柊鏃ュ織
+﻿# 更新日志
 
-杩欓噷璁板綍鐨勬槸 LHash 鑷繁缁存姢鐨勫彂琛岀嚎鍙樺寲銆?
-涓婃父 fHash 鐨勯暱鏈熷巻鍙茬増鏈褰曚笉鍐嶅湪杩欓噷閲嶅缁存姢銆?褰撳墠杩欎唤鏃ュ織浠?`1.10.0` 寮€濮嬶紝涓撻棬瀵瑰簲 LHash 鐨勭淮鎶ゅ拰鍙戝竷銆?
+这里记录的是 LHash 自己维护的发行线变化。
+
+上游 fHash 的长期历史版本记录不再在这里重复维护。
+当前这份日志从 `1.10.0` 开始，专门对应 LHash 的维护和发布。
+
 ## 1.10.0 - 2026-03-30
 
-LHash 缁存姢鐗堝彂琛岀嚎鐨勯涓寮忕増鏈€?
-### 鍙戝竷涓庝氦浠?
-- 缁存姢鐗堜骇鍝佺増鏈彿閲嶇疆涓?`1.10.0`
-- 涓?`v*` 鏍囩鎵撻€氭寮?GitHub Release
-- 涓哄垎鏀瀯寤鸿ˉ榻愬彂甯冩紨缁冨寘鍜屽彂甯冩竻鍗?- 鍦?CI 涓繚鐣欏彲閫変唬鐮佺鍚嶆帴鍏ヨ兘鍔?
-### 瀹夊叏鍔犲浐
+LHash 维护版发行线的首个正式版本。
 
-- 鍔犲浐 Windows 妗岄潰璺緞涓殑鍛戒护琛屽拰 `WM_COPYDATA` 杈撳叆澶勭悊
-- 鍔犲浐 shell 闆嗘垚涓庡彂甯冩墦鍖呮祦绋?- 鍦ㄥ綋鍓嶇淮鎶ょ増 Windows 鍙戣绾夸腑绉婚櫎绗笁鏂瑰搱甯屾彁浜ゅ叆鍙?
-### 鏋舵瀯鏁存敼
+### 发布与交付
 
-- 寮曞叆 `HashRequest`銆乣HashResult`銆乣ProgressEvent`銆乣HashProgressSink`銆乣HashExecutionContext`
-- 灏嗘牳蹇冩墽琛屼富绾挎帹杩涘埌 `HashResult` 濂戠害
-- 璁?WinUI native 鏋勫缓缁熶竴缁忚繃 `fHashNativeCore`
-- 灏?legacy `ResultData` 閫愭闄嶇骇涓哄吋瀹瑰眰
+- 维护版产品版本号重置为 `1.10.0`
+- 为 `v*` 标签打通正式 GitHub Release
+- 为分支构建补齐发布演练包和发布清单
+- 在 CI 中保留可选代码签名接入能力
 
-### 楠岃瘉浣撶郴
+### 安全加固
 
-- 鏂板鐙珛 xUnit 鍗曞厓娴嬭瘯妗嗘灦
-- 鏂板鍘熺敓 C++ 杩愯鏃舵祴璇?- Windows 鍘熺敓鏋勫缓鐭╅樀鐜板湪鍙楀崟鍏冩祴璇曘€佸畨鍏ㄥ洖褰掋€佸師鐢熻繍琛屾椂娴嬭瘯鍏卞悓 gate
-- 鍦ㄦ寮忔墦鏍囩鍓嶅畬鎴愪簡 CI 鍙戝竷閾炬紨缁?
+- 加固 Windows 桌面路径中的命令行和 `WM_COPYDATA` 输入处理
+- 加固 shell 集成与发布打包流程
+- 在当前维护版 Windows 发行线中移除第三方哈希提交入口
+
+### 架构整改
+
+- 引入 `HashRequest`、`HashResult`、`ProgressEvent`、`HashProgressSink`、`HashExecutionContext`
+- 将核心执行主线推进到 `HashResult` 契约
+- 让 WinUI native 构建统一经过 `fHashNativeCore`
+- 将 legacy `ResultData` 逐步降级为兼容层
+
+### 验证体系
+
+- 新增独立 xUnit 单元测试框架
+- 新增原生 C++ 运行时测试
+- Windows 原生构建矩阵现在受单元测试、安全回归、原生运行时测试共同 gate
+- 在正式打标签前完成了 CI 发布链演练

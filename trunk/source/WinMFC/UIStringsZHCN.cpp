@@ -60,6 +60,6 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("详细授权信息见开发者网站。");
 	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("当前操作系统:");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_SITE")] = _T("<a>Hosted on GitHub</a>");
-	m_stringsMap[_T("ABOUTDLG_PROJECT_URL")] = _T("https://github.com/lhy8888/fhash");
+	m_stringsMap[_T("ABOUTDLG_PROJECT_URL")] = _T("https://github.com/lhy8888/Lhash");
 
 }
