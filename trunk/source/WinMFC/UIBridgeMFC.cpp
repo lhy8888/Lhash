@@ -39,7 +39,7 @@ void UIBridgeMFC::unlockData()
 	m_mainMtx->unlock();
 }
 
-void UIBridgeMFC::preparingCalc()
+void UIBridgeMFC::onJobPreparing()
 {
 	PostThreadInfoMessage(WP_WORKING);
 
@@ -58,7 +58,7 @@ void UIBridgeMFC::preparingCalc()
 	}, true);
 }
 
-void UIBridgeMFC::removePreparingCalc()
+void UIBridgeMFC::onJobPreparationFinished()
 {
 	UpdateMainHyperEdit([&](CHyperEditHash *hyperEdit)
 	{
@@ -67,56 +67,59 @@ void UIBridgeMFC::removePreparingCalc()
 	});
 }
 
-void UIBridgeMFC::calcStop()
+void UIBridgeMFC::onJobCancelled()
 {
 	PostThreadInfoMessage(WP_STOPPED);
 }
 
-void UIBridgeMFC::calcFinish()
+void UIBridgeMFC::onJobCompleted()
 {
 	PostThreadInfoMessage(WP_FINISHED);
 }
 
-void UIBridgeMFC::showFileName(const HashResult& result)
+void UIBridgeMFC::onFileResultEvent(const HashResult& result,
+										ProgressEventType eventType,
+										bool uppercaseDigest)
 {
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
+	switch (eventType)
+	{
+	case PROGRESS_EVENT_FILE_STARTED:
+		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
+		break;
+	case PROGRESS_EVENT_FILE_META_READY:
+		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
+		break;
+	case PROGRESS_EVENT_FILE_HASH_READY:
+		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercaseDigest);
+		break;
+	case PROGRESS_EVENT_FILE_FAILED:
+		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
+		break;
+	default:
+		break;
+	}
 }
 
-void UIBridgeMFC::showFileMeta(const HashResult& result)
-{
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
-}
-
-void UIBridgeMFC::showFileHash(const HashResult& result, bool uppercase)
-{
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);
-}
-
-void UIBridgeMFC::showFileErr(const HashResult& result)
-{
-	AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
-}
-
-int UIBridgeMFC::getProgMax()
+int UIBridgeMFC::queryProgressMax()
 {
 	return 100;
 }
 
-void UIBridgeMFC::updateProg(int value)
+void UIBridgeMFC::onFileProgressValue(int value)
 {
 	//::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG, value);
 }
 
-void UIBridgeMFC::updateProgWhole(int value)
+void UIBridgeMFC::onTotalProgressValue(int value)
 {
 	PostThreadInfoMessage(WP_PROG_WHOLE, value);
 }
 
-void UIBridgeMFC::fileCalcFinish()
+void UIBridgeMFC::onFileCalculated()
 {
 }
 
-void UIBridgeMFC::fileFinish()
+void UIBridgeMFC::onFileFinished()
 {
 }
 

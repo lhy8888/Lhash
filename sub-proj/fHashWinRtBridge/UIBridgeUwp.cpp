@@ -26,6 +26,22 @@ void UIBridgeUwp::unlockData()
 	// No need here.
 }
 
+static ManagedResultDispatchType GetManagedResultDispatchType(ProgressEventType eventType)
+{
+	switch (eventType)
+	{
+	case PROGRESS_EVENT_FILE_STARTED:
+		return MANAGED_RESULT_DISPATCH_FILE_NAME;
+	case PROGRESS_EVENT_FILE_META_READY:
+		return MANAGED_RESULT_DISPATCH_FILE_META;
+	case PROGRESS_EVENT_FILE_HASH_READY:
+		return MANAGED_RESULT_DISPATCH_FILE_HASH;
+	case PROGRESS_EVENT_FILE_FAILED:
+	default:
+		return MANAGED_RESULT_DISPATCH_FILE_ERROR;
+	}
+}
+
 String^ UIBridgeUwp::ConvertManagedResultText(const TCHAR* resultText)
 {
 	return ConvertToPlatStr(resultText);
@@ -79,64 +95,53 @@ int UIBridgeUwp::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)
 	});
 }
 
-void UIBridgeUwp::preparingCalc()
+void UIBridgeUwp::onJobPreparing()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);
 }
 
-void UIBridgeUwp::removePreparingCalc()
+void UIBridgeUwp::onJobPreparationFinished()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);
 }
 
-void UIBridgeUwp::calcStop()
+void UIBridgeUwp::onJobCancelled()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);
 }
 
-void UIBridgeUwp::calcFinish()
+void UIBridgeUwp::onJobCompleted()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
 }
 
-void UIBridgeUwp::showFileName(const HashResult& result)
+void UIBridgeUwp::onFileResultEvent(const HashResult& result,
+										ProgressEventType eventType,
+										bool uppercaseDigest)
 {
-	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_NAME);
+	DispatchProjectedResultToDelegate(result,
+										GetManagedResultDispatchType(eventType),
+										uppercaseDigest);
 }
 
-void UIBridgeUwp::showFileMeta(const HashResult& result)
-{
-	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_META);
-}
-
-void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)
-{
-	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_HASH, uppercase);
-}
-
-void UIBridgeUwp::showFileErr(const HashResult& result)
-{
-	DispatchProjectedResultToDelegate(result, MANAGED_RESULT_DISPATCH_FILE_ERROR);
-}
-
-int UIBridgeUwp::getProgMax()
+int UIBridgeUwp::queryProgressMax()
 {
 	return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);
 }
 
-void UIBridgeUwp::updateProg(int value)
+void UIBridgeUwp::onFileProgressValue(int value)
 {
 }
 
-void UIBridgeUwp::updateProgWhole(int value)
+void UIBridgeUwp::onTotalProgressValue(int value)
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);
 }
 
-void UIBridgeUwp::fileCalcFinish()
+void UIBridgeUwp::onFileCalculated()
 {
 }
 
-void UIBridgeUwp::fileFinish()
+void UIBridgeUwp::onFileFinished()
 {
 }

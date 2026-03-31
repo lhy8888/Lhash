@@ -88,14 +88,17 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("class HashEngineObserver: public HashProgressSink", observer, StringComparison.Ordinal);
         Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent)", observer, StringComparison.Ordinal);
-        Assert.Contains("void onFileHashReady(const HashResult& result, bool uppercase)", observer, StringComparison.Ordinal);
-        Assert.DoesNotContain("void onFileStarted(const ResultData& result)", observer, StringComparison.Ordinal);
-        Assert.DoesNotContain("void onFileMetaReady(const ResultData& result)", observer, StringComparison.Ordinal);
-        Assert.DoesNotContain("void onFileHashReady(const ResultData& result, bool uppercase)", observer, StringComparison.Ordinal);
-        Assert.DoesNotContain("void onFileFailed(const ResultData& result)", observer, StringComparison.Ordinal);
-        Assert.Contains("virtual void showFileName(const HashResult& result) = 0;", observer, StringComparison.Ordinal);
-        Assert.Contains("onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", observer, StringComparison.Ordinal);
-        Assert.Contains("updateProgWhole(progressEvent.value);", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onJobPreparing() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onJobPreparationFinished() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onJobCancelled() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onJobCompleted() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onFileResultEvent(const HashResult& result,", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual int queryProgressMax() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onTotalProgressValue(int value) = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", observer, StringComparison.Ordinal);
+        Assert.Contains("onTotalProgressValue(progressEvent.value);", observer, StringComparison.Ordinal);
+        Assert.DoesNotContain("virtual void showFileName(const HashResult& result) = 0;", observer, StringComparison.Ordinal);
+        Assert.DoesNotContain("virtual void updateProgWhole(int value) = 0;", observer, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", observer, StringComparison.Ordinal);
         Assert.False(File.Exists(legacyObserverPath));
         Assert.False(File.Exists(legacyBridgePath));
@@ -253,11 +256,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("void UIBridgeDelegate::ShowFileHash(HashResultNet hashResultNet, Boolean uppercase)", uwpDelegateSource, StringComparison.Ordinal);
         Assert.Contains("ShowFileHashHandler(hashResultNet, uppercase);", uwpDelegateSource, StringComparison.Ordinal);
 
-        Assert.Contains("virtual void showFileName(const HashResult& result);", mfcHeader, StringComparison.Ordinal);
+        Assert.Contains("virtual void onFileResultEvent(const HashResult& result,", mfcHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeMFC::showFileHash(const HashResult& result, bool uppercase)", mfcSource, StringComparison.Ordinal);
-        Assert.Contains("AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercase);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMFC::onFileResultEvent(const HashResult& result,", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("case PROGRESS_EVENT_FILE_HASH_READY:", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercaseDigest);", mfcSource, StringComparison.Ordinal);
         Assert.Contains("VisitHashResultDigestDisplayValues(result, uppercase", mfcSource, StringComparison.Ordinal);
         Assert.Contains("void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", mfcSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
@@ -266,21 +270,26 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.Contains("UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", searchSource, StringComparison.Ordinal);
 
-        Assert.Contains("virtual void showFileName(const HashResult& result);", wuiHeader, StringComparison.Ordinal);
+        Assert.Contains("virtual void onFileResultEvent(const HashResult& result,", wuiHeader, StringComparison.Ordinal);
         Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", wuiHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeWUI::showFileHash(const HashResult& result, bool uppercase)", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeWUI::onFileResultEvent(const HashResult& result,", wuiSource, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("GetManagedResultDispatchType(eventType)", wuiSource, StringComparison.Ordinal);
         Assert.Contains("m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", wuiSource, StringComparison.Ordinal);
 
-        Assert.Contains("virtual void showFileName(const HashResult& result);", uwpHeader, StringComparison.Ordinal);
+        Assert.Contains("virtual void onFileResultEvent(const HashResult& result,", uwpHeader, StringComparison.Ordinal);
         Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeUwp::onFileResultEvent(const HashResult& result,", uwpSource, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("GetManagedResultDispatchType(eventType)", uwpSource, StringComparison.Ordinal);
         Assert.Contains("m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", uwpSource, StringComparison.Ordinal);
 
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", macHeader, StringComparison.Ordinal);
         Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", macHeader, StringComparison.Ordinal);
+        Assert.Contains("virtual void onFileResultEvent(const HashResult& result,", macHeader, StringComparison.Ordinal);
         Assert.Contains("ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", macSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMacSwift::onFileResultEvent(const HashResult& result,", macSource, StringComparison.Ordinal);
+        Assert.Contains("case PROGRESS_EVENT_FILE_HASH_READY:", macSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", macSource, StringComparison.Ordinal);
         Assert.Contains("ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", macSource, StringComparison.Ordinal);
         Assert.Contains("VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", hashBridgeMac, StringComparison.Ordinal);

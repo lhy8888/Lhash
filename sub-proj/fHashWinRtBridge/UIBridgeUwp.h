@@ -18,22 +18,21 @@ namespace FilesHashUwp
 		virtual void lockData();
 		virtual void unlockData();
 
-		virtual void preparingCalc();
-		virtual void removePreparingCalc();
-		virtual void calcStop();
-		virtual void calcFinish();
+		virtual void onJobPreparing();
+		virtual void onJobPreparationFinished();
+		virtual void onJobCancelled();
+		virtual void onJobCompleted();
 
-		virtual void showFileName(const HashResult& result);
-		virtual void showFileMeta(const HashResult& result);
-		virtual void showFileHash(const HashResult& result, bool uppercase);
-		virtual void showFileErr(const HashResult& result);
+		virtual void onFileResultEvent(const HashResult& result,
+										ProgressEventType eventType,
+										bool uppercaseDigest);
 
-		virtual int getProgMax();
-		virtual void updateProg(int value);
-	virtual void updateProgWhole(int value);
+		virtual int queryProgressMax();
+		virtual void onFileProgressValue(int value);
+		virtual void onTotalProgressValue(int value);
 
-	virtual void fileCalcFinish();
-	virtual void fileFinish();
+		virtual void onFileCalculated();
+		virtual void onFileFinished();
 
 	private:
 		static Platform::String^ ConvertManagedResultText(const TCHAR* resultText);

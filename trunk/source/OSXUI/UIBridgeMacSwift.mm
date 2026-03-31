@@ -44,7 +44,7 @@ void UIBridgeMacSwift::unlockData()
     //mainViewController.mainMtx->unlock();
 }
 
-void UIBridgeMacSwift::preparingCalc()
+void UIBridgeMacSwift::onJobPreparing()
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
@@ -52,7 +52,7 @@ void UIBridgeMacSwift::preparingCalc()
     });
 }
 
-void UIBridgeMacSwift::removePreparingCalc()
+void UIBridgeMacSwift::onJobPreparationFinished()
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
@@ -60,7 +60,7 @@ void UIBridgeMacSwift::removePreparingCalc()
     });
 }
 
-void UIBridgeMacSwift::calcStop()
+void UIBridgeMacSwift::onJobCancelled()
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
@@ -68,7 +68,7 @@ void UIBridgeMacSwift::calcStop()
     });
 }
 
-void UIBridgeMacSwift::calcFinish()
+void UIBridgeMacSwift::onJobCompleted()
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
@@ -76,52 +76,43 @@ void UIBridgeMacSwift::calcFinish()
     });
 }
 
-void UIBridgeMacSwift::showFileName(const HashResult& result)
+void UIBridgeMacSwift::onFileResultEvent(const HashResult& result,
+                                         ProgressEventType eventType,
+                                         bool uppercaseDigest)
 {
     ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
-        [mainViewController onShowFileName:resultSwift];
+        switch (eventType)
+        {
+            case PROGRESS_EVENT_FILE_STARTED:
+                [mainViewController onShowFileName:resultSwift];
+                break;
+            case PROGRESS_EVENT_FILE_META_READY:
+                [mainViewController onShowFileMeta:resultSwift];
+                break;
+            case PROGRESS_EVENT_FILE_HASH_READY:
+                [mainViewController onShowFileHash:resultSwift uppercase:uppercaseDigest];
+                break;
+            case PROGRESS_EVENT_FILE_FAILED:
+                [mainViewController onShowFileErr:resultSwift];
+                break;
+            default:
+                break;
+        }
     });
 }
 
-void UIBridgeMacSwift::showFileMeta(const HashResult& result)
-{
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        MainViewController *mainViewController = _mainViewControllerPtr.get();
-        [mainViewController onShowFileMeta:resultSwift];
-    });
-}
-
-void UIBridgeMacSwift::showFileHash(const HashResult& result, bool uppercase)
-{
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        MainViewController *mainViewController = _mainViewControllerPtr.get();
-        [mainViewController onShowFileHash:resultSwift uppercase:uppercase];
-    });
-}
-
-void UIBridgeMacSwift::showFileErr(const HashResult& result)
-{
-    ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        MainViewController *mainViewController = _mainViewControllerPtr.get();
-        [mainViewController onShowFileErr:resultSwift];
-    });
-}
-
-int UIBridgeMacSwift::getProgMax()
+int UIBridgeMacSwift::queryProgressMax()
 {
     return 200;
 }
 
-void UIBridgeMacSwift::updateProg(int value)
+void UIBridgeMacSwift::onFileProgressValue(int value)
 {
 }
 
-void UIBridgeMacSwift::updateProgWhole(int value)
+void UIBridgeMacSwift::onTotalProgressValue(int value)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         MainViewController *mainViewController = _mainViewControllerPtr.get();
@@ -129,11 +120,11 @@ void UIBridgeMacSwift::updateProgWhole(int value)
     });
 }
 
-void UIBridgeMacSwift::fileCalcFinish()
+void UIBridgeMacSwift::onFileCalculated()
 {
 }
 
-void UIBridgeMacSwift::fileFinish()
+void UIBridgeMacSwift::onFileFinished()
 {
 }
 

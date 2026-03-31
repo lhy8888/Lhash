@@ -80,7 +80,7 @@ using namespace sunjwbase;
 }
 
 - (int)getProgMax {
-    return _uiBridgeSwift->getProgMax();
+    return _uiBridgeSwift->queryProgressMax();
 }
 
 - (uint64_t)getTotalSize {

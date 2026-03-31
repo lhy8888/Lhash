@@ -9,69 +9,9 @@ public:
 	HashEngineObserver() {}
 	virtual ~HashEngineObserver() {}
 
-	void onPreparing()
-	{
-		preparingCalc();
-	}
-
-	void onPreparationFinished()
-	{
-		removePreparingCalc();
-	}
-
-	void onCancelled()
-	{
-		calcStop();
-	}
-
-	void onCompleted()
-	{
-		calcFinish();
-	}
-
-	void onFileStarted(const HashResult& result)
-	{
-		showFileName(result);
-	}
-
-	void onFileMetaReady(const HashResult& result)
-	{
-		showFileMeta(result);
-	}
-
-	void onFileHashReady(const HashResult& result, bool uppercase)
-	{
-		showFileHash(result, uppercase);
-	}
-
-	void onFileFailed(const HashResult& result)
-	{
-		showFileErr(result);
-	}
-
 	virtual int progressMax()
 	{
-		return getProgMax();
-	}
-
-	void onFileProgress(int value)
-	{
-		updateProg(value);
-	}
-
-	void onTotalProgress(int value)
-	{
-		updateProgWhole(value);
-	}
-
-	void onFileCalculated()
-	{
-		fileCalcFinish();
-	}
-
-	void onFileFinished()
-	{
-		fileFinish();
+		return queryProgressMax();
 	}
 
 	virtual void onProgressEvent(const ProgressEvent& progressEvent)
@@ -79,40 +19,34 @@ public:
 		switch (progressEvent.type)
 		{
 		case PROGRESS_EVENT_JOB_PREPARING:
-			preparingCalc();
+			onJobPreparing();
 			break;
 		case PROGRESS_EVENT_JOB_PREPARATION_FINISHED:
-			removePreparingCalc();
+			onJobPreparationFinished();
 			break;
 		case PROGRESS_EVENT_JOB_CANCELLED:
-			calcStop();
+			onJobCancelled();
 			break;
 		case PROGRESS_EVENT_JOB_COMPLETED:
-			calcFinish();
+			onJobCompleted();
 			break;
 		case PROGRESS_EVENT_FILE_STARTED:
-			onFileStarted(progressEvent.result);
-			break;
 		case PROGRESS_EVENT_FILE_META_READY:
-			onFileMetaReady(progressEvent.result);
-			break;
 		case PROGRESS_EVENT_FILE_HASH_READY:
-			onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);
-			break;
 		case PROGRESS_EVENT_FILE_FAILED:
-			onFileFailed(progressEvent.result);
+			onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);
 			break;
 		case PROGRESS_EVENT_FILE_PROGRESS:
-			updateProg(progressEvent.value);
+			onFileProgressValue(progressEvent.value);
 			break;
 		case PROGRESS_EVENT_TOTAL_PROGRESS:
-			updateProgWhole(progressEvent.value);
+			onTotalProgressValue(progressEvent.value);
 			break;
 		case PROGRESS_EVENT_FILE_CALCULATED:
-			fileCalcFinish();
+			onFileCalculated();
 			break;
 		case PROGRESS_EVENT_FILE_FINISHED:
-			fileFinish();
+			onFileFinished();
 			break;
 		case PROGRESS_EVENT_NONE:
 		default:
@@ -120,22 +54,18 @@ public:
 		}
 	}
 
-	virtual void preparingCalc() = 0;
-	virtual void removePreparingCalc() = 0;
-	virtual void calcStop() = 0;
-	virtual void calcFinish() = 0;
-
-	virtual void showFileName(const HashResult& result) = 0;
-	virtual void showFileMeta(const HashResult& result) = 0;
-	virtual void showFileHash(const HashResult& result, bool uppercase) = 0;
-	virtual void showFileErr(const HashResult& result) = 0;
-
-	virtual int getProgMax() = 0;
-	virtual void updateProg(int value) = 0;
-	virtual void updateProgWhole(int value) = 0;
-
-	virtual void fileCalcFinish() = 0;
-	virtual void fileFinish() = 0;
+	virtual void onJobPreparing() = 0;
+	virtual void onJobPreparationFinished() = 0;
+	virtual void onJobCancelled() = 0;
+	virtual void onJobCompleted() = 0;
+	virtual void onFileResultEvent(const HashResult& result,
+									ProgressEventType eventType,
+									bool uppercaseDigest) = 0;
+	virtual int queryProgressMax() = 0;
+	virtual void onFileProgressValue(int value) = 0;
+	virtual void onTotalProgressValue(int value) = 0;
+	virtual void onFileCalculated() = 0;
+	virtual void onFileFinished() = 0;
 };
 
 #endif
