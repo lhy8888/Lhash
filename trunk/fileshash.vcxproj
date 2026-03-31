@@ -279,7 +279,7 @@
     <ClInclude Include="source\Common\Global.h" />
     <ClInclude Include="source\Common\HashEngine.h" />
     <ClInclude Include="source\Common\strhelper.h" />
-    <ClInclude Include="source\Common\UIBridgeBase.h" />
+    <ClInclude Include="source\Adapters\UiBridge\HashEngineBridge.h" />
     <ClInclude Include="source\Common\Utils.h" />
     <ClInclude Include="source\Algorithms\endianness.h" />
     <ClInclude Include="source\OsUtils\OsFile.h" />

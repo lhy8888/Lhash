@@ -1,7 +1,7 @@
 #ifndef _HASH_ENGINE_BRIDGE_H_
 #define _HASH_ENGINE_BRIDGE_H_
 
-#include "Common/HashEngineObserver.h"
+#include "Adapters/UiBridge/HashEngineObserver.h"
 
 class HashEngineBridge: public HashEngineObserver
 {

@@ -1,7 +1,7 @@
 #ifndef _UI_BRIDGE_MFC_
 #define _UI_BRIDGE_MFC_
 
-#include "Common/HashEngineBridge.h"
+#include "Adapters/UiBridge/HashEngineBridge.h"
 
 #include <Windows.h>
 

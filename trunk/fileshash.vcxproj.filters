@@ -206,7 +206,7 @@
     <ClInclude Include="source\Common\strhelper.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="source\Common\UIBridgeBase.h">
+    <ClInclude Include="source\Adapters\UiBridge\HashEngineBridge.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="source\Common\Utils.h">

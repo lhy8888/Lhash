@@ -10,7 +10,7 @@
 #define _UI_BRIDGE_MAC_SWIFT_
 
 #include "OsUtils/OsThread.h"
-#include "Common/HashEngineBridge.h"
+#include "Adapters/UiBridge/HashEngineBridge.h"
 #include "Common/HashResult.h"
 
 #import "MacUtils.h"

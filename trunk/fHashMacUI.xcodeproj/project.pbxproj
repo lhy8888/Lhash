@@ -96,7 +96,7 @@
 		52225809213CDA7C00012EF8 /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = source/Common/Utils.h; sourceTree = "<group>"; };
 		5222580E213CDB2900012EF8 /* HashEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HashEngine.h; path = source/Common/HashEngine.h; sourceTree = "<group>"; };
 		5222580F213CDB2900012EF8 /* HashEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HashEngine.cpp; path = source/Common/HashEngine.cpp; sourceTree = "<group>"; usesTabs = 1; };
-		52225814213CDB9D00012EF8 /* UIBridgeBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UIBridgeBase.h; path = source/Common/UIBridgeBase.h; sourceTree = "<group>"; };
+		52225814213CDB9D00012EF8 /* HashEngineBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HashEngineBridge.h; path = source/Adapters/UiBridge/HashEngineBridge.h; sourceTree = "<group>"; };
 		52225819213CF24300012EF8 /* MacUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MacUtils.mm; path = source/OSXUI/MacUtils.mm; sourceTree = SOURCE_ROOT; };
 		5222581A213CF24300012EF8 /* MacUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacUtils.h; path = source/OSXUI/MacUtils.h; sourceTree = SOURCE_ROOT; };
 		52751B101B56276F00BD724B /* fHash.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = fHash.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -123,7 +123,7 @@
 				52225802213CD95D00012EF8 /* strhelper.cpp */,
 				52225803213CD95D00012EF8 /* strhelper.h */,
 				415F8D6E28CF558500D8971C /* ThreadPool.h */,
-				52225814213CDB9D00012EF8 /* UIBridgeBase.h */,
+				52225814213CDB9D00012EF8 /* HashEngineBridge.h */,
 				52225808213CDA7C00012EF8 /* Utils.cpp */,
 				52225809213CDA7C00012EF8 /* Utils.h */,
 			);

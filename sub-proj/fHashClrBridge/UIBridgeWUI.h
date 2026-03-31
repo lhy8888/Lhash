@@ -2,7 +2,7 @@
 
 #include <msclr\auto_gcroot.h>
 
-#include "Common/HashEngineBridge.h"
+#include "Adapters/UiBridge/HashEngineBridge.h"
 #include "Common/Global.h"
 #include "Common/ManagedBridgeDispatch.h"
 

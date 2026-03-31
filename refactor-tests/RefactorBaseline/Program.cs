@@ -58,11 +58,13 @@ internal static class Program
             AssertDoesNotContain(global, "ResultList resultList;", "ThreadData still exposes the legacy resultList field name.");
         }, failures);
 
-        Run("Phase 1 introduces neutral observer wrapper methods while keeping a thin bridge adapter on top", () =>
+        Run("Phase 1 introduces neutral observer wrapper methods and keeps UI-facing bridge abstractions out of the core hashing contracts", () =>
         {
-            string observer = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
-            string bridgeBase = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineBridge.h");
-            string bridge = ReadRepoFile(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
+            string observer = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
+            string bridgeBase = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineBridge.h");
+            string legacyObserverPath = Path.Combine(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string legacyBridgePath = Path.Combine(repoRoot, @"trunk\source\Common\HashEngineBridge.h");
+            string legacyUiBridgeBasePath = Path.Combine(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
             AssertContains(observer, "class HashEngineObserver", "Phase-1 observer seam is missing.");
             AssertContains(observer, "virtual void preparingCalc() = 0;", "HashEngineObserver does not expose preparingCalc.");
@@ -95,11 +97,22 @@ internal static class Program
             AssertContains(observer, "void onFileCalculated()", "HashEngineObserver does not yet offer a neutral file-calculated wrapper.");
             AssertContains(observer, "void onFileFinished()", "HashEngineObserver does not yet offer a neutral file-finished wrapper.");
 
+            AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashEngineBridge does not yet layer directly on top of the shared adapter observer seam.");
             AssertContains(bridgeBase, "class HashEngineBridge: public HashEngineObserver", "HashEngineBridge is missing the neutral bridge seam on top of HashEngineObserver.");
             AssertContains(bridgeBase, "virtual void lockData() = 0;", "HashEngineBridge does not keep lockData on top of HashEngineObserver.");
             AssertContains(bridgeBase, "virtual void unlockData() = 0;", "HashEngineBridge does not keep unlockData on top of HashEngineObserver.");
-            AssertContains(bridge, "class UIBridgeBase: public HashEngineBridge", "UIBridgeBase is not yet reduced to a compatibility adapter on top of HashEngineBridge.");
-            AssertDoesNotContain(bridge, "virtual void preparingCalc() = 0;", "UIBridgeBase still duplicates HashEngineObserver methods instead of remaining a thin compatibility adapter.");
+            if (File.Exists(legacyObserverPath))
+            {
+                failures.Add("HashEngineObserver still lives in Common instead of the shared adapter seam.");
+            }
+            if (File.Exists(legacyBridgePath))
+            {
+                failures.Add("HashEngineBridge still lives in Common instead of the shared adapter seam.");
+            }
+            if (File.Exists(legacyUiBridgeBasePath))
+            {
+                failures.Add("UIBridgeBase still exists even though the shared adapter bridge seam has replaced it.");
+            }
         }, failures);
 
         Run("Phase 1 HashEngine uses neutral observer wrappers and tiny emission helpers while preserving the current lifecycle and same-file multi-algorithm model", () =>
@@ -1876,36 +1889,38 @@ internal static class Program
             AssertContains(clrBridge, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "CLR bridge no longer resolves the native core through the current output-path coupling.");
         }, failures);
 
-        Run("Phase 7 routes platform bridges through HashEngineBridge while leaving UIBridgeBase as a compatibility shim", () =>
+        Run("Phase 7 routes platform bridges through the shared adapter bridge seam and removes the empty UIBridgeBase compatibility shim", () =>
         {
-            string bridgeBase = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineBridge.h");
-            string compatibilityBridge = ReadRepoFile(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
+            string bridgeBase = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineBridge.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeMacHeader = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.h");
+            string compatibilityBridgePath = Path.Combine(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
-            AssertContains(bridgeBase, "#include \"Common/HashEngineObserver.h\"", "HashEngineBridge does not yet layer directly on top of HashEngineObserver.");
+            AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashEngineBridge does not yet layer directly on top of the adapter observer seam.");
             AssertContains(bridgeBase, "class HashEngineBridge: public HashEngineObserver", "HashEngineBridge is missing.");
-            AssertContains(compatibilityBridge, "class UIBridgeBase: public HashEngineBridge", "UIBridgeBase is not yet reduced to a compatibility shim.");
-            AssertDoesNotContain(compatibilityBridge, "virtual void showFileName(const ResultData& result) = 0;", "UIBridgeBase still duplicates file-notification methods instead of remaining a thin shim.");
+            if (File.Exists(compatibilityBridgePath))
+            {
+                failures.Add("UIBridgeBase still exists even though the shared adapter bridge seam should have replaced it.");
+            }
 
-            AssertContains(bridgeMfcHeader, "#include \"Common/HashEngineBridge.h\"", "MFC bridge header does not yet include the neutral HashEngineBridge seam.");
+            AssertContains(bridgeMfcHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "MFC bridge header does not yet include the shared adapter HashEngineBridge seam.");
             AssertContains(bridgeMfcHeader, "class UIBridgeMFC: public HashEngineBridge", "MFC bridge does not yet inherit HashEngineBridge directly.");
             AssertDoesNotContain(bridgeMfcHeader, "#include \"Common/UIBridgeBase.h\"", "MFC bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeMfcHeader, "class UIBridgeMFC: public UIBridgeBase", "MFC bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeWuiHeader, "#include \"Common/HashEngineBridge.h\"", "WinUI bridge header does not yet include the neutral HashEngineBridge seam.");
+            AssertContains(bridgeWuiHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "WinUI bridge header does not yet include the shared adapter HashEngineBridge seam.");
             AssertContains(bridgeWuiHeader, "class UIBridgeWUI : public HashEngineBridge", "WinUI bridge does not yet inherit HashEngineBridge directly.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/UIBridgeBase.h\"", "WinUI bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeWuiHeader, "class UIBridgeWUI : public UIBridgeBase", "WinUI bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeUwpHeader, "#include \"Common/HashEngineBridge.h\"", "UWP bridge header does not yet include the neutral HashEngineBridge seam.");
+            AssertContains(bridgeUwpHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "UWP bridge header does not yet include the shared adapter HashEngineBridge seam.");
             AssertContains(bridgeUwpHeader, "class UIBridgeUwp : public HashEngineBridge", "UWP bridge does not yet inherit HashEngineBridge directly.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/UIBridgeBase.h\"", "UWP bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeUwpHeader, "class UIBridgeUwp : public UIBridgeBase", "UWP bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeMacHeader, "#include \"Common/HashEngineBridge.h\"", "macOS bridge header does not yet include the neutral HashEngineBridge seam.");
+            AssertContains(bridgeMacHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "macOS bridge header does not yet include the shared adapter HashEngineBridge seam.");
             AssertContains(bridgeMacHeader, "class UIBridgeMacSwift: public HashEngineBridge", "macOS bridge does not yet inherit HashEngineBridge directly.");
             AssertDoesNotContain(bridgeMacHeader, "#include \"Common/UIBridgeBase.h\"", "macOS bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeMacHeader, "class UIBridgeMacSwift: public UIBridgeBase", "macOS bridge still inherits the compatibility shim instead of HashEngineBridge.");
@@ -3049,7 +3064,7 @@ internal static class Program
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
-            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(hashRequest, "struct HashRequest", "Phase 31 does not yet define a stable HashRequest contract.");
@@ -3144,7 +3159,7 @@ internal static class Program
         Run("Phase 34 narrows core hashing execution onto HashProgressSink while keeping HashEngineObserver as a compatibility adapter", () =>
         {
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
-            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
@@ -3193,7 +3208,7 @@ internal static class Program
         Run("Phase 35 routes semantic result events through HashResult while narrowing observer compatibility to thin wrappers", () =>
         {
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
-            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
 
@@ -3218,7 +3233,7 @@ internal static class Program
 
         Run("Phase 36 makes HashResult the bridge-facing result contract across MFC and managed adapters", () =>
         {
-            string observer = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string observer = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
@@ -3384,7 +3399,7 @@ internal static class Program
         {
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
-            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineObserver.h");
+            string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
 
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy ResultData back-pointer.");
 

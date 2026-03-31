@@ -42,7 +42,7 @@
     <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Common\UIBridgeBase.h">
+    <ClInclude Include="..\..\trunk\source\Adapters\UiBridge\HashEngineBridge.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\WinCommon\FileVersionHelper.h">

@@ -66,7 +66,10 @@ public sealed class HashContractUnitTests
     {
         string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ProgressEvent.h");
         string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressSink.h");
-        string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineObserver.h");
+        string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
+        string legacyObserverPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineObserver.h");
+        string legacyBridgePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineBridge.h");
+        string legacyUiBridgeBasePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
         Assert.Contains("enum ProgressEventType", progressEvent, StringComparison.Ordinal);
         Assert.Contains("PROGRESS_EVENT_JOB_PREPARING", progressEvent, StringComparison.Ordinal);
@@ -94,6 +97,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("onFileHashReady(progressEvent.result, progressEvent.uppercaseDigest);", observer, StringComparison.Ordinal);
         Assert.Contains("updateProgWhole(progressEvent.value);", observer, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(result);", observer, StringComparison.Ordinal);
+        Assert.False(File.Exists(legacyObserverPath));
+        Assert.False(File.Exists(legacyBridgePath));
+        Assert.False(File.Exists(legacyUiBridgeBasePath));
     }
 
     [Fact]
