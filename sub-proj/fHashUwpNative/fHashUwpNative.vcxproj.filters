@@ -89,6 +89,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">
       <Filter>算法</Filter>
     </ClCompile>

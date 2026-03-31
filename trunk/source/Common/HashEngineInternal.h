@@ -18,6 +18,10 @@
 #include "Algorithms/sha256.h"
 #include "Algorithms/sha512.h"
 
+#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
+class ThreadPool;
+#endif
+
 namespace HashEngineInternal
 {
 	struct FileProgressState
@@ -64,6 +68,11 @@ namespace HashEngineInternal
 	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
 	void ResetFileProgressState(FileProgressState *progressState);
+	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes
+#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
+		, ThreadPool *threadPool
+#endif
+	);
 
 	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result);
 	HashResult& BeginFileResult(HashExecutionContext *executionContext, const sunjwbase::tstring& path);
