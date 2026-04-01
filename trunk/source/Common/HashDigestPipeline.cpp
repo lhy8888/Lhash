@@ -39,26 +39,6 @@ namespace HashEngineInternal
 
 	unsigned int DataBuffer::preflen = 1048576; // 2^20
 
-	static void MD5UpdateWrapper(MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen)
-	{
-		MD5Update(mdContext, inBuf, inLen);
-	}
-
-	static void SHA1UpdateWrapper(CSHA1 *sha1, unsigned char *data, unsigned int len)
-	{
-		sha1->Update(data, len);
-	}
-
-	static void SHA256UpdateWrapper(struct sha256_ctx *ctx, const unsigned char *buffer, uint32_t length)
-	{
-		sha256_update(ctx, buffer, length);
-	}
-
-	static void SHA512UpdateWrapper(SHA512_CTX *context, void *datain, size_t len)
-	{
-		SHA512_Update(context, datain, len);
-	}
-
 	static void UpdateProgressWrapper(HashExecutionContext *executionContext, uint64_t fsize, bool isSizeCaled, unsigned int dataBufLen,
 		FileProgressState *progressState)
 	{
@@ -114,6 +94,7 @@ namespace HashEngineInternal
 	)
 	{
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
+		DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);
 
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
 			isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
@@ -164,48 +145,7 @@ namespace HashEngineInternal
 					continue;
 				}
 
-				bool isSha512Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512);
-				bool isSha256Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
-				bool isSha1Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1);
-				bool isMd5Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
-				future<void> taskSHA512Update;
-				future<void> taskSHA256Update;
-				future<void> taskSHA1Update;
-				future<void> taskMD5Update;
-
-				if (isSha512Enabled)
-				{
-					taskSHA512Update = threadPool->enqueue(SHA512UpdateWrapper, &executionState->hashContexts.sha512Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-				}
-				if (isSha256Enabled)
-				{
-					taskSHA256Update = threadPool->enqueue(SHA256UpdateWrapper, &executionState->hashContexts.sha256Ctx, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-				}
-				if (isSha1Enabled)
-				{
-					taskSHA1Update = threadPool->enqueue(SHA1UpdateWrapper, &executionState->hashContexts.sha1, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-				}
-				if (isMd5Enabled)
-				{
-					taskMD5Update = threadPool->enqueue(MD5UpdateWrapper, &executionState->hashContexts.mdContext, ptrDataBufCalc->data, ptrDataBufCalc->datalen);
-				}
-
-				if (isSha512Enabled)
-				{
-					taskSHA512Update.wait();
-				}
-				if (isSha256Enabled)
-				{
-					taskSHA256Update.wait();
-				}
-				if (isSha1Enabled)
-				{
-					taskSHA1Update.wait();
-				}
-				if (isMd5Enabled)
-				{
-					taskMD5Update.wait();
-				}
+				UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, ptrDataBufCalc->data, ptrDataBufCalc->datalen, threadPool);
 
 				UpdateProgressWrapper(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);
 			}
@@ -259,22 +199,7 @@ namespace HashEngineInternal
 
 			if (!executionState->fileAttemptState.readFailed)
 			{
-				if (HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5))
-				{
-					MD5UpdateWrapper(&executionState->hashContexts.mdContext, databuf.data, databuf.datalen);
-				}
-				if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1))
-				{
-					SHA1UpdateWrapper(&executionState->hashContexts.sha1, databuf.data, databuf.datalen);
-				}
-				if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256))
-				{
-					SHA256UpdateWrapper(&executionState->hashContexts.sha256Ctx, databuf.data, databuf.datalen);
-				}
-				if (HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512))
-				{
-					SHA512UpdateWrapper(&executionState->hashContexts.sha512Ctx, databuf.data, databuf.datalen);
-				}
+				UpdateDigestContextsSequential(digestUpdateRequest, executionState->hashContexts, databuf.data, databuf.datalen);
 
 				UpdateProgressWrapper(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
 			}

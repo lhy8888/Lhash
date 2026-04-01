@@ -260,6 +260,7 @@
     <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h" />
     <ClInclude Include="..\..\trunk\source\Common\Global.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestPipeline.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h" />
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h" />
     <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h" />
@@ -278,6 +279,7 @@
     <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestPipeline.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp" />
