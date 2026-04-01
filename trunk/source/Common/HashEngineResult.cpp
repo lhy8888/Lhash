@@ -3,13 +3,6 @@
 #include "Common/HashEngineInternal.h"
 #include "Common/strhelper.h"
 
-#if defined (_WIN32)
-#include "WinCommon/WindowsComm.h"
-#if (defined (FHASH_UWP_LIB) || defined(FHASH_WUI_LIB))
-#include "WinCommon/FileVersionHelper.h"
-#endif
-#endif
-
 using namespace std;
 using namespace sunjwbase;
 
@@ -34,17 +27,8 @@ namespace HashEngineInternal
 			fSizes[fileIndex] = fsize;
 		}
 
-#if defined (_WIN32)
-#if (defined (FHASH_UWP_LIB) || defined(FHASH_WUI_LIB))
-		WindowsComm::FileVersionHelper fvHelper(osFile);
-		tstrFileVersion = fvHelper.Find();
+		tstrFileVersion = ResolveHashFileVersion(osFile, path);
 		result.meta.version = tstrFileVersion;
-		osFile.seek(0, OsFile::OsFileSeekFrom::OF_SEEK_BEGIN);
-#else
-		tstrFileVersion = WindowsComm::GetExeFileVersion((TCHAR *)path);
-		result.meta.version = tstrFileVersion;
-#endif
-#endif
 
 		EmitMetaResult(executionContext, result);
 		return fsize;

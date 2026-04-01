@@ -4025,6 +4025,39 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 WinUI native project should keep consuming the shared native core instead of compiling HashJobExecutionPlan.cpp directly.");
         }, failures);
 
+        Run("Phase 61 promotes file-version resolution into a dedicated resolver seam", () =>
+        {
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashFileVersionResolver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileVersionResolver.cpp");
+            string hashFileVersionResolverHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileVersionResolver.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashFileVersionResolverHeader, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", "Phase 61 HashFileVersionResolver.h does not yet expose file-version resolution.");
+            AssertContains(hashFileVersionResolver, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", "Phase 61 HashFileVersionResolver.cpp does not yet own file-version resolution.");
+            AssertContains(hashFileVersionResolver, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve WinUI/UWP file-version probing.");
+            AssertContains(hashFileVersionResolver, "return WindowsComm::GetExeFileVersion((TCHAR *)path);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve desktop file-version probing.");
+            AssertContains(hashEngineResult, "tstrFileVersion = ResolveHashFileVersion(osFile, path);", "Phase 61 HashEngineResult.cpp does not yet delegate file-version resolution.");
+            AssertContains(hashEngineResult, "result.meta.version = tstrFileVersion;", "Phase 61 HashEngineResult.cpp does not yet keep result-version projection after delegation.");
+            AssertDoesNotContain(hashEngineResult, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashEngineResult.cpp should stop carrying WinUI/UWP file-version probing details.");
+            AssertDoesNotContain(hashEngineResult, "WindowsComm::GetExeFileVersion((TCHAR *)path);", "Phase 61 HashEngineResult.cpp should stop carrying desktop file-version probing details.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashFileVersionResolver.h\"", "Phase 61 HashEngineInternal.h does not yet consume the HashFileVersionResolver seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileVersionResolver.cpp", "Phase 61 desktop native core project does not yet compile HashFileVersionResolver.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileVersionResolver.h", "Phase 61 desktop native core project does not yet include HashFileVersionResolver.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileVersionResolver.cpp", "Phase 61 desktop native core filters do not yet expose HashFileVersionResolver.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileVersionResolver.h", "Phase 61 desktop native core filters do not yet expose HashFileVersionResolver.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileVersionResolver.cpp", "Phase 61 UWP native project does not yet compile HashFileVersionResolver.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileVersionResolver.h", "Phase 61 UWP native project does not yet include HashFileVersionResolver.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileVersionResolver.cpp", "Phase 61 UWP native filters do not yet expose HashFileVersionResolver.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileVersionResolver.h", "Phase 61 UWP native filters do not yet expose HashFileVersionResolver.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileVersionResolver.cpp", "Phase 61 WinUI native project should keep consuming the shared native core instead of compiling HashFileVersionResolver.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

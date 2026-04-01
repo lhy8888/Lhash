@@ -8,6 +8,7 @@
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashFileAttemptWorkflow.h"
+#include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
