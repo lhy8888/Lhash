@@ -492,6 +492,7 @@ internal static partial class Program
             "\r\n",
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));

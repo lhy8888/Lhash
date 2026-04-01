@@ -38,6 +38,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestPipeline.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -86,6 +89,9 @@
       <Filter>算法</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\Global.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestPipeline.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h">

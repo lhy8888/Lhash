@@ -114,6 +114,7 @@ public sealed class HashContractUnitTests
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
+        string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
         string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
         string preparation = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEnginePreparation.cpp");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
@@ -162,13 +163,18 @@ public sealed class HashContractUnitTests
         Assert.Contains("ThreadPool threadPool(5);", scheduler, StringComparison.Ordinal);
 
         Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const tstring& fullPath", fileRunner, StringComparison.Ordinal);
-        Assert.Contains("static bool ProcessOpenedFileHashing(", fileRunner, StringComparison.Ordinal);
         Assert.Contains("YieldHashThread();", fileRunner, StringComparison.Ordinal);
+        Assert.Contains("bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", fileRunner, StringComparison.Ordinal);
         Assert.DoesNotContain("FileExecutionState executionState = { 0 };", fileRunner, StringComparison.Ordinal);
-        Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", fileRunner, StringComparison.Ordinal);
         Assert.Contains("ShouldStopHashExecution(*executionContext)", fileRunner, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", fileRunner, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", fileRunner, StringComparison.Ordinal);
+        Assert.Contains("bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("future<void> taskSHA512Update", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("future<void> taskSHA256Update", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("future<void> taskSHA1Update", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("future<void> taskMD5Update", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", digestPipeline, StringComparison.Ordinal);
 
         Assert.Contains("PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request", preparation, StringComparison.Ordinal);
         Assert.Contains("AppendHashExecutionResult(*executionContext)", preparation, StringComparison.Ordinal);
@@ -194,6 +200,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", publisher, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", publisher, StringComparison.Ordinal);
 
+        Assert.Contains("#include \"Common/HashDigestPipeline.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);

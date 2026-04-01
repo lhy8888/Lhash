@@ -2,6 +2,7 @@
 #define _HASH_ENGINE_INTERNAL_H_
 
 #include "Common/HashEngine.h"
+#include "Common/HashDigestPipeline.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
 #include "Common/HashResultPublisher.h"
