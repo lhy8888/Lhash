@@ -105,6 +105,7 @@ internal static class Program
             string fileRunner = string.Join(
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
@@ -129,7 +130,7 @@ internal static class Program
             AssertContains(engineImpl, "struct FileExecutionState", "HashEngine implementation set does not yet expose the grouped file-execution state bundle introduced after phase 3.");
             AssertContains(engineImpl, "InitializeFileHashing(", "HashEngine implementation set does not yet expose a tiny file-hashing initializer helper.");
             AssertContains(fileRunner, "static void YieldHashThread()", "HashFileRunner.cpp does not yet expose a tiny thread-yield helper.");
-            AssertContains(fileRunner, "uint64_t CalculateFileChunkIterations(", "HashDigestPipeline.cpp does not yet expose a tiny chunk-iteration helper.");
+            AssertContains(fileRunner, "uint64_t CalculateFileChunkIterations(", "HashDigestQueue.cpp does not yet expose a tiny chunk-iteration helper.");
             AssertContains(engineImpl, "UpdateWholeProgressAfterFile(", "HashEngine implementation set does not yet expose a tiny whole-progress helper.");
             AssertContains(engineImpl, "PopulateDigestResult(", "HashEngine implementation set does not yet expose a tiny digest-population helper.");
             AssertContains(engineImpl, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine implementation set does not yet expose the finalized digest bundle introduced after phase 3.");
@@ -226,7 +227,7 @@ internal static class Program
             AssertInOrder(fileRunner,
                 [
                     "uint64_t CalculateFileChunkIterations(",
-                    "return fsize / DataBuffer::preflen + 1;"
+                    "return fileSize / DigestDataBuffer::preflen + 1;"
                 ],
                 "HashEngine chunk-iteration helper no longer preserves the expected calculation.");
             AssertInOrder(engineImpl,
@@ -2074,6 +2075,7 @@ internal static class Program
             string fileRunner = string.Join(
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
@@ -3567,6 +3569,7 @@ internal static class Program
             string hashFileRunner = string.Join(
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
@@ -3658,6 +3661,8 @@ internal static class Program
         Run("Phase 52 promotes opened-file digest update orchestration into a dedicated digest pipeline seam", () =>
         {
             string hashFileRunner = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp");
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string hashDigestQueueHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.h");
             string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
             string hashDigestPipelineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
@@ -3670,26 +3675,41 @@ internal static class Program
             AssertContains(hashFileRunner, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", "Phase 52 HashFileRunner.cpp does not yet delegate opened-file digest updates through the digest pipeline seam.");
             AssertDoesNotContain(hashFileRunner, "future<void> taskSHA512Update", "Phase 52 HashFileRunner.cpp still owns SHA512 digest worker futures instead of delegating them to HashDigestPipeline.");
 
+            AssertContains(hashDigestQueueHeader, "class DigestDataBuffer", "Phase 52 HashDigestQueue.h does not yet expose queue buffer state.");
+            AssertContains(hashDigestQueueHeader, "uint64_t CalculateFileChunkIterations(uint64_t fileSize);", "Phase 52 HashDigestQueue.h does not yet expose chunk-iteration calculation.");
+            AssertContains(hashDigestQueueHeader, "bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", "Phase 52 HashDigestQueue.h does not yet expose parallel digest queue processing.");
+            AssertContains(hashDigestQueue, "DigestDataBuffer::DigestDataBuffer()", "Phase 52 HashDigestQueue.cpp does not yet own buffered digest update state.");
+            AssertContains(hashDigestQueue, "uint64_t CalculateFileChunkIterations(uint64_t fileSize)", "Phase 52 HashDigestQueue.cpp does not yet own chunk-iteration calculations.");
+            AssertContains(hashDigestQueue, "bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", "Phase 52 HashDigestQueue.cpp does not yet own parallel opened-file digest queue processing.");
+
             AssertContains(hashDigestPipelineHeader, "uint64_t CalculateFileChunkIterations(uint64_t fsize);", "Phase 52 HashDigestPipeline.h does not yet expose the chunk-iteration helper seam.");
             AssertContains(hashDigestPipelineHeader, "bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", "Phase 52 HashDigestPipeline.h does not yet expose the opened-file digest pipeline seam.");
-            AssertContains(hashDigestPipeline, "class DataBuffer", "Phase 52 HashDigestPipeline.cpp does not yet own buffered digest update state.");
-            AssertContains(hashDigestPipeline, "uint64_t CalculateFileChunkIterations(uint64_t fsize)", "Phase 52 HashDigestPipeline.cpp does not yet own chunk-iteration calculations.");
             AssertContains(hashDigestPipeline, "bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", "Phase 52 HashDigestPipeline.cpp does not yet own opened-file digest update orchestration.");
             AssertContains(hashDigestPipeline, "DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest update selection through the new digest update request seam.");
-            AssertContains(hashDigestPipeline, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestPipeline.cpp does not yet delegate parallel digest updates to the digest updater seam.");
+            AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestQueue.cpp does not yet delegate parallel digest updates to the digest updater seam.");
             AssertContains(hashDigestPipeline, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 52 HashDigestPipeline.cpp does not yet delegate sequential digest updates to the digest updater seam.");
-            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 52 HashDigestPipeline.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 52 HashDigestQueue.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
             AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 52 HashDigestPipeline.cpp does not yet route single-thread progress updates through the progress tracker seam.");
 
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueue.h\"", "Phase 52 HashEngineInternal.h does not yet consume the digest queue seam.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestPipeline.h\"", "Phase 52 HashEngineInternal.h does not yet consume the digest pipeline seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 52 desktop native core project does not yet compile HashDigestQueue.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 52 desktop native core project does not yet include HashDigestQueue.h.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 desktop native core project does not yet compile HashDigestPipeline.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.h", "Phase 52 desktop native core project does not yet include HashDigestPipeline.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 52 desktop native core filters do not yet expose HashDigestQueue.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 52 desktop native core filters do not yet expose HashDigestQueue.h.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 desktop native core filters do not yet expose HashDigestPipeline.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestPipeline.h", "Phase 52 desktop native core filters do not yet expose HashDigestPipeline.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 52 UWP native project does not yet compile HashDigestQueue.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 52 UWP native project does not yet include HashDigestQueue.h.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 UWP native project does not yet compile HashDigestPipeline.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.h", "Phase 52 UWP native project does not yet include HashDigestPipeline.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 52 UWP native filters do not yet expose HashDigestQueue.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 52 UWP native filters do not yet expose HashDigestQueue.h.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 UWP native filters do not yet expose HashDigestPipeline.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestPipeline.h", "Phase 52 UWP native filters do not yet expose HashDigestPipeline.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 52 WinUI native project should keep consuming the shared native core instead of compiling HashDigestQueue.cpp directly.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 WinUI native project should keep consuming the shared native core instead of compiling HashDigestPipeline.cpp directly.");
         }, failures);
 
@@ -3735,6 +3755,7 @@ internal static class Program
 
         Run("Phase 54 promotes progress computation and event publication into a dedicated progress tracker seam", () =>
         {
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
             string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
             string hashProgressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
             string hashProgressTrackerHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.h");
@@ -3750,7 +3771,7 @@ internal static class Program
             AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashProgressTracker.cpp does not yet own per-file progress publication.");
             AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", "Phase 54 HashProgressTracker.cpp does not yet own whole-job progress publication.");
 
-            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 54 HashDigestPipeline.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 54 HashDigestQueue.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
             AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 54 HashDigestPipeline.cpp does not yet delegate single-thread progress updates to HashProgressTracker.");
             AssertDoesNotContain(hashDigestPipeline, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashDigestPipeline.cpp still publishes per-file progress directly instead of routing through HashProgressTracker.");
 
@@ -3764,6 +3785,43 @@ internal static class Program
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 UWP native filters do not yet expose HashProgressTracker.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.h", "Phase 54 UWP native filters do not yet expose HashProgressTracker.h.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 WinUI native project should keep consuming the shared native core instead of compiling HashProgressTracker.cpp directly.");
+        }, failures);
+
+        Run("Phase 55 promotes digest queue buffering and producer-consumer coordination into a dedicated queue seam", () =>
+        {
+            string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string hashDigestQueueHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashDigestQueueHeader, "class DigestDataBuffer", "Phase 55 HashDigestQueue.h does not yet expose queue buffer state.");
+            AssertContains(hashDigestQueueHeader, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);", "Phase 55 HashDigestQueue.h does not yet expose digest chunk reads.");
+            AssertContains(hashDigestQueueHeader, "bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", "Phase 55 HashDigestQueue.h does not yet expose parallel producer-consumer processing.");
+            AssertContains(hashDigestQueue, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", "Phase 55 HashDigestQueue.cpp does not yet own digest chunk reading.");
+            AssertContains(hashDigestQueue, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestQueue.cpp does not yet own queued digest buffers.");
+            AssertContains(hashDigestQueue, "condition_variable cvFile;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer file queue signaling.");
+            AssertContains(hashDigestQueue, "condition_variable cvCalc;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer calculator queue signaling.");
+            AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 55 HashDigestQueue.cpp does not yet own queued digest updates.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 55 HashDigestQueue.cpp does not yet own queued progress publication.");
+
+            AssertContains(hashDigestPipeline, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);", "Phase 55 HashDigestPipeline.cpp does not yet delegate producer-consumer queue orchestration to HashDigestQueue.");
+            AssertDoesNotContain(hashDigestPipeline, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestPipeline.cpp still owns digest queue buffers instead of delegating them to HashDigestQueue.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueue.h\"", "Phase 55 HashEngineInternal.h does not yet consume the digest queue seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 desktop native core project does not yet compile HashDigestQueue.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 55 desktop native core project does not yet include HashDigestQueue.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 desktop native core filters do not yet expose HashDigestQueue.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 55 desktop native core filters do not yet expose HashDigestQueue.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 UWP native project does not yet compile HashDigestQueue.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 55 UWP native project does not yet include HashDigestQueue.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 UWP native filters do not yet expose HashDigestQueue.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueue.h", "Phase 55 UWP native filters do not yet expose HashDigestQueue.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 WinUI native project should keep consuming the shared native core instead of compiling HashDigestQueue.cpp directly.");
         }, failures);
 
         if (failures.Count > 0)
@@ -3804,6 +3862,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"),
