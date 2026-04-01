@@ -4,6 +4,7 @@
 #include "Common/HashEngine.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
+#include "Common/HashResultPublisher.h"
 #include "Common/HashRequest.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
@@ -83,25 +84,10 @@ namespace HashEngineInternal
 	uint64_t PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result,
 		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
 	void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);
-	void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);
 	const sunjwbase::tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType);
 	void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);
 	void PopulateDigestResult(const HashRequest& request, HashResult& result, const FinalizedDigestBundle& digestBundle);
 	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle);
-
-	void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
-		FileExecutionState& executionState);
-	void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
-		FileExecutionState& executionState);
-	void EmitMetaResult(HashExecutionContext *executionContext, HashResult& result);
-	void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase);
-	void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result);
-	void EmitErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);
-	void EmitOpenFileError(HashExecutionContext *executionContext, HashResult& result, const TCHAR *errorText);
-	void EmitReadFileError(HashExecutionContext *executionContext, HashResult& result);
-	void FinishFileProcessing(HashExecutionContext *executionContext);
-	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
-		FileExecutionState& executionState);
 }
 
 #endif

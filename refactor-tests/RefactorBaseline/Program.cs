@@ -359,13 +359,13 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "EmitOpenFileError(",
-                    "EmitErrorMessageResult(executionContext, result, tstring(errorText));"
+                    "EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));"
                 ],
                 "HashEngine open-file error helper no longer preserves the expected emission order.");
             AssertInOrder(engineImpl,
                 [
                     "EmitReadFileError(",
-                    "EmitErrorMessageResult(executionContext, result, strtotstr(string(\"Failed to read file while hashing.\")));"
+                    "EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string(\"Failed to read file while hashing.\")));"
                 ],
                 "HashEngine read-file error helper no longer preserves the expected emission order.");
             AssertInOrder(engineImpl,
@@ -2063,7 +2063,7 @@ internal static class Program
             AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
         }, failures);
 
-        Run("Phase 10 splits HashEngine preparation and result-finalization helpers into dedicated implementation files", () =>
+        Run("Phase 10 splits HashEngine preparation, result-finalization, and result-publication helpers into dedicated implementation files", () =>
         {
             string engine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string fileRunner = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp");
@@ -2071,6 +2071,7 @@ internal static class Program
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -2097,14 +2098,15 @@ internal static class Program
             AssertContains(engineResult, "uint64_t PrepareFileMetaResult(", "HashEngineResult.cpp does not yet own the file-metadata helper.");
             AssertContains(engineResult, "void InitializeFileHashing(", "HashEngineResult.cpp does not yet own the file-hashing initialization helper.");
             AssertContains(engineResult, "void FinalizeDigestStrings(", "HashEngineResult.cpp does not yet own digest finalization.");
-            AssertContains(engineResult, "void CompleteSuccessfulFileHashing(", "HashEngineResult.cpp does not yet own successful-file completion.");
-            AssertContains(engineResult, "void CompleteFileAttempt(", "HashEngineResult.cpp does not yet own file-attempt completion.");
+            AssertContains(resultPublisher, "void CompleteSuccessfulFileHashing(", "HashResultPublisher.cpp does not yet own successful-file completion.");
+            AssertContains(resultPublisher, "void CompleteFileAttempt(", "HashResultPublisher.cpp does not yet own file-attempt completion.");
             AssertContains(fileRunner, "bool RunFileHashAttempt(", "HashFileRunner.cpp does not yet own the single-file execution seam.");
             AssertContains(scheduler, "FileExecutionState executionState = { 0 };", "HashScheduler.cpp does not yet preserve grouped file-execution state for the runner seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core project does not yet compile HashFileRunner.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core project does not yet compile HashEngineResult.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core project does not yet compile HashResultPublisher.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineInternal.h", "Desktop native core project does not yet include HashEngineInternal.h.");
             AssertContains(nativeProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "Desktop native core project is missing the standalone SolutionDir fallback required by the direct CI build.");
             AssertContains(nativeProject, "<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", "Desktop native core project is missing the runtime-variant suffix required for CLR-compatible WinUI builds.");
@@ -2115,6 +2117,7 @@ internal static class Program
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core filters do not yet expose HashFileRunner.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core filters do not yet expose HashResultPublisher.cpp.");
 
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "WinUI native project still compiles HashFileRunner.cpp instead of consuming fHashNativeCore.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming fHashNativeCore.");
@@ -2122,6 +2125,7 @@ internal static class Program
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "UWP native project does not yet compile HashFileRunner.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "UWP native project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "UWP native project does not yet compile HashEngineResult.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "UWP native project does not yet compile HashResultPublisher.cpp.");
         }, failures);
 
         Run("Phase 11 introduces a dedicated hash-algorithm registry seam while keeping the current four built-in algorithms intact", () =>
@@ -3140,7 +3144,9 @@ internal static class Program
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
-            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashEngineResult = string.Join("\r\n",
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 34 hash progress sink header is missing the neutral sink seam.");
@@ -3186,7 +3192,9 @@ internal static class Program
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
-            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashEngineResult = string.Join("\r\n",
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
 
             AssertContains(progressEvent, "CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", "Phase 35 does not yet expose ProgressEvent creation directly from HashResult.");
             AssertContains(progressEvent, "CreateFileStartedProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-started events directly from HashResult.");
@@ -3597,6 +3605,41 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashScheduler.cpp", "Phase 50 WinUI native project should keep consuming the shared native core instead of compiling HashScheduler.cpp directly.");
         }, failures);
 
+        Run("Phase 51 promotes result publication into a dedicated publisher seam so digest finalization and event emission stop sharing one file", () =>
+        {
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashResultPublisherHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+
+            AssertContains(hashEngineResult, "PrepareFileMetaResult(", "Phase 51 HashEngineResult.cpp should still own file metadata result preparation.");
+            AssertContains(hashEngineResult, "FinalizeDigestStrings(", "Phase 51 HashEngineResult.cpp should still own digest finalization.");
+            AssertDoesNotContain(hashEngineResult, "void CompleteSuccessfulFileHashing(", "Phase 51 HashEngineResult.cpp still owns successful file publication.");
+            AssertDoesNotContain(hashEngineResult, "void EmitHashResult(", "Phase 51 HashEngineResult.cpp still owns hash-ready publication.");
+
+            AssertContains(hashResultPublisherHeader, "struct FileExecutionState;", "Phase 51 HashResultPublisher.h does not yet forward declare the grouped file execution state.");
+            AssertContains(hashResultPublisherHeader, "void CompleteSuccessfulFileHashing(", "Phase 51 HashResultPublisher.h does not yet expose the successful-file publisher seam.");
+            AssertContains(hashResultPublisherHeader, "void EmitHashResult(", "Phase 51 HashResultPublisher.h does not yet expose the hash-ready publisher seam.");
+            AssertContains(hashResultPublisher, "void UpdateWholeProgressAfterFile(", "Phase 51 HashResultPublisher.cpp does not yet own whole-progress publication.");
+            AssertContains(hashResultPublisher, "void CompleteSuccessfulFileHashing(", "Phase 51 HashResultPublisher.cpp does not yet own the successful-file publisher seam.");
+            AssertContains(hashResultPublisher, "void CompleteOpenedFileAttempt(", "Phase 51 HashResultPublisher.cpp does not yet own the opened-file completion publisher seam.");
+            AssertContains(hashResultPublisher, "void EmitHashResult(", "Phase 51 HashResultPublisher.cpp does not yet own the hash-ready publisher seam.");
+            AssertContains(hashResultPublisher, "void EmitErrorResult(", "Phase 51 HashResultPublisher.cpp does not yet own the error publisher seam.");
+            AssertContains(hashResultPublisher, "void FinishFileProcessing(", "Phase 51 HashResultPublisher.cpp does not yet own the file-finished publisher seam.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashResultPublisher.h\"", "Phase 51 HashEngineInternal.h does not yet consume the publisher seam.");
+            AssertDoesNotContain(hashEngineInternal, "void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", "Phase 51 HashEngineInternal.h still directly declares the hash-ready publisher helper.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Phase 51 desktop native core project does not yet compile HashResultPublisher.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Phase 51 desktop native core filters do not yet expose HashResultPublisher.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Phase 51 UWP native project does not yet compile HashResultPublisher.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Phase 51 UWP native filters do not yet expose HashResultPublisher.cpp.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -3637,7 +3680,8 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
-            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"));
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
     }
 
     private static Encoding DetectEncoding(string path)

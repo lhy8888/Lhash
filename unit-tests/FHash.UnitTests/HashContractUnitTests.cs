@@ -117,6 +117,7 @@ public sealed class HashContractUnitTests
         string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
         string preparation = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEnginePreparation.cpp");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
+        string publisher = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultPublisher.cpp");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
@@ -179,10 +180,21 @@ public sealed class HashContractUnitTests
         Assert.Contains("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
         Assert.Contains("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
         Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", result, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", result, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void CompleteSuccessfulFileHashing(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void CompleteOpenedFileAttempt(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitHashResult(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitErrorResult(", result, StringComparison.Ordinal);
 
+        Assert.Contains("void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", publisher, StringComparison.Ordinal);
+        Assert.Contains("void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
+        Assert.Contains("void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
+        Assert.Contains("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", publisher, StringComparison.Ordinal);
+        Assert.Contains("void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)", publisher, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", publisher, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", publisher, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", publisher, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
@@ -191,6 +203,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes);", internalHeader, StringComparison.Ordinal);
         Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", internalHeader, StringComparison.Ordinal);
         Assert.Contains("FileExecutionState *executionState", internalHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", internalHeader, StringComparison.Ordinal);
     }
 
     [Fact]

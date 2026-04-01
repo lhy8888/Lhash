@@ -1,0 +1,114 @@
+#include "stdafx.h"
+
+#include "Common/HashEngineInternal.h"
+
+namespace HashEngineInternal
+{
+	void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		if (!isSizeCaled)
+		{
+			if (GetHashRequestFileCount(request) == 0)
+			{
+				observer->onProgressEvent(CreateTotalProgressEvent(0));
+			}
+			else
+			{
+				int progressMax = observer->progressMax();
+				observer->onProgressEvent(CreateTotalProgressEvent((fileIndex + 1) * progressMax / static_cast<int>(GetHashRequestFileCount(request))));
+			}
+		}
+	}
+
+	void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
+		FileExecutionState& executionState)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
+
+		FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);
+		UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);
+
+		executionState.fileAttemptState.osFile->close();
+
+		PopulateDigestResult(request, result, executionState.digestBundle);
+		if (!result.digests.empty())
+		{
+			EmitHashResult(executionContext, result, GetHashRequestUppercaseDigest(request));
+		}
+	}
+
+	void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
+		FileExecutionState& executionState)
+	{
+		if (executionState.fileAttemptState.readFailed)
+		{
+			executionState.fileAttemptState.osFile->close();
+			EmitReadFileError(executionContext, result);
+		}
+		else
+		{
+			CompleteSuccessfulFileHashing(executionContext, request, result, fileIndex, isSizeCaled, executionState);
+		}
+
+		FinishFileProcessing(executionContext);
+	}
+
+	void EmitMetaResult(HashExecutionContext *executionContext, HashResult& result)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		result.state = RESULT_META;
+		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
+	}
+
+	void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		result.state = RESULT_ALL;
+		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
+	}
+
+	void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		result.state = RESULT_ERROR;
+		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
+	}
+
+	void EmitErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)
+	{
+		result.error = errorText;
+		EmitErrorResult(executionContext, result);
+	}
+
+	void EmitOpenFileError(HashExecutionContext *executionContext, HashResult& result, const TCHAR *errorText)
+	{
+		EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));
+	}
+
+	void EmitReadFileError(HashExecutionContext *executionContext, HashResult& result)
+	{
+		EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string("Failed to read file while hashing.")));
+	}
+
+	void FinishFileProcessing(HashExecutionContext *executionContext)
+	{
+		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
+		observer->onProgressEvent(CreateFileFinishedProgressEvent());
+	}
+
+	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
+		FileExecutionState& executionState)
+	{
+		if (executionState.fileAttemptState.isFileOpened)
+		{
+			CompleteOpenedFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);
+		}
+		else
+		{
+			EmitOpenFileError(executionContext, result, executionState.fileAttemptState.openErrorText);
+			FinishFileProcessing(executionContext);
+		}
+	}
+}

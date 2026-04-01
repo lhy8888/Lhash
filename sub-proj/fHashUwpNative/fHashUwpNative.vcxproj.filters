@@ -95,6 +95,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">
       <Filter>算法</Filter>
     </ClCompile>

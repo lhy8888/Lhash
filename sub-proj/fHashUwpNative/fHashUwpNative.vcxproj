@@ -280,6 +280,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEngineResult.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\strhelper.cpp" />
     <ClCompile Include="..\..\trunk\source\OsUtils\OsThreadWinApi.cpp" />
     <ClCompile Include="..\..\trunk\source\WinCommon\FileVersionHelper.cpp" />
