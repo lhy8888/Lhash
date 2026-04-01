@@ -37,11 +37,11 @@ namespace HashEngineInternal
 		HashResult& result = BeginFileHashAttempt(executionContext, fullPath, executionState, &path);
 
 #if defined (_WIN32)
-		TCHAR fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
+		TCHAR fExc[sunjwbase::OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 #else
-		char fExc[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
+		char fExc[sunjwbase::OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 #endif
-		OsFile osFile(path);
+		sunjwbase::OsFile osFile(path);
 		InitializeFileAttemptState(path, &osFile, &executionState->fileAttemptState);
 		OpenFileForHashing(&executionState->fileAttemptState, (void *)&fExc);
 		if (executionState->fileAttemptState.isFileOpened)
