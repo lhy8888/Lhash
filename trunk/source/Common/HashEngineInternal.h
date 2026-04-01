@@ -2,15 +2,18 @@
 #define _HASH_ENGINE_INTERNAL_H_
 
 #include "Common/HashEngine.h"
+#include "Common/HashDigestExecution.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestPipeline.h"
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
+#include "Common/HashFileAttemptWorkflow.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
 #include "Common/HashResultPublisher.h"
 #include "Common/HashRequest.h"
+#include "Common/HashSchedulerDispatch.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "Common/ThreadDataInputAccess.h"
 #include "Common/ThreadDataResultAccess.h"

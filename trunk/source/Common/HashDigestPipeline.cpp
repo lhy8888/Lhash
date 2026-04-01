@@ -19,12 +19,11 @@ namespace HashEngineInternal
 		uint64_t times = CalculateFileChunkIterations(fsize);
 		(void)times;
 
-		bool wasStopped = false;
+		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		wasStopped = ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);
-#else
-		wasStopped = ProcessOpenedFileHashingSinglePass(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState);
+			, threadPool
 #endif
+		);
 		if (wasStopped)
 		{
 			executionState->fileAttemptState.osFile->close();

@@ -38,6 +38,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestExecution.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -50,10 +53,16 @@
     <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp">
@@ -103,6 +112,9 @@
     <ClInclude Include="..\..\trunk\source\Common\Global.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestExecution.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -115,6 +127,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -125,6 +140,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashResultPublisher.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSchedulerDispatch.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h">
