@@ -178,6 +178,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestPipeline.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestSinglePass.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\..\trunk\source\Common\Global.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestPipeline.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestSinglePass.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h" />

@@ -4,6 +4,7 @@
 #include "Common/HashEngine.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestPipeline.h"
+#include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"

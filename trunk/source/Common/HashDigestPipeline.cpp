@@ -19,33 +19,17 @@ namespace HashEngineInternal
 		uint64_t times = CalculateFileChunkIterations(fsize);
 		(void)times;
 
+		bool wasStopped = false;
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		bool wasStopped = ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);
+		wasStopped = ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);
+#else
+		wasStopped = ProcessOpenedFileHashingSinglePass(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState);
+#endif
 		if (wasStopped)
 		{
 			executionState->fileAttemptState.osFile->close();
 			return true;
 		}
-#else
-		bool isFileFinished = false;
-		DigestDataBuffer databuf;
-		do
-		{
-			if (ShouldStopHashExecution(*executionContext))
-			{
-				break;
-			}
-
-			if (ReadDigestDataBuffer(executionState, databuf))
-			{
-				UpdateDigestContextsSequential(digestUpdateRequest, executionState->hashContexts, databuf.data, databuf.datalen);
-				UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
-			}
-
-			isFileFinished = (databuf.datalen < GetDigestDataBufferPreferredLength());
-		}
-		while (!isFileFinished && !executionState->fileAttemptState.readFailed);
-#endif
 
 		if (ShouldStopHashExecution(*executionContext))
 		{
