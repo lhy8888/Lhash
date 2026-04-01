@@ -5,6 +5,7 @@
 #include "Common/HashDigestExecution.h"
 #include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestQueue.h"
+#include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestPipeline.h"
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"

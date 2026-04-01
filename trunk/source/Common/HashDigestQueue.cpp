@@ -57,7 +57,7 @@ namespace HashEngineInternal
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
-		FileExecutionState *executionState, ThreadPool *threadPool)
+		const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
 		bool isFileFinished = false;
 
@@ -123,7 +123,7 @@ namespace HashEngineInternal
 				unique_lock<mutex> lock(mtxQueue);
 				cvFile.wait(lock, [&]
 				{
-					return (queueDataBuffer.size() < 4 || ShouldStopHashExecution(*executionContext));
+					return (queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan) || ShouldStopHashExecution(*executionContext));
 				});
 				queueDataBuffer.push(std::move(ptrDataBufFile));
 			}

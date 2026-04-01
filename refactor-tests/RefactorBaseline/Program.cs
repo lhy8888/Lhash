@@ -186,7 +186,7 @@ internal static class Program
                     "InitializeFileHashing(",
                     "uint64_t fsize = PrepareFileMetaResult(",
                     "uint64_t times = CalculateFileChunkIterations(fsize);",
-                    "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, fsize, isSizeCaled, executionState",
+                    "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, digestQueuePlan, fsize, isSizeCaled, executionState",
                     "return false;"
                 ],
                 "HashEngine opened-file processing helper no longer preserves the expected read-loop order.");
@@ -3716,9 +3716,10 @@ internal static class Program
             AssertContains(hashDigestPipeline, "bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", "Phase 52 HashDigestPipeline.cpp does not yet own opened-file digest update orchestration.");
             AssertContains(hashDigestPipeline, "const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest update selection through the job execution-plan seam.");
             AssertContains(hashDigestPipeline, "HashDigestExecutionMode digestExecutionMode = GetHashJobDigestExecutionMode(executionState->executionPlan);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest execution-mode selection through the job execution-plan seam.");
-            AssertContains(hashDigestExecution, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, uint64_t fsize, bool isSizeCaled,", "Phase 52 HashDigestExecution.cpp does not yet expose digest execution dispatch.");
+            AssertContains(hashDigestPipeline, "const HashDigestQueuePlan& digestQueuePlan = GetHashJobDigestQueuePlan(executionState->executionPlan);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest queue planning through the job execution-plan seam.");
+            AssertContains(hashDigestExecution, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, const HashDigestQueuePlan& digestQueuePlan, uint64_t fsize, bool isSizeCaled,", "Phase 52 HashDigestExecution.cpp does not yet expose digest execution dispatch.");
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestQueue.cpp does not yet delegate parallel digest updates to the digest updater seam.");
-            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, fsize, isSizeCaled, executionState", "Phase 52 HashDigestPipeline.cpp does not yet delegate digest execution dispatch to HashDigestExecution.");
+            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, digestQueuePlan, fsize, isSizeCaled, executionState", "Phase 52 HashDigestPipeline.cpp does not yet delegate digest execution dispatch to HashDigestExecution.");
             AssertContains(hashDigestSinglePass, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 52 HashDigestSinglePass.cpp does not yet delegate sequential digest updates to the digest updater seam.");
             AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 52 HashDigestQueue.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
             AssertContains(hashDigestSinglePass, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 52 HashDigestSinglePass.cpp does not yet route single-thread progress updates through the progress tracker seam.");
@@ -3806,7 +3807,7 @@ internal static class Program
             AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", "Phase 54 HashProgressTracker.cpp does not yet own whole-job progress publication.");
 
             AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 54 HashDigestQueue.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
-            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, fsize, isSizeCaled, executionState", "Phase 54 HashDigestPipeline.cpp does not yet delegate digest execution through HashDigestExecution.");
+            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, digestQueuePlan, fsize, isSizeCaled, executionState", "Phase 54 HashDigestPipeline.cpp does not yet delegate digest execution through HashDigestExecution.");
             AssertContains(hashDigestExecution, "ProcessOpenedFileHashingSinglePass(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState);", "Phase 54 HashDigestExecution.cpp does not yet delegate single-thread digest processing through HashDigestSinglePass.");
             AssertContains(hashDigestSinglePass, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 54 HashDigestSinglePass.cpp does not yet delegate single-thread progress updates to HashProgressTracker.");
             AssertDoesNotContain(hashDigestPipeline, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashDigestPipeline.cpp still publishes per-file progress directly instead of routing through HashProgressTracker.");
@@ -3839,14 +3840,16 @@ internal static class Program
             AssertContains(hashDigestQueueHeader, "class DigestDataBuffer", "Phase 55 HashDigestQueue.h does not yet expose queue buffer state.");
             AssertContains(hashDigestQueueHeader, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);", "Phase 55 HashDigestQueue.h does not yet expose digest chunk reads.");
             AssertContains(hashDigestQueueHeader, "bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", "Phase 55 HashDigestQueue.h does not yet expose parallel producer-consumer processing.");
+            AssertContains(hashDigestQueueHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 55 HashDigestQueue.h does not yet expose queue planning controls for parallel producer-consumer processing.");
             AssertContains(hashDigestQueue, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", "Phase 55 HashDigestQueue.cpp does not yet own digest chunk reading.");
             AssertContains(hashDigestQueue, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestQueue.cpp does not yet own queued digest buffers.");
             AssertContains(hashDigestQueue, "condition_variable cvFile;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer file queue signaling.");
             AssertContains(hashDigestQueue, "condition_variable cvCalc;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer calculator queue signaling.");
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 55 HashDigestQueue.cpp does not yet own queued digest updates.");
             AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 55 HashDigestQueue.cpp does not yet own queued progress publication.");
+            AssertContains(hashDigestQueue, "queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan)", "Phase 55 HashDigestQueue.cpp does not yet route queue throttling through queue-plan controls.");
 
-            AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);", "Phase 55 HashDigestExecution.cpp does not yet delegate producer-consumer queue orchestration to HashDigestQueue.");
+            AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, digestQueuePlan, executionState, threadPool);", "Phase 55 HashDigestExecution.cpp does not yet delegate producer-consumer queue orchestration to HashDigestQueue.");
             AssertDoesNotContain(hashDigestPipeline, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestPipeline.cpp still owns digest queue buffers instead of delegating them to HashDigestQueue.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueue.h\"", "Phase 55 HashEngineInternal.h does not yet consume the digest queue seam.");
@@ -3908,12 +3911,13 @@ internal static class Program
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
-            AssertContains(hashDigestExecutionHeader, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, uint64_t fsize, bool isSizeCaled,", "Phase 57 HashDigestExecution.h does not yet expose digest execution strategy dispatch.");
-            AssertContains(hashDigestExecution, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, uint64_t fsize, bool isSizeCaled,", "Phase 57 HashDigestExecution.cpp does not yet own digest execution strategy dispatch.");
+            AssertContains(hashDigestExecutionHeader, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, const HashDigestQueuePlan& digestQueuePlan, uint64_t fsize, bool isSizeCaled,", "Phase 57 HashDigestExecution.h does not yet expose digest execution strategy dispatch.");
+            AssertContains(hashDigestExecutionHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 57 HashDigestExecution.h does not yet expose planned queue controls in digest execution strategy dispatch.");
+            AssertContains(hashDigestExecution, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, const HashDigestQueuePlan& digestQueuePlan, uint64_t fsize, bool isSizeCaled,", "Phase 57 HashDigestExecution.cpp does not yet own digest execution strategy dispatch.");
             AssertContains(hashDigestExecution, "if (IsParallelHashDigestExecutionMode(digestExecutionMode))", "Phase 57 HashDigestExecution.cpp does not yet route strategy selection through the execution-mode seam.");
-            AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState, threadPool);", "Phase 57 HashDigestExecution.cpp does not yet dispatch to parallel digest execution.");
+            AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, digestQueuePlan, executionState, threadPool);", "Phase 57 HashDigestExecution.cpp does not yet dispatch to parallel digest execution.");
             AssertContains(hashDigestExecution, "ProcessOpenedFileHashingSinglePass(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState);", "Phase 57 HashDigestExecution.cpp does not yet dispatch to single-pass digest execution.");
-            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, fsize, isSizeCaled, executionState", "Phase 57 HashDigestPipeline.cpp does not yet delegate digest execution strategy dispatch.");
+            AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, digestQueuePlan, fsize, isSizeCaled, executionState", "Phase 57 HashDigestPipeline.cpp does not yet delegate digest execution strategy dispatch.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestExecution.h\"", "Phase 57 HashEngineInternal.h does not yet consume the HashDigestExecution seam.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestExecution.cpp", "Phase 57 desktop native core project does not yet compile HashDigestExecution.cpp.");
@@ -4005,20 +4009,26 @@ internal static class Program
             AssertContains(hashJobExecutionPlanHeader, "struct HashJobExecutionPlan", "Phase 60 HashJobExecutionPlan.h does not yet define the job execution plan contract.");
             AssertContains(hashJobExecutionPlanHeader, "DigestUpdateRequest digestUpdateRequest;", "Phase 60 HashJobExecutionPlan.h does not yet expose digest update selection in the job execution plan.");
             AssertContains(hashJobExecutionPlanHeader, "HashDigestExecutionMode digestExecutionMode;", "Phase 60 HashJobExecutionPlan.h does not yet expose digest execution-mode selection in the job execution plan.");
+            AssertContains(hashJobExecutionPlanHeader, "HashDigestQueuePlan digestQueuePlan;", "Phase 60 HashJobExecutionPlan.h does not yet expose digest queue planning in the job execution plan.");
             AssertContains(hashJobExecutionPlanHeader, "void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose job execution-plan initialization.");
             AssertContains(hashJobExecutionPlanHeader, "const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose digest request access.");
             AssertContains(hashJobExecutionPlanHeader, "HashDigestExecutionMode GetHashJobDigestExecutionMode(const HashJobExecutionPlan& executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose digest execution-mode access.");
+            AssertContains(hashJobExecutionPlanHeader, "const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose digest queue planning access.");
             AssertContains(hashJobExecutionPlan, "void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own job execution-plan initialization.");
             AssertContains(hashJobExecutionPlan, "executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest request initialization.");
             AssertContains(hashJobExecutionPlan, "executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest execution-mode initialization.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest queue-plan initialization.");
             AssertContains(hashJobExecutionPlan, "const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest request retrieval.");
             AssertContains(hashJobExecutionPlan, "return executionPlan.digestUpdateRequest;", "Phase 60 HashJobExecutionPlan.cpp does not yet return the planned digest request.");
             AssertContains(hashJobExecutionPlan, "HashDigestExecutionMode GetHashJobDigestExecutionMode(const HashJobExecutionPlan& executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest execution-mode retrieval.");
             AssertContains(hashJobExecutionPlan, "return executionPlan.digestExecutionMode;", "Phase 60 HashJobExecutionPlan.cpp does not yet return the planned digest execution mode.");
+            AssertContains(hashJobExecutionPlan, "const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest queue-plan retrieval.");
+            AssertContains(hashJobExecutionPlan, "return executionPlan.digestQueuePlan;", "Phase 60 HashJobExecutionPlan.cpp does not yet return the planned digest queue-plan.");
 
             AssertContains(hashScheduler, "InitializeHashJobExecutionPlan(request, &executionState.executionPlan);", "Phase 60 HashScheduler.cpp does not yet initialize job execution plans once per request.");
             AssertContains(hashDigestPipeline, "GetHashJobDigestUpdateRequest(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest request from file execution state.");
             AssertContains(hashDigestPipeline, "GetHashJobDigestExecutionMode(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest execution mode from file execution state.");
+            AssertContains(hashDigestPipeline, "GetHashJobDigestQueuePlan(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest queue controls from file execution state.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashJobExecutionPlan.h\"", "Phase 60 HashEngineInternal.h does not yet consume the HashJobExecutionPlan seam.");
             AssertContains(hashEngineInternal, "HashJobExecutionPlan executionPlan;", "Phase 60 HashEngineInternal.h does not yet keep job execution-plan state in grouped file execution state.");
@@ -4113,6 +4123,56 @@ internal static class Program
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestExecutionMode.cpp", "Phase 62 UWP native filters do not yet expose HashDigestExecutionMode.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestExecutionMode.h", "Phase 62 UWP native filters do not yet expose HashDigestExecutionMode.h.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestExecutionMode.cpp", "Phase 62 WinUI native project should keep consuming the shared native core instead of compiling HashDigestExecutionMode.cpp directly.");
+        }, failures);
+
+        Run("Phase 63 promotes digest queue planning into a dedicated queue-plan seam", () =>
+        {
+            string hashDigestQueuePlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueuePlan.cpp");
+            string hashDigestQueuePlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueuePlan.h");
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string hashDigestQueueHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.h");
+            string hashDigestExecution = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp");
+            string hashDigestExecutionHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.h");
+            string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
+            string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+            string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashDigestQueuePlanHeader, "struct HashDigestQueuePlan", "Phase 63 HashDigestQueuePlan.h does not yet expose the queue-plan contract.");
+            AssertContains(hashDigestQueuePlanHeader, "size_t maxBufferedChunkCount;", "Phase 63 HashDigestQueuePlan.h does not yet expose queue buffering controls.");
+            AssertContains(hashDigestQueuePlanHeader, "HashDigestQueuePlan CreateHashDigestQueuePlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", "Phase 63 HashDigestQueuePlan.h does not yet expose queue-plan initialization.");
+            AssertContains(hashDigestQueuePlanHeader, "size_t GetHashDigestQueueMaxBufferedChunkCount(const HashDigestQueuePlan& digestQueuePlan);", "Phase 63 HashDigestQueuePlan.h does not yet expose queue-plan querying.");
+            AssertContains(hashDigestQueuePlan, "HashDigestQueuePlan CreateHashDigestQueuePlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", "Phase 63 HashDigestQueuePlan.cpp does not yet own queue-plan initialization.");
+            AssertContains(hashDigestQueuePlan, "digestQueuePlan.maxBufferedChunkCount = 4;", "Phase 63 HashDigestQueuePlan.cpp does not yet preserve the baseline parallel queue depth.");
+            AssertContains(hashDigestQueuePlan, "size_t GetHashDigestQueueMaxBufferedChunkCount(const HashDigestQueuePlan& digestQueuePlan)", "Phase 63 HashDigestQueuePlan.cpp does not yet own queue-plan querying.");
+
+            AssertContains(hashJobExecutionPlanHeader, "HashDigestQueuePlan digestQueuePlan;", "Phase 63 HashJobExecutionPlan.h does not yet carry queue planning state.");
+            AssertContains(hashJobExecutionPlanHeader, "const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);", "Phase 63 HashJobExecutionPlan.h does not yet expose queue-plan access.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);", "Phase 63 HashJobExecutionPlan.cpp does not yet initialize queue planning.");
+            AssertContains(hashJobExecutionPlan, "const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan)", "Phase 63 HashJobExecutionPlan.cpp does not yet own queue-plan retrieval.");
+            AssertContains(hashJobExecutionPlan, "return executionPlan.digestQueuePlan;", "Phase 63 HashJobExecutionPlan.cpp does not yet return the planned queue controls.");
+
+            AssertContains(hashDigestPipeline, "const HashDigestQueuePlan& digestQueuePlan = GetHashJobDigestQueuePlan(executionState->executionPlan);", "Phase 63 HashDigestPipeline.cpp does not yet consume queue planning.");
+            AssertContains(hashDigestExecutionHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 63 HashDigestExecution.h does not yet route queue planning into digest execution dispatch.");
+            AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, digestQueuePlan, executionState, threadPool);", "Phase 63 HashDigestExecution.cpp does not yet route queue planning into parallel digest execution.");
+            AssertContains(hashDigestQueueHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 63 HashDigestQueue.h does not yet expose queue-plan controls for parallel queue processing.");
+            AssertContains(hashDigestQueue, "queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan)", "Phase 63 HashDigestQueue.cpp does not yet use queue-plan buffering controls.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueuePlan.h\"", "Phase 63 HashEngineInternal.h does not yet consume the HashDigestQueuePlan seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 desktop native core project does not yet compile HashDigestQueuePlan.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.h", "Phase 63 desktop native core project does not yet include HashDigestQueuePlan.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 desktop native core filters do not yet expose HashDigestQueuePlan.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestQueuePlan.h", "Phase 63 desktop native core filters do not yet expose HashDigestQueuePlan.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 UWP native project does not yet compile HashDigestQueuePlan.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.h", "Phase 63 UWP native project does not yet include HashDigestQueuePlan.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 UWP native filters do not yet expose HashDigestQueuePlan.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestQueuePlan.h", "Phase 63 UWP native filters do not yet expose HashDigestQueuePlan.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 WinUI native project should keep consuming the shared native core instead of compiling HashDigestQueuePlan.cpp directly.");
         }, failures);
 
         if (failures.Count > 0)
