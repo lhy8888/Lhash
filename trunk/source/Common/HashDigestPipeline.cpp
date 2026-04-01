@@ -12,7 +12,7 @@ namespace HashEngineInternal
 	)
 	{
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
-		DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);
+		const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);
 
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
 			isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);

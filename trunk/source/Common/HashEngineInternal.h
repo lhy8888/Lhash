@@ -8,6 +8,7 @@
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashFileAttemptWorkflow.h"
+#include "Common/HashJobExecutionPlan.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
@@ -67,6 +68,7 @@ namespace HashEngineInternal
 		FileProgressState progressState;
 		FileAttemptState fileAttemptState;
 		FileHashContexts hashContexts;
+		HashJobExecutionPlan executionPlan;
 		FinalizedDigestBundle digestBundle;
 	};
 

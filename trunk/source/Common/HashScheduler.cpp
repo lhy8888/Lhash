@@ -13,6 +13,7 @@ namespace HashEngineInternal
 	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes)
 	{
 		FileExecutionState executionState = { 0 };
+		InitializeHashJobExecutionPlan(request, &executionState.executionPlan);
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		ThreadPool threadPool(5);

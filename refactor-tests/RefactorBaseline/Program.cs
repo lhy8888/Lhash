@@ -107,6 +107,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
@@ -344,6 +345,7 @@ internal static class Program
                     "FileProgressState progressState;",
                     "FileAttemptState fileAttemptState;",
                     "FileHashContexts hashContexts;",
+                    "HashJobExecutionPlan executionPlan;",
                     "FinalizedDigestBundle digestBundle;"
                 ],
                 "HashEngine grouped file-execution state bundle no longer keeps the current file-level execution state together.");
@@ -2088,6 +2090,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
@@ -3711,7 +3714,7 @@ internal static class Program
             AssertContains(hashDigestPipelineHeader, "bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", "Phase 52 HashDigestPipeline.h does not yet expose the opened-file digest pipeline seam.");
             AssertContains(hashDigestSinglePassHeader, "bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", "Phase 52 HashDigestSinglePass.h does not yet expose the single-thread digest processing seam.");
             AssertContains(hashDigestPipeline, "bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", "Phase 52 HashDigestPipeline.cpp does not yet own opened-file digest update orchestration.");
-            AssertContains(hashDigestPipeline, "DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest update selection through the new digest update request seam.");
+            AssertContains(hashDigestPipeline, "const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest update selection through the job execution-plan seam.");
             AssertContains(hashDigestExecution, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", "Phase 52 HashDigestExecution.cpp does not yet expose digest execution dispatch.");
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestQueue.cpp does not yet delegate parallel digest updates to the digest updater seam.");
             AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState", "Phase 52 HashDigestPipeline.cpp does not yet delegate digest execution dispatch to HashDigestExecution.");
@@ -3984,6 +3987,44 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashSchedulerDispatch.cpp", "Phase 59 WinUI native project should keep consuming the shared native core instead of compiling HashSchedulerDispatch.cpp directly.");
         }, failures);
 
+        Run("Phase 60 promotes algorithm-selection planning into a dedicated job execution-plan seam", () =>
+        {
+            string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
+            string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
+            string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+            string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashJobExecutionPlanHeader, "struct HashJobExecutionPlan", "Phase 60 HashJobExecutionPlan.h does not yet define the job execution plan contract.");
+            AssertContains(hashJobExecutionPlanHeader, "DigestUpdateRequest digestUpdateRequest;", "Phase 60 HashJobExecutionPlan.h does not yet expose digest update selection in the job execution plan.");
+            AssertContains(hashJobExecutionPlanHeader, "void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose job execution-plan initialization.");
+            AssertContains(hashJobExecutionPlanHeader, "const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);", "Phase 60 HashJobExecutionPlan.h does not yet expose digest request access.");
+            AssertContains(hashJobExecutionPlan, "void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own job execution-plan initialization.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest request initialization.");
+            AssertContains(hashJobExecutionPlan, "const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest request retrieval.");
+            AssertContains(hashJobExecutionPlan, "return executionPlan.digestUpdateRequest;", "Phase 60 HashJobExecutionPlan.cpp does not yet return the planned digest request.");
+
+            AssertContains(hashScheduler, "InitializeHashJobExecutionPlan(request, &executionState.executionPlan);", "Phase 60 HashScheduler.cpp does not yet initialize job execution plans once per request.");
+            AssertContains(hashDigestPipeline, "GetHashJobDigestUpdateRequest(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest request from file execution state.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashJobExecutionPlan.h\"", "Phase 60 HashEngineInternal.h does not yet consume the HashJobExecutionPlan seam.");
+            AssertContains(hashEngineInternal, "HashJobExecutionPlan executionPlan;", "Phase 60 HashEngineInternal.h does not yet keep job execution-plan state in grouped file execution state.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 desktop native core project does not yet compile HashJobExecutionPlan.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.h", "Phase 60 desktop native core project does not yet include HashJobExecutionPlan.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 desktop native core filters do not yet expose HashJobExecutionPlan.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashJobExecutionPlan.h", "Phase 60 desktop native core filters do not yet expose HashJobExecutionPlan.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 UWP native project does not yet compile HashJobExecutionPlan.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.h", "Phase 60 UWP native project does not yet include HashJobExecutionPlan.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 UWP native filters do not yet expose HashJobExecutionPlan.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashJobExecutionPlan.h", "Phase 60 UWP native filters do not yet expose HashJobExecutionPlan.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashJobExecutionPlan.cpp", "Phase 60 WinUI native project should keep consuming the shared native core instead of compiling HashJobExecutionPlan.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4024,6 +4065,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),

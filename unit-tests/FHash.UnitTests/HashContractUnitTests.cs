@@ -120,6 +120,8 @@ public sealed class HashContractUnitTests
         string digestSinglePass = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestSinglePass.cpp");
         string digestUpdater = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.cpp");
         string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
+        string jobExecutionPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.cpp");
+        string jobExecutionPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
         string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
         string schedulerDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerDispatch.cpp");
@@ -164,6 +166,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("static bool ProcessOpenedFileHashing(", engine, StringComparison.Ordinal);
 
         Assert.Contains("bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes)", scheduler, StringComparison.Ordinal);
+        Assert.Contains("InitializeHashJobExecutionPlan(request, &executionState.executionPlan);", scheduler, StringComparison.Ordinal);
         Assert.Contains("ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState", scheduler, StringComparison.Ordinal);
         Assert.Contains("FileExecutionState executionState = { 0 };", scheduler, StringComparison.Ordinal);
         Assert.Contains("ThreadPool threadPool(5);", scheduler, StringComparison.Ordinal);
@@ -180,7 +183,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.Contains("CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, *executionState);", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.Contains("bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", digestPipeline, StringComparison.Ordinal);
-        Assert.Contains("DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", digestExecution, StringComparison.Ordinal);
         Assert.Contains("bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", digestQueue, StringComparison.Ordinal);
         Assert.Contains("bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", digestSinglePass, StringComparison.Ordinal);
@@ -191,6 +194,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsSequential(digestUpdateRequest", digestSinglePass, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("struct HashJobExecutionPlan", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestUpdateRequest;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("GetHashJobDigestUpdateRequest(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("future<void> taskSHA512Update", digestUpdater, StringComparison.Ordinal);
@@ -233,6 +242,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashDigestSinglePass.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestUpdater.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashFileAttemptWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashJobExecutionPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
