@@ -13,13 +13,14 @@ namespace HashEngineInternal
 	{
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
 		const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);
+		HashDigestExecutionMode digestExecutionMode = GetHashJobDigestExecutionMode(executionState->executionPlan);
 
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
 			isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
 		uint64_t times = CalculateFileChunkIterations(fsize);
 		(void)times;
 
-		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, fsize, isSizeCaled, executionState
+		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestUpdateRequest, digestExecutionMode, fsize, isSizeCaled, executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 			, threadPool
 #endif

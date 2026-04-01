@@ -3,6 +3,7 @@
 
 #include "Common/HashEngine.h"
 #include "Common/HashDigestExecution.h"
+#include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestPipeline.h"
 #include "Common/HashDigestSinglePass.h"
