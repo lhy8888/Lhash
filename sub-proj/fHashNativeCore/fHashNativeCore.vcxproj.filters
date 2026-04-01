@@ -44,6 +44,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -98,6 +101,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h">

@@ -39,48 +39,6 @@ namespace HashEngineInternal
 
 	unsigned int DataBuffer::preflen = 1048576; // 2^20
 
-	static void UpdateProgressWrapper(HashExecutionContext *executionContext, uint64_t fsize, bool isSizeCaled, unsigned int dataBufLen,
-		FileProgressState *progressState)
-	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		progressState->finishedSize += dataBufLen;
-
-		int progressMax = observer->progressMax();
-
-		int positionNew;
-		if (fsize == 0)
-		{
-			positionNew = progressMax;
-		}
-		else
-		{
-			positionNew = (int)(progressMax * progressState->finishedSize / fsize);
-		}
-
-		if (positionNew > progressState->position)
-		{
-			observer->onProgressEvent(CreateFileProgressEvent(positionNew));
-			progressState->position = positionNew;
-		}
-
-		progressState->finishedSizeWhole += dataBufLen;
-		int positionWholeNew;
-		uint64_t totalSize = GetHashExecutionTotalSize(*executionContext);
-		if (totalSize == 0)
-		{
-			positionWholeNew = progressMax;
-		}
-		else
-		{
-			positionWholeNew = (int)(progressMax * progressState->finishedSizeWhole / totalSize);
-		}
-		if (isSizeCaled && positionWholeNew > progressState->positionWhole)
-		{
-			progressState->positionWhole = positionWholeNew;
-			observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));
-		}
-	}
-
 	uint64_t CalculateFileChunkIterations(uint64_t fsize)
 	{
 		return fsize / DataBuffer::preflen + 1;
@@ -147,7 +105,7 @@ namespace HashEngineInternal
 
 				UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, ptrDataBufCalc->data, ptrDataBufCalc->datalen, threadPool);
 
-				UpdateProgressWrapper(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);
+				UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);
 			}
 			cvFile.notify_all();
 		});
@@ -201,7 +159,7 @@ namespace HashEngineInternal
 			{
 				UpdateDigestContextsSequential(digestUpdateRequest, executionState->hashContexts, databuf.data, databuf.datalen);
 
-				UpdateProgressWrapper(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
+				UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
 			}
 
 			isFileFinished = (databuf.datalen < DataBuffer::preflen);

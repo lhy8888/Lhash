@@ -106,7 +106,8 @@ internal static class Program
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"));
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
             AssertDoesNotContain(engine, "#include \"Common/HashEngineObserver.h\"", "HashEngine.cpp still directly includes HashEngineObserver after the progress-sink refactor.");
@@ -2074,7 +2075,8 @@ internal static class Program
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"));
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
             string scheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
@@ -3189,7 +3191,7 @@ internal static class Program
             AssertContains(hashEngineResult, "EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", "Phase 35 result seam does not yet publish hash results through HashExecutionContext.");
             AssertContains(hashEngineResult, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 35 result seam does not yet route counted-size replacement through HashExecutionContext.");
 
-            AssertContains(hashEngine, "HashExecutionContext *executionContext, uint64_t fsize", "Phase 35 engine progress updates do not yet route through HashExecutionContext.");
+            AssertContains(hashEngine, "UpdateHashExecutionProgress(HashExecutionContext *executionContext", "Phase 35 engine progress updates do not yet route through HashExecutionContext.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 35 HashEngine does not yet narrow the request-driven core entry onto HashExecutionContext.");
             AssertContains(hashEngine, "ShouldStopHashExecution(*executionContext)", "Phase 35 HashEngine does not yet read stop state through HashExecutionContext.");
             AssertContains(hashEngine, "ResetHashExecutionTotalSize(*executionContext);", "Phase 35 HashEngine does not yet reset counted size through HashExecutionContext.");
@@ -3566,7 +3568,8 @@ internal static class Program
                 "\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"));
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
             string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
@@ -3675,8 +3678,8 @@ internal static class Program
             AssertContains(hashDigestPipeline, "DigestUpdateRequest digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 52 HashDigestPipeline.cpp does not yet initialize digest update selection through the new digest update request seam.");
             AssertContains(hashDigestPipeline, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestPipeline.cpp does not yet delegate parallel digest updates to the digest updater seam.");
             AssertContains(hashDigestPipeline, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 52 HashDigestPipeline.cpp does not yet delegate sequential digest updates to the digest updater seam.");
-            AssertContains(hashDigestPipeline, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 52 HashDigestPipeline.cpp does not yet own per-file progress publication.");
-            AssertContains(hashDigestPipeline, "observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", "Phase 52 HashDigestPipeline.cpp does not yet own total-progress publication.");
+            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 52 HashDigestPipeline.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
+            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 52 HashDigestPipeline.cpp does not yet route single-thread progress updates through the progress tracker seam.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestPipeline.h\"", "Phase 52 HashEngineInternal.h does not yet consume the digest pipeline seam.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestPipeline.cpp", "Phase 52 desktop native core project does not yet compile HashDigestPipeline.cpp.");
@@ -3730,6 +3733,39 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestUpdater.cpp", "Phase 53 WinUI native project should keep consuming the shared native core instead of compiling HashDigestUpdater.cpp directly.");
         }, failures);
 
+        Run("Phase 54 promotes progress computation and event publication into a dedicated progress tracker seam", () =>
+        {
+            string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
+            string hashProgressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
+            string hashProgressTrackerHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashProgressTrackerHeader, "void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", "Phase 54 HashProgressTracker.h does not yet expose the progress tracker update seam.");
+            AssertContains(hashProgressTracker, "void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", "Phase 54 HashProgressTracker.cpp does not yet own progress update orchestration.");
+            AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashProgressTracker.cpp does not yet own per-file progress publication.");
+            AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", "Phase 54 HashProgressTracker.cpp does not yet own whole-job progress publication.");
+
+            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 54 HashDigestPipeline.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
+            AssertContains(hashDigestPipeline, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 54 HashDigestPipeline.cpp does not yet delegate single-thread progress updates to HashProgressTracker.");
+            AssertDoesNotContain(hashDigestPipeline, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashDigestPipeline.cpp still publishes per-file progress directly instead of routing through HashProgressTracker.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashProgressTracker.h\"", "Phase 54 HashEngineInternal.h does not yet consume the HashProgressTracker seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 desktop native core project does not yet compile HashProgressTracker.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashProgressTracker.h", "Phase 54 desktop native core project does not yet include HashProgressTracker.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 desktop native core filters do not yet expose HashProgressTracker.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.h", "Phase 54 desktop native core filters do not yet expose HashProgressTracker.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 UWP native project does not yet compile HashProgressTracker.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashProgressTracker.h", "Phase 54 UWP native project does not yet include HashProgressTracker.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 UWP native filters do not yet expose HashProgressTracker.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashProgressTracker.h", "Phase 54 UWP native filters do not yet expose HashProgressTracker.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashProgressTracker.cpp", "Phase 54 WinUI native project should keep consuming the shared native core instead of compiling HashProgressTracker.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -3770,6 +3806,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
