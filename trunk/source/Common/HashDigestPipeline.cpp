@@ -14,7 +14,9 @@ namespace HashEngineInternal
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
 		const DigestUpdateRequest& digestUpdateRequest = GetHashJobDigestUpdateRequest(executionState->executionPlan);
 		HashDigestExecutionMode digestExecutionMode = GetHashJobDigestExecutionMode(executionState->executionPlan);
+		const HashDigestBufferPlan& digestBufferPlan = GetHashJobDigestBufferPlan(executionState->executionPlan);
 		const HashDigestQueuePlan& digestQueuePlan = GetHashJobDigestQueuePlan(executionState->executionPlan);
+		SetDigestDataBufferPreferredLength(GetHashDigestBufferPreferredLength(digestBufferPlan));
 
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
 			isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);

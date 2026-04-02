@@ -26,6 +26,7 @@ namespace HashEngineInternal
 	};
 
 	unsigned int GetDigestDataBufferPreferredLength();
+	void SetDigestDataBufferPreferredLength(unsigned int preferredLength);
 	uint64_t CalculateFileChunkIterations(uint64_t fileSize);
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);
 

@@ -4273,6 +4273,53 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 WinUI native project should keep consuming the shared native core instead of compiling HashPreparationPlan.cpp directly.");
         }, failures);
 
+        Run("Phase 66 promotes digest buffer sizing into a dedicated digest-buffer plan seam", () =>
+        {
+            string hashDigestBufferPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestBufferPlan.cpp");
+            string hashDigestBufferPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestBufferPlan.h");
+            string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string hashDigestQueueHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.h");
+            string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+            string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashDigestBufferPlanHeader, "struct HashDigestBufferPlan", "Phase 66 HashDigestBufferPlan.h does not yet expose digest buffer planning state.");
+            AssertContains(hashDigestBufferPlanHeader, "unsigned int preferredBufferLength;", "Phase 66 HashDigestBufferPlan.h does not yet expose preferred digest buffer length.");
+            AssertContains(hashDigestBufferPlanHeader, "HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", "Phase 66 HashDigestBufferPlan.h does not yet expose digest-buffer plan initialization.");
+            AssertContains(hashDigestBufferPlanHeader, "unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", "Phase 66 HashDigestBufferPlan.h does not yet expose digest-buffer plan querying.");
+            AssertContains(hashDigestBufferPlan, "HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", "Phase 66 HashDigestBufferPlan.cpp does not yet own digest-buffer plan initialization.");
+            AssertContains(hashDigestBufferPlan, "digestBufferPlan.preferredBufferLength = 1048576;", "Phase 66 HashDigestBufferPlan.cpp does not yet preserve the baseline preferred digest-buffer size.");
+            AssertContains(hashDigestBufferPlan, "unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan)", "Phase 66 HashDigestBufferPlan.cpp does not yet own digest-buffer plan querying.");
+
+            AssertContains(hashJobExecutionPlanHeader, "HashDigestBufferPlan digestBufferPlan;", "Phase 66 HashJobExecutionPlan.h does not yet carry digest-buffer planning state.");
+            AssertContains(hashJobExecutionPlanHeader, "const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan);", "Phase 66 HashJobExecutionPlan.h does not yet expose digest-buffer plan access.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestBufferPlan = CreateHashDigestBufferPlan(request, executionPlan->digestExecutionMode);", "Phase 66 HashJobExecutionPlan.cpp does not yet initialize digest-buffer planning.");
+            AssertContains(hashJobExecutionPlan, "const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan)", "Phase 66 HashJobExecutionPlan.cpp does not yet own digest-buffer plan retrieval.");
+            AssertContains(hashJobExecutionPlan, "return executionPlan.digestBufferPlan;", "Phase 66 HashJobExecutionPlan.cpp does not yet return planned digest-buffer controls.");
+
+            AssertContains(hashDigestPipeline, "const HashDigestBufferPlan& digestBufferPlan = GetHashJobDigestBufferPlan(executionState->executionPlan);", "Phase 66 HashDigestPipeline.cpp does not yet consume digest-buffer planning.");
+            AssertContains(hashDigestPipeline, "SetDigestDataBufferPreferredLength(GetHashDigestBufferPreferredLength(digestBufferPlan));", "Phase 66 HashDigestPipeline.cpp does not yet apply digest-buffer planning.");
+            AssertContains(hashDigestQueueHeader, "void SetDigestDataBufferPreferredLength(unsigned int preferredLength);", "Phase 66 HashDigestQueue.h does not yet expose digest-buffer sizing controls.");
+            AssertContains(hashDigestQueue, "void SetDigestDataBufferPreferredLength(unsigned int preferredLength)", "Phase 66 HashDigestQueue.cpp does not yet own digest-buffer sizing controls.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestBufferPlan.h\"", "Phase 66 HashEngineInternal.h does not yet consume the HashDigestBufferPlan seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestBufferPlan.cpp", "Phase 66 desktop native core project does not yet compile HashDigestBufferPlan.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestBufferPlan.h", "Phase 66 desktop native core project does not yet include HashDigestBufferPlan.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestBufferPlan.cpp", "Phase 66 desktop native core filters do not yet expose HashDigestBufferPlan.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestBufferPlan.h", "Phase 66 desktop native core filters do not yet expose HashDigestBufferPlan.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestBufferPlan.cpp", "Phase 66 UWP native project does not yet compile HashDigestBufferPlan.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestBufferPlan.h", "Phase 66 UWP native project does not yet include HashDigestBufferPlan.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestBufferPlan.cpp", "Phase 66 UWP native filters do not yet expose HashDigestBufferPlan.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestBufferPlan.h", "Phase 66 UWP native filters do not yet expose HashDigestBufferPlan.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestBufferPlan.cpp", "Phase 66 WinUI native project should keep consuming the shared native core instead of compiling HashDigestBufferPlan.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

@@ -120,6 +120,9 @@ public sealed class HashContractUnitTests
         string digestExecutionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.h");
         string digestExecutionMode = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecutionMode.cpp");
         string digestExecutionModeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecutionMode.h");
+        string digestBufferPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestBufferPlan.cpp");
+        string digestBufferPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestBufferPlan.h");
+        string digestQueueHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.h");
         string digestQueuePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueuePlan.cpp");
         string digestQueuePlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueuePlan.h");
         string digestSinglePass = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestSinglePass.cpp");
@@ -205,6 +208,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("const HashDigestQueuePlan& digestQueuePlan", digestQueue, StringComparison.Ordinal);
         Assert.Contains("bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", digestSinglePass, StringComparison.Ordinal);
         Assert.Contains("bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("void SetDigestDataBufferPreferredLength(unsigned int preferredLength);", digestQueueHeader, StringComparison.Ordinal);
+        Assert.Contains("void SetDigestDataBufferPreferredLength(unsigned int preferredLength)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("uint64_t CalculateFileChunkIterations(uint64_t fileSize)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsParallel(digestUpdateRequest", digestQueue, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsParallel(digestUpdateRequest", digestQueue, StringComparison.Ordinal);
@@ -217,6 +222,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool IsParallelHashDigestExecutionMode(HashDigestExecutionMode executionMode);", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request)", digestExecutionMode, StringComparison.Ordinal);
         Assert.Contains("return HASH_DIGEST_EXECUTION_MODE_PARALLEL;", digestExecutionMode, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestBufferPlan", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("unsigned int preferredBufferLength;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("digestBufferPlan.preferredBufferLength = 1048576;", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan)", digestBufferPlan, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestQueuePlan", digestQueuePlanHeader, StringComparison.Ordinal);
         Assert.Contains("size_t maxBufferedChunkCount;", digestQueuePlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestQueuePlan CreateHashDigestQueuePlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestQueuePlanHeader, StringComparison.Ordinal);
@@ -226,22 +238,26 @@ public sealed class HashContractUnitTests
         Assert.Contains("size_t GetHashDigestQueueMaxBufferedChunkCount(const HashDigestQueuePlan& digestQueuePlan)", digestQueuePlan, StringComparison.Ordinal);
         Assert.Contains("struct HashJobExecutionPlan", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode digestExecutionMode;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan digestBufferPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestQueuePlan digestQueuePlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashPreparationPlan preparationPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashSchedulerPlan schedulerPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode GetHashJobDigestExecutionMode(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const HashSchedulerPlan& GetHashJobSchedulerPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestBufferPlan = CreateHashDigestBufferPlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->preparationPlan = CreateHashPreparationPlan(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->schedulerPlan = CreateHashSchedulerPlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.digestUpdateRequest;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.digestExecutionMode;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestBufferPlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.digestQueuePlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.preparationPlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.schedulerPlan;", jobExecutionPlan, StringComparison.Ordinal);
@@ -261,6 +277,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("size_t GetHashSchedulerWorkerThreadCount(const HashSchedulerPlan& schedulerPlan)", schedulerPlan, StringComparison.Ordinal);
         Assert.Contains("GetHashJobDigestUpdateRequest(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("GetHashJobDigestExecutionMode(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("GetHashJobDigestBufferPlan(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("SetDigestDataBufferPreferredLength(GetHashDigestBufferPreferredLength(digestBufferPlan));", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("GetHashJobDigestQueuePlan(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
@@ -307,6 +325,7 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("#include \"Common/HashDigestExecution.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestExecutionMode.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestBufferPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestQueue.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestQueuePlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestPipeline.h\"", internalHeader, StringComparison.Ordinal);

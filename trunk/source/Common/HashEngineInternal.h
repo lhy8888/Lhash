@@ -2,6 +2,7 @@
 #define _HASH_ENGINE_INTERNAL_H_
 
 #include "Common/HashEngine.h"
+#include "Common/HashDigestBufferPlan.h"
 #include "Common/HashDigestExecution.h"
 #include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestQueue.h"

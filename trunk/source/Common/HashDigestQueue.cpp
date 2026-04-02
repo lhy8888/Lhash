@@ -34,6 +34,17 @@ namespace HashEngineInternal
 		return DigestDataBuffer::preflen;
 	}
 
+	void SetDigestDataBufferPreferredLength(unsigned int preferredLength)
+	{
+		if (preferredLength == 0)
+		{
+			DigestDataBuffer::preflen = 1;
+			return;
+		}
+
+		DigestDataBuffer::preflen = preferredLength;
+	}
+
 	uint64_t CalculateFileChunkIterations(uint64_t fileSize)
 	{
 		return fileSize / DigestDataBuffer::preflen + 1;
