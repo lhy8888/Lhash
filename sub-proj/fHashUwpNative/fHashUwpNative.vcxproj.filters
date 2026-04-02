@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -258,6 +261,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">

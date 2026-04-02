@@ -4434,6 +4434,7 @@ internal static class Program
             string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashSuccessfulFileCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
@@ -4466,8 +4467,8 @@ internal static class Program
             AssertDoesNotContain(hashEngineResult, "void InitializeFileHashing(", "Phase 69 HashEngineResult.cpp should no longer own hash-context initialization.");
             AssertDoesNotContain(hashEngineResult, "void FinalizeDigestStrings(", "Phase 69 HashEngineResult.cpp should no longer own digest finalization.");
 
-            AssertContains(hashResultPublisher, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 69 HashResultPublisher.cpp does not yet consume digest finalization through lifecycle seams.");
-            AssertContains(hashResultPublisher, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 69 HashResultPublisher.cpp does not yet consume digest projection through lifecycle seams.");
+            AssertContains(string.Join("\r\n", hashResultPublisher, hashSuccessfulFileCompletionWorkflow), "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 69 result publication flow does not yet consume digest finalization through lifecycle seams.");
+            AssertContains(string.Join("\r\n", hashResultPublisher, hashSuccessfulFileCompletionWorkflow), "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 69 result publication flow does not yet consume digest projection through lifecycle seams.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestLifecycle.h\"", "Phase 69 HashEngineInternal.h does not yet consume HashDigestLifecycle.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestContextOps.h\"", "Phase 69 HashEngineInternal.h does not yet consume HashDigestContextOps.");
@@ -4816,6 +4817,47 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 WinUI native project should keep consuming the shared native core instead of compiling HashFileAttemptCompletionWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 79 promotes successful-file completion into a dedicated successful-completion workflow seam", () =>
+        {
+            string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashSuccessfulFileCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
+            string hashSuccessfulFileCompletionWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashSuccessfulFileCompletionWorkflowHeader, "void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);", "Phase 79 HashSuccessfulFileCompletionWorkflow.h does not yet expose whole-progress publication.");
+            AssertContains(hashSuccessfulFileCompletionWorkflowHeader, "void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 79 HashSuccessfulFileCompletionWorkflow.h does not yet expose successful-file completion workflow.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet own whole-progress publication.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet own successful-file completion workflow.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "observer->onProgressEvent(CreateFileCalculatedProgressEvent());", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve file-calculated publication.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve digest finalization.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve whole-progress dispatch.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "executionState.fileAttemptState.osFile->close();", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve file-close sequencing.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve digest projection.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "EmitHashResult(executionContext, result, GetHashRequestUppercaseDigest(request));", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve hash-result publication.");
+
+            AssertContains(hashResultPublisher, "PublishWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", "Phase 79 HashResultPublisher.cpp does not yet delegate whole-progress publication.");
+            AssertContains(hashResultPublisher, "ExecuteSuccessfulFileHashingWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 79 HashResultPublisher.cpp does not yet delegate successful-file completion workflow.");
+            AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileCalculatedProgressEvent());", "Phase 79 HashResultPublisher.cpp should no longer inline file-calculated publication.");
+            AssertDoesNotContain(hashResultPublisher, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 79 HashResultPublisher.cpp should no longer inline digest finalization.");
+            AssertDoesNotContain(hashResultPublisher, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 79 HashResultPublisher.cpp should no longer inline digest projection.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", "Phase 79 HashEngineInternal.h does not yet consume HashSuccessfulFileCompletionWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 desktop native core project does not yet compile HashSuccessfulFileCompletionWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h", "Phase 79 desktop native core project does not yet include HashSuccessfulFileCompletionWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 desktop native core filters do not yet expose HashSuccessfulFileCompletionWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h", "Phase 79 desktop native core filters do not yet expose HashSuccessfulFileCompletionWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 UWP native project does not yet compile HashSuccessfulFileCompletionWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h", "Phase 79 UWP native project does not yet include HashSuccessfulFileCompletionWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 UWP native filters do not yet expose HashSuccessfulFileCompletionWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h", "Phase 79 UWP native filters do not yet expose HashSuccessfulFileCompletionWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 WinUI native project should keep consuming the shared native core instead of compiling HashSuccessfulFileCompletionWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4876,6 +4918,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp"));
     }
 
