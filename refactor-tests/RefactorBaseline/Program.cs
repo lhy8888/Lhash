@@ -255,13 +255,19 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "PrepareHashingWork(",
+                    "return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);"
+                ],
+                "HashEngine preparation helper no longer delegates orchestration through the preparation-workflow seam.");
+            AssertInOrder(engineImpl,
+                [
+                    "ExecuteHashPreparationWorkflow(",
                     "observer->onProgressEvent(CreatePreparingProgressEvent());",
                     "bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);",
                     "if (*wasCancelled)",
                     "observer->onProgressEvent(CreatePreparationFinishedProgressEvent());",
                     "return isSizeCaled;"
                 ],
-                "HashEngine preparation helper no longer preserves the expected preparation order.");
+                "HashEngine preparation workflow seam no longer preserves the expected preparation order.");
             AssertInOrder(engineImpl,
                 [
                     "TryPreScanSmallBatchFileSizes(",
@@ -4692,6 +4698,40 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 WinUI native project should keep consuming the shared native core instead of compiling HashPreScanWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 76 promotes preparation lifecycle orchestration into a dedicated preparation-workflow seam", () =>
+        {
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashPreparationWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.cpp");
+            string hashPreparationWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashPreparationWorkflowHeader, "bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);", "Phase 76 HashPreparationWorkflow.h does not yet expose preparation lifecycle orchestration.");
+            AssertContains(hashPreparationWorkflow, "bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)", "Phase 76 HashPreparationWorkflow.cpp does not yet own preparation lifecycle orchestration.");
+            AssertContains(hashPreparationWorkflow, "observer->onProgressEvent(CreatePreparingProgressEvent());", "Phase 76 HashPreparationWorkflow.cpp does not yet preserve preparation-start publication.");
+            AssertContains(hashPreparationWorkflow, "bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);", "Phase 76 HashPreparationWorkflow.cpp does not yet preserve pre-scan dispatch.");
+            AssertContains(hashPreparationWorkflow, "if (*wasCancelled)", "Phase 76 HashPreparationWorkflow.cpp does not yet preserve cancellation short-circuiting.");
+            AssertContains(hashPreparationWorkflow, "observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", "Phase 76 HashPreparationWorkflow.cpp does not yet preserve preparation-finished publication.");
+            AssertContains(hashEnginePreparation, "return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);", "Phase 76 HashEnginePreparation.cpp does not yet delegate preparation lifecycle orchestration.");
+            AssertDoesNotContain(hashEnginePreparation, "observer->onProgressEvent(CreatePreparingProgressEvent());", "Phase 76 HashEnginePreparation.cpp should no longer inline preparation-start publication.");
+            AssertDoesNotContain(hashEnginePreparation, "observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", "Phase 76 HashEnginePreparation.cpp should no longer inline preparation-finished publication.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashPreparationWorkflow.h\"", "Phase 76 HashEngineInternal.h does not yet consume HashPreparationWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 desktop native core project does not yet compile HashPreparationWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.h", "Phase 76 desktop native core project does not yet include HashPreparationWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 desktop native core filters do not yet expose HashPreparationWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreparationWorkflow.h", "Phase 76 desktop native core filters do not yet expose HashPreparationWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 UWP native project does not yet compile HashPreparationWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.h", "Phase 76 UWP native project does not yet include HashPreparationWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 UWP native filters do not yet expose HashPreparationWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreparationWorkflow.h", "Phase 76 UWP native filters do not yet expose HashPreparationWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 WinUI native project should keep consuming the shared native core instead of compiling HashPreparationWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4747,6 +4787,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeProbe.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));

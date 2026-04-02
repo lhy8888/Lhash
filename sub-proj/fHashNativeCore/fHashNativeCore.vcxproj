@@ -197,6 +197,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeProbe.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanWorkflow.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashPreparationWorkflow.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp" />
@@ -244,6 +245,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeProbe.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanWorkflow.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashPreparationWorkflow.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngineInternal.h" />

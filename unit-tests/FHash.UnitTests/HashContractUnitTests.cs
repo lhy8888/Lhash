@@ -148,6 +148,8 @@ public sealed class HashContractUnitTests
         string preScanSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.h");
         string preScanWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanWorkflow.cpp");
         string preScanWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanWorkflow.h");
+        string preparationWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationWorkflow.cpp");
+        string preparationWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationWorkflow.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
         string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
         string schedulerPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerPlan.cpp");
@@ -357,16 +359,23 @@ public sealed class HashContractUnitTests
         Assert.Contains("if (ShouldStopHashExecution(*executionContext))", preScanWorkflow, StringComparison.Ordinal);
         Assert.Contains("*wasCancelled = true;", preScanWorkflow, StringComparison.Ordinal);
         Assert.Contains("AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);", preparationWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreatePreparingProgressEvent());", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("if (*wasCancelled)", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparationWorkflow, StringComparison.Ordinal);
         Assert.Contains("uint64_t fSize = ResolveHashPreScannedFileSize(path);", preparation, StringComparison.Ordinal);
         Assert.Contains("TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);", preparation, StringComparison.Ordinal);
         Assert.Contains("RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
+        Assert.Contains("return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("OsFile osFile(path);", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("fSizes[fileIndex] = fSize;", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("AddHashExecutionTotalSize(*executionContext, fSize);", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("observer->onProgressEvent(CreatePreparingProgressEvent());", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparation, StringComparison.Ordinal);
         Assert.Contains("AppendHashExecutionResult(*executionContext)", preparation, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreatePreparingProgressEvent());", preparation, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", preparation, StringComparison.Ordinal);
 
         Assert.Contains("PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", result, StringComparison.Ordinal);
@@ -430,6 +439,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashPreScanSizeProbe.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreScanSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreScanWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreparationWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);

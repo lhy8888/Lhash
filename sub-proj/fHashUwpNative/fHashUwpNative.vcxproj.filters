@@ -96,6 +96,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanWorkflow.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreparationWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -222,6 +225,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreparationWorkflow.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp">

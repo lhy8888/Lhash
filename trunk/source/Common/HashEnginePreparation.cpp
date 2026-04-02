@@ -26,16 +26,7 @@ namespace HashEngineInternal
 
 	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		observer->onProgressEvent(CreatePreparingProgressEvent());
-		bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);
-		if (*wasCancelled)
-		{
-			return isSizeCaled;
-		}
-
-		observer->onProgressEvent(CreatePreparationFinishedProgressEvent());
-		return isSizeCaled;
+		return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);
 	}
 
 	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result)
