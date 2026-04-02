@@ -144,6 +144,8 @@ public sealed class HashContractUnitTests
         string jobExecutionPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.h");
         string preScanSizeProbe = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
         string preScanSizeProbeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.h");
+        string preScanSizeAccounting = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.cpp");
+        string preScanSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
         string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
         string schedulerPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerPlan.cpp");
@@ -343,8 +345,15 @@ public sealed class HashContractUnitTests
         Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("if (osFile.openRead())", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("fSize = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", preScanSizeAccountingHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", preScanSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("fSizes[fileIndex] = fSize;", preScanSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("AddHashExecutionTotalSize(*executionContext, fSize);", preScanSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("uint64_t fSize = ResolveHashPreScannedFileSize(path);", preparation, StringComparison.Ordinal);
+        Assert.Contains("TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("OsFile osFile(path);", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("fSizes[fileIndex] = fSize;", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddHashExecutionTotalSize(*executionContext, fSize);", preparation, StringComparison.Ordinal);
         Assert.Contains("AppendHashExecutionResult(*executionContext)", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreatePreparingProgressEvent());", preparation, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparation, StringComparison.Ordinal);
@@ -409,6 +418,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashJobExecutionPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreparationPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreScanSizeProbe.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreScanSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);

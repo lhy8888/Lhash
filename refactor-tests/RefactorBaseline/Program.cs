@@ -4628,6 +4628,38 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreScanSizeProbe.cpp", "Phase 73 WinUI native project should keep consuming the shared native core instead of compiling HashPreScanSizeProbe.cpp directly.");
         }, failures);
 
+        Run("Phase 74 promotes pre-scan size accounting into a dedicated accounting seam", () =>
+        {
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashPreScanSizeAccounting = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.cpp");
+            string hashPreScanSizeAccountingHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashPreScanSizeAccountingHeader, "uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", "Phase 74 HashPreScanSizeAccounting.h does not yet expose pre-scan size accounting.");
+            AssertContains(hashPreScanSizeAccounting, "uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", "Phase 74 HashPreScanSizeAccounting.cpp does not yet own pre-scan size accounting.");
+            AssertContains(hashPreScanSizeAccounting, "fSizes[fileIndex] = fSize;", "Phase 74 HashPreScanSizeAccounting.cpp does not yet preserve pre-scan size cache writes.");
+            AssertContains(hashPreScanSizeAccounting, "AddHashExecutionTotalSize(*executionContext, fSize);", "Phase 74 HashPreScanSizeAccounting.cpp does not yet preserve pre-scan total-size accumulation.");
+            AssertContains(hashEnginePreparation, "TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);", "Phase 74 HashEnginePreparation.cpp does not yet delegate pre-scan size accounting.");
+            AssertDoesNotContain(hashEnginePreparation, "fSizes[fileIndex] = fSize;", "Phase 74 HashEnginePreparation.cpp should no longer own pre-scan cache writes.");
+            AssertDoesNotContain(hashEnginePreparation, "AddHashExecutionTotalSize(*executionContext, fSize);", "Phase 74 HashEnginePreparation.cpp should no longer own pre-scan total-size accumulation.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashPreScanSizeAccounting.h\"", "Phase 74 HashEngineInternal.h does not yet consume HashPreScanSizeAccounting.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 desktop native core project does not yet compile HashPreScanSizeAccounting.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.h", "Phase 74 desktop native core project does not yet include HashPreScanSizeAccounting.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 desktop native core filters do not yet expose HashPreScanSizeAccounting.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.h", "Phase 74 desktop native core filters do not yet expose HashPreScanSizeAccounting.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 UWP native project does not yet compile HashPreScanSizeAccounting.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.h", "Phase 74 UWP native project does not yet include HashPreScanSizeAccounting.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 UWP native filters do not yet expose HashPreScanSizeAccounting.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.h", "Phase 74 UWP native filters do not yet expose HashPreScanSizeAccounting.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 WinUI native project should keep consuming the shared native core instead of compiling HashPreScanSizeAccounting.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4681,6 +4713,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeProbe.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));

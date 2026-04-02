@@ -10,8 +10,7 @@ namespace HashEngineInternal
 	{
 		const TCHAR *path = GetHashRequestFileAt(request, fileIndex).c_str();
 		uint64_t fSize = ResolveHashPreScannedFileSize(path);
-		fSizes[fileIndex] = fSize;
-		AddHashExecutionTotalSize(*executionContext, fSize);
+		TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);
 	}
 
 	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)
