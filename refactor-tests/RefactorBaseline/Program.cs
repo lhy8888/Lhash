@@ -156,11 +156,11 @@ internal static class Program
             AssertContains(engine, "static int CancelHashing(", "HashEngine.cpp does not yet expose a tiny cancellation helper.");
             AssertContains(engine, "static int CompleteHashing(", "HashEngine.cpp does not yet expose a tiny completion helper.");
             AssertContains(engineImpl, "ThreadPool threadPool(GetHashSchedulerWorkerThreadCount(schedulerPlan));", "HashEngine implementation set no longer resolves scheduler worker-count through the scheduler-plan seam.");
-            AssertContains(engineImpl, "if (GetHashRequestFileCount(request) < 200)", "HashEngine no longer performs the current small-batch pre-scan in the baseline implementation.");
+            AssertContains(engineImpl, "ShouldPreScanHashRequestFileSizes(preparationPlan, request)", "HashEngine no longer performs the current small-batch pre-scan gate through the preparation-plan seam.");
             AssertContains(engineImpl, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "HashEngine implementation set no longer routes input-file iteration through the HashRequest contract seam.");
             AssertContains(engineImpl, "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);", "HashEngine no longer routes the small-batch pre-scan loop body through the tiny helper.");
             AssertContains(engine, "bool wasCancelled = false;", "HashEngine no longer tracks small-batch pre-scan cancellation through the local helper contract.");
-            AssertContains(engine, "isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);", "HashEngine no longer routes the preparation phase through the tiny helper.");
+            AssertContains(engine, "isSizeCaled = PrepareHashingWork(executionContext, request, GetHashJobPreparationPlan(executionPlan), fSizes, &wasCancelled);", "HashEngine no longer routes the preparation phase through the job preparation-plan seam.");
             AssertContains(engine, "if (wasCancelled)", "HashEngine no longer handles small-batch pre-scan cancellation via the helper result.");
             AssertContains(fileRunner, "YieldHashThread();", "HashFileRunner no longer routes per-file scheduler yielding through the tiny helper.");
             AssertContains(fileRunner, "future<void> taskSHA512Update", "HashFileRunner no longer fans out SHA512 updates in the baseline implementation.");
@@ -255,7 +255,7 @@ internal static class Program
                 [
                     "PrepareHashingWork(",
                     "observer->onProgressEvent(CreatePreparingProgressEvent());",
-                    "bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, fSizes, wasCancelled);",
+                    "bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);",
                     "if (*wasCancelled)",
                     "observer->onProgressEvent(CreatePreparationFinishedProgressEvent());",
                     "return isSizeCaled;"
@@ -264,7 +264,7 @@ internal static class Program
             AssertInOrder(engineImpl,
                 [
                     "TryPreScanSmallBatchFileSizes(",
-                    "if (GetHashRequestFileCount(request) < 200)",
+                    "if (ShouldPreScanHashRequestFileSizes(preparationPlan, request))",
                     "*wasCancelled = true;",
                     "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);",
                     "return true;"
@@ -400,9 +400,9 @@ internal static class Program
             AssertInOrder(engine,
                 [
                     "bool wasCancelled = false;",
-                    "isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);",
+                    "isSizeCaled = PrepareHashingWork(executionContext, request, GetHashJobPreparationPlan(executionPlan), fSizes, &wasCancelled);",
                     "if (wasCancelled)",
-                    "if (!RunHashScheduler(executionContext, request, isSizeCaled, fSizes))",
+                    "if (!RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes))",
                     "return CompleteHashing(executionContext);"
                 ],
                 "HashEngine lifecycle callbacks no longer follow the current baseline order.");
@@ -3600,7 +3600,7 @@ internal static class Program
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
-            AssertContains(hashEngine, "RunHashScheduler(executionContext, request, isSizeCaled, fSizes)", "Phase 49 HashEngine.cpp does not yet delegate orchestration to the extracted scheduler seam.");
+            AssertContains(hashEngine, "RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", "Phase 49 HashEngine.cpp does not yet delegate orchestration to the extracted scheduler seam.");
             AssertDoesNotContain(hashEngine, "static bool ProcessOpenedFileHashing(", "Phase 49 HashEngine.cpp still owns the opened-file hashing loop.");
             AssertContains(hashFileRunner, "bool ProcessOpenedFileHashing(", "Phase 49 digest pipeline does not yet own the opened-file hashing loop.");
             AssertContains(hashFileRunner, "bool RunFileHashAttempt(", "Phase 49 HashFileRunner.cpp does not yet expose the single-file execution seam.");
@@ -3628,16 +3628,16 @@ internal static class Program
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
-            AssertContains(hashEngine, "if (!RunHashScheduler(executionContext, request, isSizeCaled, fSizes))", "Phase 50 HashEngine.cpp does not yet route request scheduling through HashScheduler.");
+            AssertContains(hashEngine, "if (!RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes))", "Phase 50 HashEngine.cpp does not yet route request scheduling through HashScheduler.");
             AssertDoesNotContain(hashEngine, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "Phase 50 HashEngine.cpp still owns file iteration instead of delegating it to HashScheduler.");
             AssertDoesNotContain(hashEngine, "ThreadPool threadPool(5);", "Phase 50 HashEngine.cpp still owns the thread-pool scheduler instead of delegating it to HashScheduler.");
 
-            AssertContains(hashScheduler, "bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes)", "Phase 50 HashScheduler.cpp does not yet expose the dedicated request scheduler seam.");
+            AssertContains(hashScheduler, "bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes)", "Phase 50 HashScheduler.cpp does not yet expose the dedicated request scheduler seam.");
             AssertContains(hashScheduler, "ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState", "Phase 50 HashScheduler.cpp does not yet delegate the scheduled file loop through HashSchedulerDispatch.");
             AssertContains(hashSchedulerDispatch, "bool ExecuteScheduledHashRequestFiles(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState", "Phase 50 HashSchedulerDispatch.cpp does not yet isolate the scheduled file loop.");
             AssertContains(hashScheduler, "ThreadPool threadPool(", "Phase 50 HashScheduler.cpp does not yet own the scheduler thread-pool lifecycle.");
             AssertContains(hashSchedulerDispatch, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const sunjwbase::tstring& fullPath)", "Phase 50 HashSchedulerDispatch.cpp does not yet iterate files through HashRequest.");
-            AssertContains(hashEngineInternal, "bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes);", "Phase 50 HashEngineInternal.h does not yet declare the request scheduler seam.");
+            AssertContains(hashEngineInternal, "bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes);", "Phase 50 HashEngineInternal.h does not yet declare the request scheduler seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashScheduler.cpp", "Phase 50 desktop native core project does not yet compile HashScheduler.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashScheduler.cpp", "Phase 50 desktop native core filters do not yet expose HashScheduler.cpp.");
@@ -3995,6 +3995,7 @@ internal static class Program
 
         Run("Phase 60 promotes algorithm-selection planning into a dedicated job execution-plan seam", () =>
         {
+            string hashEngine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string hashDigestPipeline = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp");
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
@@ -4025,7 +4026,8 @@ internal static class Program
             AssertContains(hashJobExecutionPlan, "const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan)", "Phase 60 HashJobExecutionPlan.cpp does not yet own digest queue-plan retrieval.");
             AssertContains(hashJobExecutionPlan, "return executionPlan.digestQueuePlan;", "Phase 60 HashJobExecutionPlan.cpp does not yet return the planned digest queue-plan.");
 
-            AssertContains(hashScheduler, "InitializeHashJobExecutionPlan(request, &executionState.executionPlan);", "Phase 60 HashScheduler.cpp does not yet initialize job execution plans once per request.");
+            AssertContains(hashEngine, "InitializeHashJobExecutionPlan(request, &executionPlan);", "Phase 60 HashEngine.cpp does not yet initialize the shared job execution plan once per request.");
+            AssertContains(hashScheduler, "executionState.executionPlan = executionPlan;", "Phase 60 HashScheduler.cpp does not yet consume the shared job execution plan from HashEngine.");
             AssertContains(hashDigestPipeline, "GetHashJobDigestUpdateRequest(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest request from file execution state.");
             AssertContains(hashDigestPipeline, "GetHashJobDigestExecutionMode(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest execution mode from file execution state.");
             AssertContains(hashDigestPipeline, "GetHashJobDigestQueuePlan(executionState->executionPlan)", "Phase 60 HashDigestPipeline.cpp does not yet consume the planned digest queue controls from file execution state.");
@@ -4217,6 +4219,58 @@ internal static class Program
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashSchedulerPlan.cpp", "Phase 64 UWP native filters do not yet expose HashSchedulerPlan.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashSchedulerPlan.h", "Phase 64 UWP native filters do not yet expose HashSchedulerPlan.h.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashSchedulerPlan.cpp", "Phase 64 WinUI native project should keep consuming the shared native core instead of compiling HashSchedulerPlan.cpp directly.");
+        }, failures);
+
+        Run("Phase 65 promotes preparation planning into a dedicated preparation-plan seam and reuses one shared execution plan across preparation and scheduling", () =>
+        {
+            string hashPreparationPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationPlan.cpp");
+            string hashPreparationPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationPlan.h");
+            string hashEngine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
+            string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+            string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashPreparationPlanHeader, "struct HashPreparationPlan", "Phase 65 HashPreparationPlan.h does not yet expose preparation planning state.");
+            AssertContains(hashPreparationPlanHeader, "size_t preScanFileCountThreshold;", "Phase 65 HashPreparationPlan.h does not yet expose pre-scan threshold controls.");
+            AssertContains(hashPreparationPlanHeader, "HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request);", "Phase 65 HashPreparationPlan.h does not yet expose preparation-plan initialization.");
+            AssertContains(hashPreparationPlanHeader, "bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request);", "Phase 65 HashPreparationPlan.h does not yet expose pre-scan gating queries.");
+            AssertContains(hashPreparationPlan, "HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request)", "Phase 65 HashPreparationPlan.cpp does not yet own preparation-plan initialization.");
+            AssertContains(hashPreparationPlan, "preparationPlan.preScanFileCountThreshold = 200;", "Phase 65 HashPreparationPlan.cpp does not yet preserve the baseline pre-scan threshold.");
+            AssertContains(hashPreparationPlan, "bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request)", "Phase 65 HashPreparationPlan.cpp does not yet own pre-scan gating queries.");
+
+            AssertContains(hashJobExecutionPlanHeader, "HashPreparationPlan preparationPlan;", "Phase 65 HashJobExecutionPlan.h does not yet carry preparation planning state.");
+            AssertContains(hashJobExecutionPlanHeader, "const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan);", "Phase 65 HashJobExecutionPlan.h does not yet expose preparation-plan access.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->preparationPlan = CreateHashPreparationPlan(request);", "Phase 65 HashJobExecutionPlan.cpp does not yet initialize preparation planning.");
+            AssertContains(hashJobExecutionPlan, "const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan)", "Phase 65 HashJobExecutionPlan.cpp does not yet own preparation-plan retrieval.");
+            AssertContains(hashJobExecutionPlan, "return executionPlan.preparationPlan;", "Phase 65 HashJobExecutionPlan.cpp does not yet return planned preparation controls.");
+
+            AssertContains(hashEngine, "HashJobExecutionPlan executionPlan = { 0 };", "Phase 65 HashEngine.cpp does not yet allocate a shared execution plan per request.");
+            AssertContains(hashEngine, "InitializeHashJobExecutionPlan(request, &executionPlan);", "Phase 65 HashEngine.cpp does not yet initialize the shared execution plan.");
+            AssertContains(hashEngine, "PrepareHashingWork(executionContext, request, GetHashJobPreparationPlan(executionPlan), fSizes, &wasCancelled)", "Phase 65 HashEngine.cpp does not yet consume preparation planning through the shared execution plan.");
+            AssertContains(hashEngine, "RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", "Phase 65 HashEngine.cpp does not yet pass the shared execution plan into scheduling.");
+            AssertContains(hashEnginePreparation, "TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", "Phase 65 HashEnginePreparation.cpp does not yet consume preparation planning in pre-scan gating.");
+            AssertContains(hashEnginePreparation, "PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", "Phase 65 HashEnginePreparation.cpp does not yet consume preparation planning in preparation flow.");
+            AssertContains(hashEnginePreparation, "ShouldPreScanHashRequestFileSizes(preparationPlan, request)", "Phase 65 HashEnginePreparation.cpp does not yet route pre-scan gating through preparation-plan seams.");
+            AssertDoesNotContain(hashEnginePreparation, "if (GetHashRequestFileCount(request) < 200)", "Phase 65 HashEnginePreparation.cpp should no longer hard-code pre-scan thresholds.");
+            AssertContains(hashScheduler, "executionState.executionPlan = executionPlan;", "Phase 65 HashScheduler.cpp does not yet consume the shared execution plan from HashEngine.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashPreparationPlan.h\"", "Phase 65 HashEngineInternal.h does not yet consume the HashPreparationPlan seam.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 desktop native core project does not yet compile HashPreparationPlan.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.h", "Phase 65 desktop native core project does not yet include HashPreparationPlan.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 desktop native core filters do not yet expose HashPreparationPlan.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreparationPlan.h", "Phase 65 desktop native core filters do not yet expose HashPreparationPlan.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 UWP native project does not yet compile HashPreparationPlan.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.h", "Phase 65 UWP native project does not yet include HashPreparationPlan.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 UWP native filters do not yet expose HashPreparationPlan.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreparationPlan.h", "Phase 65 UWP native filters do not yet expose HashPreparationPlan.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreparationPlan.cpp", "Phase 65 WinUI native project should keep consuming the shared native core instead of compiling HashPreparationPlan.cpp directly.");
         }, failures);
 
         if (failures.Count > 0)

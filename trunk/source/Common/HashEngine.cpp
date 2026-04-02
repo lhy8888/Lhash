@@ -30,18 +30,21 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 {
 	SetHashExecutionWorking(*executionContext, true);
 
+	HashJobExecutionPlan executionPlan = { 0 };
+	InitializeHashJobExecutionPlan(request, &executionPlan);
+
 	ResetHashExecutionTotalSize(*executionContext);
 	bool isSizeCaled = false;
 	ULLongVector fSizes(GetHashRequestFileCount(request));
 
 	bool wasCancelled = false;
-	isSizeCaled = PrepareHashingWork(executionContext, request, fSizes, &wasCancelled);
+	isSizeCaled = PrepareHashingWork(executionContext, request, GetHashJobPreparationPlan(executionPlan), fSizes, &wasCancelled);
 	if (wasCancelled)
 	{
 		return CancelHashing(executionContext);
 	}
 
-	if (!RunHashScheduler(executionContext, request, isSizeCaled, fSizes))
+	if (!RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes))
 	{
 		return CancelHashing(executionContext);
 	}

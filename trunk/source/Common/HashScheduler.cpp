@@ -10,10 +10,10 @@ using namespace sunjwbase;
 
 namespace HashEngineInternal
 {
-	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes)
+	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes)
 	{
 		FileExecutionState executionState = { 0 };
-		InitializeHashJobExecutionPlan(request, &executionState.executionPlan);
+		executionState.executionPlan = executionPlan;
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		const HashSchedulerPlan& schedulerPlan = GetHashJobSchedulerPlan(executionState.executionPlan);

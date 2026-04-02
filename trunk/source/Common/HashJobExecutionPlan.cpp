@@ -9,6 +9,7 @@ namespace HashEngineInternal
 		executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);
 		executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);
 		executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);
+		executionPlan->preparationPlan = CreateHashPreparationPlan(request);
 		executionPlan->schedulerPlan = CreateHashSchedulerPlan(request, executionPlan->digestExecutionMode);
 	}
 
@@ -25,6 +26,11 @@ namespace HashEngineInternal
 	const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan)
 	{
 		return executionPlan.digestQueuePlan;
+	}
+
+	const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan)
+	{
+		return executionPlan.preparationPlan;
 	}
 
 	const HashSchedulerPlan& GetHashJobSchedulerPlan(const HashJobExecutionPlan& executionPlan)

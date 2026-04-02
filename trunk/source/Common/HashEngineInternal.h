@@ -12,6 +12,7 @@
 #include "Common/HashFileAttemptWorkflow.h"
 #include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
+#include "Common/HashPreparationPlan.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
@@ -77,9 +78,9 @@ namespace HashEngineInternal
 	};
 
 	void AccumulatePreScannedFileSize(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex);
-	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);
-	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);
-	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes);
+	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);
+	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);
+	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes);
 
 	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
 	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);

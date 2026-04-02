@@ -22,9 +22,9 @@ namespace HashEngineInternal
 		AddHashExecutionTotalSize(*executionContext, fSize);
 	}
 
-	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
+	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)
 	{
-		if (GetHashRequestFileCount(request) < 200)
+		if (ShouldPreScanHashRequestFileSizes(preparationPlan, request))
 		{
 			VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
 			{
@@ -45,11 +45,11 @@ namespace HashEngineInternal
 		return false;
 	}
 
-	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)
+	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		observer->onProgressEvent(CreatePreparingProgressEvent());
-		bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, fSizes, wasCancelled);
+		bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);
 		if (*wasCancelled)
 		{
 			return isSizeCaled;

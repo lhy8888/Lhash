@@ -269,6 +269,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileVersionResolver.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashJobExecutionPlan.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashPreparationPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashSchedulerDispatch.h" />
@@ -299,6 +300,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileVersionResolver.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashJobExecutionPlan.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashPreparationPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp" />
