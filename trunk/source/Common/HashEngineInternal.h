@@ -3,10 +3,12 @@
 
 #include "Common/HashEngine.h"
 #include "Common/HashDigestBufferPlan.h"
+#include "Common/HashDigestCompletion.h"
 #include "Common/HashDigestExecution.h"
 #include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestQueuePlan.h"
+#include "Common/HashDigestRuntimePlan.h"
 #include "Common/HashDigestPipeline.h"
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"

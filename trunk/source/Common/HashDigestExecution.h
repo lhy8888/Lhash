@@ -4,6 +4,7 @@
 #include "Common/HashExecutionContext.h"
 #include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestQueuePlan.h"
+#include "Common/HashDigestRuntimePlan.h"
 #include "Common/HashDigestUpdater.h"
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
@@ -14,7 +15,7 @@ namespace HashEngineInternal
 {
 	struct FileExecutionState;
 
-	bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, uint64_t fsize, bool isSizeCaled,
+	bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,
 		FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		, ThreadPool *threadPool

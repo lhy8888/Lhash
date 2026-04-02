@@ -4,13 +4,18 @@
 
 namespace HashEngineInternal
 {
-	bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, HashDigestExecutionMode digestExecutionMode, unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, uint64_t fsize, bool isSizeCaled,
+	bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,
 		FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		, ThreadPool *threadPool
 #endif
 	)
 	{
+		const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);
+		HashDigestExecutionMode digestExecutionMode = GetHashDigestRuntimeExecutionMode(digestRuntimePlan);
+		unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);
+		const HashDigestQueuePlan& digestQueuePlan = GetHashDigestRuntimeQueuePlan(digestRuntimePlan);
+
 #if defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 		(void)digestQueuePlan;
 #endif
