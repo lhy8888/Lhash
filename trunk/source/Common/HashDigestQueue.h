@@ -16,23 +16,21 @@ namespace HashEngineInternal
 	class DigestDataBuffer
 	{
 	public:
-		DigestDataBuffer();
+		explicit DigestDataBuffer(unsigned int preferredLength);
 		~DigestDataBuffer();
 
-		static unsigned int preflen;
-
 		unsigned int datalen;
+		unsigned int capacity;
 		unsigned char *data;
 	};
 
-	unsigned int GetDigestDataBufferPreferredLength();
-	void SetDigestDataBufferPreferredLength(unsigned int preferredLength);
-	uint64_t CalculateFileChunkIterations(uint64_t fileSize);
+	unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength);
+	uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
-		const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool);
+		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool);
 #endif
 }
 

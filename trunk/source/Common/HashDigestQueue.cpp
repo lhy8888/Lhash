@@ -16,9 +16,9 @@ using namespace std;
 
 namespace HashEngineInternal
 {
-	DigestDataBuffer::DigestDataBuffer():datalen(0), data(NULL)
+	DigestDataBuffer::DigestDataBuffer(unsigned int preferredLength):datalen(0), capacity(NormalizeDigestDataBufferPreferredLength(preferredLength)), data(NULL)
 	{
-		data = new unsigned char[DigestDataBuffer::preflen];
+		data = new unsigned char[capacity];
 	}
 
 	DigestDataBuffer::~DigestDataBuffer()
@@ -27,32 +27,25 @@ namespace HashEngineInternal
 		datalen = 0;
 	}
 
-	unsigned int DigestDataBuffer::preflen = 1048576; // 2^20
-
-	unsigned int GetDigestDataBufferPreferredLength()
-	{
-		return DigestDataBuffer::preflen;
-	}
-
-	void SetDigestDataBufferPreferredLength(unsigned int preferredLength)
+	unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength)
 	{
 		if (preferredLength == 0)
 		{
-			DigestDataBuffer::preflen = 1;
-			return;
+			return 1;
 		}
 
-		DigestDataBuffer::preflen = preferredLength;
+		return preferredLength;
 	}
 
-	uint64_t CalculateFileChunkIterations(uint64_t fileSize)
+	uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength)
 	{
-		return fileSize / DigestDataBuffer::preflen + 1;
+		unsigned int bufferLength = NormalizeDigestDataBufferPreferredLength(preferredLength);
+		return fileSize / bufferLength + 1;
 	}
 
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)
 	{
-		int64_t readRet = executionState->fileAttemptState.osFile->read(dataBuffer.data, DigestDataBuffer::preflen);
+		int64_t readRet = executionState->fileAttemptState.osFile->read(dataBuffer.data, dataBuffer.capacity);
 		if (readRet >= 0)
 		{
 			dataBuffer.datalen = (unsigned int)readRet;
@@ -68,7 +61,7 @@ namespace HashEngineInternal
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
-		const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
+		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
 		bool isFileFinished = false;
 
@@ -126,10 +119,10 @@ namespace HashEngineInternal
 				break;
 			}
 
-			unique_ptr<DigestDataBuffer> ptrDataBufFile = make_unique<DigestDataBuffer>();
+			unique_ptr<DigestDataBuffer> ptrDataBufFile = make_unique<DigestDataBuffer>(preferredBufferLength);
 			if (ReadDigestDataBuffer(executionState, *ptrDataBufFile))
 			{
-				isFileFinished = (ptrDataBufFile->datalen < DigestDataBuffer::preflen);
+				isFileFinished = (ptrDataBufFile->datalen < ptrDataBufFile->capacity);
 
 				unique_lock<mutex> lock(mtxQueue);
 				cvFile.wait(lock, [&]

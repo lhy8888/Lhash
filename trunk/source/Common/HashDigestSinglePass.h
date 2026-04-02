@@ -8,7 +8,7 @@ namespace HashEngineInternal
 {
 	struct FileExecutionState;
 
-	bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,
+	bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled, unsigned int preferredBufferLength,
 		FileExecutionState *executionState);
 }
 

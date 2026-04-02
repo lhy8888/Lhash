@@ -13,7 +13,7 @@ namespace HashEngineInternal
 {
 	struct FileExecutionState;
 
-	uint64_t CalculateFileChunkIterations(uint64_t fsize);
+	uint64_t CalculateFileChunkIterations(uint64_t fsize, unsigned int preferredBufferLength);
 
 	bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,
 		bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState

@@ -4,11 +4,11 @@
 
 namespace HashEngineInternal
 {
-	bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,
+	bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled, unsigned int preferredBufferLength,
 		FileExecutionState *executionState)
 	{
 		bool isFileFinished = false;
-		DigestDataBuffer databuf;
+		DigestDataBuffer databuf(preferredBufferLength);
 		do
 		{
 			if (ShouldStopHashExecution(*executionContext))
@@ -22,7 +22,7 @@ namespace HashEngineInternal
 				UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
 			}
 
-			isFileFinished = (databuf.datalen < GetDigestDataBufferPreferredLength());
+			isFileFinished = (databuf.datalen < databuf.capacity);
 		}
 		while (!isFileFinished && !executionState->fileAttemptState.readFailed);
 
