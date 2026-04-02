@@ -4776,6 +4776,46 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 WinUI native project should keep consuming the shared native core instead of compiling HashFileResultWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 78 promotes file-attempt completion branching into a dedicated completion-workflow seam", () =>
+        {
+            string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashFileAttemptCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp");
+            string hashFileAttemptCompletionWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashFileAttemptCompletionWorkflowHeader, "void ExecuteOpenedFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.h does not yet expose opened-file completion workflow.");
+            AssertContains(hashFileAttemptCompletionWorkflowHeader, "void ExecuteFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.h does not yet expose file-attempt completion workflow.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "void ExecuteOpenedFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet own opened-file completion branching.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "if (executionState.fileAttemptState.readFailed)", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve read-failed branching.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "CompleteSuccessfulFileHashing(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve successful completion dispatch.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "FinishFileProcessing(executionContext);", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve file-finished dispatch.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "void ExecuteFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet own file-attempt completion branching.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "if (executionState.fileAttemptState.isFileOpened)", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve open-file branching.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "CompleteOpenedFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve opened-file completion dispatch.");
+            AssertContains(hashFileAttemptCompletionWorkflow, "EmitOpenFileError(executionContext, result, executionState.fileAttemptState.openErrorText);", "Phase 78 HashFileAttemptCompletionWorkflow.cpp does not yet preserve open-file error dispatch.");
+
+            AssertContains(hashResultPublisher, "ExecuteOpenedFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 78 HashResultPublisher.cpp does not yet delegate opened-file completion branching.");
+            AssertContains(hashResultPublisher, "ExecuteFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 78 HashResultPublisher.cpp does not yet delegate file-attempt completion branching.");
+            AssertDoesNotContain(hashResultPublisher, "if (executionState.fileAttemptState.readFailed)", "Phase 78 HashResultPublisher.cpp should no longer inline read-failed branching.");
+            AssertDoesNotContain(hashResultPublisher, "if (executionState.fileAttemptState.isFileOpened)", "Phase 78 HashResultPublisher.cpp should no longer inline opened-file branching.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashFileAttemptCompletionWorkflow.h\"", "Phase 78 HashEngineInternal.h does not yet consume HashFileAttemptCompletionWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 desktop native core project does not yet compile HashFileAttemptCompletionWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.h", "Phase 78 desktop native core project does not yet include HashFileAttemptCompletionWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 desktop native core filters do not yet expose HashFileAttemptCompletionWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.h", "Phase 78 desktop native core filters do not yet expose HashFileAttemptCompletionWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 UWP native project does not yet compile HashFileAttemptCompletionWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.h", "Phase 78 UWP native project does not yet include HashFileAttemptCompletionWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 UWP native filters do not yet expose HashFileAttemptCompletionWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.h", "Phase 78 UWP native filters do not yet expose HashFileAttemptCompletionWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp", "Phase 78 WinUI native project should keep consuming the shared native core instead of compiling HashFileAttemptCompletionWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4835,7 +4875,8 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
-            ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp"));
     }
 
     private static Encoding DetectEncoding(string path)

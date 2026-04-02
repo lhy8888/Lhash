@@ -14,6 +14,7 @@
 #include "Common/HashDigestPipeline.h"
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
+#include "Common/HashFileAttemptCompletionWorkflow.h"
 #include "Common/HashFileAttemptWorkflow.h"
 #include "Common/HashFileResultWorkflow.h"
 #include "Common/HashFileAttemptStateOps.h"

@@ -42,17 +42,7 @@ namespace HashEngineInternal
 	void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
-		if (executionState.fileAttemptState.readFailed)
-		{
-			executionState.fileAttemptState.osFile->close();
-			EmitReadFileError(executionContext, result);
-		}
-		else
-		{
-			CompleteSuccessfulFileHashing(executionContext, request, result, fileIndex, isSizeCaled, executionState);
-		}
-
-		FinishFileProcessing(executionContext);
+		ExecuteOpenedFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);
 	}
 
 	void EmitMetaResult(HashExecutionContext *executionContext, HashResult& result)
@@ -101,14 +91,6 @@ namespace HashEngineInternal
 	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
-		if (executionState.fileAttemptState.isFileOpened)
-		{
-			CompleteOpenedFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);
-		}
-		else
-		{
-			EmitOpenFileError(executionContext, result, executionState.fileAttemptState.openErrorText);
-			FinishFileProcessing(executionContext);
-		}
+		ExecuteFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);
 	}
 }
