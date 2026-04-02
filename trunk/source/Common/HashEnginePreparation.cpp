@@ -8,16 +8,8 @@ namespace HashEngineInternal
 {
 	void AccumulatePreScannedFileSize(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex)
 	{
-		uint64_t fSize = 0;
-
 		const TCHAR *path = GetHashRequestFileAt(request, fileIndex).c_str();
-		OsFile osFile(path);
-		if (osFile.openRead())
-		{
-			fSize = osFile.getLength();
-			osFile.close();
-		}
-
+		uint64_t fSize = ResolveHashPreScannedFileSize(path);
 		fSizes[fileIndex] = fSize;
 		AddHashExecutionTotalSize(*executionContext, fSize);
 	}

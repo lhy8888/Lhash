@@ -20,6 +20,7 @@
 #include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
 #include "Common/HashPreparationPlan.h"
+#include "Common/HashPreScanSizeProbe.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
