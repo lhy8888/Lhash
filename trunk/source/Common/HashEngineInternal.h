@@ -6,6 +6,7 @@
 #include "Common/HashDigestCompletion.h"
 #include "Common/HashDigestExecution.h"
 #include "Common/HashDigestExecutionMode.h"
+#include "Common/HashDigestLifecycle.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestRuntimePlan.h"
@@ -101,11 +102,6 @@ namespace HashEngineInternal
 
 	uint64_t PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result,
 		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
-	void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);
-	const sunjwbase::tstring& GetFinalizedDigestValue(const FinalizedDigestBundle& digestBundle, ResultDigestType digestType);
-	void SetFinalizedDigestValue(FinalizedDigestBundle& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);
-	void PopulateDigestResult(const HashRequest& request, HashResult& result, const FinalizedDigestBundle& digestBundle);
-	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, FinalizedDigestBundle& digestBundle);
 }
 
 #endif

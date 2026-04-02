@@ -45,6 +45,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -150,6 +153,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp">

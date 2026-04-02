@@ -118,6 +118,8 @@ public sealed class HashContractUnitTests
         string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
         string digestExecution = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.cpp");
         string digestExecutionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.h");
+        string digestLifecycle = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.cpp");
+        string digestLifecycleHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.h");
         string digestRuntimePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.cpp");
         string digestRuntimePlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.h");
         string digestCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestCompletion.cpp");
@@ -224,6 +226,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsSequential(digestUpdateRequest", digestSinglePass, StringComparison.Ordinal);
+        Assert.Contains("struct FileHashContexts;", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("enum HashDigestExecutionMode", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request);", digestExecutionModeHeader, StringComparison.Ordinal);
@@ -309,8 +316,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", preparation, StringComparison.Ordinal);
 
         Assert.Contains("PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", result, StringComparison.Ordinal);
-        Assert.Contains("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
-        Assert.Contains("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
         Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
         Assert.Contains("tstrFileVersion = ResolveHashFileVersion(osFile, path);", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void CompleteSuccessfulFileHashing(", result, StringComparison.Ordinal);
@@ -342,6 +349,7 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("#include \"Common/HashDigestExecution.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestExecutionMode.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestLifecycle.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestBufferPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestCompletion.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestQueue.h\"", internalHeader, StringComparison.Ordinal);

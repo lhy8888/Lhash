@@ -180,6 +180,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashDigestCompletion.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecution.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueuePlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestRuntimePlan.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashDigestCompletion.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecution.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueuePlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestRuntimePlan.h" />
