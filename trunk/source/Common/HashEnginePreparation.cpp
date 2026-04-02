@@ -59,30 +59,6 @@ namespace HashEngineInternal
 		return isSizeCaled;
 	}
 
-	void InitializeFileAttemptState(const TCHAR *path, OsFile *osFile, FileAttemptState *fileAttemptState)
-	{
-		fileAttemptState->path = path;
-		fileAttemptState->osFile = osFile;
-		fileAttemptState->fileVersion.clear();
-		fileAttemptState->readFailed = false;
-		fileAttemptState->isFileOpened = false;
-		fileAttemptState->openErrorText = NULL;
-	}
-
-	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer)
-	{
-		fileAttemptState->readFailed = false;
-		fileAttemptState->openErrorText = (const TCHAR *)openErrorBuffer;
-		fileAttemptState->isFileOpened = fileAttemptState->osFile->openReadScan(openErrorBuffer);
-		return fileAttemptState->isFileOpened;
-	}
-
-	void ResetFileProgressState(FileProgressState *progressState)
-	{
-		progressState->finishedSize = 0;
-		progressState->position = 0;
-	}
-
 	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);

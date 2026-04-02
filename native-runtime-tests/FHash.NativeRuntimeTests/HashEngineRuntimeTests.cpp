@@ -380,6 +380,29 @@ namespace
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
 	}
 
+	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("meta-only.txt"), "abc");
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<ResultDigestType> algorithms;
+		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+
+		int exitCode = HashThreadFunc(&threadData);
+		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed even when no digest algorithms are enabled.");
+		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "A metadata-only request should still produce one file result.");
+
+		const HashResult& result = GetThreadDataResults(threadData).front();
+		NativeAssertEqual(RESULT_META, result.state, "Without enabled algorithms the final result should remain metadata-only.");
+		NativeAssertEqual(static_cast<size_t>(0), result.digests.size(), "Without enabled algorithms no digest values should be emitted.");
+		NativeAssertEqual(static_cast<uint64_t>(3), result.meta.size, "Metadata-only hashing should still report the correct file size.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_META_READY), "Metadata-only hashing should emit file-metadata events.");
+		NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "Metadata-only hashing should not emit file-hash events.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "Metadata-only hashing should still complete.");
+	}
+
 	static void HashResultSearch_FindsMatchingRuntimeDigests()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -616,6 +639,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
+	tests.push_back({ "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", &HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
 	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForEmptyFile", &HashThreadFunc_ComputesExpectedDigestsForEmptyFile });

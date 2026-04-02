@@ -4557,6 +4557,45 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 WinUI native project should keep consuming the shared native core instead of compiling HashFileSizeAccounting.cpp directly.");
         }, failures);
 
+        Run("Phase 72 promotes file-attempt state operations into a dedicated state-ops seam", () =>
+        {
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashFileAttemptStateOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp");
+            string hashFileAttemptStateOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashFileAttemptStateOpsHeader, "struct FileAttemptState;", "Phase 72 HashFileAttemptStateOps.h does not yet expose FileAttemptState forward declarations.");
+            AssertContains(hashFileAttemptStateOpsHeader, "struct FileProgressState;", "Phase 72 HashFileAttemptStateOps.h does not yet expose FileProgressState forward declarations.");
+            AssertContains(hashFileAttemptStateOpsHeader, "void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);", "Phase 72 HashFileAttemptStateOps.h does not yet expose file-attempt initialization.");
+            AssertContains(hashFileAttemptStateOpsHeader, "bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);", "Phase 72 HashFileAttemptStateOps.h does not yet expose file-open state transitions.");
+            AssertContains(hashFileAttemptStateOpsHeader, "void ResetFileProgressState(FileProgressState *progressState);", "Phase 72 HashFileAttemptStateOps.h does not yet expose file-progress reset operations.");
+
+            AssertContains(hashFileAttemptStateOps, "void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState)", "Phase 72 HashFileAttemptStateOps.cpp does not yet own file-attempt initialization.");
+            AssertContains(hashFileAttemptStateOps, "fileAttemptState->path = path;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve path assignment.");
+            AssertContains(hashFileAttemptStateOps, "fileAttemptState->osFile = osFile;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve file-handle assignment.");
+            AssertContains(hashFileAttemptStateOps, "fileAttemptState->fileVersion.clear();", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve version reset.");
+            AssertContains(hashFileAttemptStateOps, "fileAttemptState->isFileOpened = fileAttemptState->osFile->openReadScan(openErrorBuffer);", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve openReadScan routing.");
+            AssertContains(hashFileAttemptStateOps, "progressState->finishedSize = 0;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve finished-size reset.");
+            AssertContains(hashFileAttemptStateOps, "progressState->position = 0;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve position reset.");
+            AssertContains(hashEnginePreparation, "ResetFileProgressState(&executionState->progressState);", "Phase 72 HashEnginePreparation.cpp does not yet consume the state-ops progress reset seam.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashFileAttemptStateOps.h\"", "Phase 72 HashEngineInternal.h does not yet consume HashFileAttemptStateOps.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 desktop native core project does not yet compile HashFileAttemptStateOps.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.h", "Phase 72 desktop native core project does not yet include HashFileAttemptStateOps.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 desktop native core filters do not yet expose HashFileAttemptStateOps.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileAttemptStateOps.h", "Phase 72 desktop native core filters do not yet expose HashFileAttemptStateOps.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 UWP native project does not yet compile HashFileAttemptStateOps.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.h", "Phase 72 UWP native project does not yet include HashFileAttemptStateOps.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 UWP native filters do not yet expose HashFileAttemptStateOps.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileAttemptStateOps.h", "Phase 72 UWP native filters do not yet expose HashFileAttemptStateOps.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 WinUI native project should keep consuming the shared native core instead of compiling HashFileAttemptStateOps.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4596,6 +4635,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),

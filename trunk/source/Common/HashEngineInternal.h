@@ -15,6 +15,7 @@
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashFileAttemptWorkflow.h"
+#include "Common/HashFileAttemptStateOps.h"
 #include "Common/HashFileSizeAccounting.h"
 #include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
@@ -88,9 +89,6 @@ namespace HashEngineInternal
 	bool PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);
 	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes);
 
-	void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);
-	bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);
-	void ResetFileProgressState(FileProgressState *progressState);
 	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,
 		FileExecutionState *executionState
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
