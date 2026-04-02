@@ -266,8 +266,7 @@ internal static class Program
                 [
                     "TryPreScanSmallBatchFileSizes(",
                     "if (ShouldPreScanHashRequestFileSizes(preparationPlan, request))",
-                    "*wasCancelled = true;",
-                    "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);",
+                    "RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);",
                     "return true;"
                 ],
                 "HashEngine small-batch pre-scan helper no longer preserves the expected control flow.");
@@ -4660,6 +4659,39 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp", "Phase 74 WinUI native project should keep consuming the shared native core instead of compiling HashPreScanSizeAccounting.cpp directly.");
         }, failures);
 
+        Run("Phase 75 promotes pre-scan visit and cancellation flow into a dedicated pre-scan workflow seam", () =>
+        {
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashPreScanWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.cpp");
+            string hashPreScanWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashPreScanWorkflowHeader, "void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);", "Phase 75 HashPreScanWorkflow.h does not yet expose pre-scan visit workflow orchestration.");
+            AssertContains(hashPreScanWorkflow, "void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)", "Phase 75 HashPreScanWorkflow.cpp does not yet own pre-scan visit workflow orchestration.");
+            AssertContains(hashPreScanWorkflow, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "Phase 75 HashPreScanWorkflow.cpp does not yet preserve pre-scan request traversal.");
+            AssertContains(hashPreScanWorkflow, "if (ShouldStopHashExecution(*executionContext))", "Phase 75 HashPreScanWorkflow.cpp does not yet preserve pre-scan cancellation checks.");
+            AssertContains(hashPreScanWorkflow, "*wasCancelled = true;", "Phase 75 HashPreScanWorkflow.cpp does not yet preserve pre-scan cancellation signaling.");
+            AssertContains(hashPreScanWorkflow, "AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);", "Phase 75 HashPreScanWorkflow.cpp does not yet preserve pre-scan accumulation dispatch.");
+            AssertContains(hashEnginePreparation, "RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);", "Phase 75 HashEnginePreparation.cpp does not yet delegate pre-scan traversal workflow.");
+            AssertDoesNotContain(hashEnginePreparation, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "Phase 75 HashEnginePreparation.cpp should no longer inline pre-scan visit traversal.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashPreScanWorkflow.h\"", "Phase 75 HashEngineInternal.h does not yet consume HashPreScanWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 desktop native core project does not yet compile HashPreScanWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.h", "Phase 75 desktop native core project does not yet include HashPreScanWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 desktop native core filters do not yet expose HashPreScanWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashPreScanWorkflow.h", "Phase 75 desktop native core filters do not yet expose HashPreScanWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 UWP native project does not yet compile HashPreScanWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.h", "Phase 75 UWP native project does not yet include HashPreScanWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 UWP native filters do not yet expose HashPreScanWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashPreScanWorkflow.h", "Phase 75 UWP native filters do not yet expose HashPreScanWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreScanWorkflow.cpp", "Phase 75 WinUI native project should keep consuming the shared native core instead of compiling HashPreScanWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4714,6 +4746,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeProbe.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));

@@ -17,19 +17,7 @@ namespace HashEngineInternal
 	{
 		if (ShouldPreScanHashRequestFileSizes(preparationPlan, request))
 		{
-			VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)
-			{
-				(void)fullPath;
-				if (ShouldStopHashExecution(*executionContext))
-				{
-					*wasCancelled = true;
-					return false;
-				}
-
-				AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);
-				return true;
-			});
-
+			RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);
 			return true;
 		}
 
