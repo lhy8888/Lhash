@@ -4858,6 +4858,40 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp", "Phase 79 WinUI native project should keep consuming the shared native core instead of compiling HashSuccessfulFileCompletionWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 80 extracts error-message result emission into a dedicated error-result workflow seam", () =>
+        {
+            string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashErrorResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.cpp");
+            string hashErrorResultWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashErrorResultWorkflowHeader, "void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);", "Phase 80 HashErrorResultWorkflow.h does not yet expose error-message publication.");
+            AssertContains(hashErrorResultWorkflow, "void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)", "Phase 80 HashErrorResultWorkflow.cpp does not yet own error-message publication.");
+            AssertContains(hashErrorResultWorkflow, "result.error = errorText;", "Phase 80 HashErrorResultWorkflow.cpp does not yet preserve error message assignment.");
+            AssertContains(hashErrorResultWorkflow, "EmitErrorResult(executionContext, result);", "Phase 80 HashErrorResultWorkflow.cpp does not yet preserve failed-result publication.");
+
+            AssertContains(hashResultPublisher, "PublishErrorMessageResult(executionContext, result, errorText);", "Phase 80 HashResultPublisher.cpp does not yet delegate error-message publication.");
+            AssertContains(hashResultPublisher, "EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));", "Phase 80 HashResultPublisher.cpp does not yet route open-file errors through the shared error-message helper.");
+            AssertContains(hashResultPublisher, "EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string(\"Failed to read file while hashing.\")));", "Phase 80 HashResultPublisher.cpp does not yet route read-file errors through the shared error-message helper.");
+            AssertDoesNotContain(hashResultPublisher, "result.error = errorText;", "Phase 80 HashResultPublisher.cpp should no longer inline error assignment.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashErrorResultWorkflow.h\"", "Phase 80 HashEngineInternal.h does not yet consume HashErrorResultWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 desktop native core project does not yet compile HashErrorResultWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.h", "Phase 80 desktop native core project does not yet include HashErrorResultWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 desktop native core filters do not yet expose HashErrorResultWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashErrorResultWorkflow.h", "Phase 80 desktop native core filters do not yet expose HashErrorResultWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 UWP native project does not yet compile HashErrorResultWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.h", "Phase 80 UWP native project does not yet include HashErrorResultWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 UWP native filters do not yet expose HashErrorResultWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashErrorResultWorkflow.h", "Phase 80 UWP native filters do not yet expose HashErrorResultWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 WinUI native project should keep consuming the shared native core instead of compiling HashErrorResultWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4918,6 +4952,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp"));
     }

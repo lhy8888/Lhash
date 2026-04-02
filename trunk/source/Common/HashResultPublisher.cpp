@@ -44,8 +44,7 @@ namespace HashEngineInternal
 
 	void EmitErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)
 	{
-		result.error = errorText;
-		EmitErrorResult(executionContext, result);
+		PublishErrorMessageResult(executionContext, result, errorText);
 	}
 
 	void EmitOpenFileError(HashExecutionContext *executionContext, HashResult& result, const TCHAR *errorText)

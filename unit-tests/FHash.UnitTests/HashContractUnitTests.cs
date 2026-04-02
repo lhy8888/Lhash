@@ -168,6 +168,8 @@ public sealed class HashContractUnitTests
         string publisher = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultPublisher.cpp");
         string successfulFileCompletionWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
         string successfulFileCompletionWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h");
+        string errorResultWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.cpp");
+        string errorResultWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.h");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
@@ -444,6 +446,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("PopulateDigestResult(request, result, executionState.digestBundle);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);", errorResultWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("result.error = errorText;", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorResult(executionContext, result);", errorResultWorkflow, StringComparison.Ordinal);
 
         Assert.Contains("void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", publisher, StringComparison.Ordinal);
         Assert.Contains("void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
@@ -454,6 +460,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("ExecuteFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", publisher, StringComparison.Ordinal);
         Assert.Contains("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", publisher, StringComparison.Ordinal);
         Assert.Contains("void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishErrorMessageResult(executionContext, result, errorText);", publisher, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));", publisher, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string(\"Failed to read file while hashing.\")));", publisher, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", publisher, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", publisher, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", publisher, StringComparison.Ordinal);
@@ -483,6 +492,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashPreScanWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreparationWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashErrorResultWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);

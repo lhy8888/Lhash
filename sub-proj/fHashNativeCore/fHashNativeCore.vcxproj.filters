@@ -131,6 +131,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngineResult.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashErrorResultWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -251,6 +254,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashEngineInternal.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashErrorResultWorkflow.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashResultPublisher.h">
