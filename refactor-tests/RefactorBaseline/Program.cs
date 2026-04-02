@@ -3177,6 +3177,7 @@ internal static class Program
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
@@ -3225,6 +3226,7 @@ internal static class Program
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
 
             AssertContains(progressEvent, "CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", "Phase 35 does not yet expose ProgressEvent creation directly from HashResult.");
@@ -4521,6 +4523,40 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 WinUI native project should keep consuming the shared native core instead of compiling HashDigestContextOps.cpp directly.");
         }, failures);
 
+        Run("Phase 71 promotes file-size accounting into a dedicated file-size seam", () =>
+        {
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string hashFileSizeAccounting = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp");
+            string hashFileSizeAccountingHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashFileSizeAccountingHeader, "uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result);", "Phase 71 HashFileSizeAccounting.h does not yet expose file-size accounting seams.");
+            AssertContains(hashFileSizeAccounting, "uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result)", "Phase 71 HashFileSizeAccounting.cpp does not yet own file-size accounting.");
+            AssertContains(hashFileSizeAccounting, "uint64_t fsize = osFile.getLength();", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve file-size retrieval.");
+            AssertContains(hashFileSizeAccounting, "result.meta.size = fsize;", "Phase 71 HashFileSizeAccounting.cpp does not yet project file-size metadata.");
+            AssertContains(hashFileSizeAccounting, "AddHashExecutionTotalSize(*executionContext, fsize);", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve uncounted-size accumulation.");
+            AssertContains(hashFileSizeAccounting, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size replacement.");
+            AssertContains(hashFileSizeAccounting, "fSizes[fileIndex] = fsize;", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size cache updates.");
+            AssertContains(hashEngineResult, "uint64_t fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", "Phase 71 HashEngineResult.cpp does not yet delegate file-size accounting.");
+            AssertDoesNotContain(hashEngineResult, "uint64_t fsize = osFile.getLength();", "Phase 71 HashEngineResult.cpp should no longer inline file-size retrieval.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashFileSizeAccounting.h\"", "Phase 71 HashEngineInternal.h does not yet consume HashFileSizeAccounting.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 desktop native core project does not yet compile HashFileSizeAccounting.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.h", "Phase 71 desktop native core project does not yet include HashFileSizeAccounting.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 desktop native core filters do not yet expose HashFileSizeAccounting.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileSizeAccounting.h", "Phase 71 desktop native core filters do not yet expose HashFileSizeAccounting.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 UWP native project does not yet compile HashFileSizeAccounting.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.h", "Phase 71 UWP native project does not yet include HashFileSizeAccounting.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 UWP native filters do not yet expose HashFileSizeAccounting.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileSizeAccounting.h", "Phase 71 UWP native filters do not yet expose HashFileSizeAccounting.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileSizeAccounting.cpp", "Phase 71 WinUI native project should keep consuming the shared native core instead of compiling HashFileSizeAccounting.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4569,6 +4605,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),

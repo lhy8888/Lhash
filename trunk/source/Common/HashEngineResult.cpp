@@ -11,19 +11,7 @@ namespace HashEngineInternal
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		result.meta.modifiedDate = osFile.getModifiedTimeFormat();
-
-		uint64_t fsize = osFile.getLength();
-		result.meta.size = fsize;
-
-		if (!isSizeCaled)
-		{
-			AddHashExecutionTotalSize(*executionContext, fsize);
-		}
-		else
-		{
-			ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);
-			fSizes[fileIndex] = fsize;
-		}
+		uint64_t fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);
 
 		tstrFileVersion = ResolveHashFileVersion(osFile, path);
 		result.meta.version = tstrFileVersion;

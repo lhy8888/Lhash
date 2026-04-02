@@ -15,6 +15,7 @@
 #include "Common/HashDigestSinglePass.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashFileAttemptWorkflow.h"
+#include "Common/HashFileSizeAccounting.h"
 #include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
 #include "Common/HashPreparationPlan.h"

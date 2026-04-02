@@ -136,6 +136,8 @@ public sealed class HashContractUnitTests
         string digestSinglePass = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestSinglePass.cpp");
         string digestUpdater = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.cpp");
         string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
+        string fileSizeAccounting = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileSizeAccounting.cpp");
+        string fileSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileSizeAccounting.h");
         string jobExecutionPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.cpp");
         string jobExecutionPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
@@ -325,9 +327,17 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", preparation, StringComparison.Ordinal);
 
         Assert.Contains("PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", result, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result);", fileSizeAccountingHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result)", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("result.meta.size = fsize;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("AddHashExecutionTotalSize(*executionContext, fsize);", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("fSizes[fileIndex] = fsize;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("uint64_t fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("uint64_t fsize = osFile.getLength();", result, StringComparison.Ordinal);
         Assert.DoesNotContain("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
         Assert.DoesNotContain("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
-        Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
         Assert.Contains("tstrFileVersion = ResolveHashFileVersion(osFile, path);", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void CompleteSuccessfulFileHashing(", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void CompleteOpenedFileAttempt(", result, StringComparison.Ordinal);
@@ -369,6 +379,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashDigestSinglePass.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestUpdater.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashFileAttemptWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashFileVersionResolver.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashJobExecutionPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreparationPlan.h\"", internalHeader, StringComparison.Ordinal);
