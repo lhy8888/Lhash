@@ -261,6 +261,7 @@
     <ClInclude Include="..\..\trunk\source\Common\Global.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestBufferPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestCompletion.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestContextOps.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecution.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h" />
@@ -296,6 +297,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestCompletion.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestContextOps.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecution.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp" />

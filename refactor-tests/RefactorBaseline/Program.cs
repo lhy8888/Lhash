@@ -4421,6 +4421,8 @@ internal static class Program
         {
             string hashDigestLifecycle = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp");
             string hashDigestLifecycleHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.h");
+            string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
+            string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
@@ -4440,10 +4442,16 @@ internal static class Program
             AssertContains(hashDigestLifecycle, "void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "Phase 69 HashDigestLifecycle.cpp does not yet own hash-context initialization.");
             AssertContains(hashDigestLifecycle, "void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest finalization.");
             AssertContains(hashDigestLifecycle, "void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest projection.");
-            AssertContains(hashDigestLifecycle, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestLifecycle.cpp does not yet preserve MD5 finalization.");
-            AssertContains(hashDigestLifecycle, "hashContexts.sha1.Final();", "Phase 69 HashDigestLifecycle.cpp does not yet preserve SHA1 finalization.");
-            AssertContains(hashDigestLifecycle, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestLifecycle.cpp does not yet preserve SHA256 finalization.");
-            AssertContains(hashDigestLifecycle, "SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);", "Phase 69 HashDigestLifecycle.cpp does not yet preserve SHA512 finalization.");
+            AssertContains(hashDigestLifecycle, "InitializeHashDigestContext(hashContexts, digestType);", "Phase 69 HashDigestLifecycle.cpp does not yet delegate initialization through hash-digest context seams.");
+            AssertContains(hashDigestLifecycle, "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", "Phase 69 HashDigestLifecycle.cpp does not yet delegate finalization through hash-digest context seams.");
+            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context initialization.");
+            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
+            AssertContains(hashDigestContextOps, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
+            AssertContains(hashDigestContextOps, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
+            AssertContains(hashDigestContextOps, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestContextOps.cpp does not yet preserve MD5 finalization.");
+            AssertContains(hashDigestContextOps, "hashContexts.sha1.Final();", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA1 finalization.");
+            AssertContains(hashDigestContextOps, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA256 finalization.");
+            AssertContains(hashDigestContextOps, "SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA512 finalization.");
 
             AssertContains(hashEngineResult, "uint64_t PrepareFileMetaResult(", "Phase 69 HashEngineResult.cpp should keep owning file metadata projection.");
             AssertDoesNotContain(hashEngineResult, "void InitializeFileHashing(", "Phase 69 HashEngineResult.cpp should no longer own hash-context initialization.");
@@ -4453,16 +4461,64 @@ internal static class Program
             AssertContains(hashResultPublisher, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 69 HashResultPublisher.cpp does not yet consume digest projection through lifecycle seams.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestLifecycle.h\"", "Phase 69 HashEngineInternal.h does not yet consume HashDigestLifecycle.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestContextOps.h\"", "Phase 69 HashEngineInternal.h does not yet consume HashDigestContextOps.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestLifecycle.cpp", "Phase 69 desktop native core project does not yet compile HashDigestLifecycle.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestLifecycle.h", "Phase 69 desktop native core project does not yet include HashDigestLifecycle.h.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 69 desktop native core project does not yet compile HashDigestContextOps.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 69 desktop native core project does not yet include HashDigestContextOps.h.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestLifecycle.cpp", "Phase 69 desktop native core filters do not yet expose HashDigestLifecycle.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestLifecycle.h", "Phase 69 desktop native core filters do not yet expose HashDigestLifecycle.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 69 desktop native core filters do not yet expose HashDigestContextOps.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 69 desktop native core filters do not yet expose HashDigestContextOps.h.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestLifecycle.cpp", "Phase 69 UWP native project does not yet compile HashDigestLifecycle.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestLifecycle.h", "Phase 69 UWP native project does not yet include HashDigestLifecycle.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 69 UWP native project does not yet compile HashDigestContextOps.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 69 UWP native project does not yet include HashDigestContextOps.h.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestLifecycle.cpp", "Phase 69 UWP native filters do not yet expose HashDigestLifecycle.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestLifecycle.h", "Phase 69 UWP native filters do not yet expose HashDigestLifecycle.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 69 UWP native filters do not yet expose HashDigestContextOps.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 69 UWP native filters do not yet expose HashDigestContextOps.h.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestLifecycle.cpp", "Phase 69 WinUI native project should keep consuming the shared native core instead of compiling HashDigestLifecycle.cpp directly.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 69 WinUI native project should keep consuming the shared native core instead of compiling HashDigestContextOps.cpp directly.");
+        }, failures);
+
+        Run("Phase 70 promotes per-algorithm digest context initialization and finalization into dedicated context-ops seams", () =>
+        {
+            string hashDigestLifecycle = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp");
+            string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
+            string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm initialization.");
+            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm finalization.");
+
+            AssertContains(hashDigestContextOps, "switch (digestType)", "Phase 70 HashDigestContextOps.cpp does not yet own per-algorithm branch dispatch.");
+            AssertContains(hashDigestContextOps, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestContextOps.cpp does not yet preserve MD5 init.");
+            AssertContains(hashDigestContextOps, "hashContexts->sha1.Reset();", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA1 init.");
+            AssertContains(hashDigestContextOps, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA256 init.");
+            AssertContains(hashDigestContextOps, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA512 init.");
+
+            AssertContains(hashDigestLifecycle, "InitializeHashDigestContext(hashContexts, digestType);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm initialization seams.");
+            AssertContains(hashDigestLifecycle, "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm finalization seams.");
+            AssertDoesNotContain(hashDigestLifecycle, "switch (digestType)", "Phase 70 HashDigestLifecycle.cpp should no longer own algorithm-specific branching.");
+
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestContextOps.h\"", "Phase 70 HashEngineInternal.h does not yet consume HashDigestContextOps.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 desktop native core project does not yet compile HashDigestContextOps.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 70 desktop native core project does not yet include HashDigestContextOps.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 desktop native core filters do not yet expose HashDigestContextOps.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 70 desktop native core filters do not yet expose HashDigestContextOps.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 UWP native project does not yet compile HashDigestContextOps.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 70 UWP native project does not yet include HashDigestContextOps.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 UWP native filters do not yet expose HashDigestContextOps.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestContextOps.h", "Phase 70 UWP native filters do not yet expose HashDigestContextOps.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestContextOps.cpp", "Phase 70 WinUI native project should keep consuming the shared native core instead of compiling HashDigestContextOps.cpp directly.");
         }, failures);
 
         if (failures.Count > 0)
@@ -4507,6 +4563,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),
