@@ -31,27 +31,16 @@ namespace HashEngineInternal
 
 	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		result.state = RESULT_PATH;
-		observer->onProgressEvent(CreateFileStartedProgressEvent(result));
+		PublishFilePathResult(executionContext, result);
 	}
 
 	HashResult& BeginFileResult(HashExecutionContext *executionContext, const tstring& path)
 	{
-		HashResult& result = AppendHashExecutionResult(*executionContext);
-		result = HashResult();
-		result.path = path;
-
-		EmitPathResult(executionContext, result);
-		return result;
+		return ExecuteFileResultBeginWorkflow(executionContext, path);
 	}
 
 	HashResult& BeginFileHashAttempt(HashExecutionContext *executionContext, const tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)
 	{
-		ResetFileProgressState(&executionState->progressState);
-
-		HashResult& result = BeginFileResult(executionContext, path);
-		*resultPath = result.path.c_str();
-		return result;
+		return ExecuteFileHashAttemptBeginWorkflow(executionContext, path, executionState, resultPath);
 	}
 }

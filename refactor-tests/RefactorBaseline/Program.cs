@@ -3180,6 +3180,7 @@ internal static class Program
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
@@ -3212,7 +3213,7 @@ internal static class Program
 
             AssertContains(hashEnginePreparation, "PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request", "Phase 35 preparation seam does not yet consume HashExecutionContext.");
             AssertContains(hashEnginePreparation, "EmitPathResult(HashExecutionContext *executionContext, HashResult& result)", "Phase 35 preparation seam does not yet publish file-start events through HashExecutionContext.");
-            AssertContains(hashEnginePreparation, "AppendHashExecutionResult(*executionContext)", "Phase 35 preparation seam does not yet publish results through HashExecutionContext.");
+            AssertContains(hashFileResultWorkflow, "AppendHashExecutionResult(*executionContext)", "Phase 35 file-result workflow seam does not yet publish results through HashExecutionContext.");
 
             AssertContains(hashEngineResult, "PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", "Phase 35 result seam does not yet consume HashExecutionContext.");
             AssertContains(hashEngineResult, "EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", "Phase 35 result seam does not yet publish hash results through HashExecutionContext.");
@@ -3229,6 +3230,7 @@ internal static class Program
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
@@ -3245,7 +3247,7 @@ internal static class Program
             AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
             AssertDoesNotContain(hashEngineObserver, "CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver still rebuilds ResultData instead of staying as a thin HashResult wrapper.");
 
-            AssertContains(hashEnginePreparation, "CreateFileStartedProgressEvent(result)", "Phase 35 preparation seam does not yet emit file-start events through HashResult.");
+            AssertContains(hashFileResultWorkflow, "CreateFileStartedProgressEvent(result)", "Phase 35 file-result workflow seam does not yet emit file-start events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileMetaReadyProgressEvent(result)", "Phase 35 result seam does not yet emit file-meta events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileHashReadyProgressEvent(result, uppercase)", "Phase 35 result seam does not yet emit file-hash events through HashResult.");
             AssertContains(hashEngineResult, "CreateFileFailedProgressEvent(result)", "Phase 35 result seam does not yet emit file-failed events through HashResult.");
@@ -4565,6 +4567,7 @@ internal static class Program
         Run("Phase 72 promotes file-attempt state operations into a dedicated state-ops seam", () =>
         {
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
             string hashFileAttemptStateOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp");
             string hashFileAttemptStateOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
@@ -4587,7 +4590,8 @@ internal static class Program
             AssertContains(hashFileAttemptStateOps, "fileAttemptState->isFileOpened = fileAttemptState->osFile->openReadScan(openErrorBuffer);", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve openReadScan routing.");
             AssertContains(hashFileAttemptStateOps, "progressState->finishedSize = 0;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve finished-size reset.");
             AssertContains(hashFileAttemptStateOps, "progressState->position = 0;", "Phase 72 HashFileAttemptStateOps.cpp does not yet preserve position reset.");
-            AssertContains(hashEnginePreparation, "ResetFileProgressState(&executionState->progressState);", "Phase 72 HashEnginePreparation.cpp does not yet consume the state-ops progress reset seam.");
+            AssertContains(hashFileResultWorkflow, "ResetFileProgressState(&executionState->progressState);", "Phase 72 file-result workflow seam does not yet consume the state-ops progress reset seam.");
+            AssertDoesNotContain(hashEnginePreparation, "ResetFileProgressState(&executionState->progressState);", "Phase 72 HashEnginePreparation.cpp should no longer inline state-ops progress reset after workflow extraction.");
             AssertContains(hashEngineInternal, "#include \"Common/HashFileAttemptStateOps.h\"", "Phase 72 HashEngineInternal.h does not yet consume HashFileAttemptStateOps.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileAttemptStateOps.cpp", "Phase 72 desktop native core project does not yet compile HashFileAttemptStateOps.cpp.");
@@ -4732,6 +4736,46 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashPreparationWorkflow.cpp", "Phase 76 WinUI native project should keep consuming the shared native core instead of compiling HashPreparationWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 77 promotes file-result startup into a dedicated file-result workflow seam", () =>
+        {
+            string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
+            string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
+            string hashFileResultWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashFileResultWorkflowHeader, "void PublishFilePathResult(HashExecutionContext *executionContext, HashResult& result);", "Phase 77 HashFileResultWorkflow.h does not yet expose path-result publication.");
+            AssertContains(hashFileResultWorkflowHeader, "HashResult& ExecuteFileResultBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path);", "Phase 77 HashFileResultWorkflow.h does not yet expose file-result begin workflow.");
+            AssertContains(hashFileResultWorkflowHeader, "HashResult& ExecuteFileHashAttemptBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);", "Phase 77 HashFileResultWorkflow.h does not yet expose file-attempt begin workflow.");
+            AssertContains(hashFileResultWorkflow, "void PublishFilePathResult(HashExecutionContext *executionContext, HashResult& result)", "Phase 77 HashFileResultWorkflow.cpp does not yet own path-result publication.");
+            AssertContains(hashFileResultWorkflow, "HashResult& ExecuteFileResultBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path)", "Phase 77 HashFileResultWorkflow.cpp does not yet own file-result begin workflow.");
+            AssertContains(hashFileResultWorkflow, "HashResult& ExecuteFileHashAttemptBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)", "Phase 77 HashFileResultWorkflow.cpp does not yet own file-attempt begin workflow.");
+            AssertContains(hashFileResultWorkflow, "AppendHashExecutionResult(*executionContext)", "Phase 77 HashFileResultWorkflow.cpp does not yet preserve result-list append flow.");
+            AssertContains(hashFileResultWorkflow, "EmitPathResult(executionContext, result);", "Phase 77 HashFileResultWorkflow.cpp does not yet preserve path-result emission.");
+            AssertContains(hashFileResultWorkflow, "ResetFileProgressState(&executionState->progressState);", "Phase 77 HashFileResultWorkflow.cpp does not yet preserve progress-state reset.");
+
+            AssertContains(hashEnginePreparation, "PublishFilePathResult(executionContext, result);", "Phase 77 HashEnginePreparation.cpp does not yet delegate path-result publication.");
+            AssertContains(hashEnginePreparation, "return ExecuteFileResultBeginWorkflow(executionContext, path);", "Phase 77 HashEnginePreparation.cpp does not yet delegate file-result begin workflow.");
+            AssertContains(hashEnginePreparation, "return ExecuteFileHashAttemptBeginWorkflow(executionContext, path, executionState, resultPath);", "Phase 77 HashEnginePreparation.cpp does not yet delegate file-attempt begin workflow.");
+            AssertDoesNotContain(hashEnginePreparation, "AppendHashExecutionResult(*executionContext)", "Phase 77 HashEnginePreparation.cpp should no longer inline result-list append flow.");
+            AssertDoesNotContain(hashEnginePreparation, "ResetFileProgressState(&executionState->progressState);", "Phase 77 HashEnginePreparation.cpp should no longer inline progress reset flow.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashFileResultWorkflow.h\"", "Phase 77 HashEngineInternal.h does not yet consume HashFileResultWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 desktop native core project does not yet compile HashFileResultWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.h", "Phase 77 desktop native core project does not yet include HashFileResultWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 desktop native core filters do not yet expose HashFileResultWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileResultWorkflow.h", "Phase 77 desktop native core filters do not yet expose HashFileResultWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 UWP native project does not yet compile HashFileResultWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.h", "Phase 77 UWP native project does not yet include HashFileResultWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 UWP native filters do not yet expose HashFileResultWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashFileResultWorkflow.h", "Phase 77 UWP native filters do not yet expose HashFileResultWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileResultWorkflow.cpp", "Phase 77 WinUI native project should keep consuming the shared native core instead of compiling HashFileResultWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4771,6 +4815,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),

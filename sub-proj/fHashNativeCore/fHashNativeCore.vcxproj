@@ -189,6 +189,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashDigestSinglePass.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashFileResultWorkflow.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptStateOps.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileSizeAccounting.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileVersionResolver.cpp" />
@@ -237,6 +238,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashDigestSinglePass.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashFileResultWorkflow.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptStateOps.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileSizeAccounting.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileVersionResolver.h" />

@@ -77,6 +77,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileResultWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptStateOps.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -200,6 +203,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileResultWorkflow.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptStateOps.h">
