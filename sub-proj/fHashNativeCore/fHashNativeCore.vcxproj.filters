@@ -77,6 +77,9 @@
     <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSchedulerPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -167,6 +170,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashSchedulerDispatch.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSchedulerPlan.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h">

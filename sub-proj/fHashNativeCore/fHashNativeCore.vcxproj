@@ -189,6 +189,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashSchedulerPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEngineResult.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashEngineInternal.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashResultPublisher.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashSchedulerDispatch.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashSchedulerPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h" />
     <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h" />
     <ClInclude Include="..\..\trunk\source\Adapters\UiBridge\HashEngineBridge.h" />

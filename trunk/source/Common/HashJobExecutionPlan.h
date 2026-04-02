@@ -5,6 +5,7 @@
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashRequest.h"
+#include "Common/HashSchedulerPlan.h"
 
 namespace HashEngineInternal
 {
@@ -13,12 +14,14 @@ namespace HashEngineInternal
 		DigestUpdateRequest digestUpdateRequest;
 		HashDigestExecutionMode digestExecutionMode;
 		HashDigestQueuePlan digestQueuePlan;
+		HashSchedulerPlan schedulerPlan;
 	};
 
 	void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);
 	const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);
 	HashDigestExecutionMode GetHashJobDigestExecutionMode(const HashJobExecutionPlan& executionPlan);
 	const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);
+	const HashSchedulerPlan& GetHashJobSchedulerPlan(const HashJobExecutionPlan& executionPlan);
 }
 
 #endif

@@ -16,7 +16,8 @@ namespace HashEngineInternal
 		InitializeHashJobExecutionPlan(request, &executionState.executionPlan);
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		ThreadPool threadPool(5);
+		const HashSchedulerPlan& schedulerPlan = GetHashJobSchedulerPlan(executionState.executionPlan);
+		ThreadPool threadPool(GetHashSchedulerWorkerThreadCount(schedulerPlan));
 		return ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState, &threadPool);
 #else
 		return ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState);
