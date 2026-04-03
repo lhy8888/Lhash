@@ -1,5 +1,5 @@
-#ifndef _THREAD_DATA_EXECUTION_ACCESS_H_
-#define _THREAD_DATA_EXECUTION_ACCESS_H_
+#ifndef _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
+#define _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
 
 #include "LegacyCompat/LegacyThreadData.h"
 #include "Common/HashAlgorithmRegistry.h"

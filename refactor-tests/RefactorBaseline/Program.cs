@@ -12,6 +12,7 @@ internal static class Program
         Run("Phase 1 core contract narrows ThreadData to a HashEngineObserver observer while keeping result shape stable", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string legacyThreadData = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\LegacyThreadData.h");
 
             AssertContains(global, "struct ResultData", "ResultData baseline struct is missing.");
             AssertContains(global, "ResultState state;", "ResultData no longer carries result state in the baseline contract.");
@@ -27,12 +28,7 @@ internal static class Program
             AssertContains(global, "sunjwbase::tstring error;", "ResultData no longer carries the error string in the baseline contract.");
 
             AssertContains(global, "class HashProgressSink;", "Global.h is missing the new phase-34 progress-sink forward declaration.");
-            AssertContains(global, "struct ThreadData", "ThreadData baseline struct is missing.");
-            AssertContains(global, "struct ThreadDataInputState", "ThreadData baseline struct is missing the grouped input-state seam.");
-            AssertContains(global, "struct ThreadDataExecutionState", "ThreadData baseline struct is missing the grouped execution-state seam.");
-            AssertContains(global, "HashProgressSink *observer;", "ThreadData is not yet narrowed to a neutral HashProgressSink observer in the phase-34 contract.");
-            AssertContains(global, "ThreadDataInputState inputState;", "ThreadData no longer carries the grouped input-state field in the baseline contract.");
-            AssertContains(global, "ThreadDataExecutionState executionState;", "ThreadData no longer carries the grouped execution-state field in the baseline contract.");
+            AssertContains(global, "#include \"LegacyCompat/LegacyThreadData.h\"", "Global.h no longer routes legacy ThreadData through the dedicated legacy seam include.");
             AssertDoesNotContain(global, "HashEngineObserver *uiBridge;", "ThreadData still uses the UI-specific uiBridge field name in the phase-1 contract.");
             AssertDoesNotContain(global, "UIBridgeBase *uiBridge;", "ThreadData still directly depends on UIBridgeBase in the phase-1 contract.");
             AssertContains(global, "struct HashExecutionPreferenceState", "ThreadData baseline contract is missing the grouped execution-preference seam.");
@@ -41,21 +37,26 @@ internal static class Program
             AssertContains(global, "std::atomic<bool> working;", "ThreadData no longer carries the grouped working-state flag in the baseline contract.");
             AssertContains(global, "std::atomic<bool> stopRequested;", "ThreadData no longer carries the grouped stop flag in the baseline contract.");
             AssertContains(global, "bool uppercaseDigest;", "ThreadData no longer carries the grouped uppercase flag in the baseline contract.");
-            AssertContains(global, "uint64_t countedSize;", "ThreadData no longer carries grouped totalSize in the baseline contract.");
-            AssertContains(global, "uint32_t fileCount;", "ThreadData no longer carries nFiles in the baseline contract.");
-            AssertContains(global, "TStrVector inputFiles;", "ThreadData no longer carries fullPaths in the baseline contract.");
-            AssertContains(global, "HashResultList results;", "ThreadData no longer carries the grouped HashResultList execution store in the baseline contract.");
-            AssertContains(global, "HashExecutionPreferenceState preferences;", "ThreadData no longer carries the grouped execution-preference state field in the baseline contract.");
-            AssertContains(global, "HashCancellationState cancellation;", "ThreadData no longer carries the grouped cancellation state field in the baseline contract.");
-            AssertContains(global, "HashJobState jobState;", "ThreadData no longer carries the grouped job-state field in the baseline contract.");
             AssertContains(global, "typedef HashResultList ResultList;", "Global.h no longer preserves the temporary ResultList compatibility alias while the legacy seams are being retired.");
-            AssertDoesNotContain(global, "bool threadWorking;", "ThreadData still exposes the legacy threadWorking field name.");
-            AssertDoesNotContain(global, "bool stop;", "ThreadData still exposes the legacy stop field name.");
-            AssertDoesNotContain(global, "bool uppercase;", "ThreadData still exposes the legacy uppercase field name.");
-            AssertDoesNotContain(global, "uint64_t totalSize;", "ThreadData still exposes the legacy totalSize field name.");
-            AssertDoesNotContain(global, "uint32_t nFiles;", "ThreadData still exposes the legacy nFiles field name.");
-            AssertDoesNotContain(global, "TStrVector fullPaths;", "ThreadData still exposes the legacy fullPaths field name.");
-            AssertDoesNotContain(global, "ResultList resultList;", "ThreadData still exposes the legacy resultList field name.");
+
+            AssertContains(legacyThreadData, "struct ThreadDataInputState", "LegacyThreadData seam is missing the grouped input-state seam.");
+            AssertContains(legacyThreadData, "struct ThreadDataExecutionState", "LegacyThreadData seam is missing the grouped execution-state seam.");
+            AssertContains(legacyThreadData, "struct ThreadData", "LegacyThreadData seam is missing the root ThreadData contract.");
+            AssertContains(legacyThreadData, "HashProgressSink *observer;", "ThreadData is not yet narrowed to a neutral HashProgressSink observer in the legacy seam.");
+            AssertContains(legacyThreadData, "ThreadDataInputState inputState;", "ThreadData no longer carries the grouped input-state field in the legacy seam.");
+            AssertContains(legacyThreadData, "ThreadDataExecutionState executionState;", "ThreadData no longer carries the grouped execution-state field in the legacy seam.");
+            AssertContains(legacyThreadData, "uint32_t fileCount;", "ThreadData no longer carries nFiles in the legacy seam.");
+            AssertContains(legacyThreadData, "TStrVector inputFiles;", "ThreadData no longer carries fullPaths in the legacy seam.");
+            AssertContains(legacyThreadData, "HashExecutionPreferenceState preferences;", "ThreadData no longer carries the grouped execution-preference state field in the legacy seam.");
+            AssertContains(legacyThreadData, "HashCancellationState cancellation;", "ThreadData no longer carries the grouped cancellation state field in the legacy seam.");
+            AssertContains(legacyThreadData, "HashJobState jobState;", "ThreadData no longer carries the grouped job-state field in the legacy seam.");
+            AssertDoesNotContain(legacyThreadData, "bool threadWorking;", "ThreadData still exposes the legacy threadWorking field name.");
+            AssertDoesNotContain(legacyThreadData, "bool stop;", "ThreadData still exposes the legacy stop field name.");
+            AssertDoesNotContain(legacyThreadData, "bool uppercase;", "ThreadData still exposes the legacy uppercase field name.");
+            AssertDoesNotContain(legacyThreadData, "uint64_t totalSize;", "ThreadData still exposes the legacy totalSize field name.");
+            AssertDoesNotContain(legacyThreadData, "uint32_t nFiles;", "ThreadData still exposes the legacy nFiles field name.");
+            AssertDoesNotContain(legacyThreadData, "TStrVector fullPaths;", "ThreadData still exposes the legacy fullPaths field name.");
+            AssertDoesNotContain(legacyThreadData, "ResultList resultList;", "ThreadData still exposes the legacy resultList field name.");
         }, failures);
 
         Run("Phase 1 keeps the core on HashProgressSink while moving adapter bridge semantics onto event-oriented callbacks", () =>

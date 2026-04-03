@@ -1,5 +1,5 @@
-#ifndef _THREAD_DATA_INPUT_ACCESS_H_
-#define _THREAD_DATA_INPUT_ACCESS_H_
+#ifndef _LEGACY_THREAD_DATA_INPUT_ACCESS_H_
+#define _LEGACY_THREAD_DATA_INPUT_ACCESS_H_
 
 #include "LegacyCompat/LegacyThreadData.h"
 

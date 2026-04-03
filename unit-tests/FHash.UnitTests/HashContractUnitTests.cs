@@ -115,6 +115,7 @@ public sealed class HashContractUnitTests
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\LegacyThreadData.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string threadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
@@ -189,14 +190,19 @@ public sealed class HashContractUnitTests
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
-        Assert.Contains("HashProgressSink *observer;", global, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> stopRequested;", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> working;", global, StringComparison.Ordinal);
-        Assert.Contains("HashJobState jobState;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadDataInputState", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadDataExecutionState", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadData", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *observer;", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("ThreadDataInputState inputState;", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("HashJobState jobState;", legacyThreadData, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext", executionContext, StringComparison.Ordinal);
         Assert.Contains("CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", executionContext, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashExecutionContext(ThreadData& threadData)", executionContext, StringComparison.Ordinal);

@@ -23,6 +23,7 @@
 #endif
 #include "Common/strhelper.h"
 class HashProgressSink;
+struct ThreadData;
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 
@@ -175,23 +176,5 @@ struct HashJobState
 	HashResultList results;
 };
 
-struct ThreadDataInputState
-{
-	uint32_t fileCount;
-	TStrVector inputFiles;
-};
-
-struct ThreadDataExecutionState
-{
-	HashExecutionPreferenceState preferences;
-	HashCancellationState cancellation;
-	HashJobState jobState;
-};
-
-struct ThreadData
-{
-	HashProgressSink *observer;
-	ThreadDataInputState inputState;
-	ThreadDataExecutionState executionState;
-};
+#include "LegacyCompat/LegacyThreadData.h"
 #endif
