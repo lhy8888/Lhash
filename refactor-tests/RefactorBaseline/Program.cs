@@ -1580,8 +1580,9 @@ internal static class Program
             AssertContains(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultNetProjection does not yet expose the grouped digest-type dispatch helper.");
             AssertContains(resultNetProjection, "switch (resultState)", "ResultNetProjection ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
             AssertContains(resultNetProjection, "return TResultStateNet::ResultPath;", "ResultNetProjection ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
-            AssertContains(resultNetProjection, "switch (digestType)", "ResultNetProjection digest assignment helper does not yet use the compile-safe explicit digest-type switch.");
-            AssertContains(resultNetProjection, "resultDataNet.MD5 = digestValue;", "ResultNetProjection digest assignment helper does not yet map MD5 through the compile-safe explicit switch.");
+            AssertContains(resultNetProjection, "IsResultDigestStableName(ResultDigestType digestType, const char *stableName)", "ResultNetProjection digest assignment helper does not yet route digest-type checks through stable-name metadata.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(digestType,", "ResultNetProjection digest assignment helper does not yet route assignments through the grouped digest dispatch helper.");
+            AssertContains(resultNetProjection, "resultDataNet.MD5 = digestValue;", "ResultNetProjection digest assignment helper does not yet map MD5 through the grouped digest dispatch helper.");
 
             AssertDoesNotContain(resultRender, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataRender render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
         }, failures);
