@@ -3,6 +3,66 @@ namespace FHash.UnitTests;
 public sealed class CommonSeamUnitTests
 {
     [Fact]
+    public void CoreCommonSurface_ContainsThreadDataOnlyInLegacyProjectionAndAccessShims()
+    {
+        string commonRoot = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common");
+        HashSet<string> allowedRelativePaths = new(StringComparer.OrdinalIgnoreCase)
+        {
+            @"trunk\source\Common\Global.h",
+            @"trunk\source\Common\ThreadDataAccess.h",
+            @"trunk\source\Common\ThreadDataExecutionAccess.h",
+            @"trunk\source\Common\ThreadDataInputAccess.h",
+            @"trunk\source\Common\ThreadDataResultAccess.h",
+            @"trunk\source\Common\HashRequestProjection.h",
+            @"trunk\source\Common\HashThreadEntryProjection.h",
+            @"trunk\source\Common\HashThreadEntry.h",
+            @"trunk\source\Common\HashThreadEntry.cpp",
+            @"trunk\source\Common\HashThreadLaunch.h",
+            @"trunk\source\Common\ManagedHashMgmtAccess.h"
+        };
+
+        List<string> threadDataLeakFiles = [];
+        string[] candidates = Directory.GetFiles(commonRoot, "*.*", SearchOption.AllDirectories)
+            .Where(path => path.EndsWith(".h", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        foreach (string candidate in candidates)
+        {
+            string contents = RepositoryTestContext.ReadTextFile(Path.GetRelativePath(RepositoryTestContext.RepoRoot, candidate).Replace('/', '\\'));
+            if (!contents.Contains("ThreadData", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string relativePath = Path.GetRelativePath(RepositoryTestContext.RepoRoot, candidate).Replace('/', '\\');
+            if (allowedRelativePaths.Contains(relativePath))
+            {
+                continue;
+            }
+
+            threadDataLeakFiles.Add(relativePath);
+        }
+
+        Assert.Empty(threadDataLeakFiles);
+    }
+
+    [Fact]
+    public void NativeVcxprojToolset_IsUnifiedToV143()
+    {
+        string[] vcxProjects = Directory.GetFiles(RepositoryTestContext.RepoRoot, "*.vcxproj", SearchOption.AllDirectories);
+        Assert.NotEmpty(vcxProjects);
+
+        foreach (string projectPath in vcxProjects)
+        {
+            string relativePath = Path.GetRelativePath(RepositoryTestContext.RepoRoot, projectPath).Replace('/', '\\');
+            string projectContents = RepositoryTestContext.ReadTextFile(relativePath);
+
+            Assert.DoesNotContain("<PlatformToolset>v141</PlatformToolset>", projectContents, StringComparison.Ordinal);
+            Assert.DoesNotContain("<PlatformToolset>v145</PlatformToolset>", projectContents, StringComparison.Ordinal);
+            Assert.Contains("<PlatformToolset>v143</PlatformToolset>", projectContents, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashAlgorithmRegistry.h");

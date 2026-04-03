@@ -5173,6 +5173,74 @@ internal static class Program
             AssertContains(hashContractUnitTests, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 86 contract unit tests do not yet assert descriptor snapshots use registry-derived storage.");
         }, failures);
 
+        Run("Phase 87 isolates ThreadData into legacy seams and unifies native toolsets on v143", () =>
+        {
+            string[] vcxProjects = Directory.GetFiles(repoRoot, "*.vcxproj", SearchOption.AllDirectories);
+            if (vcxProjects.Length == 0)
+            {
+                failures.Add("Phase 87 could not find any vcxproj files to validate native toolset unification.");
+            }
+
+            for (int projectIndex = 0; projectIndex < vcxProjects.Length; ++projectIndex)
+            {
+                string projectPath = vcxProjects[projectIndex];
+                string projectContents = File.ReadAllText(projectPath, Encoding.UTF8);
+                string relativeProjectPath = Path.GetRelativePath(repoRoot, projectPath).Replace('/', '\\');
+
+                if (projectContents.Contains("<PlatformToolset>v141</PlatformToolset>", StringComparison.Ordinal) ||
+                    projectContents.Contains("<PlatformToolset>v145</PlatformToolset>", StringComparison.Ordinal))
+                {
+                    failures.Add($"Phase 87 native toolset unification failed: {relativeProjectPath} still uses a legacy PlatformToolset.");
+                }
+
+                if (!projectContents.Contains("<PlatformToolset>v143</PlatformToolset>", StringComparison.Ordinal))
+                {
+                    failures.Add($"Phase 87 native toolset unification failed: {relativeProjectPath} does not contain a v143 PlatformToolset entry.");
+                }
+            }
+
+            HashSet<string> allowedThreadDataFiles =
+            [
+                @"trunk\source\Common\Global.h",
+                @"trunk\source\Common\ThreadDataAccess.h",
+                @"trunk\source\Common\ThreadDataExecutionAccess.h",
+                @"trunk\source\Common\ThreadDataInputAccess.h",
+                @"trunk\source\Common\ThreadDataResultAccess.h",
+                @"trunk\source\Common\HashRequestProjection.h",
+                @"trunk\source\Common\HashThreadEntryProjection.h",
+                @"trunk\source\Common\HashThreadEntry.h",
+                @"trunk\source\Common\HashThreadEntry.cpp",
+                @"trunk\source\Common\HashThreadLaunch.h",
+                @"trunk\source\Common\ManagedHashMgmtAccess.h"
+            ];
+
+            string commonRoot = Path.Combine(repoRoot, @"trunk\source\Common");
+            string[] commonFiles = Directory.GetFiles(commonRoot, "*.*", SearchOption.AllDirectories);
+            for (int fileIndex = 0; fileIndex < commonFiles.Length; ++fileIndex)
+            {
+                string commonFile = commonFiles[fileIndex];
+                if (!commonFile.EndsWith(".h", StringComparison.OrdinalIgnoreCase) &&
+                    !commonFile.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string contents = File.ReadAllText(commonFile, Encoding.UTF8);
+                if (!contents.Contains("ThreadData", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                string relativePath = Path.GetRelativePath(repoRoot, commonFile).Replace('/', '\\');
+                if (allowedThreadDataFiles.Contains(relativePath))
+                {
+                    continue;
+                }
+
+                failures.Add($"Phase 87 ThreadData isolation failed: {relativePath} still references ThreadData outside the legacy seam whitelist.");
+            }
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
