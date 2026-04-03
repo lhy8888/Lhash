@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "Common/Global.h"
+#include "LegacyCompat/LegacyThreadData.h"
 #include "HashResultNet.h"
 #include "UIBridgeDelegate.h"
 #include "UIBridgeUwp.h"

@@ -79,6 +79,12 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registry, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registry, StringComparison.Ordinal);
+        Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registry, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registry, StringComparison.Ordinal);
+        Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registry, StringComparison.Ordinal);
+        Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registry, StringComparison.Ordinal);
         Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
         Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registry, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registry, StringComparison.Ordinal);
@@ -326,5 +332,26 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("<PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.8.260317003\" />", winUiProject, StringComparison.Ordinal);
         Assert.DoesNotContain("2.0.0-experimental", winUiProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SourceLayerEntryPoints_ExposeDomainRuntimeAndLegacyCompatContracts()
+    {
+        string domainContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashDomainContracts.h");
+        string runtimeContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\HashRuntimeContracts.h");
+        string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\LegacyCompatibility.h");
+
+        Assert.Contains("#include \"Common/HashAlgorithmRegistry.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResult.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/ProgressEvent.h\"", domainContracts, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Common/HashExecutionContext.h\"", runtimeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashEngine.h\"", runtimeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataAccess.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
     }
 }

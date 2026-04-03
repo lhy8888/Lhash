@@ -10,8 +10,16 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
+        Assert.Contains("std::vector<HashAlgorithmId> algorithmIds;", request, StringComparison.Ordinal);
         Assert.Contains("std::vector<ResultDigestType> algorithms;", request, StringComparison.Ordinal);
         Assert.Contains("bool uppercaseDigest;", request, StringComparison.Ordinal);
+        Assert.Contains("HashRequestDigestExecutionPolicy digestExecutionPolicy;", request, StringComparison.Ordinal);
+        Assert.Contains("AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
+        Assert.Contains("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.Contains("GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)", request, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithmIds(const HashRequest& request", request, StringComparison.Ordinal);
+        Assert.Contains("HasHashRequestAlgorithmId(const HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
+        Assert.Contains("GetHashRequestDigestExecutionPolicy(const HashRequest& request)", request, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestFiles(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithms(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("CreateHashRequestAlgorithmSelectionState(const HashRequest& request)", request, StringComparison.Ordinal);
@@ -190,7 +198,8 @@ public sealed class HashContractUnitTests
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadData;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);

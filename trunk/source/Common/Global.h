@@ -176,5 +176,4 @@ struct HashJobState
 	HashResultList results;
 };
 
-#include "LegacyCompat/LegacyThreadData.h"
 #endif

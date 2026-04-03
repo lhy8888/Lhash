@@ -2,6 +2,8 @@
 #define _HASH_ALGORITHM_REGISTRY_H_
 #include "Common/Global.h"
 
+typedef sunjwbase::tstring HashAlgorithmId;
+
 struct HashAlgorithmDescriptor
 {
 	ResultDigestType type;
@@ -21,6 +23,12 @@ static inline std::vector<HashAlgorithmDescriptor>& GetMutableHashAlgorithmDescr
 	return descriptorStorage;
 }
 
+static inline bool& GetHashAlgorithmDefaultsInitializedFlag()
+{
+	static bool defaultsInitialized = false;
+	return defaultsInitialized;
+}
+
 static inline HashAlgorithmDescriptorRegistry& GetMutableHashAlgorithmDescriptorRegistryView()
 {
 	static HashAlgorithmDescriptorRegistry registryView = { NULL, 0 };
@@ -33,6 +41,22 @@ static inline bool IsHashAlgorithmDescriptorValid(const HashAlgorithmDescriptor&
 		algorithmDescriptor.stableName[0] != '\0' &&
 		algorithmDescriptor.displayLabel != NULL &&
 		algorithmDescriptor.displayLabel[0] != '\0';
+}
+
+static inline HashAlgorithmId NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)
+{
+	std::string normalizedStableName = sunjwbase::str_lower(sunjwbase::tstrtostr(algorithmId));
+	return sunjwbase::strtotstr(normalizedStableName);
+}
+
+static inline HashAlgorithmId GetHashAlgorithmDescriptorId(const HashAlgorithmDescriptor& algorithmDescriptor)
+{
+	return NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(algorithmDescriptor.stableName)));
+}
+
+static inline bool IsHashAlgorithmDescriptorIdEqual(const HashAlgorithmDescriptor& left, const HashAlgorithmDescriptor& right)
+{
+	return GetHashAlgorithmDescriptorId(left) == GetHashAlgorithmDescriptorId(right);
 }
 
 static inline void RefreshHashAlgorithmDescriptorRegistryView()
@@ -53,7 +77,8 @@ static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor
 	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
 	for (size_t descriptorIndex = 0; descriptorIndex < descriptorStorage.size(); ++descriptorIndex)
 	{
-		if (descriptorStorage[descriptorIndex].type != algorithmDescriptor.type)
+		if (descriptorStorage[descriptorIndex].type != algorithmDescriptor.type &&
+			!IsHashAlgorithmDescriptorIdEqual(descriptorStorage[descriptorIndex], algorithmDescriptor))
 		{
 			continue;
 		}
@@ -70,8 +95,7 @@ static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor
 
 static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 {
-	static bool defaultsInitialized = false;
-	if (defaultsInitialized)
+	if (GetHashAlgorithmDefaultsInitializedFlag())
 	{
 		return;
 	}
@@ -80,7 +104,7 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA1, "sha1", "SHA1" });
 	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA256, "sha256", "SHA256" });
 	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA512, "sha512", "SHA512" });
-	defaultsInitialized = true;
+	GetHashAlgorithmDefaultsInitializedFlag() = true;
 }
 
 static inline const HashAlgorithmDescriptor& GetUnknownHashAlgorithmDescriptor()
@@ -109,6 +133,21 @@ static inline sunjwbase::tstring GetHashAlgorithmDescriptorDisplayLabel(const Ha
 	return sunjwbase::strtotstr(std::string(algorithmDescriptor.displayLabel));
 }
 
+static inline bool ClearHashAlgorithmDescriptorsForTesting()
+{
+	GetMutableHashAlgorithmDescriptorStorage().clear();
+	RefreshHashAlgorithmDescriptorRegistryView();
+	GetHashAlgorithmDefaultsInitializedFlag() = false;
+	return true;
+}
+
+static inline bool ResetHashAlgorithmDescriptorsToDefaultsForTesting()
+{
+	ClearHashAlgorithmDescriptorsForTesting();
+	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	return true;
+}
+
 static inline const HashAlgorithmDescriptorRegistry& GetHashAlgorithmDescriptorRegistry()
 {
 	EnsureDefaultHashAlgorithmDescriptorsRegistered();
@@ -134,6 +173,35 @@ static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int in
 		return GetUnknownHashAlgorithmDescriptor();
 	}
 	return algorithmDescriptors[index];
+}
+
+static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)
+{
+	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
+	const HashAlgorithmDescriptor *resolvedDescriptor = NULL;
+
+	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& descriptor)
+	{
+		(void)index;
+		if (GetHashAlgorithmDescriptorId(descriptor) != normalizedAlgorithmId)
+		{
+			return true;
+		}
+
+		resolvedDescriptor = &descriptor;
+		return false;
+	});
+
+	if (resolvedDescriptor == NULL)
+	{
+		return false;
+	}
+
+	if (algorithmDescriptor != NULL)
+	{
+		*algorithmDescriptor = resolvedDescriptor;
+	}
+	return true;
 }
 
 template<typename THashAlgorithmVisitor>
@@ -201,6 +269,31 @@ static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, co
 		*algorithmDescriptor = &GetHashAlgorithmDescriptorAt(algorithmIndex);
 	}
 	return true;
+}
+
+static inline bool IsRegisteredHashAlgorithmId(const HashAlgorithmId& algorithmId)
+{
+	return TryGetHashAlgorithmDescriptorById(algorithmId, NULL);
+}
+
+static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)
+{
+	const HashAlgorithmDescriptor *descriptor = NULL;
+	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &descriptor) || descriptor == NULL)
+	{
+		return false;
+	}
+
+	if (digestType != NULL)
+	{
+		*digestType = GetHashAlgorithmDescriptorType(*descriptor);
+	}
+	return true;
+}
+
+static inline HashAlgorithmId GetHashAlgorithmId(ResultDigestType digestType)
+{
+	return GetHashAlgorithmDescriptorId(GetHashAlgorithmDescriptor(digestType));
 }
 
 static inline ResultDigestType GetHashAlgorithmTypeAt(int index)

@@ -15,11 +15,27 @@
 #include "Common/HashProgressSink.h"
 #include "Common/HashRequest.h"
 #include "Common/HashResultSearch.h"
+#include "Common/ResultDataAccess.h"
+#include "Common/ResultDigestValueAccess.h"
 #include "Common/ThreadDataAccess.h"
 
 namespace
 {
 	static const size_t kHashEngineBufferSize = 1048576;
+
+	class ScopedHashAlgorithmRegistryReset
+	{
+	public:
+		ScopedHashAlgorithmRegistryReset()
+		{
+			ResetHashAlgorithmDescriptorsToDefaultsForTesting();
+		}
+
+		~ScopedHashAlgorithmRegistryReset()
+		{
+			ResetHashAlgorithmDescriptorsToDefaultsForTesting();
+		}
+	};
 
 	class CapturingProgressSink : public HashProgressSink
 	{
@@ -248,7 +264,10 @@ namespace
 	{
 		HashRequest request;
 		request.files = filePaths;
-		request.algorithms = enabledAlgorithms;
+		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithms.size(); ++algorithmIndex)
+		{
+			AppendHashRequestAlgorithm(request, enabledAlgorithms[algorithmIndex]);
+		}
 		request.uppercaseDigest = uppercaseDigest;
 		return request;
 	}
@@ -420,6 +439,78 @@ namespace
 		SetThreadDataHashAlgorithmEnabled(threadData, RESULT_DIGEST_UNKNOWN, false);
 		NativeAssertEqual(initialEnabledCount, GetEnabledThreadDataHashAlgorithmCount(threadData), "Unknown digest toggles should not mutate enabled algorithm count.");
 		NativeAssertTrue(!IsThreadDataHashAlgorithmEnabled(threadData, RESULT_DIGEST_UNKNOWN), "Unknown digest types should always be reported as disabled.");
+	}
+
+	static void HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset()
+	{
+		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
+		int baselineCount = GetRegisteredHashAlgorithmCount();
+		ResultDigestType customDigestType = static_cast<ResultDigestType>(4096);
+
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			customDigestType,
+			"blake3",
+			"BLAKE3"
+		}), "RegisterHashAlgorithmDescriptor should accept descriptor/id-based custom algorithm registration.");
+
+		NativeAssertEqual(baselineCount + 1, GetRegisteredHashAlgorithmCount(), "Descriptor/id-based custom algorithm registration should increase the registry count.");
+		NativeAssertTrue(IsRegisteredHashAlgorithmId(sunjwbase::strtotstr(std::string("BLAKE3"))), "Algorithm id lookups should be case-insensitive.");
+
+		const HashAlgorithmDescriptor *registeredDescriptor = NULL;
+		NativeAssertTrue(TryGetHashAlgorithmDescriptorById(sunjwbase::strtotstr(std::string("blake3")), &registeredDescriptor), "Descriptor/id-based lookup should resolve custom algorithms.");
+		NativeAssertTrue(registeredDescriptor != NULL, "Descriptor/id lookup should expose the registered descriptor.");
+		NativeAssertEqual(customDigestType, GetHashAlgorithmDescriptorType(*registeredDescriptor), "Descriptor/id lookup should preserve custom digest type identity.");
+	}
+
+	static void HashRequest_AlgorithmIdsDriveSelectionAndDeduplication()
+	{
+		HashRequest request;
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("SHA512")));
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha512")));
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("unknown")));
+
+		std::vector<HashAlgorithmId> algorithmIds;
+		VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
+		{
+			algorithmIds.push_back(algorithmId);
+			return true;
+		});
+
+		std::vector<ResultDigestType> digestTypes;
+		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
+		{
+			digestTypes.push_back(digestType);
+			return true;
+		});
+
+		NativeAssertEqual(static_cast<size_t>(2), algorithmIds.size(), "HashRequest should deduplicate descriptor/id algorithms while keeping compatibility algorithms.");
+		NativeAssertTrue(HasHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha512"))), "HashRequest should report selected algorithms by descriptor/id.");
+		NativeAssertTrue(HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5), "HashRequest should preserve digest-type compatibility selection.");
+		NativeAssertEqual(static_cast<size_t>(2), digestTypes.size(), "HashRequest digest iteration should resolve deduplicated descriptor/id selections.");
+	}
+
+	static void HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots()
+	{
+		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
+		ResultDigestType customDigestType = static_cast<ResultDigestType>(4097);
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			customDigestType,
+			"xxh3",
+			"XXH3"
+		}), "Custom descriptor/id registration should allow result projection coverage for non-fixed digests.");
+
+		ResultData resultData;
+		ResetResultData(resultData);
+		SetResultState(resultData, RESULT_ALL);
+		SetResultPath(resultData, sunjwbase::strtotstr(std::string("custom-id.bin")));
+		SetResultDigest(resultData, customDigestType, sunjwbase::strtotstr(std::string("CAFEBABE")));
+
+		HashResult result = ProjectHashResult(resultData);
+		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "HashResult projection should emit descriptor/id-based digest results without fixed digest slots.");
+		NativeAssertEqual(customDigestType, result.digests[0].type, "Projected digest should preserve custom descriptor digest identity.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("xxh3")), result.digests[0].stableName, "Projected digest should preserve descriptor/id stable names.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("CAFEBABE")), result.digests[0].value, "Projected digest should preserve descriptor/id digest values.");
 	}
 
 	static void HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry()
@@ -743,6 +834,9 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
+	tests.push_back({ "HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", &HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset });
+	tests.push_back({ "HashRequest_AlgorithmIdsDriveSelectionAndDeduplication", &HashRequest_AlgorithmIdsDriveSelectionAndDeduplication });
+	tests.push_back({ "HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots", &HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots });
 	tests.push_back({ "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", &HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry });
 	tests.push_back({ "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", &HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry });
 	tests.push_back({ "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", &HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests });

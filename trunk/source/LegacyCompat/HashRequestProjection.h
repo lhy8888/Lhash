@@ -13,7 +13,7 @@ static inline HashRequest CreateHashRequest(const ThreadData& threadData)
 
 	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
 	{
-		request.algorithms.push_back(digestType);
+		AppendHashRequestAlgorithm(request, digestType);
 		return true;
 	});
 

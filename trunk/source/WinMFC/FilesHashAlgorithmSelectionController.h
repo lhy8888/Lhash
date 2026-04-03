@@ -6,6 +6,7 @@
 
 #include "Common/Global.h"
 #include "Common/HashAlgorithmRegistry.h"
+#include "LegacyCompat/LegacyThreadData.h"
 
 class FilesHashAlgorithmSelectionController
 {
