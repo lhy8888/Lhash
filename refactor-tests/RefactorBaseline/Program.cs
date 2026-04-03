@@ -5152,6 +5152,24 @@ internal static class Program
             AssertContains(nativeRuntimeUnitTests, "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", "Phase 85 managed unit tests do not yet gate registry-ordered digest updater runtime coverage.");
         }, failures);
 
+        Run("Phase 86 derives digest-operation snapshots from the algorithm registry seam", () =>
+        {
+            string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
+
+            AssertContains(hashDigestOperationRegistry, "TryCreateHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor creation through a dedicated resolver helper.");
+            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 86 HashDigestOperationRegistry.cpp does not yet cache digest-operation descriptors from registry metadata.");
+            AssertContains(hashDigestOperationRegistry, "static bool operationDescriptorsInitialized = false;", "Phase 86 HashDigestOperationRegistry.cpp does not yet guard one-time descriptor snapshot initialization.");
+            AssertContains(hashDigestOperationRegistry, "operationDescriptors.push_back(operationDescriptor);", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize registry-ordered operation descriptors.");
+            AssertDoesNotContain(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 86 HashDigestOperationRegistry.cpp still hardcodes a fixed operation-descriptor table.");
+
+            AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 native runtime tests do not yet cover descriptor snapshot generation.");
+            AssertContains(nativeRuntimeUnitTests, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 managed unit tests do not yet gate descriptor snapshot generation coverage.");
+            AssertContains(hashContractUnitTests, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 86 contract unit tests do not yet assert descriptor snapshots use registry-derived storage.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
