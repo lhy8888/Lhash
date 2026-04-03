@@ -38,12 +38,13 @@ namespace HashEngineInternal
 		{
 			return digestUpdateRequest;
 		}
+		HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);
 
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
 			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-			if (!HasHashRequestAlgorithm(request, digestType))
+			if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))
 			{
 				return true;
 			}

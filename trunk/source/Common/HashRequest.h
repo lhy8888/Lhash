@@ -20,6 +20,48 @@ struct HashRequest
 	bool uppercaseDigest;
 };
 
+static inline HashAlgorithmSelectionState CreateHashRequestAlgorithmSelectionState(const HashRequest& request)
+{
+	HashAlgorithmSelectionState selectionState;
+	selectionState.enabled.assign(static_cast<size_t>(GetRegisteredHashAlgorithmCount()), false);
+
+	for (size_t algorithmIndex = 0; algorithmIndex < request.algorithms.size(); ++algorithmIndex)
+	{
+		int registeredIndex = -1;
+		if (!TryGetHashAlgorithmIndex(request.algorithms[algorithmIndex], &registeredIndex))
+		{
+			continue;
+		}
+
+		size_t normalizedIndex = static_cast<size_t>(registeredIndex);
+		if (normalizedIndex >= selectionState.enabled.size())
+		{
+			continue;
+		}
+
+		selectionState.enabled[normalizedIndex] = true;
+	}
+
+	return selectionState;
+}
+
+static inline bool IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)
+{
+	int algorithmIndex = -1;
+	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	{
+		return false;
+	}
+
+	size_t normalizedIndex = static_cast<size_t>(algorithmIndex);
+	if (normalizedIndex >= selectionState.enabled.size())
+	{
+		return false;
+	}
+
+	return selectionState.enabled[normalizedIndex];
+}
+
 static inline size_t GetHashRequestFileCount(const HashRequest& request)
 {
 	return request.files.size();
@@ -75,20 +117,7 @@ static inline bool VisitHashRequestAlgorithms(const HashRequest& request, THashR
 
 static inline bool HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)
 {
-	bool hasAlgorithm = false;
-
-	VisitHashRequestAlgorithms(request, [&](ResultDigestType algorithmType)
-	{
-		if (algorithmType == digestType)
-		{
-			hasAlgorithm = true;
-			return false;
-		}
-
-		return true;
-	});
-
-	return hasAlgorithm;
+	return IsHashRequestAlgorithmSelected(CreateHashRequestAlgorithmSelectionState(request), digestType);
 }
 
 static inline bool GetHashRequestUppercaseDigest(const HashRequest& request)
