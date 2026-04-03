@@ -193,8 +193,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
         Assert.Contains("ShouldStopHashExecution(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
         Assert.Contains("AppendHashExecutionResult(HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
-        Assert.Contains("HashJobState *jobState;", executionContext, StringComparison.Ordinal);
-        Assert.Contains("HashCancellationState *cancellationState;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashJobState& jobState;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashCancellationState& cancellationState;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", executionContext, StringComparison.Ordinal);
         Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", threadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);

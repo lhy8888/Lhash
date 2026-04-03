@@ -3192,8 +3192,9 @@ internal static class Program
             AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashEngineObserver no longer satisfies the progress-max sink contract.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashEngineObserver no longer satisfies the semantic progress-event sink contract.");
             AssertContains(hashExecutionContext, "HashProgressSink *progressSink;", "Phase 35 hash execution context does not yet carry the neutral progress sink.");
-            AssertContains(hashExecutionContext, "HashJobState *jobState;", "Phase 35 hash execution context does not yet carry the grouped job-state seam.");
-            AssertContains(hashExecutionContext, "HashCancellationState *cancellationState;", "Phase 35 hash execution context does not yet carry the grouped cancellation seam.");
+            AssertContains(hashExecutionContext, "HashJobState& jobState;", "Phase 35 hash execution context does not yet carry the grouped job-state seam.");
+            AssertContains(hashExecutionContext, "HashCancellationState& cancellationState;", "Phase 35 hash execution context does not yet carry the grouped cancellation seam.");
+            AssertContains(hashExecutionContext, "HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", "Phase 35 hash execution context does not yet require explicit state dependencies.");
             AssertContains(hashExecutionContext, "GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose progress-sink reads.");
             AssertContains(hashExecutionContext, "ShouldStopHashExecution(const HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose cancellation reads.");
             AssertContains(hashExecutionContext, "AppendHashExecutionResult(HashExecutionContext& executionContext)", "Phase 35 hash execution context does not yet expose result publication.");
