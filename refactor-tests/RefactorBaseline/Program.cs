@@ -2100,6 +2100,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
             string scheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
@@ -2110,7 +2111,12 @@ internal static class Program
 
             AssertContains(engine, "#include \"Common/HashEngineInternal.h\"", "HashEngine.cpp does not yet consume the new internal HashEngine split seam.");
             AssertContains(fileRunner, "bool ProcessOpenedFileHashing(", "HashDigestPipeline.cpp no longer owns the opened-file read/update orchestration.");
-            AssertContains(engine, "int WINAPI HashThreadFunc(void *param)", "HashEngine.cpp no longer owns the thread orchestration entry point.");
+            AssertDoesNotContain(engine, "int WINAPI HashThreadFunc(void *param)", "HashEngine.cpp should no longer own the thread orchestration entry point after the thread-entry split.");
+            AssertContains(hashThreadEntry, "int WINAPI HashThreadFunc(void *param)", "HashThreadEntry.cpp does not yet own the thread orchestration entry point after the thread-entry split.");
+            AssertContains(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp does not yet consume HashRequest projection for thread-data adaptation.");
+            AssertContains(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp does not yet consume thread-data execution access for runtime adaptation.");
+            AssertContains(hashThreadEntry, "HashRequest request = CreateHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest.");
+            AssertContains(hashThreadEntry, "HashExecutionContext executionContext = CreateHashExecutionContext(", "HashThreadEntry.cpp does not yet inject HashExecutionContext.");
             AssertDoesNotContain(engine, "static uint64_t PrepareFileMetaResult(", "HashEngine.cpp still owns file-metadata finalization instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static void CompleteSuccessfulFileHashing(", "HashEngine.cpp still owns successful-file completion instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static bool PrepareHashingWork(", "HashEngine.cpp still owns preparation helpers instead of delegating them to the split preparation implementation file.");
@@ -2135,6 +2141,7 @@ internal static class Program
             AssertContains(scheduler, "FileExecutionState executionState = { 0 };", "HashScheduler.cpp does not yet preserve grouped file-execution state for the runner seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core project does not yet compile HashFileRunner.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "Desktop native core project does not yet compile HashThreadEntry.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core project does not yet compile HashEngineResult.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core project does not yet compile HashResultPublisher.cpp.");
@@ -2146,14 +2153,17 @@ internal static class Program
             AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
             AssertContains(nativeProject, @"$(MSBuildProjectName)$(FHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core filters do not yet expose HashFileRunner.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "Desktop native core filters do not yet expose HashThreadEntry.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core filters do not yet expose HashResultPublisher.cpp.");
 
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "WinUI native project still compiles HashFileRunner.cpp instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "WinUI native project still compiles HashThreadEntry.cpp instead of consuming fHashNativeCore.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming fHashNativeCore.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project still compiles HashEngineResult.cpp instead of consuming fHashNativeCore.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "UWP native project does not yet compile HashFileRunner.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "UWP native project does not yet compile HashThreadEntry.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "UWP native project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "UWP native project does not yet compile HashEngineResult.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "UWP native project does not yet compile HashResultPublisher.cpp.");
@@ -2484,9 +2494,9 @@ internal static class Program
             AssertContains(threadResultAccess, "AppendThreadDataResult(ThreadData& threadData)", "Phase 18 result seam does not yet own result-list appends.");
             AssertContains(threadResultAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "Phase 18 result seam does not yet own result traversal.");
 
-            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 execution seam.");
-            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataInputAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 input seam.");
-            AssertContains(hashEngineInternal, "#include \"Common/ThreadDataResultAccess.h\"", "HashEngineInternal.h does not yet consume the phase 18 result seam.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 execution seam after thread-entry decoupling.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataInputAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 input seam after thread-entry decoupling.");
+            AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataResultAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 result seam after thread-entry decoupling.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataAccess.h\"", "HashEngineInternal.h still consumes the umbrella ThreadDataAccess header after the phase 18 seam split.");
 
             AssertContains(mfcSearchController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC search controller does not yet consume the phase 18 execution seam.");
@@ -5095,6 +5105,7 @@ internal static class Program
         return string.Join(
             "\r\n",
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),

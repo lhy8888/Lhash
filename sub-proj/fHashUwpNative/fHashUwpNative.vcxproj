@@ -308,6 +308,7 @@
     <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashThreadEntry.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestCompletion.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestContextOps.cpp" />

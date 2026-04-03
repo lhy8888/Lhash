@@ -2,9 +2,6 @@
 
 #include "HashEngine.h"
 
-#include "Common/HashExecutionContext.h"
-#include "Common/HashRequestProjection.h"
-#include "Common/ThreadDataExecutionAccess.h"
 #include "Common/HashEngineInternal.h"
 
 using namespace std;
@@ -49,16 +46,4 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 	}
 
 	return CompleteHashing(executionContext);
-}
-
-int WINAPI HashThreadFunc(void *param)
-{
-	ThreadData *thrdData = (ThreadData *)param;
-	HashExecutionContext executionContext = CreateHashExecutionContext(
-		GetThreadDataObserver(*thrdData),
-		GetMutableThreadDataHashJobState(*thrdData),
-		GetMutableThreadDataHashCancellationState(*thrdData));
-	HashRequest request = CreateHashRequest(*thrdData);
-
-	return RunHashRequest(&executionContext, request);
 }

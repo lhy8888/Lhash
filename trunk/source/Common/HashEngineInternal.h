@@ -38,9 +38,6 @@
 #include "Common/HashRequest.h"
 #include "Common/HashSchedulerDispatch.h"
 #include "Common/HashSchedulerPlan.h"
-#include "Common/ThreadDataExecutionAccess.h"
-#include "Common/ThreadDataInputAccess.h"
-#include "Common/ThreadDataResultAccess.h"
 #include "Common/ResultDigestMetadataAccess.h"
 #include "Common/ResultDigestStateAccess.h"
 
