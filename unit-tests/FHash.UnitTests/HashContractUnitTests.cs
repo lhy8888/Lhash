@@ -622,8 +622,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);
         Assert.Contains("cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(&m_hWorkThread);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("RestartHashWorkerThread(&workThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("CloseHashWorkerThreadHandle(&workThread);", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("FindResult(System::String^ sstrHashToFind)", clrMgmtHeader, StringComparison.Ordinal);

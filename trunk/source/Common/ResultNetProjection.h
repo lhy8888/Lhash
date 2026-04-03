@@ -69,6 +69,28 @@ static inline void DispatchResultDigestValueByType(ResultDigestType digestType, 
 template<typename TResultDataNet, typename TResultString>
 static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)
 {
+#if defined (_MANAGED)
+	if (IsResultDigestStableName(digestType, "md5"))
+	{
+		resultDataNet.MD5 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableName(digestType, "sha1"))
+	{
+		resultDataNet.SHA1 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableName(digestType, "sha256"))
+	{
+		resultDataNet.SHA256 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableName(digestType, "sha512"))
+	{
+		resultDataNet.SHA512 = digestValue;
+		return resultDataNet;
+	}
+#else
 	DispatchResultDigestValueByType(digestType,
 		[&]()
 	{
@@ -86,6 +108,7 @@ static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNe
 	{
 		resultDataNet.SHA512 = digestValue;
 	});
+#endif
 	return resultDataNet;
 }
 

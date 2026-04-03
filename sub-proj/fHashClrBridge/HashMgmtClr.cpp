@@ -56,7 +56,9 @@ HashMgmtClr::!HashMgmtClr()
 		delete m_pUiBridgeWUI;
 	if (m_pThreadData)
 		delete m_pThreadData;
-	CloseHashWorkerThreadHandle(&m_hWorkThread);
+	HANDLE workThread = m_hWorkThread;
+	CloseHashWorkerThreadHandle(&workThread);
+	m_hWorkThread = workThread;
 }
 
 void HashMgmtClr::Init()
@@ -126,7 +128,9 @@ void HashMgmtClr::StartHashThread()
 	}
 
 	unsigned int thredID = 0;
-	RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);
+	HANDLE workThread = m_hWorkThread;
+	RestartHashWorkerThread(&workThread, m_pThreadData, &thredID);
+	m_hWorkThread = workThread;
 }
 
 cli::array<HashResultNet>^ HashMgmtClr::FindHashResults(String^ sstrHashToFind)
