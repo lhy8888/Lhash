@@ -37,8 +37,14 @@ namespace HashEngineInternal
 			return false;
 		}
 
-		const HashAlgorithmId resolvedAlgorithmId = GetHashAlgorithmId(operationDescriptor->digestType);
-		return NormalizeHashAlgorithmId(resolvedAlgorithmId) == NormalizeHashAlgorithmId(algorithmId) &&
+		HashAlgorithmId resolvedAlgorithmId = NormalizeHashAlgorithmId(operationDescriptor->algorithmId);
+		if (resolvedAlgorithmId.empty() && IsRegisteredHashAlgorithmType(operationDescriptor->digestType))
+		{
+			resolvedAlgorithmId = NormalizeHashAlgorithmId(GetHashAlgorithmId(operationDescriptor->digestType));
+		}
+
+		return !resolvedAlgorithmId.empty() &&
+			resolvedAlgorithmId == NormalizeHashAlgorithmId(algorithmId) &&
 			IsHashDigestOperationDescriptorComplete(*operationDescriptor);
 	}
 

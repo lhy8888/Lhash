@@ -17,6 +17,22 @@ static inline bool TryResolveDigestStorageIndex(ResultDigestType digestType, siz
 	return true;
 }
 
+static inline bool TryResolveDigestStorageIndexById(const HashAlgorithmId& algorithmId, size_t *digestIndex)
+{
+	int index = -1;
+	if (!TryGetResultDigestIndexById(algorithmId, &index) || index < 0)
+	{
+		return false;
+	}
+
+	if (digestIndex != NULL)
+	{
+		*digestIndex = static_cast<size_t>(index);
+	}
+
+	return true;
+}
+
 static inline sunjwbase::tstring& GetInvalidDigestStorageScratch()
 {
 	static sunjwbase::tstring invalidDigestStorageScratch;
@@ -49,6 +65,22 @@ static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigest
 	return digestStorage.values[digestIndex];
 }
 
+static inline const sunjwbase::tstring& GetDigestStorageValueById(const ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
+{
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndexById(algorithmId, &digestIndex))
+	{
+		static const sunjwbase::tstring emptyDigestValue;
+		return emptyDigestValue;
+	}
+	if (digestIndex >= digestStorage.values.size())
+	{
+		static const sunjwbase::tstring emptyDigestValue;
+		return emptyDigestValue;
+	}
+	return digestStorage.values[digestIndex];
+}
+
 static inline sunjwbase::tstring& GetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
 	size_t digestIndex = 0;
@@ -61,9 +93,26 @@ static inline sunjwbase::tstring& GetMutableDigestStorageValue(ResultDigestStora
 	return digestStorage.values[digestIndex];
 }
 
+static inline sunjwbase::tstring& GetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
+{
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndexById(algorithmId, &digestIndex))
+	{
+		return GetInvalidDigestStorageScratch();
+	}
+
+	EnsureDigestStorageSize(digestStorage);
+	return digestStorage.values[digestIndex];
+}
+
 static inline bool HasDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
 	return !GetDigestStorageValue(digestStorage, digestType).empty();
+}
+
+static inline bool HasDigestStorageValueById(const ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
+{
+	return !GetDigestStorageValueById(digestStorage, algorithmId).empty();
 }
 
 static inline void SetDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
@@ -78,10 +127,34 @@ static inline void SetDigestStorageValue(ResultDigestStorage& digestStorage, Res
 	digestStorage.values[digestIndex] = digestValue;
 }
 
+static inline void SetDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)
+{
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndexById(algorithmId, &digestIndex))
+	{
+		return;
+	}
+
+	EnsureDigestStorageSize(digestStorage);
+	digestStorage.values[digestIndex] = digestValue;
+}
+
 static inline void ClearDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
 	size_t digestIndex = 0;
 	if (!TryResolveDigestStorageIndex(digestType, &digestIndex))
+	{
+		return;
+	}
+
+	EnsureDigestStorageSize(digestStorage);
+	digestStorage.values[digestIndex].clear();
+}
+
+static inline void ClearDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
+{
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndexById(algorithmId, &digestIndex))
 	{
 		return;
 	}
@@ -115,9 +188,19 @@ static inline const sunjwbase::tstring& GetStoredResultDigest(const ResultData& 
 	return GetDigestStorageValue(GetResultDigestStorage(result), digestType);
 }
 
+static inline const sunjwbase::tstring& GetStoredResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return GetDigestStorageValueById(GetResultDigestStorage(result), algorithmId);
+}
+
 static inline sunjwbase::tstring& GetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType)
 {
 	return GetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType);
+}
+
+static inline sunjwbase::tstring& GetMutableStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return GetMutableDigestStorageValueById(GetMutableResultDigestStorage(result), algorithmId);
 }
 
 static inline bool HasStoredResultDigest(const ResultData& result, ResultDigestType digestType)
@@ -125,14 +208,29 @@ static inline bool HasStoredResultDigest(const ResultData& result, ResultDigestT
 	return HasDigestStorageValue(GetResultDigestStorage(result), digestType);
 }
 
+static inline bool HasStoredResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return HasDigestStorageValueById(GetResultDigestStorage(result), algorithmId);
+}
+
 static inline void SetStoredResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
 {
 	SetDigestStorageValue(GetMutableResultDigestStorage(result), digestType, digestValue);
 }
 
+static inline void SetStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)
+{
+	SetDigestStorageValueById(GetMutableResultDigestStorage(result), algorithmId, digestValue);
+}
+
 static inline void ClearStoredResultDigest(ResultData& result, ResultDigestType digestType)
 {
 	ClearDigestStorageValue(GetMutableResultDigestStorage(result), digestType);
+}
+
+static inline void ClearStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	ClearDigestStorageValueById(GetMutableResultDigestStorage(result), algorithmId);
 }
 
 #endif

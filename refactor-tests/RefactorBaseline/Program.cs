@@ -601,8 +601,18 @@ internal static class Program
             AssertContains(digestAccess, "GetResultDigest(result, digestType).find(digestText)", "ResultDigestAccess no longer routes digest search through the neutral digest order helper.");
 
             AssertContains(engineImpl, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine does not yet centralize finalized digest strings through the finalized digest bundle.");
-            AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine no longer routes digest publishing through the neutral digest iteration helper.");
-            AssertContains(engineImpl, "GetFinalizedDigestValue(digestBundle, digestType)", "HashEngine does not yet read finalized digest strings through the finalized digest seam.");
+            AssertContainsAny(engineImpl,
+                [
+                    "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)",
+                    "VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)"
+                ],
+                "HashEngine no longer routes digest publishing through the request algorithm iteration helper.");
+            AssertContainsAny(engineImpl,
+                [
+                    "GetFinalizedDigestValue(digestBundle, digestType)",
+                    "GetFinalizedDigestValueById(digestBundle, algorithmId)"
+                ],
+                "HashEngine does not yet read finalized digest strings through the finalized digest seam.");
             AssertContains(engineImpl, "HashDigestResult digestResult;", "HashEngine no longer materializes finalized digests through the neutral HashResult digest seam.");
             AssertContains(engineImpl, "digestResult.value = digestValue;", "HashEngine no longer assigns finalized digest text through the neutral HashResult digest seam.");
             AssertContains(engineImpl, "result.digests.push_back(digestResult);", "HashEngine no longer writes finalized digests through the HashResult digest collection seam.");
@@ -696,7 +706,12 @@ internal static class Program
             AssertContains(digestAccess, "return GetMutableStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet expose mutable access through the internal digest storage in phase 3.");
             AssertDoesNotContain(digestAccess, "GetMutableCompatibilityResultDigest(result, digestType) = digestValue;", "Digest writes still mirror back into removed compatibility fields.");
 
-            AssertContains(engineImpl, "const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);", "HashEngine no longer routes finalized digest metadata lookup through the phase-3 digest seam.");
+            AssertContainsAny(engineImpl,
+                [
+                    "const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);",
+                    "TryGetResultDigestMetadataById(algorithmId, &digestMetadata)"
+                ],
+                "HashEngine no longer routes finalized digest metadata lookup through the digest metadata seam.");
             AssertContains(engineImpl, "result.digests.push_back(digestResult);", "HashEngine no longer routes finalized digest writes through the HashResult digest seam.");
             AssertContains(bridgeMfc, "VisitResultDigestDisplayValues(result, uppercase, [&](int index, const ResultDigestMetadata& digestMetadata, const ResultDigestDisplayInfo& digestDisplayInfo)", "MFC digest rendering no longer reads through the phase-5 formatted digest-display visitor seam.");
         }, failures);
@@ -886,8 +901,18 @@ internal static class Program
             AssertContains(digestAccess, "ClearDigestStorageValue(GetMutableResultDigestStorage(result), digestType);", "ResultDigestAccess stored-digest clear helper does not yet reuse the neutral digest-storage seam.");
 
             AssertContains(engineImpl, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine does not yet reuse ResultDigestStorage as the finalized digest bundle.");
-            AssertContains(engineImpl, "GetDigestStorageValue(digestBundle, digestType)", "HashEngine finalized-digest getter does not yet reuse the neutral digest-storage seam.");
-            AssertContains(engineImpl, "SetDigestStorageValue(digestBundle, digestType, digestValue);", "HashEngine finalized-digest setter does not yet reuse the neutral digest-storage seam.");
+            AssertContainsAny(engineImpl,
+                [
+                    "GetDigestStorageValue(digestBundle, digestType)",
+                    "GetDigestStorageValueById(digestBundle, algorithmId)"
+                ],
+                "HashEngine finalized-digest getter does not yet reuse the neutral digest-storage seam.");
+            AssertContainsAny(engineImpl,
+                [
+                    "SetDigestStorageValue(digestBundle, digestType, digestValue);",
+                    "SetDigestStorageValueById(digestBundle, algorithmId, digestValue);"
+                ],
+                "HashEngine finalized-digest setter does not yet reuse the neutral digest-storage seam.");
             AssertDoesNotContain(engineImpl, "tstring digestValues[RESULT_DIGEST_STORAGE_COUNT];", "HashEngine still duplicates digest storage layout inside FinalizedDigestBundle instead of reusing the neutral storage seam.");
         }, failures);
 
@@ -1959,7 +1984,12 @@ internal static class Program
             AssertContains(threadAccess, "hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, true);", "ThreadDataAccess does not yet default a new algorithm-selection vector to enabled.");
 
             AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
-            AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
+            AssertContainsAny(engineImpl,
+                [
+                    "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)",
+                    "VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)"
+                ],
+                "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
             AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "PopulateDigestResult(request, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", "HashEngine does not yet route digest updates through operation-descriptor iteration seams.");
@@ -4547,8 +4577,18 @@ internal static class Program
             AssertContains(hashDigestLifecycle, "void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "Phase 69 HashDigestLifecycle.cpp does not yet own hash-context initialization.");
             AssertContains(hashDigestLifecycle, "void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest finalization.");
             AssertContains(hashDigestLifecycle, "void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest projection.");
-            AssertContains(hashDigestLifecycle, "InitializeHashDigestContext(hashContexts, digestType);", "Phase 69 HashDigestLifecycle.cpp does not yet delegate initialization through hash-digest context seams.");
-            AssertContains(hashDigestLifecycle, "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", "Phase 69 HashDigestLifecycle.cpp does not yet delegate finalization through hash-digest context seams.");
+            AssertContainsAny(hashDigestLifecycle,
+                [
+                    "InitializeHashDigestContext(hashContexts, digestType);",
+                    "InitializeHashDigestContextById(hashContexts, algorithmId);"
+                ],
+                "Phase 69 HashDigestLifecycle.cpp does not yet delegate initialization through hash-digest context seams.");
+            AssertContainsAny(hashDigestLifecycle,
+                [
+                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);",
+                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);"
+                ],
+                "Phase 69 HashDigestLifecycle.cpp does not yet delegate finalization through hash-digest context seams.");
             AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context initialization.");
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
             AssertContains(hashDigestContextOps, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
@@ -4613,8 +4653,18 @@ internal static class Program
             AssertContains(hashDigestOperationRegistry, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA256 init.");
             AssertContains(hashDigestOperationRegistry, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA512 init.");
 
-            AssertContains(hashDigestLifecycle, "InitializeHashDigestContext(hashContexts, digestType);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm initialization seams.");
-            AssertContains(hashDigestLifecycle, "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm finalization seams.");
+            AssertContainsAny(hashDigestLifecycle,
+                [
+                    "InitializeHashDigestContext(hashContexts, digestType);",
+                    "InitializeHashDigestContextById(hashContexts, algorithmId);"
+                ],
+                "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm initialization seams.");
+            AssertContainsAny(hashDigestLifecycle,
+                [
+                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);",
+                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);"
+                ],
+                "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm finalization seams.");
             AssertDoesNotContain(hashDigestLifecycle, "switch (digestType)", "Phase 70 HashDigestLifecycle.cpp should no longer own algorithm-specific branching.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestContextOps.h\"", "Phase 70 HashEngineInternal.h does not yet consume HashDigestContextOps.");

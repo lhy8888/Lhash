@@ -6,41 +6,67 @@ namespace HashEngineInternal
 {
 	void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)
 	{
-		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
 		{
-			InitializeHashDigestContext(hashContexts, digestType);
+			InitializeHashDigestContextById(hashContexts, algorithmId);
 			return true;
 		});
 
 		GetHashExecutionProgressSink(*executionContext)->onProgressEvent(CreateFileProgressEvent(0));
 	}
 
+	const sunjwbase::tstring& GetFinalizedDigestValueById(const ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId)
+	{
+		return GetDigestStorageValueById(digestBundle, algorithmId);
+	}
+
 	const sunjwbase::tstring& GetFinalizedDigestValue(const ResultDigestStorage& digestBundle, ResultDigestType digestType)
 	{
-		return GetDigestStorageValue(digestBundle, digestType);
+		if (!IsRegisteredHashAlgorithmType(digestType))
+		{
+			static const sunjwbase::tstring emptyDigestValue;
+			return emptyDigestValue;
+		}
+
+		return GetFinalizedDigestValueById(digestBundle, GetHashAlgorithmId(digestType));
+	}
+
+	void SetFinalizedDigestValueById(ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)
+	{
+		SetDigestStorageValueById(digestBundle, algorithmId, digestValue);
 	}
 
 	void SetFinalizedDigestValue(ResultDigestStorage& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
 	{
-		SetDigestStorageValue(digestBundle, digestType, digestValue);
+		if (!IsRegisteredHashAlgorithmType(digestType))
+		{
+			return;
+		}
+
+		SetFinalizedDigestValueById(digestBundle, GetHashAlgorithmId(digestType), digestValue);
 	}
 
 	void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle)
 	{
 		result.digests.clear();
-		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
 		{
-			const sunjwbase::tstring& digestValue = GetFinalizedDigestValue(digestBundle, digestType);
+			const sunjwbase::tstring& digestValue = GetFinalizedDigestValueById(digestBundle, algorithmId);
 			if (digestValue.empty())
 			{
 				return true;
 			}
 
-			const ResultDigestMetadata& digestMetadata = GetResultDigestMetadata(digestType);
+			const ResultDigestMetadata *digestMetadata = NULL;
+			if (!TryGetResultDigestMetadataById(algorithmId, &digestMetadata) || digestMetadata == NULL)
+			{
+				return true;
+			}
+
 			HashDigestResult digestResult;
-			digestResult.type = digestType;
-			digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
-			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
+			digestResult.type = GetResultDigestMetadataType(*digestMetadata);
+			digestResult.stableName = GetResultDigestMetadataStableName(*digestMetadata);
+			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(*digestMetadata);
 			digestResult.value = digestValue;
 			result.digests.push_back(digestResult);
 			return true;
@@ -49,9 +75,9 @@ namespace HashEngineInternal
 
 	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
 	{
-		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
+		VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
 		{
-			FinalizeHashDigestContext(hashContexts, digestType, digestBundle);
+			FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);
 			return true;
 		});
 	}

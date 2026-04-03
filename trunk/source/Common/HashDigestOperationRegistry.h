@@ -18,6 +18,7 @@ namespace HashEngineInternal
 		HashDigestInitializeAction initializeAction;
 		HashDigestUpdateAction updateAction;
 		HashDigestFinalizeAction finalizeAction;
+		HashAlgorithmId algorithmId;
 	};
 
 	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);

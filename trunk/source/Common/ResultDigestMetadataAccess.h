@@ -30,9 +30,19 @@ static inline int GetResultDigestIndex(ResultDigestType digestType)
 	return GetHashAlgorithmIndex(digestType);
 }
 
+static inline int GetResultDigestIndexById(const HashAlgorithmId& algorithmId)
+{
+	return GetHashAlgorithmIndexById(algorithmId);
+}
+
 static inline bool TryGetResultDigestIndex(ResultDigestType digestType, int *index)
 {
 	return TryGetHashAlgorithmIndex(digestType, index);
+}
+
+static inline bool TryGetResultDigestIndexById(const HashAlgorithmId& algorithmId, int *index)
+{
+	return TryGetHashAlgorithmIndexById(algorithmId, index);
 }
 
 static inline ResultDigestType GetResultDigestTypeAt(int index)
@@ -53,6 +63,22 @@ static inline const ResultDigestMetadata& GetResultDigestMetadata(ResultDigestTy
 static inline bool TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)
 {
 	return TryGetHashAlgorithmDescriptor(digestType, digestMetadata);
+}
+
+static inline const ResultDigestMetadata& GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)
+{
+	const ResultDigestMetadata *digestMetadata = NULL;
+	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &digestMetadata) || digestMetadata == NULL)
+	{
+		return GetResultDigestMetadata(RESULT_DIGEST_UNKNOWN);
+	}
+
+	return *digestMetadata;
+}
+
+static inline bool TryGetResultDigestMetadataById(const HashAlgorithmId& algorithmId, const ResultDigestMetadata **digestMetadata)
+{
+	return TryGetHashAlgorithmDescriptorById(algorithmId, digestMetadata);
 }
 
 static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata& digestMetadata)
