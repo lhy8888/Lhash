@@ -8,6 +8,7 @@
 
 #include "Common/HashAlgorithmRegistry.h"
 #include "Common/HashEngine.h"
+#include "Common/HashThreadEntry.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
 #include "Common/HashRequest.h"

@@ -116,6 +116,7 @@ public sealed class HashContractUnitTests
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string threadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
+        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.cpp");
         string threadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntryProjection.h");
@@ -210,7 +211,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetThreadDataHashJobState(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext;", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("int WINAPI HashThreadFunc(void *param);", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashThreadEntry.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);

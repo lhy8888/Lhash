@@ -13,7 +13,7 @@
 #include <string>
 #include "Common/strhelper.h"
 #include "Common/Global.h"
-#include "Common/HashEngine.h"
+#include "Common/HashThreadEntry.h"
 #include "Common/HashResult.h"
 #include "Common/ThreadDataResultAccess.h"
 

@@ -11,6 +11,5 @@ struct HashRequest;
 struct HashExecutionContext;
 
 int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);
-int WINAPI HashThreadFunc(void *param);
 
 #endif

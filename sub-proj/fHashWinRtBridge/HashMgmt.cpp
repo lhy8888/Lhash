@@ -3,7 +3,7 @@
 #include "HashMgmt.h"
 #include "CxHelper.h"
 #include "Common/ManagedHashMgmtAccess.h"
-#include "Common/HashEngine.h"
+#include "Common/HashThreadEntry.h"
 using namespace std;
 using namespace Platform;
 using namespace FilesHashUwp;

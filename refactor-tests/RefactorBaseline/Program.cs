@@ -2620,7 +2620,7 @@ internal static class Program
             AssertContains(sessionControllerHeader, "void SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 21 session controller is missing the grouped working-state UI seam.");
             AssertContains(sessionControllerHeader, "void PrepareDropTarget(CWnd* pWnd, BOOL bAccept);", "Phase 21 session controller is missing the grouped drop-target helper.");
 
-            AssertContains(sessionController, "#include \"Common/HashEngine.h\"", "Phase 21 session controller does not yet own thread startup through HashEngine.h.");
+            AssertContains(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller does not yet own thread startup through HashThreadEntry.h.");
             AssertContains(sessionController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 21 session controller does not yet consume the ThreadData execution seam.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->SyncSelections();", "Phase 21 session controller does not yet own hash-algorithm selection sync.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "Phase 21 session controller does not yet own hash-algorithm validation.");
@@ -3175,6 +3175,7 @@ internal static class Program
         {
             string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
+            string hashThreadEntryHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
@@ -3182,6 +3183,8 @@ internal static class Program
             AssertDoesNotContain(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context still directly depends on ThreadData.");
             AssertContains(hashEngineHeader, "struct HashExecutionContext;", "Phase 33 HashEngine header does not yet forward declare HashExecutionContext.");
             AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
+            AssertDoesNotContain(hashEngineHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashEngine header should no longer expose the thread-entry declaration after the thread-entry header split.");
+            AssertContains(hashThreadEntryHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashThreadEntry header does not yet expose the thread-entry declaration.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
             AssertContains(hashEngine, "#include \"Common/HashThreadEntryProjection.h\"", "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
             AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");

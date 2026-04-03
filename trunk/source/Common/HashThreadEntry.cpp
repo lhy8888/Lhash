@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngine.h"
+#include "Common/HashThreadEntry.h"
 #include "Common/HashThreadEntryProjection.h"
 
 int WINAPI HashThreadFunc(void *param)

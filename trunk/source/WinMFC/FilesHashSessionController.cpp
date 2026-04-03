@@ -5,7 +5,7 @@
 
 #include "FilesHashSessionController.h"
 
-#include "Common/HashEngine.h"
+#include "Common/HashThreadEntry.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
 
