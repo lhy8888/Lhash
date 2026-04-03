@@ -175,6 +175,19 @@ static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int in
 	return algorithmDescriptors[index];
 }
 
+template<typename THashAlgorithmVisitor>
+static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
+{
+	for (int index = 0; index < GetRegisteredHashAlgorithmCount(); ++index)
+	{
+		if (!visitor(index, GetHashAlgorithmDescriptorAt(index)))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)
 {
 	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
@@ -200,19 +213,6 @@ static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algo
 	if (algorithmDescriptor != NULL)
 	{
 		*algorithmDescriptor = resolvedDescriptor;
-	}
-	return true;
-}
-
-template<typename THashAlgorithmVisitor>
-static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
-{
-	for (int index = 0; index < GetRegisteredHashAlgorithmCount(); ++index)
-	{
-		if (!visitor(index, GetHashAlgorithmDescriptorAt(index)))
-		{
-			return false;
-		}
 	}
 	return true;
 }
