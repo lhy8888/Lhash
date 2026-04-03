@@ -295,8 +295,8 @@ internal static class Program
             AssertInOrder(engine,
                 [
                     "static int CompleteHashing(",
-                    "observer->onProgressEvent(CreateCompletedProgressEvent());",
-                    "SetHashExecutionWorking(*executionContext, false);",
+                    "HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);",
+                    "ExecuteCompletedHashingWorkflow(executionContext, observer);",
                     "return 0;"
                 ],
                 "HashEngine completion helper no longer preserves the expected completion order.");
@@ -4943,6 +4943,43 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 WinUI native project should keep consuming the shared native core instead of compiling HashResultEventWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 82 extracts hash-job terminal lifecycle publication into a dedicated job-lifecycle workflow seam", () =>
+        {
+            string hashEngine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
+            string hashJobLifecycleWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.cpp");
+            string hashJobLifecycleWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashJobLifecycleWorkflowHeader, "void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", "Phase 82 HashJobLifecycleWorkflow.h does not yet expose cancellation lifecycle publication.");
+            AssertContains(hashJobLifecycleWorkflowHeader, "void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", "Phase 82 HashJobLifecycleWorkflow.h does not yet expose completion lifecycle publication.");
+            AssertContains(hashJobLifecycleWorkflow, "void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", "Phase 82 HashJobLifecycleWorkflow.cpp does not yet own cancellation lifecycle publication.");
+            AssertContains(hashJobLifecycleWorkflow, "void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", "Phase 82 HashJobLifecycleWorkflow.cpp does not yet own completion lifecycle publication.");
+            AssertContains(hashJobLifecycleWorkflow, "observer->onProgressEvent(CreateCancelledProgressEvent());", "Phase 82 HashJobLifecycleWorkflow.cpp does not yet preserve cancelled-event publication.");
+            AssertContains(hashJobLifecycleWorkflow, "observer->onProgressEvent(CreateCompletedProgressEvent());", "Phase 82 HashJobLifecycleWorkflow.cpp does not yet preserve completed-event publication.");
+            AssertContains(hashJobLifecycleWorkflow, "SetHashExecutionWorking(*executionContext, false);", "Phase 82 HashJobLifecycleWorkflow.cpp does not yet preserve job-working teardown.");
+
+            AssertContains(hashEngine, "ExecuteCancelledHashingWorkflow(executionContext, observer);", "Phase 82 HashEngine.cpp does not yet delegate cancellation lifecycle publication.");
+            AssertContains(hashEngine, "ExecuteCompletedHashingWorkflow(executionContext, observer);", "Phase 82 HashEngine.cpp does not yet delegate completion lifecycle publication.");
+            AssertDoesNotContain(hashEngine, "observer->onProgressEvent(CreateCancelledProgressEvent());", "Phase 82 HashEngine.cpp should no longer inline cancelled-event publication.");
+            AssertDoesNotContain(hashEngine, "observer->onProgressEvent(CreateCompletedProgressEvent());", "Phase 82 HashEngine.cpp should no longer inline completed-event publication.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashJobLifecycleWorkflow.h\"", "Phase 82 HashEngineInternal.h does not yet consume HashJobLifecycleWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 desktop native core project does not yet compile HashJobLifecycleWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.h", "Phase 82 desktop native core project does not yet include HashJobLifecycleWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 desktop native core filters do not yet expose HashJobLifecycleWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.h", "Phase 82 desktop native core filters do not yet expose HashJobLifecycleWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 UWP native project does not yet compile HashJobLifecycleWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.h", "Phase 82 UWP native project does not yet include HashJobLifecycleWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 UWP native filters do not yet expose HashJobLifecycleWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.h", "Phase 82 UWP native filters do not yet expose HashJobLifecycleWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 WinUI native project should keep consuming the shared native core instead of compiling HashJobLifecycleWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4986,6 +5023,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp"),

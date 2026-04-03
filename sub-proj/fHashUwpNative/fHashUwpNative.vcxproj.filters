@@ -90,6 +90,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashJobExecutionPlan.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashPreparationPlan.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -234,6 +237,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashJobExecutionPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashPreparationPlan.cpp">

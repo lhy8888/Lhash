@@ -13,16 +13,14 @@ using namespace HashEngineInternal;
 static int CancelHashing(HashExecutionContext *executionContext)
 {
 	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-	SetHashExecutionWorking(*executionContext, false);
-	observer->onProgressEvent(CreateCancelledProgressEvent());
+	ExecuteCancelledHashingWorkflow(executionContext, observer);
 	return 0;
 }
 
 static int CompleteHashing(HashExecutionContext *executionContext)
 {
 	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-	observer->onProgressEvent(CreateCompletedProgressEvent());
-	SetHashExecutionWorking(*executionContext, false);
+	ExecuteCompletedHashingWorkflow(executionContext, observer);
 	return 0;
 }
 

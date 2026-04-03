@@ -195,6 +195,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashFileSizeAccounting.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashFileVersionResolver.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashJobExecutionPlan.cpp" />
+    <ClCompile Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashPreparationPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeProbe.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp" />
@@ -248,6 +249,7 @@
     <ClInclude Include="..\..\trunk\source\Common\HashFileSizeAccounting.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashFileVersionResolver.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashJobExecutionPlan.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashPreparationPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeProbe.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.h" />

@@ -146,6 +146,8 @@ public sealed class HashContractUnitTests
         string fileSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileSizeAccounting.h");
         string jobExecutionPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.cpp");
         string jobExecutionPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.h");
+        string jobLifecycleWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobLifecycleWorkflow.cpp");
+        string jobLifecycleWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobLifecycleWorkflow.h");
         string preScanSizeProbe = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
         string preScanSizeProbeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.h");
         string preScanSizeAccounting = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.cpp");
@@ -205,8 +207,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
         Assert.Contains("RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", engine, StringComparison.Ordinal);
         Assert.Contains("ResetHashExecutionTotalSize(*executionContext);", engine, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateCancelledProgressEvent());", engine, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateCompletedProgressEvent());", engine, StringComparison.Ordinal);
+        Assert.Contains("ExecuteCancelledHashingWorkflow(executionContext, observer);", engine, StringComparison.Ordinal);
+        Assert.Contains("ExecuteCompletedHashingWorkflow(executionContext, observer);", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("FileExecutionState executionState = { 0 };", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("static bool ProcessOpenedFileHashing(", engine, StringComparison.Ordinal);
 
@@ -327,6 +329,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
         Assert.Contains("preparationPlan.preScanFileCountThreshold = 200;", preparationPlan, StringComparison.Ordinal);
         Assert.Contains("bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", jobLifecycleWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", jobLifecycleWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", jobLifecycleWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", jobLifecycleWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateCancelledProgressEvent());", jobLifecycleWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateCompletedProgressEvent());", jobLifecycleWorkflow, StringComparison.Ordinal);
+        Assert.Contains("SetHashExecutionWorking(*executionContext, false);", jobLifecycleWorkflow, StringComparison.Ordinal);
         Assert.Contains("struct HashSchedulerPlan", schedulerPlanHeader, StringComparison.Ordinal);
         Assert.Contains("size_t workerThreadCount;", schedulerPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashSchedulerPlan CreateHashSchedulerPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", schedulerPlanHeader, StringComparison.Ordinal);
@@ -501,6 +510,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashFileSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashFileVersionResolver.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashJobExecutionPlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashJobLifecycleWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreparationPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreScanSizeProbe.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashPreScanSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);

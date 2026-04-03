@@ -21,6 +21,7 @@
 #include "Common/HashFileSizeAccounting.h"
 #include "Common/HashFileVersionResolver.h"
 #include "Common/HashJobExecutionPlan.h"
+#include "Common/HashJobLifecycleWorkflow.h"
 #include "Common/HashPreparationPlan.h"
 #include "Common/HashPreScanSizeProbe.h"
 #include "Common/HashPreScanSizeAccounting.h"
