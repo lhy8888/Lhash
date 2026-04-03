@@ -1,4 +1,4 @@
-// MD5SUM03Dlg.cpp : ÊµÏÖÎÄ¼ş
+// MD5SUM03Dlg.cpp : å®ç°æ–‡ä»¶
 //
 #include "stdafx.h"
 
@@ -12,7 +12,7 @@
 #include "FilesHash.h"
 #include "FilesHashDlg.h"
 #include "Common/Global.h"
-#include "Common/ThreadDataAccess.h"
+#include "LegacyCompat/ThreadDataAccess.h"
 #include "Common/Utils.h"
 #include "WindowsUtils.h"
 #include "UIBridgeMFC.h"
@@ -26,7 +26,7 @@ using namespace WindowsStrings;
 #define new DEBUG_NEW
 #endif
 
-// CFilesHashDlg ¶Ô»°¿ò
+// CFilesHashDlg å¯¹è¯æ¡†
 CFilesHashDlg::CFilesHashDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CFilesHashDlg::IDD, pParent),
 	m_uiBridgeMFC(NULL)
@@ -72,7 +72,7 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CFilesHashDlg ÏûÏ¢´¦Àí³ÌĞò
+// CFilesHashDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 BOOL CFilesHashDlg::OnInitDialog()
 {
@@ -224,9 +224,9 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	// TODO:  ÔÚ´Ë¸ü¸Ä DC µÄÈÎºÎÊôĞÔ
+	// TODO:  åœ¨æ­¤æ›´æ”¹ DC çš„ä»»ä½•å±æ€§
 
-	// TODO:  Èç¹ûÄ¬ÈÏµÄ²»ÊÇËùĞè»­±Ê£¬Ôò·µ»ØÁíÒ»¸ö»­±Ê
+	// TODO:  å¦‚æœé»˜è®¤çš„ä¸æ˜¯æ‰€éœ€ç”»ç¬”ï¼Œåˆ™è¿”å›å¦ä¸€ä¸ªç”»ç¬”
 	return hbr;
 }
 

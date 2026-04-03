@@ -537,7 +537,9 @@ internal static class Program
             AssertContains(uwpBridge, "GetThreadDataTotalSize(m_threadData);", "UWP bridge does not yet route GetTotalSize() through ThreadDataAccess.");
             AssertContains(uwpBridge, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP bridge does not yet route AddFiles() through the grouped managed input-file helper.");
 
-            AssertContains(mfcDialog, "#include \"Common/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam.");
+            AssertContainsAny(mfcDialog,
+                new[] { "#include \"Common/ThreadDataAccess.h\"", "#include \"LegacyCompat/ThreadDataAccess.h\"" },
+                "MFC dialog does not yet consume the ThreadDataAccess seam.");
             string mfcInputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
             string mfcMessageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
