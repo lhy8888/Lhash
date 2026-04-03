@@ -3146,7 +3146,7 @@ internal static class Program
             AssertContains(hashRequest, "struct HashRequest", "Phase 31 does not yet define a stable HashRequest contract.");
             AssertContains(hashRequest, "TStrVector files;", "Phase 31 HashRequest does not yet own file inputs.");
             AssertContains(hashRequest, "std::vector<HashAlgorithmId> algorithmIds;", "Phase 31 HashRequest does not yet own descriptor/id-based algorithm selection.");
-            AssertContains(hashRequest, "std::vector<ResultDigestType> algorithms;", "Phase 31 HashRequest does not yet own algorithm selection.");
+            AssertDoesNotContain(hashRequest, "std::vector<ResultDigestType> algorithms;", "Phase 31 HashRequest still keeps the legacy digest-type algorithm list after descriptor/id promotion.");
             AssertContains(hashRequest, "bool uppercaseDigest;", "Phase 31 HashRequest does not yet own uppercase output preference.");
             AssertContains(hashRequest, "HashRequestDigestExecutionPolicy digestExecutionPolicy;", "Phase 31 HashRequest does not yet expose runtime digest execution policy.");
             AssertDoesNotContain(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 HashRequest contract still depends directly on ThreadData projection.");
@@ -3156,6 +3156,7 @@ internal static class Program
             AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data input access.");
             AssertContains(hashRequest, "AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", "Phase 31 HashRequest does not yet expose descriptor/id append seams.");
             AssertContains(hashRequest, "AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", "Phase 31 HashRequest does not yet expose digest-type compatibility append seams.");
+            AssertContains(hashRequest, "normalizedAlgorithmIds.reserve(request.algorithmIds.size());", "Phase 31 HashRequest normalization should reserve from descriptor/id algorithm inputs only.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithmIds(const HashRequest& request", "Phase 31 HashRequest does not yet expose descriptor/id iteration seams.");
             AssertContains(hashRequest, "VisitHashRequestFiles(const HashRequest& request", "Phase 31 HashRequest does not yet own file iteration.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 HashRequest does not yet own algorithm iteration.");
@@ -5164,7 +5165,7 @@ internal static class Program
 
             AssertContains(hashRequest, "#include \"Common/HashAlgorithmRegistry.h\"", "Phase 84 HashRequest does not yet consume the hash-algorithm registry seam for algorithm sanitization.");
             AssertContains(hashRequest, "std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId)", "Phase 84 HashRequest algorithm traversal does not yet deduplicate descriptor/id algorithm selections.");
-            AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmType(digestType))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
+            AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
 
             AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 84 compatibility ThreadData execution access does not yet layer on top of the legacy execution seam.");
             AssertContains(legacyThreadExecutionAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");

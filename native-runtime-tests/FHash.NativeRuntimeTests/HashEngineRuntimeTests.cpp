@@ -600,11 +600,11 @@ namespace
 	static void HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms()
 	{
 		HashRequest request;
-		request.algorithms.push_back(RESULT_DIGEST_SHA512);
-		request.algorithms.push_back(RESULT_DIGEST_MD5);
-		request.algorithms.push_back(RESULT_DIGEST_SHA256);
-		request.algorithms.push_back(RESULT_DIGEST_SHA256);
-		request.algorithms.push_back(RESULT_DIGEST_UNKNOWN);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA512);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_UNKNOWN);
 
 		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
 		NativeAssertEqual(static_cast<size_t>(3), digestUpdateRequest.operationDescriptors.size(), "Digest update planning should keep only requested registered algorithms without duplicates.");
@@ -736,7 +736,7 @@ namespace
 
 		HashRequest request;
 		request.files.push_back(missingPath);
-		request.algorithms.push_back(RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should complete even when a file cannot be opened.");
@@ -796,7 +796,7 @@ namespace
 
 		HashRequest request;
 		request.files.push_back(sunjwbase::strtotstr(std::string("should-not-run.txt")));
-		request.algorithms.push_back(RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should return 0 for a cooperative cancellation.");

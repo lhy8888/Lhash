@@ -12,7 +12,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
         Assert.Contains("std::vector<HashAlgorithmId> algorithmIds;", request, StringComparison.Ordinal);
-        Assert.Contains("std::vector<ResultDigestType> algorithms;", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", request, StringComparison.Ordinal);
         Assert.Contains("bool uppercaseDigest;", request, StringComparison.Ordinal);
         Assert.Contains("HashRequestDigestExecutionPolicy digestExecutionPolicy;", request, StringComparison.Ordinal);
         Assert.Contains("AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);

@@ -24,7 +24,6 @@ struct HashRequest
 
 	TStrVector files;
 	std::vector<HashAlgorithmId> algorithmIds;
-	std::vector<ResultDigestType> algorithms;
 	bool uppercaseDigest;
 	HashRequestDigestExecutionPolicy digestExecutionPolicy;
 };
@@ -42,14 +41,13 @@ static inline void AppendHashRequestAlgorithmId(HashRequest& request, const Hash
 
 static inline void AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)
 {
-	request.algorithms.push_back(digestType);
 	AppendHashRequestAlgorithmId(request, GetHashAlgorithmId(digestType));
 }
 
 static inline std::vector<HashAlgorithmId> GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)
 {
 	std::vector<HashAlgorithmId> normalizedAlgorithmIds;
-	normalizedAlgorithmIds.reserve(request.algorithmIds.size() + request.algorithms.size());
+	normalizedAlgorithmIds.reserve(request.algorithmIds.size());
 
 	for (size_t algorithmIndex = 0; algorithmIndex < request.algorithmIds.size(); ++algorithmIndex)
 	{
@@ -64,23 +62,6 @@ static inline std::vector<HashAlgorithmId> GetHashRequestNormalizedAlgorithmIds(
 			continue;
 		}
 
-		if (std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId) != normalizedAlgorithmIds.end())
-		{
-			continue;
-		}
-
-		normalizedAlgorithmIds.push_back(normalizedAlgorithmId);
-	}
-
-	for (size_t algorithmIndex = 0; algorithmIndex < request.algorithms.size(); ++algorithmIndex)
-	{
-		ResultDigestType digestType = request.algorithms[algorithmIndex];
-		if (!IsRegisteredHashAlgorithmType(digestType))
-		{
-			continue;
-		}
-
-		HashAlgorithmId normalizedAlgorithmId = GetHashAlgorithmId(digestType);
 		if (std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId) != normalizedAlgorithmIds.end())
 		{
 			continue;
