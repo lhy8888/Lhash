@@ -633,7 +633,10 @@ namespace
 		{
 			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(descriptorIndex);
 			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-			NativeAssertEqual(digestType, operationDescriptors[descriptorIndex].digestType, "Digest operation descriptors should preserve registry ordering.");
+			NativeAssertEqual(
+				GetHashAlgorithmId(digestType),
+				NormalizeHashAlgorithmId(operationDescriptors[descriptorIndex].algorithmId),
+				"Digest operation descriptors should preserve registry ordering.");
 			NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(operationDescriptors[descriptorIndex]), "Digest operation descriptors published from the registry should always be complete.");
 		}
 	}
@@ -675,9 +678,9 @@ namespace
 
 		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
 		NativeAssertEqual(static_cast<size_t>(3), digestUpdateRequest.operationDescriptors.size(), "Digest update planning should keep only requested registered algorithms without duplicates.");
-		NativeAssertEqual(RESULT_DIGEST_MD5, digestUpdateRequest.operationDescriptors[0].digestType, "Digest update planning should preserve registry order for MD5.");
-		NativeAssertEqual(RESULT_DIGEST_SHA256, digestUpdateRequest.operationDescriptors[1].digestType, "Digest update planning should preserve registry order for SHA256.");
-		NativeAssertEqual(RESULT_DIGEST_SHA512, digestUpdateRequest.operationDescriptors[2].digestType, "Digest update planning should preserve registry order for SHA512.");
+		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_MD5), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[0].algorithmId), "Digest update planning should preserve registry order for MD5.");
+		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_SHA256), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[1].algorithmId), "Digest update planning should preserve registry order for SHA256.");
+		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_SHA512), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[2].algorithmId), "Digest update planning should preserve registry order for SHA512.");
 	}
 
 	static void HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency()
@@ -697,7 +700,7 @@ namespace
 
 		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
 		NativeAssertEqual(static_cast<size_t>(1), digestUpdateRequest.operationDescriptors.size(), "Descriptor/id-only algorithms without backend operations should be skipped instead of disabling digest planning.");
-		NativeAssertEqual(RESULT_DIGEST_MD5, digestUpdateRequest.operationDescriptors[0].digestType, "Supported digest planning should remain intact when descriptor-only algorithms are present.");
+		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_MD5), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[0].algorithmId), "Supported digest planning should remain intact when descriptor-only algorithms are present.");
 	}
 
 	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
