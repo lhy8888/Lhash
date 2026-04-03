@@ -359,7 +359,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetHashDigestRuntimeExecutionMode(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestRuntimeQueuePlan(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
-        Assert.Contains("HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256)", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("future<void> taskSHA512Update", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("future<void> taskSHA256Update", digestUpdater, StringComparison.Ordinal);

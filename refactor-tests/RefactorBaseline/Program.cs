@@ -1951,10 +1951,10 @@ internal static class Program
             AssertContains(engineImpl, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
             AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "PopulateDigestResult(request, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the request-scoped algorithm-selection seam.");
-            AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5)", "HashEngine does not yet gate MD5 updates through the algorithm-selection seam.");
-            AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1)", "HashEngine does not yet gate SHA1 updates through the algorithm-selection seam.");
-            AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "HashEngine does not yet gate SHA256 updates through the algorithm-selection seam.");
-            AssertContains(engineImpl, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512)", "HashEngine does not yet gate SHA512 updates through the algorithm-selection seam.");
+            AssertContains(engineImpl, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_MD5)", "HashEngine does not yet gate MD5 updates through the digest-update selection seam.");
+            AssertContains(engineImpl, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA1)", "HashEngine does not yet gate SHA1 updates through the digest-update selection seam.");
+            AssertContains(engineImpl, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256)", "HashEngine does not yet gate SHA256 updates through the digest-update selection seam.");
+            AssertContains(engineImpl, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA512)", "HashEngine does not yet gate SHA512 updates through the digest-update selection seam.");
             AssertContains(engineImpl, "if (!result.digests.empty())", "HashEngine does not yet suppress hash-result publication when no algorithms are enabled.");
 
             AssertContains(digestAccess, "HasResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the result-digest presence helper needed for selective rendering.");
@@ -3111,7 +3111,7 @@ internal static class Program
 
             AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "HashEngine does not yet start from the phase 31 HashRequest contract.");
             AssertContains(hashEngine, "VisitHashRequestFiles(request", "HashEngine does not yet iterate files through HashRequest.");
-            AssertContains(hashEngine, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "HashEngine does not yet read selected algorithms through HashRequest.");
+            AssertContains(hashEngine, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256)", "HashEngine does not yet route selected algorithms through the digest-update request seam.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreatePreparingProgressEvent());", "HashEngine preparation does not yet emit semantic progress events.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateFileStartedProgressEvent(result));", "Phase 35 HashEngine does not yet emit file-started progress events through HashResult.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "Phase 35 HashEngine does not yet emit hash-ready progress events through HashResult.");
@@ -3777,10 +3777,11 @@ internal static class Program
             AssertContains(hashDigestUpdaterHeader, "void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", "Phase 53 HashDigestUpdater.h does not yet expose parallel digest updates.");
 
             AssertContains(hashDigestUpdater, "DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", "Phase 53 HashDigestUpdater.cpp does not yet own digest update request creation.");
-            AssertContains(hashDigestUpdater, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA512 algorithm selection.");
-            AssertContains(hashDigestUpdater, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA256 algorithm selection.");
-            AssertContains(hashDigestUpdater, "HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA1 algorithm selection.");
-            AssertContains(hashDigestUpdater, "HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5)", "Phase 53 HashDigestUpdater.cpp does not yet own MD5 algorithm selection.");
+            AssertContains(hashDigestUpdater, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "Phase 53 HashDigestUpdater.cpp does not yet own request-algorithm iteration.");
+            AssertContains(hashDigestUpdater, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA512)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA512 digest-update selection.");
+            AssertContains(hashDigestUpdater, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA256 digest-update selection.");
+            AssertContains(hashDigestUpdater, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA1)", "Phase 53 HashDigestUpdater.cpp does not yet own SHA1 digest-update selection.");
+            AssertContains(hashDigestUpdater, "HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_MD5)", "Phase 53 HashDigestUpdater.cpp does not yet own MD5 digest-update selection.");
             AssertContains(hashDigestUpdater, "void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", "Phase 53 HashDigestUpdater.cpp does not yet own parallel digest fan-out.");
             AssertContains(hashDigestUpdater, "future<void> taskSHA512Update", "Phase 53 HashDigestUpdater.cpp does not yet own SHA512 digest worker fan-out.");
             AssertContains(hashDigestUpdater, "future<void> taskSHA256Update", "Phase 53 HashDigestUpdater.cpp does not yet own SHA256 digest worker fan-out.");

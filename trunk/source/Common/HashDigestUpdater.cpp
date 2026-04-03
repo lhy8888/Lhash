@@ -57,10 +57,6 @@ namespace HashEngineInternal
 	DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)
 	{
 		DigestUpdateRequest digestUpdateRequest = { 0 };
-		digestUpdateRequest.sha512Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA512);
-		digestUpdateRequest.sha256Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
-		digestUpdateRequest.sha1Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_SHA1);
-		digestUpdateRequest.md5Enabled = HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
 
 		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{
@@ -81,19 +77,19 @@ namespace HashEngineInternal
 
 	void UpdateDigestContextsSequential(const DigestUpdateRequest& digestUpdateRequest, FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
-		if (digestUpdateRequest.md5Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_MD5))
 		{
 			TryUpdateDigestContext(RESULT_DIGEST_MD5, hashContexts, data, dataLen);
 		}
-		if (digestUpdateRequest.sha1Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA1))
 		{
 			TryUpdateDigestContext(RESULT_DIGEST_SHA1, hashContexts, data, dataLen);
 		}
-		if (digestUpdateRequest.sha256Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256))
 		{
 			TryUpdateDigestContext(RESULT_DIGEST_SHA256, hashContexts, data, dataLen);
 		}
-		if (digestUpdateRequest.sha512Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA512))
 		{
 			TryUpdateDigestContext(RESULT_DIGEST_SHA512, hashContexts, data, dataLen);
 		}
@@ -119,28 +115,28 @@ namespace HashEngineInternal
 		std::future<void> taskMD5Update;
 		std::vector<std::future<void>> extensionDigestUpdateTasks;
 
-		if (digestUpdateRequest.sha512Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA512))
 		{
 			taskSHA512Update = threadPool->enqueue([&hashContexts, data, dataLen]()
 			{
 				TryUpdateDigestContext(RESULT_DIGEST_SHA512, hashContexts, data, dataLen);
 			});
 		}
-		if (digestUpdateRequest.sha256Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256))
 		{
 			taskSHA256Update = threadPool->enqueue([&hashContexts, data, dataLen]()
 			{
 				TryUpdateDigestContext(RESULT_DIGEST_SHA256, hashContexts, data, dataLen);
 			});
 		}
-		if (digestUpdateRequest.sha1Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA1))
 		{
 			taskSHA1Update = threadPool->enqueue([&hashContexts, data, dataLen]()
 			{
 				TryUpdateDigestContext(RESULT_DIGEST_SHA1, hashContexts, data, dataLen);
 			});
 		}
-		if (digestUpdateRequest.md5Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_MD5))
 		{
 			taskMD5Update = threadPool->enqueue([&hashContexts, data, dataLen]()
 			{
@@ -162,19 +158,19 @@ namespace HashEngineInternal
 			return true;
 		});
 
-		if (digestUpdateRequest.sha512Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA512))
 		{
 			taskSHA512Update.wait();
 		}
-		if (digestUpdateRequest.sha256Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256))
 		{
 			taskSHA256Update.wait();
 		}
-		if (digestUpdateRequest.sha1Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA1))
 		{
 			taskSHA1Update.wait();
 		}
-		if (digestUpdateRequest.md5Enabled)
+		if (HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_MD5))
 		{
 			taskMD5Update.wait();
 		}
