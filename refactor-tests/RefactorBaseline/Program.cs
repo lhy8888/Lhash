@@ -4980,6 +4980,38 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp", "Phase 82 WinUI native project should keep consuming the shared native core instead of compiling HashJobLifecycleWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 83 promotes digest dispatch to algorithm-list seams while keeping legacy compatibility paths", () =>
+        {
+            string hashDigestUpdater = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp");
+            string hashDigestUpdaterHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.h");
+            string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
+            string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
+            string hashDigestRuntimePlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestRuntimePlan.cpp");
+            string hashDigestExecution = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp");
+            string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string hashDigestSinglePass = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp");
+            string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+
+            AssertContains(hashDigestUpdaterHeader, "std::vector<ResultDigestType> algorithms;", "Phase 83 HashDigestUpdater.h does not yet preserve algorithm-list state in digest update requests.");
+            AssertContains(hashDigestUpdaterHeader, "VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h does not yet expose digest-update algorithm iteration.");
+            AssertContains(hashDigestUpdater, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "Phase 83 HashDigestUpdater.cpp does not yet project request algorithms into digest update plans.");
+            AssertContains(hashDigestUpdater, "digestUpdateRequest.algorithms.push_back(digestType);", "Phase 83 HashDigestUpdater.cpp does not yet preserve request-driven digest algorithm ordering.");
+            AssertContains(hashDigestUpdater, "VisitDigestUpdateRequestAlgorithms(digestUpdateRequest, [&](ResultDigestType digestType)", "Phase 83 HashDigestUpdater.cpp does not yet route updates through digest-update algorithm iteration.");
+            AssertContains(hashDigestUpdater, "std::vector<std::future<void>> extensionDigestUpdateTasks;", "Phase 83 HashDigestUpdater.cpp does not yet preserve extension-task fan-out for algorithm-list updates.");
+
+            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
+            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
+            AssertContains(hashDigestContextOps, "struct DigestContextOperation", "Phase 83 HashDigestContextOps.cpp does not yet centralize digest context operation descriptors.");
+            AssertContains(hashDigestContextOps, "TryGetDigestContextOperation(digestType, &digestContextOperation)", "Phase 83 HashDigestContextOps.cpp does not yet route per-algorithm init/finalize through operation lookup.");
+            AssertContains(hashDigestContextOps, "static const DigestContextOperation digestContextOperations[]", "Phase 83 HashDigestContextOps.cpp does not yet keep digest context operation registration centralized.");
+
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 83 HashJobExecutionPlan.cpp does not yet consume request-driven digest update plans.");
+            AssertContains(hashDigestRuntimePlan, "digestRuntimePlan.digestUpdateRequest = &GetHashJobDigestUpdateRequest(executionPlan);", "Phase 83 HashDigestRuntimePlan.cpp does not yet forward request-driven digest update plans into runtime execution.");
+            AssertContains(hashDigestExecution, "const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);", "Phase 83 HashDigestExecution.cpp does not yet consume digest update request plans.");
+            AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 83 HashDigestQueue.cpp does not yet consume digest-update request plans in parallel mode.");
+            AssertContains(hashDigestSinglePass, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 83 HashDigestSinglePass.cpp does not yet consume digest-update request plans in single-pass mode.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

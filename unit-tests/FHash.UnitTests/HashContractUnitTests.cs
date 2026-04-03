@@ -135,6 +135,7 @@ public sealed class HashContractUnitTests
         string digestQueuePlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueuePlan.h");
         string digestSinglePass = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestSinglePass.cpp");
         string digestUpdater = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.cpp");
+        string digestUpdaterHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.h");
         string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string fileAttemptCompletionWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp");
         string fileAttemptCompletionWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptCompletionWorkflow.h");
@@ -274,10 +275,16 @@ public sealed class HashContractUnitTests
         Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", digestContextOpsHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", digestContextOps, StringComparison.Ordinal);
         Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", digestContextOps, StringComparison.Ordinal);
+        Assert.Contains("struct DigestContextOperation", digestContextOps, StringComparison.Ordinal);
+        Assert.Contains("TryGetDigestContextOperation(digestType, &digestContextOperation)", digestContextOps, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContext(hashContexts, digestType);", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", digestLifecycle, StringComparison.Ordinal);
         Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("digestUpdateRequest.algorithms.push_back(digestType);", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("enum HashDigestExecutionMode", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request);", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsParallelHashDigestExecutionMode(HashDigestExecutionMode executionMode);", digestExecutionModeHeader, StringComparison.Ordinal);
