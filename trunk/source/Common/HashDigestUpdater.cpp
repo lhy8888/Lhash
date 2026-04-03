@@ -10,36 +10,46 @@
 
 namespace HashEngineInternal
 {
-	static bool ContainsDigestUpdateOperation(const DigestUpdateRequest& digestUpdateRequest, ResultDigestType digestType)
+	static bool TryResolveDigestUpdateOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)
 	{
-		for (size_t operationIndex = 0; operationIndex < digestUpdateRequest.operationDescriptors.size(); ++operationIndex)
+		if (!IsRegisteredHashAlgorithmType(digestType))
 		{
-			if (digestUpdateRequest.operationDescriptors[operationIndex].digestType == digestType)
-			{
-				return true;
-			}
+			return false;
 		}
 
-		return false;
+		if (!TryGetHashDigestOperationDescriptor(digestType, operationDescriptor))
+		{
+			return false;
+		}
+
+		if (operationDescriptor == NULL)
+		{
+			return false;
+		}
+
+		return operationDescriptor->digestType == digestType &&
+			IsHashDigestOperationDescriptorComplete(*operationDescriptor);
 	}
 
 	DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)
 	{
 		DigestUpdateRequest digestUpdateRequest = {};
-
-		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
+		if (!IsHashDigestOperationRegistryConsistent())
 		{
-			if (!IsRegisteredHashAlgorithmType(digestType))
-			{
-				return true;
-			}
-			if (ContainsDigestUpdateOperation(digestUpdateRequest, digestType))
+			return digestUpdateRequest;
+		}
+
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+		{
+			(void)index;
+			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+			if (!HasHashRequestAlgorithm(request, digestType))
 			{
 				return true;
 			}
 
 			HashDigestOperationDescriptor operationDescriptor = {};
-			if (!TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor))
+			if (!TryResolveDigestUpdateOperationDescriptor(digestType, &operationDescriptor))
 			{
 				return true;
 			}

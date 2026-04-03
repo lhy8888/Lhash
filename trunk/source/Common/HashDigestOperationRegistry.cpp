@@ -127,6 +127,13 @@ namespace HashEngineInternal
 		SetDigestStorageValue(digestBundle, RESULT_DIGEST_SHA512, sunjwbase::strtotstr(strSHA512));
 	}
 
+	bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor)
+	{
+		return operationDescriptor.initializeAction != NULL &&
+			operationDescriptor.updateAction != NULL &&
+			operationDescriptor.finalizeAction != NULL;
+	}
+
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
 	{
 		static const HashDigestOperationDescriptor operationDescriptors[] =
@@ -152,10 +159,45 @@ namespace HashEngineInternal
 				continue;
 			}
 
-			*operationDescriptor = operationDescriptors[descriptorIndex];
+			if (operationDescriptor != NULL)
+			{
+				*operationDescriptor = operationDescriptors[descriptorIndex];
+			}
 			return true;
 		}
 
 		return false;
+	}
+
+	bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)
+	{
+		HashDigestOperationDescriptor operationDescriptor = {};
+		if (!TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor))
+		{
+			return false;
+		}
+
+		return operationDescriptor.digestType == digestType &&
+			IsHashDigestOperationDescriptorComplete(operationDescriptor);
+	}
+
+	bool IsHashDigestOperationRegistryConsistent()
+	{
+		bool isConsistent = true;
+
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+		{
+			(void)index;
+			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+			if (!IsHashDigestOperationDescriptorSupported(digestType))
+			{
+				isConsistent = false;
+				return false;
+			}
+
+			return true;
+		});
+
+		return isConsistent;
 	}
 }

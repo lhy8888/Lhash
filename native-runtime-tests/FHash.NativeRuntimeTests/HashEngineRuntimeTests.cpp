@@ -7,6 +7,8 @@
 #include "NativeTestHarness.h"
 
 #include "Common/HashAlgorithmRegistry.h"
+#include "Common/HashDigestOperationRegistry.h"
+#include "Common/HashDigestUpdater.h"
 #include "Common/HashEngine.h"
 #include "Common/HashThreadEntry.h"
 #include "Common/HashExecutionContext.h"
@@ -420,6 +422,56 @@ namespace
 		NativeAssertTrue(!IsThreadDataHashAlgorithmEnabled(threadData, RESULT_DIGEST_UNKNOWN), "Unknown digest types should always be reported as disabled.");
 	}
 
+	static void HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry()
+	{
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationRegistryConsistent(), "Digest operation registry should cover every registered algorithm with complete operations.");
+
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& descriptor)
+		{
+			(void)index;
+			ResultDigestType digestType = GetHashAlgorithmDescriptorType(descriptor);
+			NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupported(digestType), "Registered algorithms should resolve to supported digest operation descriptors.");
+			return true;
+		});
+	}
+
+	static void HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests()
+	{
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_MD5, NULL), "Known digests should support existence probes without an output descriptor.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA256, NULL), "Known digests should support existence probes without an output descriptor.");
+		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_UNKNOWN, NULL), "Unknown digest probes should fail.");
+		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(static_cast<ResultDigestType>(9999), NULL), "Out-of-range digest probes should fail.");
+	}
+
+	static void HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport()
+	{
+		HashDigestOperationDescriptor descriptor = {};
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA512, &descriptor), "Known SHA512 descriptors should resolve.");
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(descriptor), "Resolved registry descriptors should be complete.");
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_SHA512), "Known SHA512 descriptors should be reported as supported.");
+
+		HashDigestOperationDescriptor incompleteDescriptor = descriptor;
+		incompleteDescriptor.updateAction = NULL;
+		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorComplete(incompleteDescriptor), "Descriptors missing update actions should be rejected as incomplete.");
+		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_UNKNOWN), "Unknown digest types should not be reported as supported.");
+	}
+
+	static void HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms()
+	{
+		HashRequest request;
+		request.algorithms.push_back(RESULT_DIGEST_SHA512);
+		request.algorithms.push_back(RESULT_DIGEST_MD5);
+		request.algorithms.push_back(RESULT_DIGEST_SHA256);
+		request.algorithms.push_back(RESULT_DIGEST_SHA256);
+		request.algorithms.push_back(RESULT_DIGEST_UNKNOWN);
+
+		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
+		NativeAssertEqual(static_cast<size_t>(3), digestUpdateRequest.operationDescriptors.size(), "Digest update planning should keep only requested registered algorithms without duplicates.");
+		NativeAssertEqual(RESULT_DIGEST_MD5, digestUpdateRequest.operationDescriptors[0].digestType, "Digest update planning should preserve registry order for MD5.");
+		NativeAssertEqual(RESULT_DIGEST_SHA256, digestUpdateRequest.operationDescriptors[1].digestType, "Digest update planning should preserve registry order for SHA256.");
+		NativeAssertEqual(RESULT_DIGEST_SHA512, digestUpdateRequest.operationDescriptors[2].digestType, "Digest update planning should preserve registry order for SHA512.");
+	}
+
 	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -675,6 +727,10 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
+	tests.push_back({ "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", &HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry });
+	tests.push_back({ "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", &HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests });
+	tests.push_back({ "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", &HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport });
+	tests.push_back({ "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", &HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms });
 	tests.push_back({ "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", &HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
 	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });
