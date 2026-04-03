@@ -8,6 +8,7 @@
 #include "Common/HashDigestExecution.h"
 #include "Common/HashDigestExecutionMode.h"
 #include "Common/HashDigestLifecycle.h"
+#include "Common/HashDigestOperationRegistry.h"
 #include "Common/HashDigestQueue.h"
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestRuntimePlan.h"

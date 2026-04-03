@@ -120,6 +120,8 @@ public sealed class HashContractUnitTests
         string digestExecutionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.h");
         string digestContextOps = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestContextOps.cpp");
         string digestContextOpsHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestContextOps.h");
+        string digestOperationRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+        string digestOperationRegistryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.h");
         string digestLifecycle = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.cpp");
         string digestLifecycleHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.h");
         string digestRuntimePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.cpp");
@@ -275,8 +277,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", digestContextOpsHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", digestContextOps, StringComparison.Ordinal);
         Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", digestContextOps, StringComparison.Ordinal);
-        Assert.Contains("struct DigestContextOperation", digestContextOps, StringComparison.Ordinal);
-        Assert.Contains("TryGetDigestContextOperation(digestType, &digestContextOperation)", digestContextOps, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", digestContextOps, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestOperationDescriptor", digestOperationRegistryHeader, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
+        Assert.Contains("static const HashDigestOperationDescriptor operationDescriptors[]", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContext(hashContexts, digestType);", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", digestLifecycle, StringComparison.Ordinal);
         Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);
@@ -501,6 +505,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashDigestExecution.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestExecutionMode.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestContextOps.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestOperationRegistry.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestLifecycle.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestBufferPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestCompletion.h\"", internalHeader, StringComparison.Ordinal);

@@ -4434,6 +4434,8 @@ internal static class Program
             string hashDigestLifecycleHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.h");
             string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
             string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
+            string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string hashDigestOperationRegistryHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.h");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string hashSuccessfulFileCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
@@ -4460,10 +4462,12 @@ internal static class Program
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
             AssertContains(hashDigestContextOps, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
             AssertContains(hashDigestContextOps, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
-            AssertContains(hashDigestContextOps, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestContextOps.cpp does not yet preserve MD5 finalization.");
-            AssertContains(hashDigestContextOps, "hashContexts.sha1.Final();", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA1 finalization.");
-            AssertContains(hashDigestContextOps, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA256 finalization.");
-            AssertContains(hashDigestContextOps, "SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);", "Phase 69 HashDigestContextOps.cpp does not yet preserve SHA512 finalization.");
+            AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
+            AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation lookup.");
+            AssertContains(hashDigestOperationRegistry, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve MD5 finalization.");
+            AssertContains(hashDigestOperationRegistry, "hashContexts.sha1.Final();", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA1 finalization.");
+            AssertContains(hashDigestOperationRegistry, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA256 finalization.");
+            AssertContains(hashDigestOperationRegistry, "SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA512 finalization.");
 
             AssertContains(hashEngineResult, "uint64_t PrepareFileMetaResult(", "Phase 69 HashEngineResult.cpp should keep owning file metadata projection.");
             AssertDoesNotContain(hashEngineResult, "void InitializeFileHashing(", "Phase 69 HashEngineResult.cpp should no longer own hash-context initialization.");
@@ -4500,6 +4504,7 @@ internal static class Program
             string hashDigestLifecycle = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp");
             string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
             string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
+            string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
@@ -4510,11 +4515,11 @@ internal static class Program
             AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm initialization.");
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm finalization.");
 
-            AssertContains(hashDigestContextOps, "switch (digestType)", "Phase 70 HashDigestContextOps.cpp does not yet own per-algorithm branch dispatch.");
-            AssertContains(hashDigestContextOps, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestContextOps.cpp does not yet preserve MD5 init.");
-            AssertContains(hashDigestContextOps, "hashContexts->sha1.Reset();", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA1 init.");
-            AssertContains(hashDigestContextOps, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA256 init.");
-            AssertContains(hashDigestContextOps, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestContextOps.cpp does not yet preserve SHA512 init.");
+            AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 70 HashDigestContextOps.cpp does not yet route context operations through operation-registry lookup.");
+            AssertContains(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve MD5 init.");
+            AssertContains(hashDigestOperationRegistry, "hashContexts->sha1.Reset();", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA1 init.");
+            AssertContains(hashDigestOperationRegistry, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA256 init.");
+            AssertContains(hashDigestOperationRegistry, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA512 init.");
 
             AssertContains(hashDigestLifecycle, "InitializeHashDigestContext(hashContexts, digestType);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm initialization seams.");
             AssertContains(hashDigestLifecycle, "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm finalization seams.");
@@ -4986,11 +4991,19 @@ internal static class Program
             string hashDigestUpdaterHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.h");
             string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
             string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
+            string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string hashDigestOperationRegistryHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashDigestRuntimePlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestRuntimePlan.cpp");
             string hashDigestExecution = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp");
             string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
             string hashDigestSinglePass = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp");
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestUpdaterHeader, "std::vector<ResultDigestType> algorithms;", "Phase 83 HashDigestUpdater.h does not yet preserve algorithm-list state in digest update requests.");
             AssertContains(hashDigestUpdaterHeader, "VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h does not yet expose digest-update algorithm iteration.");
@@ -4998,18 +5011,32 @@ internal static class Program
             AssertContains(hashDigestUpdater, "digestUpdateRequest.algorithms.push_back(digestType);", "Phase 83 HashDigestUpdater.cpp does not yet preserve request-driven digest algorithm ordering.");
             AssertContains(hashDigestUpdater, "VisitDigestUpdateRequestAlgorithms(digestUpdateRequest, [&](ResultDigestType digestType)", "Phase 83 HashDigestUpdater.cpp does not yet route updates through digest-update algorithm iteration.");
             AssertContains(hashDigestUpdater, "std::vector<std::future<void>> extensionDigestUpdateTasks;", "Phase 83 HashDigestUpdater.cpp does not yet preserve extension-task fan-out for algorithm-list updates.");
+            AssertContains(hashDigestUpdater, "TryUpdateDigestContext(RESULT_DIGEST_SHA256, hashContexts, data, dataLen);", "Phase 83 HashDigestUpdater.cpp does not yet route legacy SHA256 updates through registry-backed helpers.");
 
             AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
-            AssertContains(hashDigestContextOps, "struct DigestContextOperation", "Phase 83 HashDigestContextOps.cpp does not yet centralize digest context operation descriptors.");
-            AssertContains(hashDigestContextOps, "TryGetDigestContextOperation(digestType, &digestContextOperation)", "Phase 83 HashDigestContextOps.cpp does not yet route per-algorithm init/finalize through operation lookup.");
-            AssertContains(hashDigestContextOps, "static const DigestContextOperation digestContextOperations[]", "Phase 83 HashDigestContextOps.cpp does not yet keep digest context operation registration centralized.");
+            AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
+            AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
+            AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor lookup.");
+            AssertContains(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize per-algorithm operation descriptors.");
+            AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashDigestOperationRegistry.h\"", "Phase 83 HashEngineInternal.h does not yet consume HashDigestOperationRegistry.");
 
             AssertContains(hashJobExecutionPlan, "executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 83 HashJobExecutionPlan.cpp does not yet consume request-driven digest update plans.");
             AssertContains(hashDigestRuntimePlan, "digestRuntimePlan.digestUpdateRequest = &GetHashJobDigestUpdateRequest(executionPlan);", "Phase 83 HashDigestRuntimePlan.cpp does not yet forward request-driven digest update plans into runtime execution.");
             AssertContains(hashDigestExecution, "const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);", "Phase 83 HashDigestExecution.cpp does not yet consume digest update request plans.");
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 83 HashDigestQueue.cpp does not yet consume digest-update request plans in parallel mode.");
             AssertContains(hashDigestSinglePass, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 83 HashDigestSinglePass.cpp does not yet consume digest-update request plans in single-pass mode.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 desktop native core project does not yet compile HashDigestOperationRegistry.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.h", "Phase 83 desktop native core project does not yet include HashDigestOperationRegistry.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 desktop native core filters do not yet expose HashDigestOperationRegistry.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.h", "Phase 83 desktop native core filters do not yet expose HashDigestOperationRegistry.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 UWP native project does not yet compile HashDigestOperationRegistry.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.h", "Phase 83 UWP native project does not yet include HashDigestOperationRegistry.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 UWP native filters do not yet expose HashDigestOperationRegistry.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.h", "Phase 83 UWP native filters do not yet expose HashDigestOperationRegistry.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 WinUI native project should keep consuming the shared native core instead of compiling HashDigestOperationRegistry.cpp directly.");
         }, failures);
 
         if (failures.Count > 0)
@@ -5058,6 +5085,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestLifecycle.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestPipeline.cpp"),

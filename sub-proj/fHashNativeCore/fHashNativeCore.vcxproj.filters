@@ -50,12 +50,15 @@
     <ClCompile Include="..\..\trunk\source\Common\HashDigestExecution.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestOperationRegistry.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -193,12 +196,15 @@
     <ClInclude Include="..\..\trunk\source\Common\HashDigestExecution.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h">
-      <Filter>Common</Filter>
-    </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h">
+    <Filter>Common</Filter>
+  </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestOperationRegistry.h">
+    <Filter>Common</Filter>
+  </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h">
+    <Filter>Common</Filter>
+  </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h">
       <Filter>Common</Filter>
     </ClInclude>
