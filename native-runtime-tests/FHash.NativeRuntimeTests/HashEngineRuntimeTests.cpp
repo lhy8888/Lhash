@@ -435,6 +435,22 @@ namespace
 		});
 	}
 
+	static void HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry()
+	{
+		int descriptorCount = 0;
+		const HashEngineInternal::HashDigestOperationDescriptor *operationDescriptors = HashEngineInternal::GetHashDigestOperationDescriptors(&descriptorCount);
+		NativeAssertTrue(operationDescriptors != NULL, "Digest operation registry should publish descriptors for registered algorithms.");
+		NativeAssertEqual(GetRegisteredHashAlgorithmCount(), descriptorCount, "Digest operation descriptor count should match registered algorithm count.");
+
+		for (int descriptorIndex = 0; descriptorIndex < descriptorCount; ++descriptorIndex)
+		{
+			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(descriptorIndex);
+			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+			NativeAssertEqual(digestType, operationDescriptors[descriptorIndex].digestType, "Digest operation descriptors should preserve registry ordering.");
+			NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(operationDescriptors[descriptorIndex]), "Digest operation descriptors published from the registry should always be complete.");
+		}
+	}
+
 	static void HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests()
 	{
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_MD5, NULL), "Known digests should support existence probes without an output descriptor.");
@@ -728,6 +744,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
 	tests.push_back({ "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", &HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry });
+	tests.push_back({ "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", &HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry });
 	tests.push_back({ "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", &HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests });
 	tests.push_back({ "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", &HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport });
 	tests.push_back({ "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", &HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms });

@@ -127,6 +127,55 @@ namespace HashEngineInternal
 		SetDigestStorageValue(digestBundle, RESULT_DIGEST_SHA512, sunjwbase::strtotstr(strSHA512));
 	}
 
+	static bool TryCreateHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)
+	{
+		if (operationDescriptor == NULL)
+		{
+			return false;
+		}
+
+		HashDigestOperationDescriptor descriptor = {};
+		descriptor.digestType = digestType;
+
+		switch (digestType)
+		{
+		case RESULT_DIGEST_MD5:
+			descriptor.initializeAction = InitializeMD5DigestContext;
+			descriptor.updateAction = UpdateMD5DigestContext;
+			descriptor.finalizeAction = FinalizeMD5DigestContext;
+			break;
+
+		case RESULT_DIGEST_SHA1:
+			descriptor.initializeAction = InitializeSHA1DigestContext;
+			descriptor.updateAction = UpdateSHA1DigestContext;
+			descriptor.finalizeAction = FinalizeSHA1DigestContext;
+			break;
+
+		case RESULT_DIGEST_SHA256:
+			descriptor.initializeAction = InitializeSHA256DigestContext;
+			descriptor.updateAction = UpdateSHA256DigestContext;
+			descriptor.finalizeAction = FinalizeSHA256DigestContext;
+			break;
+
+		case RESULT_DIGEST_SHA512:
+			descriptor.initializeAction = InitializeSHA512DigestContext;
+			descriptor.updateAction = UpdateSHA512DigestContext;
+			descriptor.finalizeAction = FinalizeSHA512DigestContext;
+			break;
+
+		default:
+			return false;
+		}
+
+		if (!IsHashDigestOperationDescriptorComplete(descriptor))
+		{
+			return false;
+		}
+
+		*operationDescriptor = descriptor;
+		return true;
+	}
+
 	bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor)
 	{
 		return operationDescriptor.initializeAction != NULL &&
@@ -136,16 +185,33 @@ namespace HashEngineInternal
 
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
 	{
-		static const HashDigestOperationDescriptor operationDescriptors[] =
+		static std::vector<HashDigestOperationDescriptor> operationDescriptors;
+		static bool operationDescriptorsInitialized = false;
+		if (!operationDescriptorsInitialized)
 		{
-			{ RESULT_DIGEST_MD5, InitializeMD5DigestContext, UpdateMD5DigestContext, FinalizeMD5DigestContext },
-			{ RESULT_DIGEST_SHA1, InitializeSHA1DigestContext, UpdateSHA1DigestContext, FinalizeSHA1DigestContext },
-			{ RESULT_DIGEST_SHA256, InitializeSHA256DigestContext, UpdateSHA256DigestContext, FinalizeSHA256DigestContext },
-			{ RESULT_DIGEST_SHA512, InitializeSHA512DigestContext, UpdateSHA512DigestContext, FinalizeSHA512DigestContext }
-		};
+			VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+			{
+				(void)index;
+				HashDigestOperationDescriptor operationDescriptor = {};
+				ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+				if (!TryCreateHashDigestOperationDescriptor(digestType, &operationDescriptor))
+				{
+					return false;
+				}
 
-		*descriptorCount = static_cast<int>(sizeof(operationDescriptors) / sizeof(HashDigestOperationDescriptor));
-		return operationDescriptors;
+				operationDescriptors.push_back(operationDescriptor);
+				return true;
+			});
+
+			operationDescriptorsInitialized = true;
+		}
+
+		if (descriptorCount != NULL)
+		{
+			*descriptorCount = static_cast<int>(operationDescriptors.size());
+		}
+
+		return operationDescriptors.empty() ? NULL : &operationDescriptors[0];
 	}
 
 	bool TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)

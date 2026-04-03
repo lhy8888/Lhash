@@ -311,7 +311,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationRegistryConsistent();", digestOperationRegistryHeader, StringComparison.Ordinal);
-        Assert.Contains("static const HashDigestOperationDescriptor operationDescriptors[]", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("static std::vector<HashDigestOperationDescriptor> operationDescriptors;", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContext(hashContexts, digestType);", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", digestLifecycle, StringComparison.Ordinal);
         Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);

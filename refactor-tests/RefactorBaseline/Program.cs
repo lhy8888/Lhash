@@ -5061,7 +5061,8 @@ internal static class Program
             AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor lookup.");
-            AssertContains(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize per-algorithm operation descriptors.");
+            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize per-algorithm operation descriptors.");
+            AssertContains(hashDigestOperationRegistry, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 83 HashDigestOperationRegistry.cpp does not yet build operation descriptors from the shared algorithm registry.");
             AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestOperationRegistry.h\"", "Phase 83 HashEngineInternal.h does not yet consume HashDigestOperationRegistry.");
 
@@ -5131,6 +5132,7 @@ internal static class Program
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);", "Phase 85 HashDigestOperationRegistry.h does not yet expose per-digest descriptor support checks.");
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationRegistryConsistent();", "Phase 85 HashDigestOperationRegistry.h does not yet expose registry-consistency checks.");
             AssertContains(hashDigestOperationRegistry, "if (operationDescriptor != NULL)", "Phase 85 HashDigestOperationRegistry.cpp does not yet tolerate null descriptor output pointers.");
+            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 85 HashDigestOperationRegistry.cpp does not yet cache descriptor snapshots from the algorithm registry.");
             AssertContains(hashDigestOperationRegistry, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 85 HashDigestOperationRegistry.cpp does not yet validate operation coverage against the algorithm registry.");
             AssertContains(hashDigestOperationRegistry, "IsHashDigestOperationDescriptorComplete(operationDescriptor);", "Phase 85 HashDigestOperationRegistry.cpp does not yet validate descriptor completeness.");
 
@@ -5141,10 +5143,12 @@ internal static class Program
 
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", "Phase 85 native runtime tests do not yet cover registry consistency.");
             AssertContains(nativeRuntimeSource, "HashEngineInternal::IsHashDigestOperationRegistryConsistent()", "Phase 85 native runtime tests do not yet assert operation-registry consistency.");
+            AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 85 native runtime tests do not yet cover descriptor snapshot generation from the algorithm registry.");
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", "Phase 85 native runtime tests do not yet cover null descriptor probes for digest operations.");
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", "Phase 85 native runtime tests do not yet cover descriptor completeness and unknown digest support.");
             AssertContains(nativeRuntimeSource, "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", "Phase 85 native runtime tests do not yet cover registry-ordered digest updater planning.");
             AssertContains(nativeRuntimeUnitTests, "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", "Phase 85 managed unit tests do not yet gate the new native runtime consistency scenario.");
+            AssertContains(nativeRuntimeUnitTests, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 85 managed unit tests do not yet gate descriptor snapshot coverage.");
             AssertContains(nativeRuntimeUnitTests, "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", "Phase 85 managed unit tests do not yet gate registry-ordered digest updater runtime coverage.");
         }, failures);
 
