@@ -44,6 +44,8 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_ReportsMissingFileAsErrorResult", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_ContinuesAfterOpenFileErrorInBatch", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", testSource, StringComparison.Ordinal);
+        Assert.Contains("ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", testSource, StringComparison.Ordinal);

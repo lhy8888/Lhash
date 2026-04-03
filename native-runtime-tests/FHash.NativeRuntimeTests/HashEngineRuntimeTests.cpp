@@ -377,6 +377,49 @@ namespace
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
 	}
 
+	static void RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("request-filter.txt"), "abc");
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_UNKNOWN);
+		algorithms.push_back(RESULT_DIGEST_SHA256);
+		algorithms.push_back(RESULT_DIGEST_SHA256);
+		algorithms.push_back(static_cast<ResultDigestType>(9999));
+		HashRequest request = CreateRequest(filePaths, algorithms);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "RunHashRequest should ignore unknown/duplicate algorithms and still succeed.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Unknown/duplicate algorithms should not prevent result publication.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Unknown/duplicate algorithms should collapse to one registered SHA256 digest.");
+		NativeAssertEqual(RESULT_DIGEST_SHA256, result.digests[0].type, "The emitted digest type should be SHA256 after request sanitization.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The sanitized SHA256 digest value should match the known vector.");
+		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "Sanitized requests should still emit exactly one hash-ready event.");
+	}
+
+	static void ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection()
+	{
+		ThreadData threadData;
+		ResetThreadDataForNewSession(threadData);
+
+		size_t initialEnabledCount = GetEnabledThreadDataHashAlgorithmCount(threadData);
+		NativeAssertTrue(initialEnabledCount >= 1, "ThreadData should start with at least one enabled algorithm.");
+
+		SetThreadDataHashAlgorithmEnabled(threadData, RESULT_DIGEST_UNKNOWN, false);
+		NativeAssertEqual(initialEnabledCount, GetEnabledThreadDataHashAlgorithmCount(threadData), "Unknown digest toggles should not mutate enabled algorithm count.");
+		NativeAssertTrue(!IsThreadDataHashAlgorithmEnabled(threadData, RESULT_DIGEST_UNKNOWN), "Unknown digest types should always be reported as disabled.");
+	}
+
 	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -630,6 +673,8 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
+	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
+	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
 	tests.push_back({ "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", &HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
 	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });

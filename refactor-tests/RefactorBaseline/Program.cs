@@ -3574,6 +3574,8 @@ internal static class Program
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForEmptyFile", "Phase 47 native runtime tests do not yet cover the empty-file digest vectors.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_ReportsMissingFileAsErrorResult", "Phase 47 native runtime tests do not yet cover the missing-file error path.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_ContinuesAfterOpenFileErrorInBatch", "Phase 47 native runtime tests do not yet cover mixed success+error file batches.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", "Phase 47 native runtime tests do not yet cover unknown/duplicate request algorithm sanitization.");
+            AssertContains(nativeRuntimeSource, "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", "Phase 47 native runtime tests do not yet cover unknown algorithm selection hardening.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsWhenStopRequestedBeforeStart", "Phase 47 native runtime tests do not yet cover cooperative cancellation.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", "Phase 47 native runtime tests do not yet cover uppercase digest event propagation.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", "Phase 47 native runtime tests do not yet cover mid-run cancellation.");
