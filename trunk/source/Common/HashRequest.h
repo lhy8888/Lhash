@@ -3,8 +3,6 @@
 
 #include <vector>
 
-#include "Common/ThreadDataExecutionAccess.h"
-#include "Common/ThreadDataInputAccess.h"
 
 struct HashRequest
 {
@@ -77,21 +75,6 @@ static inline bool HasHashRequestAlgorithm(const HashRequest& request, ResultDig
 static inline bool GetHashRequestUppercaseDigest(const HashRequest& request)
 {
 	return request.uppercaseDigest;
-}
-
-static inline HashRequest CreateHashRequest(const ThreadData& threadData)
-{
-	HashRequest request;
-	request.files = GetThreadDataInputFiles(threadData);
-	request.uppercaseDigest = GetThreadDataUppercase(threadData);
-
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
-	{
-		request.algorithms.push_back(digestType);
-		return true;
-	});
-
-	return request;
 }
 
 #endif

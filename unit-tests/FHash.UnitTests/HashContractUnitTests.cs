@@ -6,6 +6,7 @@ public sealed class HashContractUnitTests
     public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
+        string requestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequestProjection.h");
 
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
@@ -14,7 +15,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitHashRequestFiles(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithms(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
-        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", requestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/ThreadDataExecutionAccess.h\"", requestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/ThreadDataInputAccess.h\"", requestProjection, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -205,6 +209,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashExecutionContext;", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashRequestProjection.h\"", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/ThreadDataAccess.h\"", engine, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataObserver(*thrdData)", engine, StringComparison.Ordinal);

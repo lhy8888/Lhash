@@ -3,7 +3,8 @@
 #include "HashEngine.h"
 
 #include "Common/HashExecutionContext.h"
-#include "Common/ThreadDataAccess.h"
+#include "Common/HashRequestProjection.h"
+#include "Common/ThreadDataExecutionAccess.h"
 #include "Common/HashEngineInternal.h"
 
 using namespace std;

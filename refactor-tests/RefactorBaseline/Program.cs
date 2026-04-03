@@ -3071,6 +3071,7 @@ internal static class Program
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
         {
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string hashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequestProjection.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
@@ -3082,7 +3083,10 @@ internal static class Program
             AssertContains(hashRequest, "TStrVector files;", "Phase 31 HashRequest does not yet own file inputs.");
             AssertContains(hashRequest, "std::vector<ResultDigestType> algorithms;", "Phase 31 HashRequest does not yet own algorithm selection.");
             AssertContains(hashRequest, "bool uppercaseDigest;", "Phase 31 HashRequest does not yet own uppercase output preference.");
-            AssertContains(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest.");
+            AssertDoesNotContain(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 HashRequest contract still depends directly on ThreadData projection.");
+            AssertContains(hashRequestProjection, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest through the projection seam.");
+            AssertContains(hashRequestProjection, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 31 HashRequest projection does not yet consume thread-data execution access.");
+            AssertContains(hashRequestProjection, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 31 HashRequest projection does not yet consume thread-data input access.");
             AssertContains(hashRequest, "VisitHashRequestFiles(const HashRequest& request", "Phase 31 HashRequest does not yet own file iteration.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 HashRequest does not yet own algorithm iteration.");
 
@@ -3163,6 +3167,8 @@ internal static class Program
             AssertContains(hashEngineHeader, "struct HashExecutionContext;", "Phase 33 HashEngine header does not yet forward declare HashExecutionContext.");
             AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
+            AssertContains(hashEngine, "#include \"Common/HashRequestProjection.h\"", "Phase 33 HashEngine does not yet consume the HashRequest projection seam.");
+            AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");
             AssertContains(hashEngine, "HashExecutionContext executionContext = CreateHashExecutionContext(", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through explicit dependency injection.");
             AssertContains(hashEngine, "GetThreadDataObserver(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData observer through execution-state accessors.");
             AssertContains(hashEngine, "GetMutableThreadDataHashJobState(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData job state through execution-state accessors.");
