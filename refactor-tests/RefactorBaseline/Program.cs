@@ -438,7 +438,11 @@ internal static class Program
             string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
             string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
             string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
-            string threadAccess = string.Join("\r\n", threadDataAccess, threadExecutionAccess, threadInputAccess, threadResultAccess);
+            string legacyThreadDataAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h");
+            string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+            string legacyThreadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h");
+            string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
+            string threadAccess = string.Join("\r\n", threadDataAccess, threadExecutionAccess, threadInputAccess, threadResultAccess, legacyThreadDataAccess, legacyThreadExecutionAccess, legacyThreadInputAccess, legacyThreadResultAccess);
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
@@ -493,7 +497,7 @@ internal static class Program
             AssertContains(threadAccess, "AppendThreadDataInputFiles(threadData, fullPaths);", "ThreadData access seams grouped input-file replacement helper does not yet reuse the grouped list append seam.");
             AssertContains(threadAccess, "AppendTrimmedThreadDataInputFile(threadData, *itr);", "ThreadData access seams grouped trimmed input-file replacement helper does not yet reuse the trimmed single-file append seam.");
             AssertContains(threadAccess, "ClearThreadDataResults(threadData);", "ThreadData access seams grouped reset helper does not yet reuse the result-clear seam.");
-            AssertContains(threadDataAccess, "ResetThreadDataInputFiles(threadData);", "ThreadDataAccess grouped reset helper does not yet reuse the input-file reset seam.");
+            AssertContains(legacyThreadDataAccess, "ResetThreadDataInputFiles(threadData);", "ThreadDataAccess grouped reset helper does not yet reuse the input-file reset seam.");
             AssertContains(threadAccess, "return threadData.inputState;", "ThreadData access seams grouped input-state getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return threadData.executionState;", "ThreadData access seams grouped execution-state getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return GetThreadDataInputState(threadData).inputFiles;", "ThreadData access seams grouped input-files getter does not yet route through the grouped input-state seam.");
@@ -1930,7 +1934,11 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h"));
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
@@ -2107,6 +2115,7 @@ internal static class Program
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
             string hashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
+            string legacyHashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
@@ -2124,10 +2133,11 @@ internal static class Program
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp should not include ThreadData execution access directly after the thread-entry projection seam split.");
             AssertContains(hashThreadEntry, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest through the thread-entry projection seam.");
             AssertContains(hashThreadEntry, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "HashThreadEntry.cpp does not yet inject HashExecutionContext through the thread-entry projection seam.");
-            AssertContains(hashThreadEntryProjection, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntryProjection.h does not yet layer on top of HashRequestProjection.");
-            AssertContains(hashThreadEntryProjection, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntryProjection.h does not yet layer on top of ThreadDataExecutionAccess.");
-            AssertContains(hashThreadEntryProjection, "CreateThreadDataHashExecutionContext(ThreadData& threadData)", "HashThreadEntryProjection.h does not yet expose the ThreadData-to-HashExecutionContext projection seam.");
-            AssertContains(hashThreadEntryProjection, "CreateThreadDataHashRequest(const ThreadData& threadData)", "HashThreadEntryProjection.h does not yet expose the ThreadData-to-HashRequest projection seam.");
+            AssertContains(hashThreadEntryProjection, "#include \"LegacyCompat/HashThreadEntryProjection.h\"", "HashThreadEntryProjection compatibility shim does not yet layer on top of the legacy projection seam.");
+            AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of HashRequestProjection.");
+            AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of ThreadDataExecutionAccess.");
+            AssertContains(legacyHashThreadEntryProjection, "CreateThreadDataHashExecutionContext(ThreadData& threadData)", "Legacy HashThreadEntryProjection does not yet expose the ThreadData-to-HashExecutionContext projection seam.");
+            AssertContains(legacyHashThreadEntryProjection, "CreateThreadDataHashRequest(const ThreadData& threadData)", "Legacy HashThreadEntryProjection does not yet expose the ThreadData-to-HashRequest projection seam.");
             AssertDoesNotContain(engine, "static uint64_t PrepareFileMetaResult(", "HashEngine.cpp still owns file-metadata finalization instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static void CompleteSuccessfulFileHashing(", "HashEngine.cpp still owns successful-file completion instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static bool PrepareHashingWork(", "HashEngine.cpp still owns preparation helpers instead of delegating them to the split preparation implementation file.");
@@ -2190,7 +2200,11 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"));
+                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h"),
+                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h"));
 
             AssertContains(global, "std::vector<bool> enabled;", "Global.h does not yet route algorithm-selection state through a registry-sized vector.");
 
@@ -2480,30 +2494,35 @@ internal static class Program
             string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
             string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
             string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+            string legacyThreadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h");
+            string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+            string legacyThreadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h");
+            string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string mfcAlgorithmController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
 
-            AssertContains(threadAccess, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the execution seam.");
-            AssertContains(threadAccess, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the input seam.");
-            AssertContains(threadAccess, "#include \"Common/ThreadDataResultAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the result seam.");
-            AssertContains(threadAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "Phase 18 compatibility ThreadDataAccess shim does not yet keep the grouped session-reset helper.");
+            AssertContains(threadAccess, "#include \"LegacyCompat/ThreadDataAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the legacy seam.");
             AssertDoesNotContain(threadAccess, "AppendThreadDataInputFile(ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns input-file helpers after the seam split.");
             AssertDoesNotContain(threadAccess, "VisitThreadDataResults(const ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns result traversal after the seam split.");
+            AssertContains(legacyThreadAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "Phase 18 legacy ThreadDataAccess seam does not yet keep the grouped session-reset helper.");
 
-            AssertContains(threadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "Phase 18 execution seam does not yet own progress-sink wiring.");
-            AssertContains(threadExecutionAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "Phase 18 execution seam does not yet own working-state writes.");
-            AssertContains(threadExecutionAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "Phase 18 execution seam does not yet own algorithm enablement.");
-            AssertContains(threadExecutionAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "Phase 18 execution seam does not yet own counted-size reads.");
+            AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 18 compatibility execution seam does not yet layer on top of the legacy execution seam.");
+            AssertContains(legacyThreadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "Phase 18 execution seam does not yet own progress-sink wiring.");
+            AssertContains(legacyThreadExecutionAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "Phase 18 execution seam does not yet own working-state writes.");
+            AssertContains(legacyThreadExecutionAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "Phase 18 execution seam does not yet own algorithm enablement.");
+            AssertContains(legacyThreadExecutionAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "Phase 18 execution seam does not yet own counted-size reads.");
 
-            AssertContains(threadInputAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "Phase 18 input seam does not yet own input-file reads.");
-            AssertContains(threadInputAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "Phase 18 input seam does not yet own input-file appends.");
-            AssertContains(threadInputAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "Phase 18 input seam does not yet own trimmed input-file replacement.");
-            AssertContains(threadInputAccess, "VisitThreadDataInputFiles(const ThreadData& threadData, TInputFileVisitor visitor)", "Phase 18 input seam does not yet own input-file traversal.");
+            AssertContains(threadInputAccess, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 18 compatibility input seam does not yet layer on top of the legacy input seam.");
+            AssertContains(legacyThreadInputAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "Phase 18 input seam does not yet own input-file reads.");
+            AssertContains(legacyThreadInputAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "Phase 18 input seam does not yet own input-file appends.");
+            AssertContains(legacyThreadInputAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "Phase 18 input seam does not yet own trimmed input-file replacement.");
+            AssertContains(legacyThreadInputAccess, "VisitThreadDataInputFiles(const ThreadData& threadData, TInputFileVisitor visitor)", "Phase 18 input seam does not yet own input-file traversal.");
 
-            AssertContains(threadResultAccess, "GetThreadDataResults(const ThreadData& threadData)", "Phase 18 result seam does not yet own result-list reads.");
-            AssertContains(threadResultAccess, "AppendThreadDataResult(ThreadData& threadData)", "Phase 18 result seam does not yet own result-list appends.");
-            AssertContains(threadResultAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "Phase 18 result seam does not yet own result traversal.");
+            AssertContains(threadResultAccess, "#include \"LegacyCompat/ThreadDataResultAccess.h\"", "Phase 18 compatibility result seam does not yet layer on top of the legacy result seam.");
+            AssertContains(legacyThreadResultAccess, "GetThreadDataResults(const ThreadData& threadData)", "Phase 18 result seam does not yet own result-list reads.");
+            AssertContains(legacyThreadResultAccess, "AppendThreadDataResult(ThreadData& threadData)", "Phase 18 result seam does not yet own result-list appends.");
+            AssertContains(legacyThreadResultAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "Phase 18 result seam does not yet own result traversal.");
 
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 execution seam after thread-entry decoupling.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataInputAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 input seam after thread-entry decoupling.");
@@ -3094,6 +3113,7 @@ internal static class Program
         {
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string hashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequestProjection.h");
+            string legacyHashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestProjection.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
@@ -3108,9 +3128,10 @@ internal static class Program
             AssertContains(hashRequest, "bool uppercaseDigest;", "Phase 31 HashRequest does not yet own uppercase output preference.");
             AssertContains(hashRequest, "HashRequestDigestExecutionPolicy digestExecutionPolicy;", "Phase 31 HashRequest does not yet expose runtime digest execution policy.");
             AssertDoesNotContain(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 HashRequest contract still depends directly on ThreadData projection.");
-            AssertContains(hashRequestProjection, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest through the projection seam.");
-            AssertContains(hashRequestProjection, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 31 HashRequest projection does not yet consume thread-data execution access.");
-            AssertContains(hashRequestProjection, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 31 HashRequest projection does not yet consume thread-data input access.");
+            AssertContains(hashRequestProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Phase 31 compatibility HashRequest projection does not yet layer on top of the legacy projection seam.");
+            AssertContains(legacyHashRequestProjection, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest through the legacy projection seam.");
+            AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data execution access.");
+            AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data input access.");
             AssertContains(hashRequest, "AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", "Phase 31 HashRequest does not yet expose descriptor/id append seams.");
             AssertContains(hashRequest, "AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", "Phase 31 HashRequest does not yet expose digest-type compatibility append seams.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithmIds(const HashRequest& request", "Phase 31 HashRequest does not yet expose descriptor/id iteration seams.");
@@ -3526,6 +3547,7 @@ internal static class Program
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
             string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+            string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
@@ -3539,8 +3561,9 @@ internal static class Program
             AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult traversal.");
             AssertContains(hashResultProjection, "VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult matching traversal.");
 
-            AssertContains(threadResultAccess, "VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult traversal.");
-            AssertContains(threadResultAccess, "VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult path+digest traversal.");
+            AssertContains(threadResultAccess, "#include \"LegacyCompat/ThreadDataResultAccess.h\"", "Phase 45 compatibility ThreadData result access does not yet layer on top of the legacy result seam.");
+            AssertContains(legacyThreadResultAccess, "VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult traversal.");
+            AssertContains(legacyThreadResultAccess, "VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult path+digest traversal.");
 
             AssertContains(managedHashMgmtAccess, "NormalizeHashResultDigestSearchText(hashToFind)", "Phase 45 managed hash management does not yet normalize digest queries through HashResultSearch.");
             AssertContains(filesHashSearchController, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route history traversal through ThreadData HashResult visitors.");
@@ -5101,6 +5124,7 @@ internal static class Program
             string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
+            string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string digestMetadataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h");
             string digestStateAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestStateAccess.h");
             string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
@@ -5118,8 +5142,9 @@ internal static class Program
             AssertContains(hashRequest, "std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId)", "Phase 84 HashRequest algorithm traversal does not yet deduplicate descriptor/id algorithm selections.");
             AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmType(digestType))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
 
-            AssertContains(threadExecutionAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
-            AssertDoesNotContain(threadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
+            AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 84 compatibility ThreadData execution access does not yet layer on top of the legacy execution seam.");
+            AssertContains(legacyThreadExecutionAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
+            AssertDoesNotContain(legacyThreadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
 
             AssertContains(digestMetadataAccess, "TryGetResultDigestIndex(ResultDigestType digestType, int *index)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-index lookup.");
             AssertContains(digestMetadataAccess, "TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-metadata lookup.");

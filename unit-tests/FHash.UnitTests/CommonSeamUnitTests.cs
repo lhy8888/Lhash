@@ -98,9 +98,7 @@ public sealed class CommonSeamUnitTests
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ThreadDataAccess.h");
 
-        Assert.Contains("#include \"Common/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataAccess.h\"", access, StringComparison.Ordinal);
         Assert.DoesNotContain("GetThreadDataObserver(const ThreadData& threadData)", access, StringComparison.Ordinal);
         Assert.DoesNotContain("VisitThreadDataResults(const ThreadData& threadData", access, StringComparison.Ordinal);
     }
@@ -190,6 +188,7 @@ public sealed class CommonSeamUnitTests
     {
         string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
         string threadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ThreadDataResultAccess.h");
+        string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
 
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", hashResultSearch, StringComparison.Ordinal);
@@ -200,8 +199,9 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("CountMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("VisitDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
-        Assert.Contains("VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", threadResultAccess, StringComparison.Ordinal);
-        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", threadResultAccess, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataResultAccess.h\"", threadResultAccess, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", legacyThreadResultAccess, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", legacyThreadResultAccess, StringComparison.Ordinal);
     }
 
     [Fact]

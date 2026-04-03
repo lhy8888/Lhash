@@ -7,6 +7,7 @@ public sealed class HashContractUnitTests
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
         string requestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequestProjection.h");
+        string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestProjection.h");
 
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
@@ -26,9 +27,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", request, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
-        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", requestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ThreadDataExecutionAccess.h\"", requestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ThreadDataInputAccess.h\"", requestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", requestProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", requestProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -139,11 +142,13 @@ public sealed class HashContractUnitTests
         string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\LegacyThreadData.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string threadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ThreadDataExecutionAccess.h");
+        string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.cpp");
         string threadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntryProjection.h");
+        string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
         string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
@@ -234,11 +239,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashJobState& jobState;", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashCancellationState& cancellationState;", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", executionContext, StringComparison.Ordinal);
-        Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", threadExecutionAccess, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataHashCancellationState(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataHashJobState(const ThreadData& threadData)", threadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", threadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashCancellationState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashJobState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext;", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
@@ -254,15 +260,13 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", threadEntry, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", threadEntry, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashExecutionContext.h\"", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashRequestProjection.h\"", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataObserver(threadData)", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetMutableThreadDataHashJobState(threadData)", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", threadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateHashRequest(threadData)", threadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashJobState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
         Assert.Contains("return RunHashRequest(&executionContext, request);", threadEntry, StringComparison.Ordinal);
         Assert.Contains("InitializeHashJobExecutionPlan(request, &executionPlan);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
