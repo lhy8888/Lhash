@@ -8,6 +8,7 @@ public sealed class HashContractUnitTests
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
         string requestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequestProjection.h");
         string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestProjection.h");
+        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
 
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
@@ -16,20 +17,25 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool uppercaseDigest;", request, StringComparison.Ordinal);
         Assert.Contains("HashRequestDigestExecutionPolicy digestExecutionPolicy;", request, StringComparison.Ordinal);
         Assert.Contains("AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
-        Assert.Contains("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
         Assert.Contains("GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)", request, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithmIds(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("HasHashRequestAlgorithmId(const HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
         Assert.Contains("GetHashRequestDigestExecutionPolicy(const HashRequest& request)", request, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestFiles(const HashRequest& request", request, StringComparison.Ordinal);
-        Assert.Contains("VisitHashRequestAlgorithms(const HashRequest& request", request, StringComparison.Ordinal);
         Assert.Contains("CreateHashRequestAlgorithmSelectionState(const HashRequest& request)", request, StringComparison.Ordinal);
-        Assert.Contains("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", request, StringComparison.Ordinal);
-        Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("VisitHashRequestAlgorithms(const HashRequest& request", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.Contains("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithms(const HashRequest& request", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", requestProjection, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", requestProjection, StringComparison.Ordinal);
         Assert.Contains("CreateHashRequest(const ThreadData& threadData)", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashRequestTypeCompat.h\"", legacyRequestProjection, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
     }
@@ -153,6 +159,7 @@ public sealed class HashContractUnitTests
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.cpp");
         string threadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntryProjection.h");
         string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
+        string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
         string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
@@ -221,7 +228,7 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
-        Assert.Contains("struct ThreadData;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("struct ThreadData;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);
@@ -254,16 +261,17 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int WINAPI HashThreadFunc(void *param);", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashThreadEntry.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashThreadEntryRuntime.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
-        Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", threadEntry, StringComparison.Ordinal);
-        Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("return RunLegacyHashThread(param);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntryProjection, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
@@ -271,7 +279,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetMutableThreadDataHashJobState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
         Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
         Assert.Contains("CreateHashRequest(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("return RunHashRequest(&executionContext, request);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("return RunHashRequest(&executionContext, request);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("InitializeHashJobExecutionPlan(request, &executionPlan);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
         Assert.Contains("RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", engine, StringComparison.Ordinal);
@@ -339,11 +347,21 @@ public sealed class HashContractUnitTests
         Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);", digestLifecycleHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", digestLifecycle, StringComparison.Ordinal);
-        Assert.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", digestContextOpsHeader, StringComparison.Ordinal);
-        Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", digestContextOpsHeader, StringComparison.Ordinal);
-        Assert.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", digestContextOps, StringComparison.Ordinal);
-        Assert.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", digestContextOps, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", digestContextOps, StringComparison.Ordinal);
+        Assert.True(
+            digestContextOpsHeader.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", StringComparison.Ordinal) ||
+            digestContextOpsHeader.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOpsHeader.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", StringComparison.Ordinal) ||
+            digestContextOpsHeader.Contains("void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId)", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)", StringComparison.Ordinal));
         Assert.Contains("struct HashDigestOperationDescriptor", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
@@ -638,6 +656,7 @@ public sealed class HashContractUnitTests
     {
         string managedDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedBridgeDispatch.h");
         string managedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedHashMgmtAccess.h");
+        string legacyManagedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
         string clrHashResultNet = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashResultNet.h");
         string clrMgmt = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
         string clrMgmtHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.h");
@@ -666,9 +685,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("DispatchManagedBridgeResultByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", managedDispatch, StringComparison.Ordinal);
         Assert.DoesNotContain("DispatchManagedBridgeResultByType(const ResultData& result", managedDispatch, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashResultProjection.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", managedHashMgmtAccess, StringComparison.Ordinal);
-        Assert.Contains("static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", managedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultProjection.h\"", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
 
         Assert.Contains("public enum class HashResultStateNet", clrHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);

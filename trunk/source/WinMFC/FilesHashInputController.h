@@ -5,6 +5,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
+struct ThreadData;
 
 class FilesHashInputController
 {

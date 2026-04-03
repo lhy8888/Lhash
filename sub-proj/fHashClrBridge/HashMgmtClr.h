@@ -4,6 +4,7 @@
 #include "HashResultNet.h"
 #include "UIBridgeDelegates.h"
 #include "UIBridgeWUI.h"
+struct ThreadData;
 
 namespace FilesHashWUI
 {

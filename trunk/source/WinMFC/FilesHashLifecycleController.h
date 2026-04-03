@@ -3,6 +3,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
+struct ThreadData;
 
 class UIBridgeMFC;
 class FilesHashSearchController;

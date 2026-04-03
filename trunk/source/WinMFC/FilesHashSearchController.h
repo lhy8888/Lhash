@@ -5,6 +5,7 @@
 #include "Common/Global.h"
 #include "Common/HashResult.h"
 #include "HyperEditHash.h"
+struct ThreadData;
 
 class FilesHashSearchController
 {

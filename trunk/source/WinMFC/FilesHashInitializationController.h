@@ -5,6 +5,7 @@
 
 #include "OsUtils/OsThread.h"
 #include "Common/Global.h"
+struct ThreadData;
 
 class CHyperEditHash;
 class UIBridgeMFC;

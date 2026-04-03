@@ -8,9 +8,7 @@ namespace HashEngineInternal
 	struct FileHashContexts;
 
 	void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);
-	void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);
 	void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);
-	void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);
 }
 
 #endif

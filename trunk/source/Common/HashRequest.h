@@ -39,11 +39,6 @@ static inline void AppendHashRequestAlgorithmId(HashRequest& request, const Hash
 	request.algorithmIds.push_back(normalizedAlgorithmId);
 }
 
-static inline void AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)
-{
-	AppendHashRequestAlgorithmId(request, GetHashAlgorithmId(digestType));
-}
-
 static inline std::vector<HashAlgorithmId> GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)
 {
 	std::vector<HashAlgorithmId> normalizedAlgorithmIds;
@@ -99,23 +94,6 @@ static inline HashAlgorithmSelectionState CreateHashRequestAlgorithmSelectionSta
 	return selectionState;
 }
 
-static inline bool IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)
-{
-	int algorithmIndex = -1;
-	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
-	{
-		return false;
-	}
-
-	size_t normalizedIndex = static_cast<size_t>(algorithmIndex);
-	if (normalizedIndex >= selectionState.enabled.size())
-	{
-		return false;
-	}
-
-	return selectionState.enabled[normalizedIndex];
-}
-
 static inline size_t GetHashRequestFileCount(const HashRequest& request)
 {
 	return request.files.size();
@@ -153,26 +131,6 @@ static inline bool VisitHashRequestAlgorithmIds(const HashRequest& request, THas
 	}
 
 	return true;
-}
-
-template<typename THashRequestAlgorithmVisitor>
-static inline bool VisitHashRequestAlgorithms(const HashRequest& request, THashRequestAlgorithmVisitor visitor)
-{
-	return VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
-	{
-		ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
-		if (!TryGetHashAlgorithmTypeById(algorithmId, &digestType))
-		{
-			return true;
-		}
-
-		return visitor(digestType);
-	});
-}
-
-static inline bool HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)
-{
-	return IsHashRequestAlgorithmSelected(CreateHashRequestAlgorithmSelectionState(request), digestType);
 }
 
 static inline bool HasHashRequestAlgorithmId(const HashRequest& request, const HashAlgorithmId& algorithmId)

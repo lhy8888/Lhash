@@ -20,30 +20,9 @@ namespace HashEngineInternal
 		return GetDigestStorageValueById(digestBundle, algorithmId);
 	}
 
-	const sunjwbase::tstring& GetFinalizedDigestValue(const ResultDigestStorage& digestBundle, ResultDigestType digestType)
-	{
-		if (!IsRegisteredHashAlgorithmType(digestType))
-		{
-			static const sunjwbase::tstring emptyDigestValue;
-			return emptyDigestValue;
-		}
-
-		return GetFinalizedDigestValueById(digestBundle, GetHashAlgorithmId(digestType));
-	}
-
 	void SetFinalizedDigestValueById(ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)
 	{
 		SetDigestStorageValueById(digestBundle, algorithmId, digestValue);
-	}
-
-	void SetFinalizedDigestValue(ResultDigestStorage& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
-	{
-		if (!IsRegisteredHashAlgorithmType(digestType))
-		{
-			return;
-		}
-
-		SetFinalizedDigestValueById(digestBundle, GetHashAlgorithmId(digestType), digestValue);
 	}
 
 	void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle)
@@ -65,7 +44,6 @@ namespace HashEngineInternal
 
 			HashDigestResult digestResult;
 			digestResult.algorithmId = NormalizeHashAlgorithmId(algorithmId);
-			digestResult.type = GetResultDigestMetadataType(*digestMetadata);
 			digestResult.stableName = GetResultDigestMetadataStableName(*digestMetadata);
 			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(*digestMetadata);
 			digestResult.value = digestValue;

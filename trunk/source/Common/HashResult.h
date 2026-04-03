@@ -18,11 +18,6 @@ static inline HashAlgorithmId ResolveHashDigestResultAlgorithmId(const HashDiges
 		return stableNameAlgorithmId;
 	}
 
-	if (IsRegisteredHashAlgorithmType(digestResult.type))
-	{
-		return GetHashAlgorithmId(digestResult.type);
-	}
-
 	return HashAlgorithmId();
 }
 
@@ -48,7 +43,6 @@ static inline HashResult ProjectHashResult(const ResultData& result)
 		}
 		HashDigestResult digestResult;
 		digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);
-		digestResult.type = GetHashAlgorithmDescriptorType(digestMetadata);
 		digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
 		digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
 		digestResult.value = digestValue;

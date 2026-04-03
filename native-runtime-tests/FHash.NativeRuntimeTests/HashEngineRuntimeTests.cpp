@@ -17,6 +17,7 @@
 #include "Common/HashResultSearch.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestValueAccess.h"
+#include "LegacyCompat/HashRequestTypeCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
 
 namespace
@@ -272,11 +273,23 @@ namespace
 		return request;
 	}
 
+	static HashAlgorithmId ResolveDigestResultAlgorithmId(const HashDigestResult& digestResult)
+	{
+		HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(digestResult.algorithmId);
+		if (!normalizedAlgorithmId.empty())
+		{
+			return normalizedAlgorithmId;
+		}
+
+		return NormalizeHashAlgorithmId(digestResult.stableName);
+	}
+
 	static sunjwbase::tstring FindDigestValue(const HashResult& result, ResultDigestType digestType)
 	{
+		HashAlgorithmId targetAlgorithmId = NormalizeHashAlgorithmId(GetHashAlgorithmId(digestType));
 		for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
 		{
-			if (result.digests[digestIndex].type == digestType)
+			if (ResolveDigestResultAlgorithmId(result.digests[digestIndex]) == targetAlgorithmId)
 			{
 				return result.digests[digestIndex].value;
 			}
@@ -394,7 +407,10 @@ namespace
 
 		const HashResult& result = GetThreadDataResults(threadData).front();
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Only the explicitly enabled algorithm should be emitted.");
-		NativeAssertEqual(RESULT_DIGEST_SHA256, result.digests[0].type, "The only emitted digest should be SHA256.");
+		NativeAssertEqual(
+			NormalizeHashAlgorithmId(GetHashAlgorithmId(RESULT_DIGEST_SHA256)),
+			ResolveDigestResultAlgorithmId(result.digests[0]),
+			"The only emitted digest should be SHA256.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
 	}
 
@@ -423,7 +439,10 @@ namespace
 
 		const HashResult& result = jobState.results.front();
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Unknown/duplicate algorithms should collapse to one registered SHA256 digest.");
-		NativeAssertEqual(RESULT_DIGEST_SHA256, result.digests[0].type, "The emitted digest type should be SHA256 after request sanitization.");
+		NativeAssertEqual(
+			NormalizeHashAlgorithmId(GetHashAlgorithmId(RESULT_DIGEST_SHA256)),
+			ResolveDigestResultAlgorithmId(result.digests[0]),
+			"The emitted digest type should be SHA256 after request sanitization.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The sanitized SHA256 digest value should match the known vector.");
 		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "Sanitized requests should still emit exactly one hash-ready event.");
 	}
@@ -457,7 +476,10 @@ namespace
 		const HashResult& result = jobState.results.front();
 		NativeAssertEqual(RESULT_ALL, result.state, "Supported digest execution should still complete the file result.");
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Descriptor/id-only algorithms without digest operations should be skipped.");
-		NativeAssertEqual(RESULT_DIGEST_MD5, result.digests[0].type, "Supported MD5 digest should remain available.");
+		NativeAssertEqual(
+			NormalizeHashAlgorithmId(GetHashAlgorithmId(RESULT_DIGEST_MD5)),
+			ResolveDigestResultAlgorithmId(result.digests[0]),
+			"Supported MD5 digest should remain available.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), result.digests[0].value, "Supported MD5 digest should keep the expected known vector.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "Supported digest execution should still emit file-hash-ready events.");
 	}
@@ -576,7 +598,10 @@ namespace
 
 		HashResult result = ProjectHashResult(resultData);
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "HashResult projection should emit descriptor/id-based digest results without fixed digest slots.");
-		NativeAssertEqual(customDigestType, result.digests[0].type, "Projected digest should preserve custom descriptor digest identity.");
+		NativeAssertEqual(
+			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("xxh3"))),
+			ResolveDigestResultAlgorithmId(result.digests[0]),
+			"Projected digest should preserve custom descriptor digest identity.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("xxh3")), result.digests[0].stableName, "Projected digest should preserve descriptor/id stable names.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("CAFEBABE")), result.digests[0].value, "Projected digest should preserve descriptor/id digest values.");
 	}

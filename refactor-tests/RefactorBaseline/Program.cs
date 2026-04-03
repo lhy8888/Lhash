@@ -29,7 +29,7 @@ internal static class Program
 
             AssertContains(global, "class HashProgressSink;", "Global.h is missing the new phase-34 progress-sink forward declaration.");
             AssertDoesNotContain(global, "#include \"LegacyCompat/LegacyThreadData.h\"", "Global.h should not include legacy ThreadData contracts directly.");
-            AssertContains(global, "struct ThreadData;", "Global.h should keep ThreadData as a forward declaration only.");
+            AssertDoesNotContain(global, "struct ThreadData;", "Global.h should no longer expose ThreadData forward declarations after boundary isolation.");
             AssertDoesNotContain(global, "HashEngineObserver *uiBridge;", "ThreadData still uses the UI-specific uiBridge field name in the phase-1 contract.");
             AssertDoesNotContain(global, "UIBridgeBase *uiBridge;", "ThreadData still directly depends on UIBridgeBase in the phase-1 contract.");
             AssertContains(global, "struct HashExecutionPreferenceState", "ThreadData baseline contract is missing the grouped execution-preference seam.");
@@ -141,8 +141,18 @@ internal static class Program
             AssertContains(engineImpl, "UpdateWholeProgressAfterFile(", "HashEngine implementation set does not yet expose a tiny whole-progress helper.");
             AssertContains(engineImpl, "PopulateDigestResult(", "HashEngine implementation set does not yet expose a tiny digest-population helper.");
             AssertContains(engineImpl, "typedef ResultDigestStorage FinalizedDigestBundle;", "HashEngine implementation set does not yet expose the finalized digest bundle introduced after phase 3.");
-            AssertContains(engineImpl, "GetFinalizedDigestValue(", "HashEngine implementation set does not yet expose the finalized-digest getter introduced after phase 3.");
-            AssertContains(engineImpl, "SetFinalizedDigestValue(", "HashEngine implementation set does not yet expose the finalized-digest setter introduced after phase 3.");
+            AssertContainsAny(engineImpl,
+                [
+                    "GetFinalizedDigestValue(",
+                    "GetFinalizedDigestValueById("
+                ],
+                "HashEngine implementation set does not yet expose the finalized-digest getter introduced after phase 3.");
+            AssertContainsAny(engineImpl,
+                [
+                    "SetFinalizedDigestValue(",
+                    "SetFinalizedDigestValueById("
+                ],
+                "HashEngine implementation set does not yet expose the finalized-digest setter introduced after phase 3.");
             AssertContains(engineImpl, "FinalizeDigestStrings(", "HashEngine implementation set does not yet expose a tiny digest-finalization helper.");
             AssertContains(engineImpl, "CompleteSuccessfulFileHashing(", "HashEngine implementation set does not yet expose a tiny successful-file completion helper.");
             AssertContains(engineImpl, "CompleteOpenedFileAttempt(", "HashEngine implementation set does not yet expose a tiny opened-file completion helper.");
@@ -2148,6 +2158,7 @@ internal static class Program
             string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
             string hashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
             string legacyHashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
+            string legacyHashThreadEntryRuntime = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
@@ -2160,13 +2171,12 @@ internal static class Program
             AssertContains(fileRunner, "bool ProcessOpenedFileHashing(", "HashDigestPipeline.cpp no longer owns the opened-file read/update orchestration.");
             AssertDoesNotContain(engine, "int WINAPI HashThreadFunc(void *param)", "HashEngine.cpp should no longer own the thread orchestration entry point after the thread-entry split.");
             AssertContains(hashThreadEntry, "int WINAPI HashThreadFunc(void *param)", "HashThreadEntry.cpp does not yet own the thread orchestration entry point after the thread-entry split.");
-            AssertContainsAny(hashThreadEntry,
-                new[] { "#include \"Common/HashThreadEntryProjection.h\"", "#include \"LegacyCompat/HashThreadEntryProjection.h\"" },
-                "HashThreadEntry.cpp does not yet consume the thread-entry projection seam.");
+            AssertContains(hashThreadEntry, "#include \"LegacyCompat/HashThreadEntryRuntime.h\"", "HashThreadEntry.cpp does not yet consume the legacy thread-entry runtime seam.");
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp should not include HashRequestProjection directly after the thread-entry projection seam split.");
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp should not include ThreadData execution access directly after the thread-entry projection seam split.");
-            AssertContains(hashThreadEntry, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest through the thread-entry projection seam.");
-            AssertContains(hashThreadEntry, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "HashThreadEntry.cpp does not yet inject HashExecutionContext through the thread-entry projection seam.");
+            AssertContains(hashThreadEntry, "return RunLegacyHashThread(param);", "HashThreadEntry.cpp should delegate thread execution to legacy runtime seam.");
+            AssertContains(legacyHashThreadEntryRuntime, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Legacy HashThreadEntry runtime does not yet project ThreadData into HashRequest.");
+            AssertContains(legacyHashThreadEntryRuntime, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Legacy HashThreadEntry runtime does not yet inject HashExecutionContext through the projection seam.");
             AssertContains(hashThreadEntryProjection, "#include \"LegacyCompat/HashThreadEntryProjection.h\"", "HashThreadEntryProjection compatibility shim does not yet layer on top of the legacy projection seam.");
             AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of HashRequestProjection.");
             AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of ThreadDataExecutionAccess.");
@@ -2582,17 +2592,19 @@ internal static class Program
         Run("Phase 19 extracts shared managed hash-management helpers for CLR and UWP bridges", () =>
         {
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
-            AssertContains(managedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)", "Phase 19 is missing the shared managed digest-type conversion helper.");
-            AssertContains(managedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
-            AssertContains(managedHashMgmtAccess, "descriptorNet->StableName =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose stable names.");
-            AssertContains(managedHashMgmtAccess, "descriptorNet->DisplayLabel =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose display labels.");
-            AssertContains(managedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type enable helper.");
-            AssertContains(managedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type query helper.");
-            AssertContains(managedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
-            AssertContains(managedHashMgmtAccess, "CreateProjectedManagedDigestMatchingResults(", "Phase 19 is missing the shared managed digest-search projection helper.");
+            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 19 common managed access should forward to legacy managed compatibility seam.");
+            AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)", "Phase 19 is missing the shared managed digest-type conversion helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->StableName =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose stable names.");
+            AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->DisplayLabel =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose display labels.");
+            AssertContains(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type enable helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type query helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "CreateProjectedManagedDigestMatchingResults(", "Phase 19 is missing the shared managed digest-search projection helper.");
 
             AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>", "CLR HashMgmt does not yet route descriptor projection through the shared managed helper.");
@@ -3168,6 +3180,7 @@ internal static class Program
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string hashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequestProjection.h");
             string legacyHashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestProjection.h");
+            string legacyHashRequestTypeCompat = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
@@ -3184,14 +3197,15 @@ internal static class Program
             AssertDoesNotContain(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 HashRequest contract still depends directly on ThreadData projection.");
             AssertContains(hashRequestProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Phase 31 compatibility HashRequest projection does not yet layer on top of the legacy projection seam.");
             AssertContains(legacyHashRequestProjection, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest through the legacy projection seam.");
+            AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/HashRequestTypeCompat.h\"", "Phase 31 legacy HashRequest projection does not consume digest-type compatibility helpers.");
             AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data execution access.");
             AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data input access.");
             AssertContains(hashRequest, "AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", "Phase 31 HashRequest does not yet expose descriptor/id append seams.");
-            AssertContains(hashRequest, "AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", "Phase 31 HashRequest does not yet expose digest-type compatibility append seams.");
+            AssertContains(legacyHashRequestTypeCompat, "AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", "Phase 31 digest-type compatibility append seam should live in legacy compatibility layer.");
             AssertContains(hashRequest, "normalizedAlgorithmIds.reserve(request.algorithmIds.size());", "Phase 31 HashRequest normalization should reserve from descriptor/id algorithm inputs only.");
             AssertContains(hashRequest, "VisitHashRequestAlgorithmIds(const HashRequest& request", "Phase 31 HashRequest does not yet expose descriptor/id iteration seams.");
             AssertContains(hashRequest, "VisitHashRequestFiles(const HashRequest& request", "Phase 31 HashRequest does not yet own file iteration.");
-            AssertContains(hashRequest, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 HashRequest does not yet own algorithm iteration.");
+            AssertContains(legacyHashRequestTypeCompat, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 digest-type compatibility algorithm iteration seam should live in legacy compatibility layer.");
 
             AssertContains(global, "struct HashResult", "Phase 31 does not yet define a stable HashResult contract.");
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy compatibility link back to ResultData.");
@@ -3407,6 +3421,7 @@ internal static class Program
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
@@ -3422,14 +3437,16 @@ internal static class Program
             AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResult projection seam does not yet reuse shared HashResult whole-list traversal.");
             AssertContains(hashResultProjection, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString)", "Phase 37 HashResult projection seam does not yet route materialized net projection through ProjectHashResultToNet.");
 
-            AssertContains(managedHashMgmtAccess, "#include \"Common/HashResultProjection.h\"", "Phase 37 managed hash-management seam does not yet consume HashResultProjection.");
-            AssertContains(managedHashMgmtAccess, "CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", "Phase 37 managed hash-management seam does not yet route digest-search projection through HashResultProjection.");
-            AssertDoesNotContain(managedHashMgmtAccess, "#include \"Common/ResultDataProjection.h\"", "Phase 37 managed hash-management seam still depends directly on ResultDataProjection.");
+            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 37 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertContains(legacyManagedHashMgmtAccess, "#include \"Common/HashResultProjection.h\"", "Phase 37 managed hash-management seam does not yet consume HashResultProjection.");
+            AssertContains(legacyManagedHashMgmtAccess, "CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", "Phase 37 managed hash-management seam does not yet route digest-search projection through HashResultProjection.");
+            AssertDoesNotContain(legacyManagedHashMgmtAccess, "#include \"Common/ResultDataProjection.h\"", "Phase 37 managed hash-management seam still depends directly on ResultDataProjection.");
         }, failures);
 
         Run("Phase 38 promotes managed query results onto HashResultNet as the primary managed query contract", () =>
         {
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string clrHashResultNet = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashResultNet.h");
             string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
             string clrHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
@@ -3439,7 +3456,8 @@ internal static class Program
             string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
             string winUwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
 
-            AssertContains(managedHashMgmtAccess, "static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", "Phase 38 managed hash-management seam does not yet expose HashResultNet-based digest search projection.");
+            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 38 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertContains(legacyManagedHashMgmtAccess, "static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", "Phase 38 managed hash-management seam does not yet expose HashResultNet-based digest search projection.");
 
             AssertContains(clrHashResultNet, "public enum class HashResultStateNet", "Phase 38 CLR bridge does not yet define HashResultStateNet.");
             AssertContains(clrHashResultNet, "public value struct HashResultNet", "Phase 38 CLR bridge does not yet define HashResultNet.");
@@ -3606,6 +3624,7 @@ internal static class Program
             string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
             string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
+            string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
 
@@ -3622,7 +3641,8 @@ internal static class Program
             AssertContains(legacyThreadResultAccess, "VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult traversal.");
             AssertContains(legacyThreadResultAccess, "VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult path+digest traversal.");
 
-            AssertContains(managedHashMgmtAccess, "NormalizeHashResultDigestSearchText(hashToFind)", "Phase 45 managed hash management does not yet normalize digest queries through HashResultSearch.");
+            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 45 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertContains(legacyManagedHashMgmtAccess, "NormalizeHashResultDigestSearchText(hashToFind)", "Phase 45 managed hash management does not yet normalize digest queries through HashResultSearch.");
             AssertContains(filesHashSearchController, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route history traversal through ThreadData HashResult visitors.");
             AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route search traversal through ThreadData HashResult visitors.");
             AssertContains(hashBridgeMac, "VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", "Phase 45 Mac history bridge does not yet route history traversal through ThreadData HashResult visitors.");
@@ -4571,8 +4591,18 @@ internal static class Program
 
             AssertContains(hashDigestLifecycleHeader, "struct FileHashContexts;", "Phase 69 HashDigestLifecycle.h does not yet expose digest lifecycle context seams.");
             AssertContains(hashDigestLifecycleHeader, "void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);", "Phase 69 HashDigestLifecycle.h does not yet expose hash-context initialization.");
-            AssertContains(hashDigestLifecycleHeader, "const sunjwbase::tstring& GetFinalizedDigestValue(const ResultDigestStorage& digestBundle, ResultDigestType digestType);", "Phase 69 HashDigestLifecycle.h does not yet expose finalized digest getters.");
-            AssertContains(hashDigestLifecycleHeader, "void SetFinalizedDigestValue(ResultDigestStorage& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);", "Phase 69 HashDigestLifecycle.h does not yet expose finalized digest setters.");
+            AssertContainsAny(hashDigestLifecycleHeader,
+                [
+                    "const sunjwbase::tstring& GetFinalizedDigestValue(const ResultDigestStorage& digestBundle, ResultDigestType digestType);",
+                    "const sunjwbase::tstring& GetFinalizedDigestValueById(const ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId);"
+                ],
+                "Phase 69 HashDigestLifecycle.h does not yet expose finalized digest getters.");
+            AssertContainsAny(hashDigestLifecycleHeader,
+                [
+                    "void SetFinalizedDigestValue(ResultDigestStorage& digestBundle, ResultDigestType digestType, const sunjwbase::tstring& digestValue);",
+                    "void SetFinalizedDigestValueById(ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue);"
+                ],
+                "Phase 69 HashDigestLifecycle.h does not yet expose finalized digest setters.");
             AssertContains(hashDigestLifecycleHeader, "void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle);", "Phase 69 HashDigestLifecycle.h does not yet expose digest projection.");
             AssertContains(hashDigestLifecycleHeader, "void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestLifecycle.h does not yet expose digest finalization.");
 
@@ -4591,10 +4621,30 @@ internal static class Program
                     "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);"
                 ],
                 "Phase 69 HashDigestLifecycle.cpp does not yet delegate finalization through hash-digest context seams.");
-            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context initialization.");
-            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
-            AssertContains(hashDigestContextOps, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
-            AssertContains(hashDigestContextOps, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);",
+                    "void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);"
+                ],
+                "Phase 69 HashDigestContextOps.h does not yet expose digest-context initialization.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
+                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                ],
+                "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
+            AssertContainsAny(hashDigestContextOps,
+                [
+                    "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)",
+                    "void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId)"
+                ],
+                "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
+            AssertContainsAny(hashDigestContextOps,
+                [
+                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)",
+                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)"
+                ],
+                "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose descriptor/id operation lookup.");
@@ -4646,10 +4696,25 @@ internal static class Program
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
-            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm initialization.");
-            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm finalization.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);",
+                    "void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);"
+                ],
+                "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm initialization.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
+                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                ],
+                "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm finalization.");
 
-            AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 70 HashDigestContextOps.cpp does not yet route context operations through operation-registry lookup.");
+            AssertContainsAny(hashDigestContextOps,
+                [
+                    "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)",
+                    "TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)"
+                ],
+                "Phase 70 HashDigestContextOps.cpp does not yet route context operations through operation-registry lookup.");
             AssertContains(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve MD5 init.");
             AssertContains(hashDigestOperationRegistry, "hashContexts->sha1.Reset();", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA1 init.");
             AssertContains(hashDigestOperationRegistry, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA256 init.");
@@ -5169,9 +5234,24 @@ internal static class Program
             AssertDoesNotContain(hashDigestRuntimePlan, "static const HashDigestQueuePlan fallbackQueuePlan = { 1 };", "Phase 83 HashDigestRuntimePlan.cpp still uses legacy fallback queue plan initialization.");
             AssertDoesNotContain(hashEngine, "HashJobExecutionPlan executionPlan = { 0 };", "Phase 83 HashEngine.cpp still uses legacy scalar brace initialization for execution plans on MSVC.");
 
-            AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
-            AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
-            AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);",
+                    "void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);"
+                ],
+                "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
+            AssertContainsAny(hashDigestContextOpsHeader,
+                [
+                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
+                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                ],
+                "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
+            AssertContainsAny(hashDigestContextOps,
+                [
+                    "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)",
+                    "TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)"
+                ],
+                "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContains(hashDigestOperationRegistryHeader, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose operation-descriptor registration.");
             AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest-type descriptor lookup.");
@@ -5210,7 +5290,8 @@ internal static class Program
             string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
             AssertContains(global, "RESULT_DIGEST_UNKNOWN = -1", "Phase 84 Global.h does not yet expose the unknown digest sentinel.");
-            AssertContains(global, ": type(RESULT_DIGEST_UNKNOWN)", "Phase 84 HashDigestResult does not yet default to the unknown digest sentinel.");
+            AssertContains(global, "sunjwbase::tstring algorithmId;", "Phase 84 HashDigestResult does not yet expose descriptor/id identity storage.");
+            AssertDoesNotContain(global, ": type(RESULT_DIGEST_UNKNOWN)", "Phase 84 HashDigestResult should not carry legacy digest-type default initialization.");
 
             AssertContains(hashAlgorithmRegistry, "GetUnknownHashAlgorithmDescriptor()", "Phase 84 HashAlgorithmRegistry does not yet expose the unknown descriptor fallback seam.");
             AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", "Phase 84 HashAlgorithmRegistry does not yet expose safe algorithm-index lookup.");
@@ -5417,6 +5498,7 @@ internal static class Program
             "\r\n",
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),

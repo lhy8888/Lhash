@@ -1,4 +1,4 @@
-// MD5SUM03Dlg.h : Í·ÎÄ¼ş
+// MD5SUM03Dlg.h : å¤´æ–‡ä»¶
 //
 
 #pragma once
@@ -11,6 +11,7 @@
 #include "OsUtils/OsThread.h"
 
 #include "Common/Global.h"
+#include "LegacyCompat/LegacyThreadData.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"
 #include "FilesHashCommandController.h"
@@ -25,18 +26,18 @@
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 
-// CMD5SUM03Dlg ¶Ô»°¿ò
+// CMD5SUM03Dlg å¯¹è¯æ¡†
 class CFilesHashDlg : public CDialog
 {
-// ¹¹Ôì
+// æ„é€ 
 public:
-	CFilesHashDlg(CWnd* pParent = NULL);	// ±ê×¼¹¹Ôìº¯Êı
+	CFilesHashDlg(CWnd* pParent = NULL);	// æ ‡å‡†æ„é€ å‡½æ•°
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 	enum { IDD = IDD_MAIN_DIALOG };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV æ”¯æŒ
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
@@ -61,7 +62,7 @@ public:
 	afx_msg void OnHypereditmenuCopyhash();
 	afx_msg void OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI);
 
-// ÊµÏÖ
+// å®ç°
 protected:
 	HICON m_hIcon;
 

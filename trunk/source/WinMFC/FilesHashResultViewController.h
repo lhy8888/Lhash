@@ -6,6 +6,7 @@
 
 #include "OsUtils/OsThread.h"
 #include "Common/Global.h"
+struct ThreadData;
 
 class FilesHashSearchController;
 

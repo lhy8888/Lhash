@@ -23,7 +23,6 @@
 #endif
 #include "Common/strhelper.h"
 class HashProgressSink;
-struct ThreadData;
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 
@@ -111,12 +110,7 @@ struct ResultData
 
 struct HashDigestResult
 {
-	HashDigestResult()
-		: type(RESULT_DIGEST_UNKNOWN)
-	{
-		algorithmId.clear();
-	}
-	ResultDigestType type;
+	HashDigestResult() {}
 	sunjwbase::tstring algorithmId;
 	sunjwbase::tstring stableName;
 	sunjwbase::tstring displayLabel;
