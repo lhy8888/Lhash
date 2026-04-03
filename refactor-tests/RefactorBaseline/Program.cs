@@ -3549,6 +3549,12 @@ internal static class Program
             AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsWhenStopRequestedBeforeStart", "Phase 47 native runtime tests do not yet cover cooperative cancellation.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", "Phase 47 native runtime tests do not yet cover uppercase digest event propagation.");
             AssertContains(nativeRuntimeSource, "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", "Phase 47 native runtime tests do not yet cover mid-run cancellation.");
+            AssertContains(nativeRuntimeSource, "static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", "Phase 47 native runtime tests do not yet expose an execution-context helper aligned with the explicit-context constructor seam.");
+            AssertContains(nativeRuntimeSource, "return HashExecutionContext(&progressSink, jobState, cancellationState);", "Phase 47 native runtime tests do not yet construct HashExecutionContext through explicit state dependencies.");
+            AssertDoesNotContain(nativeRuntimeSource, "HashExecutionContext executionContext;", "Phase 47 native runtime tests still rely on default HashExecutionContext construction.");
+            AssertDoesNotContain(nativeRuntimeSource, "executionContext.jobState = &jobState;", "Phase 47 native runtime tests still mutate job-state pointers directly.");
+            AssertDoesNotContain(nativeRuntimeSource, "executionContext.cancellationState = &cancellationState;", "Phase 47 native runtime tests still mutate cancellation-state pointers directly.");
+            AssertDoesNotContain(nativeRuntimeSource, "executionContext.progressSink = &progressSink;", "Phase 47 native runtime tests still mutate progress-sink pointers directly.");
             AssertContains(nativeRuntimeMain, "All native runtime tests passed", "Phase 47 native runtime test main does not yet report aggregate success.");
 
             AssertContains(solution, "FHash.NativeRuntimeTests", "Phase 47 fileshash15.sln does not yet include the native runtime test project.");

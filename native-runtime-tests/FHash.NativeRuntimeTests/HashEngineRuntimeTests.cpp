@@ -236,14 +236,10 @@ namespace
 		ConfigureThreadDataFiles(threadData, progressSink, filePaths, enabledAlgorithms, uppercaseDigest);
 	}
 
-	static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
-	{
-		HashExecutionContext executionContext;
-		executionContext.progressSink = &progressSink;
-		executionContext.jobState = &jobState;
-		executionContext.cancellationState = &cancellationState;
-		return executionContext;
-	}
+		static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
+		{
+			return HashExecutionContext(&progressSink, jobState, cancellationState);
+		}
 
 	static HashRequest CreateRequest(const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
 	{
@@ -499,10 +495,7 @@ namespace
 		HashJobState jobState;
 		HashCancellationState cancellationState;
 
-		HashExecutionContext executionContext;
-		executionContext.progressSink = &progressSink;
-		executionContext.jobState = &jobState;
-		executionContext.cancellationState = &cancellationState;
+			HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
 
 		HashRequest request;
 		request.files.push_back(missingPath);
@@ -562,10 +555,7 @@ namespace
 		HashCancellationState cancellationState;
 		cancellationState.stopRequested.store(true);
 
-		HashExecutionContext executionContext;
-		executionContext.progressSink = &progressSink;
-		executionContext.jobState = &jobState;
-		executionContext.cancellationState = &cancellationState;
+			HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
 
 		HashRequest request;
 		request.files.push_back(sunjwbase::strtotstr(std::string("should-not-run.txt")));
