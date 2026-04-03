@@ -3,7 +3,7 @@
 #include "HashMgmtClr.h"
 #include "ClrHelper.h"
 #include "Common/ManagedHashMgmtAccess.h"
-#include "Common/HashThreadLaunch.h"
+#include "LegacyCompat/HashThreadLaunch.h"
 using namespace std;
 using namespace System;
 using namespace FilesHashWUI;

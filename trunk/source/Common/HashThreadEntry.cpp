@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngine.h"
-#include "Common/HashThreadEntry.h"
+#include "LegacyCompat/HashThreadEntry.h"
 #include "LegacyCompat/HashThreadEntryProjection.h"
 
 int WINAPI HashThreadFunc(void *param)

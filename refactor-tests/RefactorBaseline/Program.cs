@@ -2656,7 +2656,9 @@ internal static class Program
             AssertContains(sessionControllerHeader, "void SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 21 session controller is missing the grouped working-state UI seam.");
             AssertContains(sessionControllerHeader, "void PrepareDropTarget(CWnd* pWnd, BOOL bAccept);", "Phase 21 session controller is missing the grouped drop-target helper.");
 
-            AssertContains(sessionController, "#include \"Common/HashThreadLaunch.h\"", "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
+            AssertContainsAny(sessionController,
+                new[] { "#include \"Common/HashThreadLaunch.h\"", "#include \"LegacyCompat/HashThreadLaunch.h\"" },
+                "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
             AssertDoesNotContain(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller should consume HashThreadLaunch.h instead of directly including HashThreadEntry.h.");
             AssertContainsAny(sessionController,
                 new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },

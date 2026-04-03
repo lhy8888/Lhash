@@ -4,7 +4,7 @@
 
 #include "FilesHashSessionController.h"
 
-#include "Common/HashThreadLaunch.h"
+#include "LegacyCompat/HashThreadLaunch.h"
 #include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
 

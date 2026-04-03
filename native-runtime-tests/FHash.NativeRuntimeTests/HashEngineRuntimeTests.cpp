@@ -10,14 +10,14 @@
 #include "Common/HashDigestOperationRegistry.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashEngine.h"
-#include "Common/HashThreadEntry.h"
+#include "LegacyCompat/HashThreadEntry.h"
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
 #include "Common/HashRequest.h"
 #include "Common/HashResultSearch.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestValueAccess.h"
-#include "Common/ThreadDataAccess.h"
+#include "LegacyCompat/ThreadDataAccess.h"
 
 namespace
 {
