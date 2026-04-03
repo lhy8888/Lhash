@@ -2101,6 +2101,7 @@ internal static class Program
             string scheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
+            string hashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
@@ -2113,10 +2114,15 @@ internal static class Program
             AssertContains(fileRunner, "bool ProcessOpenedFileHashing(", "HashDigestPipeline.cpp no longer owns the opened-file read/update orchestration.");
             AssertDoesNotContain(engine, "int WINAPI HashThreadFunc(void *param)", "HashEngine.cpp should no longer own the thread orchestration entry point after the thread-entry split.");
             AssertContains(hashThreadEntry, "int WINAPI HashThreadFunc(void *param)", "HashThreadEntry.cpp does not yet own the thread orchestration entry point after the thread-entry split.");
-            AssertContains(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp does not yet consume HashRequest projection for thread-data adaptation.");
-            AssertContains(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp does not yet consume thread-data execution access for runtime adaptation.");
-            AssertContains(hashThreadEntry, "HashRequest request = CreateHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest.");
-            AssertContains(hashThreadEntry, "HashExecutionContext executionContext = CreateHashExecutionContext(", "HashThreadEntry.cpp does not yet inject HashExecutionContext.");
+            AssertContains(hashThreadEntry, "#include \"Common/HashThreadEntryProjection.h\"", "HashThreadEntry.cpp does not yet consume the thread-entry projection seam.");
+            AssertDoesNotContain(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp should not include HashRequestProjection directly after the thread-entry projection seam split.");
+            AssertDoesNotContain(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp should not include ThreadData execution access directly after the thread-entry projection seam split.");
+            AssertContains(hashThreadEntry, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest through the thread-entry projection seam.");
+            AssertContains(hashThreadEntry, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "HashThreadEntry.cpp does not yet inject HashExecutionContext through the thread-entry projection seam.");
+            AssertContains(hashThreadEntryProjection, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntryProjection.h does not yet layer on top of HashRequestProjection.");
+            AssertContains(hashThreadEntryProjection, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntryProjection.h does not yet layer on top of ThreadDataExecutionAccess.");
+            AssertContains(hashThreadEntryProjection, "CreateThreadDataHashExecutionContext(ThreadData& threadData)", "HashThreadEntryProjection.h does not yet expose the ThreadData-to-HashExecutionContext projection seam.");
+            AssertContains(hashThreadEntryProjection, "CreateThreadDataHashRequest(const ThreadData& threadData)", "HashThreadEntryProjection.h does not yet expose the ThreadData-to-HashRequest projection seam.");
             AssertDoesNotContain(engine, "static uint64_t PrepareFileMetaResult(", "HashEngine.cpp still owns file-metadata finalization instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static void CompleteSuccessfulFileHashing(", "HashEngine.cpp still owns successful-file completion instead of delegating it to the split result implementation file.");
             AssertDoesNotContain(engine, "static bool PrepareHashingWork(", "HashEngine.cpp still owns preparation helpers instead of delegating them to the split preparation implementation file.");
@@ -3118,7 +3124,7 @@ internal static class Program
             AssertContains(hashEngineObserver, "onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet route result progress events through HashResult.");
             AssertContains(hashEngineObserver, "onTotalProgressValue(progressEvent.value);", "HashEngineObserver does not yet bridge total-progress events through the neutral adapter callback.");
 
-            AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "HashEngine does not yet start from the phase 31 HashRequest contract.");
+            AssertContains(hashEngine, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThread entry does not yet start from the phase 31 HashRequest contract through the projection seam.");
             AssertContains(hashEngine, "VisitHashRequestFiles(request", "HashEngine does not yet iterate files through HashRequest.");
             AssertContains(hashEngine, "VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", "HashEngine does not yet route selected algorithms through digest-update operation descriptors.");
             AssertContains(hashEngine, "observer->onProgressEvent(CreatePreparingProgressEvent());", "HashEngine preparation does not yet emit semantic progress events.");
@@ -3177,14 +3183,11 @@ internal static class Program
             AssertContains(hashEngineHeader, "struct HashExecutionContext;", "Phase 33 HashEngine header does not yet forward declare HashExecutionContext.");
             AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
-            AssertContains(hashEngine, "#include \"Common/HashRequestProjection.h\"", "Phase 33 HashEngine does not yet consume the HashRequest projection seam.");
+            AssertContains(hashEngine, "#include \"Common/HashThreadEntryProjection.h\"", "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
             AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");
-            AssertContains(hashEngine, "HashExecutionContext executionContext = CreateHashExecutionContext(", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through explicit dependency injection.");
-            AssertContains(hashEngine, "GetThreadDataObserver(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData observer through execution-state accessors.");
-            AssertContains(hashEngine, "GetMutableThreadDataHashJobState(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData job state through execution-state accessors.");
-            AssertContains(hashEngine, "GetMutableThreadDataHashCancellationState(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData cancellation state through execution-state accessors.");
+            AssertContains(hashEngine, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through the thread-entry projection seam.");
+            AssertContains(hashEngine, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest through the thread-entry projection seam.");
             AssertContains(hashEngine, "return RunHashRequest(&executionContext, request);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest through HashExecutionContext.");
-            AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest before dispatch.");
         }, failures);
 
         Run("Phase 34 narrows core hashing execution onto HashProgressSink while keeping HashEngineObserver as a compatibility adapter", () =>
@@ -5106,6 +5109,7 @@ internal static class Program
             "\r\n",
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
