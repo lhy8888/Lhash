@@ -8,14 +8,29 @@ static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result
 	return GetStoredResultDigest(result, digestType);
 }
 
+static inline const sunjwbase::tstring& GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return GetStoredResultDigestById(result, algorithmId);
+}
+
 static inline sunjwbase::tstring& GetMutableResultDigest(ResultData& result, ResultDigestType digestType)
 {
 	return GetMutableStoredResultDigest(result, digestType);
 }
 
+static inline sunjwbase::tstring& GetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return GetMutableStoredResultDigestById(result, algorithmId);
+}
+
 static inline bool HasResultDigest(const ResultData& result, ResultDigestType digestType)
 {
 	return !GetResultDigest(result, digestType).empty();
+}
+
+static inline bool HasResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	return !GetResultDigestById(result, algorithmId).empty();
 }
 
 template<typename TResultDigestValueVisitor>
@@ -33,6 +48,16 @@ static inline bool VisitResultDigestMetadataValues(const ResultData& result, TRe
 	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
 	{
 		return visitor(index, digestMetadata, GetResultDigest(result, GetResultDigestMetadataType(digestMetadata)));
+	});
+}
+
+template<typename TResultDigestMetadataIdValueVisitor>
+static inline bool VisitResultDigestMetadataIdValues(const ResultData& result, TResultDigestMetadataIdValueVisitor visitor)
+{
+	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
+	{
+		HashAlgorithmId algorithmId = GetResultDigestMetadataId(digestMetadata);
+		return visitor(index, digestMetadata, algorithmId, GetResultDigestById(result, algorithmId));
 	});
 }
 
@@ -57,6 +82,16 @@ static inline bool HasAnyResultDigests(const ResultData& result)
 static inline void SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
 {
 	SetStoredResultDigest(result, digestType, digestValue);
+}
+
+static inline void SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)
+{
+	SetStoredResultDigestById(result, algorithmId, digestValue);
+}
+
+static inline void ClearResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+{
+	ClearStoredResultDigestById(result, algorithmId);
 }
 
 static inline void ResetResultDigests(ResultData& result)

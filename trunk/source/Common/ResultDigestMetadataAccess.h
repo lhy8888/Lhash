@@ -10,6 +10,11 @@ static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMet
 	return GetHashAlgorithmDescriptorType(digestMetadata);
 }
 
+static inline HashAlgorithmId GetResultDigestMetadataId(const ResultDigestMetadata& digestMetadata)
+{
+	return GetHashAlgorithmDescriptorId(digestMetadata);
+}
+
 static inline sunjwbase::tstring GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)
 {
 	return GetHashAlgorithmDescriptorDisplayLabel(digestMetadata);
@@ -53,6 +58,11 @@ static inline ResultDigestType GetResultDigestTypeAt(int index)
 static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index)
 {
 	return GetHashAlgorithmDescriptorAt(index);
+}
+
+static inline HashAlgorithmId GetResultDigestIdAt(int index)
+{
+	return GetResultDigestMetadataId(GetResultDigestMetadataAt(index));
 }
 
 static inline const ResultDigestMetadata& GetResultDigestMetadata(ResultDigestType digestType)
@@ -112,6 +122,16 @@ static inline bool VisitResultDigests(TResultDigestVisitor visitor)
 	{
 		(void)index;
 		return visitor(GetResultDigestMetadataType(digestMetadata));
+	});
+}
+
+template<typename TResultDigestIdVisitor>
+static inline bool VisitResultDigestIds(TResultDigestIdVisitor visitor)
+{
+	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
+	{
+		(void)index;
+		return visitor(GetResultDigestMetadataId(digestMetadata));
 	});
 }
 

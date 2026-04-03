@@ -92,6 +92,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitPathAndDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", search, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(result", result, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataId(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
     }
 
     [Fact]
