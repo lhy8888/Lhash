@@ -580,8 +580,11 @@ namespace
 	{
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_MD5, NULL), "Known digests should support existence probes without an output descriptor.");
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA256, NULL), "Known digests should support existence probes without an output descriptor.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(GetHashAlgorithmId(RESULT_DIGEST_MD5), NULL), "Known descriptor ids should support existence probes without an output descriptor.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(GetHashAlgorithmId(RESULT_DIGEST_SHA256), NULL), "Known descriptor ids should support existence probes without an output descriptor.");
 		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_UNKNOWN, NULL), "Unknown digest probes should fail.");
 		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(static_cast<ResultDigestType>(9999), NULL), "Out-of-range digest probes should fail.");
+		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptorById(sunjwbase::strtotstr(std::string("unknown")), NULL), "Unknown descriptor-id probes should fail.");
 	}
 
 	static void HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport()
@@ -595,6 +598,8 @@ namespace
 		incompleteDescriptor.updateAction = NULL;
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorComplete(incompleteDescriptor), "Descriptors missing update actions should be rejected as incomplete.");
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_UNKNOWN), "Unknown digest types should not be reported as supported.");
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(GetHashAlgorithmId(RESULT_DIGEST_SHA512)), "Known descriptor ids should be reported as supported.");
+		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(sunjwbase::strtotstr(std::string("unknown"))), "Unknown descriptor ids should not be reported as supported.");
 	}
 
 	static void HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms()

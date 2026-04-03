@@ -343,8 +343,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashDigestOperationDescriptor", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);", digestOperationRegistryHeader, StringComparison.Ordinal);
+        Assert.Contains("bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId);", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationRegistryConsistent();", digestOperationRegistryHeader, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptor({", digestOperationRegistry, StringComparison.Ordinal);
@@ -356,10 +358,11 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
         Assert.Contains("VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", digestUpdater, StringComparison.Ordinal);
-        Assert.Contains("HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);", digestUpdater, StringComparison.Ordinal);
-        Assert.Contains("if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("if (!IsHashDigestOperationRegistryConsistent())", digestUpdater, StringComparison.Ordinal);
-        Assert.Contains("TryResolveDigestUpdateOperationDescriptor(digestType, &operationDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("TryResolveDigestUpdateOperationDescriptor(algorithmId, &operationDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptorById(algorithmId, operationDescriptor)", digestUpdater, StringComparison.Ordinal);
         Assert.DoesNotContain("digestUpdateRequest.algorithms.push_back(digestType);", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("enum HashDigestExecutionMode", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request);", digestExecutionModeHeader, StringComparison.Ordinal);

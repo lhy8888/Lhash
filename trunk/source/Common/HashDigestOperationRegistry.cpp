@@ -237,6 +237,17 @@ namespace HashEngineInternal
 		return false;
 	}
 
+	bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor)
+	{
+		const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
+		if (!TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor) || algorithmDescriptor == NULL)
+		{
+			return false;
+		}
+
+		return TryGetHashDigestOperationDescriptor(GetHashAlgorithmDescriptorType(*algorithmDescriptor), operationDescriptor);
+	}
+
 	bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)
 	{
 		HashDigestOperationDescriptor operationDescriptor = {};
@@ -249,6 +260,24 @@ namespace HashEngineInternal
 			IsHashDigestOperationDescriptorComplete(operationDescriptor);
 	}
 
+	bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId)
+	{
+		HashDigestOperationDescriptor operationDescriptor = {};
+		if (!TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor))
+		{
+			return false;
+		}
+
+		const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
+		if (!TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor) || algorithmDescriptor == NULL)
+		{
+			return false;
+		}
+
+		return operationDescriptor.digestType == GetHashAlgorithmDescriptorType(*algorithmDescriptor) &&
+			IsHashDigestOperationDescriptorComplete(operationDescriptor);
+	}
+
 	bool IsHashDigestOperationRegistryConsistent()
 	{
 		bool isConsistent = true;
@@ -256,8 +285,8 @@ namespace HashEngineInternal
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
-			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-			if (!IsHashDigestOperationDescriptorSupported(digestType))
+			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
+			if (!IsHashDigestOperationDescriptorSupportedById(algorithmId))
 			{
 				isConsistent = false;
 				return false;

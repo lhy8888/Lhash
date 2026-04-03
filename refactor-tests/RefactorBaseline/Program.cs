@@ -3869,8 +3869,8 @@ internal static class Program
 
             AssertContains(hashDigestUpdater, "DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", "Phase 53 HashDigestUpdater.cpp does not yet own digest update request creation.");
             AssertContains(hashDigestUpdater, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 53 HashDigestUpdater.cpp does not yet own registry-driven request-algorithm iteration.");
-            AssertContains(hashDigestUpdater, "HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);", "Phase 53 HashDigestUpdater.cpp does not yet precompute request-selected algorithm state.");
-            AssertContains(hashDigestUpdater, "if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))", "Phase 53 HashDigestUpdater.cpp does not yet filter update plans through request-selected algorithms.");
+            AssertContains(hashDigestUpdater, "const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);", "Phase 53 HashDigestUpdater.cpp does not yet precompute normalized descriptor/id request algorithms.");
+            AssertContains(hashDigestUpdater, "if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))", "Phase 53 HashDigestUpdater.cpp does not yet filter update plans through descriptor/id request algorithms.");
             AssertContains(hashDigestUpdater, "digestUpdateRequest.operationDescriptors.push_back(operationDescriptor);", "Phase 53 HashDigestUpdater.cpp does not yet preserve operation descriptors in digest update requests.");
             AssertContains(hashDigestUpdater, "void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", "Phase 53 HashDigestUpdater.cpp does not yet own parallel digest fan-out.");
             AssertContains(hashDigestUpdater, "std::vector<std::future<void>> digestUpdateTasks;", "Phase 53 HashDigestUpdater.cpp does not yet own generic digest worker fan-out.");
@@ -4555,6 +4555,7 @@ internal static class Program
             AssertContains(hashDigestContextOps, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation lookup.");
+            AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose descriptor/id operation lookup.");
             AssertContains(hashDigestOperationRegistry, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve MD5 finalization.");
             AssertContains(hashDigestOperationRegistry, "hashContexts.sha1.Final();", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA1 finalization.");
             AssertContains(hashDigestOperationRegistry, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA256 finalization.");
@@ -5102,10 +5103,11 @@ internal static class Program
             AssertDoesNotContain(hashDigestUpdaterHeader, "VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h still exposes legacy digest-update algorithm iteration.");
             AssertContains(hashDigestUpdaterHeader, "VisitDigestUpdateRequestOperations(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h does not yet expose digest-update operation iteration.");
             AssertContains(hashDigestUpdater, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet project request algorithms through the registry seam.");
-            AssertContains(hashDigestUpdater, "HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);", "Phase 83 HashDigestUpdater.cpp does not yet precompute request-selected algorithm state.");
-            AssertContains(hashDigestUpdater, "if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))", "Phase 83 HashDigestUpdater.cpp does not yet filter digest update plans by request-selected algorithms.");
+            AssertContains(hashDigestUpdater, "const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);", "Phase 83 HashDigestUpdater.cpp does not yet precompute normalized descriptor/id request algorithms.");
+            AssertContains(hashDigestUpdater, "if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))", "Phase 83 HashDigestUpdater.cpp does not yet filter digest update plans by descriptor/id request algorithms.");
             AssertContains(hashDigestUpdater, "if (!IsHashDigestOperationRegistryConsistent())", "Phase 83 HashDigestUpdater.cpp does not yet gate digest update planning on registry consistency.");
-            AssertContains(hashDigestUpdater, "TryResolveDigestUpdateOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet route operation resolution through the strict descriptor helper.");
+            AssertContains(hashDigestUpdater, "TryResolveDigestUpdateOperationDescriptor(algorithmId, &operationDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet route operation resolution through the strict descriptor/id helper.");
+            AssertContains(hashDigestUpdater, "TryGetHashDigestOperationDescriptorById(algorithmId, operationDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet resolve operations by descriptor/id.");
             AssertDoesNotContain(hashDigestUpdater, "digestUpdateRequest.algorithms.push_back(digestType);", "Phase 83 HashDigestUpdater.cpp should no longer persist legacy algorithm-list slots.");
             AssertContains(hashDigestUpdater, "digestUpdateRequest.operationDescriptors.push_back(operationDescriptor);", "Phase 83 HashDigestUpdater.cpp does not yet preserve request-driven digest operation descriptors.");
             AssertContains(hashDigestUpdater, "VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet route updates through digest-update operation iteration.");
@@ -5120,7 +5122,8 @@ internal static class Program
             AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContains(hashDigestOperationRegistryHeader, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose operation-descriptor registration.");
-            AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor lookup.");
+            AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest-type descriptor lookup.");
+            AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor/id lookup.");
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize operation descriptors behind dedicated storage.");
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 83 HashDigestOperationRegistry.cpp does not yet register default operation descriptors through the registration seam.");
             AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
@@ -5192,6 +5195,7 @@ internal static class Program
 
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", "Phase 85 HashDigestOperationRegistry.h does not yet expose descriptor-completeness validation.");
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);", "Phase 85 HashDigestOperationRegistry.h does not yet expose per-digest descriptor support checks.");
+            AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId);", "Phase 85 HashDigestOperationRegistry.h does not yet expose descriptor/id support checks.");
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationRegistryConsistent();", "Phase 85 HashDigestOperationRegistry.h does not yet expose registry-consistency checks.");
             AssertContains(hashDigestOperationRegistry, "if (operationDescriptor != NULL)", "Phase 85 HashDigestOperationRegistry.cpp does not yet tolerate null descriptor output pointers.");
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 85 HashDigestOperationRegistry.cpp does not yet cache descriptor snapshots through dedicated operation storage.");
@@ -5199,10 +5203,10 @@ internal static class Program
             AssertContains(hashDigestOperationRegistry, "IsHashDigestOperationDescriptorComplete(operationDescriptor);", "Phase 85 HashDigestOperationRegistry.cpp does not yet validate descriptor completeness.");
 
             AssertContains(hashDigestUpdater, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 85 HashDigestUpdater.cpp does not yet iterate digest planning in registry order.");
-            AssertContains(hashDigestUpdater, "HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);", "Phase 85 HashDigestUpdater.cpp does not yet precompute request-selected algorithm state.");
-            AssertContains(hashDigestUpdater, "if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))", "Phase 85 HashDigestUpdater.cpp does not yet filter registry order by request-selected algorithms.");
+            AssertContains(hashDigestUpdater, "const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);", "Phase 85 HashDigestUpdater.cpp does not yet precompute normalized descriptor/id request algorithms.");
+            AssertContains(hashDigestUpdater, "if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))", "Phase 85 HashDigestUpdater.cpp does not yet filter registry order by descriptor/id request algorithms.");
             AssertContains(hashDigestUpdater, "if (!IsHashDigestOperationRegistryConsistent())", "Phase 85 HashDigestUpdater.cpp does not yet gate plan creation on operation-registry consistency.");
-            AssertContains(hashDigestUpdater, "TryResolveDigestUpdateOperationDescriptor(digestType, &operationDescriptor)", "Phase 85 HashDigestUpdater.cpp does not yet resolve operations through the strict descriptor helper.");
+            AssertContains(hashDigestUpdater, "TryResolveDigestUpdateOperationDescriptor(algorithmId, &operationDescriptor)", "Phase 85 HashDigestUpdater.cpp does not yet resolve operations through the strict descriptor/id helper.");
 
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", "Phase 85 native runtime tests do not yet cover registry consistency.");
             AssertContains(nativeRuntimeSource, "HashEngineInternal::IsHashDigestOperationRegistryConsistent()", "Phase 85 native runtime tests do not yet assert operation-registry consistency.");

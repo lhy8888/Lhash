@@ -10,14 +10,24 @@
 
 namespace HashEngineInternal
 {
-	static bool TryResolveDigestUpdateOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)
+	static bool IsRequestedDigestAlgorithmId(
+		const std::vector<HashAlgorithmId>& normalizedAlgorithmIds,
+		const HashAlgorithmId& candidateAlgorithmId)
 	{
-		if (!IsRegisteredHashAlgorithmType(digestType))
+		return std::find(
+			normalizedAlgorithmIds.begin(),
+			normalizedAlgorithmIds.end(),
+			candidateAlgorithmId) != normalizedAlgorithmIds.end();
+	}
+
+	static bool TryResolveDigestUpdateOperationDescriptor(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor)
+	{
+		if (!IsRegisteredHashAlgorithmId(algorithmId))
 		{
 			return false;
 		}
 
-		if (!TryGetHashDigestOperationDescriptor(digestType, operationDescriptor))
+		if (!TryGetHashDigestOperationDescriptorById(algorithmId, operationDescriptor))
 		{
 			return false;
 		}
@@ -27,7 +37,8 @@ namespace HashEngineInternal
 			return false;
 		}
 
-		return operationDescriptor->digestType == digestType &&
+		const HashAlgorithmId resolvedAlgorithmId = GetHashAlgorithmId(operationDescriptor->digestType);
+		return NormalizeHashAlgorithmId(resolvedAlgorithmId) == NormalizeHashAlgorithmId(algorithmId) &&
 			IsHashDigestOperationDescriptorComplete(*operationDescriptor);
 	}
 
@@ -38,19 +49,19 @@ namespace HashEngineInternal
 		{
 			return digestUpdateRequest;
 		}
-		HashAlgorithmSelectionState selectedAlgorithms = CreateHashRequestAlgorithmSelectionState(request);
+		const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);
 
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
-			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-			if (!IsHashRequestAlgorithmSelected(selectedAlgorithms, digestType))
+			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
+			if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))
 			{
 				return true;
 			}
 
 			HashDigestOperationDescriptor operationDescriptor = {};
-			if (!TryResolveDigestUpdateOperationDescriptor(digestType, &operationDescriptor))
+			if (!TryResolveDigestUpdateOperationDescriptor(algorithmId, &operationDescriptor))
 			{
 				return true;
 			}
