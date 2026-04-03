@@ -366,6 +366,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", digestUpdater, StringComparison.Ordinal);
         Assert.DoesNotContain("DigestUpdateRequest digestUpdateRequest = { 0 };", digestUpdater, StringComparison.Ordinal);
         Assert.DoesNotContain("static const DigestUpdateRequest emptyDigestUpdateRequest = { 0 };", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("static const HashDigestQueuePlan fallbackQueuePlan = { 1 };", digestRuntimePlan, StringComparison.Ordinal);
         Assert.DoesNotContain("HashJobExecutionPlan executionPlan = { 0 };", engine, StringComparison.Ordinal);
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("std::vector<std::future<void>> digestUpdateTasks;", digestUpdater, StringComparison.Ordinal);
@@ -447,9 +448,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestRuntimePlan", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);", digestRuntimePlanHeader, StringComparison.Ordinal);
-        Assert.Contains("const HashDigestQueuePlan *digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
-        Assert.Contains("digestRuntimePlan.digestQueuePlan = &GetHashJobDigestQueuePlan(executionPlan);", digestRuntimePlan, StringComparison.Ordinal);
-        Assert.Contains("digestRuntimePlan.preferredBufferLength = GetHashDigestBufferPreferredLength(GetHashJobDigestBufferPlan(executionPlan));", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestQueuePlan& digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestRuntimePlan(const DigestUpdateRequest& updateRequest, HashDigestExecutionMode executionMode, unsigned int bufferLength, const HashDigestQueuePlan& queuePlan)", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("return HashDigestRuntimePlan(", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("GetHashJobDigestQueuePlan(executionPlan));", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("return digestRuntimePlan.digestQueuePlan;", digestRuntimePlan, StringComparison.Ordinal);
         Assert.Contains("bool CompleteOpenedFileDigestExecution(HashExecutionContext *executionContext, FileExecutionState *executionState, bool wasStopped);", digestCompletionHeader, StringComparison.Ordinal);
         Assert.Contains("bool CompleteOpenedFileDigestExecution(HashExecutionContext *executionContext, FileExecutionState *executionState, bool wasStopped)", digestCompletion, StringComparison.Ordinal);
         Assert.Contains("if (CompleteOpenedFileDigestExecution(executionContext, executionState, wasStopped))", digestPipeline, StringComparison.Ordinal);

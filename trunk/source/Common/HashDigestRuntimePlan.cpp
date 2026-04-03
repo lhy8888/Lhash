@@ -6,23 +6,16 @@ namespace HashEngineInternal
 {
 	HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan)
 	{
-		HashDigestRuntimePlan digestRuntimePlan = {};
-		digestRuntimePlan.digestUpdateRequest = &GetHashJobDigestUpdateRequest(executionPlan);
-		digestRuntimePlan.digestExecutionMode = GetHashJobDigestExecutionMode(executionPlan);
-		digestRuntimePlan.preferredBufferLength = GetHashDigestBufferPreferredLength(GetHashJobDigestBufferPlan(executionPlan));
-		digestRuntimePlan.digestQueuePlan = &GetHashJobDigestQueuePlan(executionPlan);
-		return digestRuntimePlan;
+		return HashDigestRuntimePlan(
+			GetHashJobDigestUpdateRequest(executionPlan),
+			GetHashJobDigestExecutionMode(executionPlan),
+			GetHashDigestBufferPreferredLength(GetHashJobDigestBufferPlan(executionPlan)),
+			GetHashJobDigestQueuePlan(executionPlan));
 	}
 
 	const DigestUpdateRequest& GetHashDigestRuntimeUpdateRequest(const HashDigestRuntimePlan& digestRuntimePlan)
 	{
-		static const DigestUpdateRequest emptyDigestUpdateRequest = {};
-		if (digestRuntimePlan.digestUpdateRequest == NULL)
-		{
-			return emptyDigestUpdateRequest;
-		}
-
-		return *digestRuntimePlan.digestUpdateRequest;
+		return digestRuntimePlan.digestUpdateRequest;
 	}
 
 	HashDigestExecutionMode GetHashDigestRuntimeExecutionMode(const HashDigestRuntimePlan& digestRuntimePlan)
@@ -37,12 +30,6 @@ namespace HashEngineInternal
 
 	const HashDigestQueuePlan& GetHashDigestRuntimeQueuePlan(const HashDigestRuntimePlan& digestRuntimePlan)
 	{
-		static const HashDigestQueuePlan fallbackQueuePlan = { 1 };
-		if (digestRuntimePlan.digestQueuePlan == NULL)
-		{
-			return fallbackQueuePlan;
-		}
-
-		return *digestRuntimePlan.digestQueuePlan;
+		return digestRuntimePlan.digestQueuePlan;
 	}
 }

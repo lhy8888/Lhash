@@ -11,10 +11,18 @@ namespace HashEngineInternal
 
 	struct HashDigestRuntimePlan
 	{
-		const DigestUpdateRequest *digestUpdateRequest;
+		HashDigestRuntimePlan(const DigestUpdateRequest& updateRequest, HashDigestExecutionMode executionMode, unsigned int bufferLength, const HashDigestQueuePlan& queuePlan)
+			: digestUpdateRequest(updateRequest),
+			digestExecutionMode(executionMode),
+			preferredBufferLength(bufferLength),
+			digestQueuePlan(queuePlan)
+		{
+		}
+
+		const DigestUpdateRequest& digestUpdateRequest;
 		HashDigestExecutionMode digestExecutionMode;
 		unsigned int preferredBufferLength;
-		const HashDigestQueuePlan *digestQueuePlan;
+		const HashDigestQueuePlan& digestQueuePlan;
 	};
 
 	HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);
