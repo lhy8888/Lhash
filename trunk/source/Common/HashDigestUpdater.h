@@ -2,6 +2,7 @@
 #define _HASH_DIGEST_UPDATER_H_
 
 #include "Common/HashRequest.h"
+#include "Common/HashDigestOperationRegistry.h"
 
 #if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 class ThreadPool;
@@ -14,6 +15,7 @@ namespace HashEngineInternal
 	struct DigestUpdateRequest
 	{
 		std::vector<ResultDigestType> algorithms;
+		std::vector<HashDigestOperationDescriptor> operationDescriptors;
 	};
 
 	template<typename TDigestTypeVisitor>
@@ -40,6 +42,20 @@ namespace HashEngineInternal
 		}
 
 		return false;
+	}
+
+	template<typename TDigestUpdateOperationVisitor>
+	static inline bool VisitDigestUpdateRequestOperations(const DigestUpdateRequest& digestUpdateRequest, TDigestUpdateOperationVisitor visitor)
+	{
+		for (size_t index = 0; index < digestUpdateRequest.operationDescriptors.size(); ++index)
+		{
+			if (!visitor(digestUpdateRequest.operationDescriptors[index]))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request);
