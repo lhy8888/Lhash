@@ -127,53 +127,73 @@ namespace HashEngineInternal
 		SetDigestStorageValue(digestBundle, RESULT_DIGEST_SHA512, sunjwbase::strtotstr(strSHA512));
 	}
 
-	static bool TryCreateHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)
+	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()
 	{
-		if (operationDescriptor == NULL)
+		static std::vector<HashDigestOperationDescriptor> operationDescriptorStorage;
+		return operationDescriptorStorage;
+	}
+
+	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)
+	{
+		if (!IsRegisteredHashAlgorithmType(operationDescriptor.digestType))
 		{
 			return false;
 		}
 
-		HashDigestOperationDescriptor descriptor = {};
-		descriptor.digestType = digestType;
-
-		switch (digestType)
-		{
-		case RESULT_DIGEST_MD5:
-			descriptor.initializeAction = InitializeMD5DigestContext;
-			descriptor.updateAction = UpdateMD5DigestContext;
-			descriptor.finalizeAction = FinalizeMD5DigestContext;
-			break;
-
-		case RESULT_DIGEST_SHA1:
-			descriptor.initializeAction = InitializeSHA1DigestContext;
-			descriptor.updateAction = UpdateSHA1DigestContext;
-			descriptor.finalizeAction = FinalizeSHA1DigestContext;
-			break;
-
-		case RESULT_DIGEST_SHA256:
-			descriptor.initializeAction = InitializeSHA256DigestContext;
-			descriptor.updateAction = UpdateSHA256DigestContext;
-			descriptor.finalizeAction = FinalizeSHA256DigestContext;
-			break;
-
-		case RESULT_DIGEST_SHA512:
-			descriptor.initializeAction = InitializeSHA512DigestContext;
-			descriptor.updateAction = UpdateSHA512DigestContext;
-			descriptor.finalizeAction = FinalizeSHA512DigestContext;
-			break;
-
-		default:
-			return false;
-		}
-
-		if (!IsHashDigestOperationDescriptorComplete(descriptor))
+		if (!IsHashDigestOperationDescriptorComplete(operationDescriptor))
 		{
 			return false;
 		}
 
-		*operationDescriptor = descriptor;
+		std::vector<HashDigestOperationDescriptor>& operationDescriptorStorage = GetMutableHashDigestOperationDescriptorStorage();
+		for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptorStorage.size(); ++descriptorIndex)
+		{
+			if (operationDescriptorStorage[descriptorIndex].digestType != operationDescriptor.digestType)
+			{
+				continue;
+			}
+
+			operationDescriptorStorage[descriptorIndex] = operationDescriptor;
+			return true;
+		}
+
+		operationDescriptorStorage.push_back(operationDescriptor);
 		return true;
+	}
+
+	static void EnsureDefaultHashDigestOperationDescriptorsRegistered()
+	{
+		static bool defaultsInitialized = false;
+		if (defaultsInitialized)
+		{
+			return;
+		}
+
+		RegisterHashDigestOperationDescriptor({
+			RESULT_DIGEST_MD5,
+			InitializeMD5DigestContext,
+			UpdateMD5DigestContext,
+			FinalizeMD5DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			RESULT_DIGEST_SHA1,
+			InitializeSHA1DigestContext,
+			UpdateSHA1DigestContext,
+			FinalizeSHA1DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			RESULT_DIGEST_SHA256,
+			InitializeSHA256DigestContext,
+			UpdateSHA256DigestContext,
+			FinalizeSHA256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			RESULT_DIGEST_SHA512,
+			InitializeSHA512DigestContext,
+			UpdateSHA512DigestContext,
+			FinalizeSHA512DigestContext
+		});
+		defaultsInitialized = true;
 	}
 
 	bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor)
@@ -185,26 +205,8 @@ namespace HashEngineInternal
 
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
 	{
-		static std::vector<HashDigestOperationDescriptor> operationDescriptors;
-		static bool operationDescriptorsInitialized = false;
-		if (!operationDescriptorsInitialized)
-		{
-			VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
-			{
-				(void)index;
-				HashDigestOperationDescriptor operationDescriptor = {};
-				ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-				if (!TryCreateHashDigestOperationDescriptor(digestType, &operationDescriptor))
-				{
-					return false;
-				}
-
-				operationDescriptors.push_back(operationDescriptor);
-				return true;
-			});
-
-			operationDescriptorsInitialized = true;
-		}
+		EnsureDefaultHashDigestOperationDescriptorsRegistered();
+		std::vector<HashDigestOperationDescriptor>& operationDescriptors = GetMutableHashDigestOperationDescriptorStorage();
 
 		if (descriptorCount != NULL)
 		{

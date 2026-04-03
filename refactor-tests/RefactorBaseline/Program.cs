@@ -726,7 +726,9 @@ internal static class Program
             AssertContains(global, "std::vector<sunjwbase::tstring> values;", "ResultData internal digest storage is not yet routed through a registry-sized vector.");
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptorRegistry", "HashAlgorithmRegistry does not yet wrap the descriptor table in a dedicated registry object.");
             AssertContains(hashAlgorithmRegistry, "GetHashAlgorithmDescriptorRegistry()", "HashAlgorithmRegistry does not yet expose the centralized descriptor-registry helper.");
-            AssertContains(hashAlgorithmRegistry, "sizeof(algorithmDescriptors) / sizeof(HashAlgorithmDescriptor)", "HashAlgorithmRegistry does not yet derive the registered algorithm count from the descriptor table.");
+            AssertContains(hashAlgorithmRegistry, "GetMutableHashAlgorithmDescriptorStorage()", "HashAlgorithmRegistry does not yet route descriptors through mutable registry storage.");
+            AssertContains(hashAlgorithmRegistry, "RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", "HashAlgorithmRegistry does not yet expose descriptor registration.");
+            AssertContains(hashAlgorithmRegistry, "EnsureDefaultHashAlgorithmDescriptorsRegistered()", "HashAlgorithmRegistry does not yet isolate default algorithms behind a registration bootstrap seam.");
             AssertContains(digestAccess, "return GetRegisteredHashAlgorithmCount();", "ResultDigestAccess does not yet route digest count through the centralized registry-count helper.");
         }, failures);
 
@@ -5062,9 +5064,10 @@ internal static class Program
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
             AssertContains(hashDigestContextOps, "TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", "Phase 83 HashDigestContextOps.cpp does not yet route context operations through registry lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 83 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
+            AssertContains(hashDigestOperationRegistryHeader, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose operation-descriptor registration.");
             AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor lookup.");
-            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize per-algorithm operation descriptors.");
-            AssertContains(hashDigestOperationRegistry, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 83 HashDigestOperationRegistry.cpp does not yet build operation descriptors from the shared algorithm registry.");
+            AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize operation descriptors behind dedicated storage.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 83 HashDigestOperationRegistry.cpp does not yet register default operation descriptors through the registration seam.");
             AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestOperationRegistry.h\"", "Phase 83 HashEngineInternal.h does not yet consume HashDigestOperationRegistry.");
 
@@ -5134,8 +5137,8 @@ internal static class Program
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);", "Phase 85 HashDigestOperationRegistry.h does not yet expose per-digest descriptor support checks.");
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationRegistryConsistent();", "Phase 85 HashDigestOperationRegistry.h does not yet expose registry-consistency checks.");
             AssertContains(hashDigestOperationRegistry, "if (operationDescriptor != NULL)", "Phase 85 HashDigestOperationRegistry.cpp does not yet tolerate null descriptor output pointers.");
-            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 85 HashDigestOperationRegistry.cpp does not yet cache descriptor snapshots from the algorithm registry.");
-            AssertContains(hashDigestOperationRegistry, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 85 HashDigestOperationRegistry.cpp does not yet validate operation coverage against the algorithm registry.");
+            AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 85 HashDigestOperationRegistry.cpp does not yet cache descriptor snapshots through dedicated operation storage.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)", "Phase 85 HashDigestOperationRegistry.cpp does not yet expose descriptor registration.");
             AssertContains(hashDigestOperationRegistry, "IsHashDigestOperationDescriptorComplete(operationDescriptor);", "Phase 85 HashDigestOperationRegistry.cpp does not yet validate descriptor completeness.");
 
             AssertContains(hashDigestUpdater, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 85 HashDigestUpdater.cpp does not yet iterate digest planning in registry order.");
@@ -5162,19 +5165,23 @@ internal static class Program
             string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
 
-            AssertContains(hashDigestOperationRegistry, "TryCreateHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor creation through a dedicated resolver helper.");
-            AssertContains(hashDigestOperationRegistry, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 86 HashDigestOperationRegistry.cpp does not yet cache digest-operation descriptors from registry metadata.");
-            AssertContains(hashDigestOperationRegistry, "static bool operationDescriptorsInitialized = false;", "Phase 86 HashDigestOperationRegistry.cpp does not yet guard one-time descriptor snapshot initialization.");
-            AssertContains(hashDigestOperationRegistry, "operationDescriptors.push_back(operationDescriptor);", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize registry-ordered operation descriptors.");
+            AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose dedicated descriptor storage.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor registration through a dedicated seam.");
+            AssertContains(hashDigestOperationRegistry, "EnsureDefaultHashDigestOperationDescriptorsRegistered()", "Phase 86 HashDigestOperationRegistry.cpp does not yet bootstrap defaults through registration.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize default descriptors through registration.");
             AssertDoesNotContain(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 86 HashDigestOperationRegistry.cpp still hardcodes a fixed operation-descriptor table.");
 
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 native runtime tests do not yet cover descriptor snapshot generation.");
             AssertContains(nativeRuntimeUnitTests, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 managed unit tests do not yet gate descriptor snapshot generation coverage.");
-            AssertContains(hashContractUnitTests, "static std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 86 contract unit tests do not yet assert descriptor snapshots use registry-derived storage.");
+            AssertContains(hashContractUnitTests, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 86 contract unit tests do not yet assert descriptor snapshots use dedicated registry storage.");
         }, failures);
 
         Run("Phase 87 isolates ThreadData into legacy seams and unifies native toolsets on v143", () =>
         {
+            string winUiProject = ReadRepoFile(repoRoot, @"trunk\source\WinUI\fHashWUI.csproj");
+            AssertContains(winUiProject, "<PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.8.260317003\" />", "Phase 87 WinUI project does not yet pin to a stable WindowsAppSDK version.");
+            AssertDoesNotContain(winUiProject, "2.0.0-experimental", "Phase 87 WinUI project still depends on experimental WindowsAppSDK packages.");
+
             string[] vcxProjects = Directory.GetFiles(repoRoot, "*.vcxproj", SearchOption.AllDirectories);
             if (vcxProjects.Length == 0)
             {

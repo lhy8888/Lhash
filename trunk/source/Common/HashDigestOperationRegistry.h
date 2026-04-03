@@ -19,6 +19,7 @@ namespace HashEngineInternal
 		HashDigestFinalizeAction finalizeAction;
 	};
 
+	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);
 	bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);
 	bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType);
 	bool IsHashDigestOperationRegistryConsistent();

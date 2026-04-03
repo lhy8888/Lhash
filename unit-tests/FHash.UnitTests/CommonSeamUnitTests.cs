@@ -76,7 +76,9 @@ public sealed class CommonSeamUnitTests
             "RESULT_DIGEST_SHA512");
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registry, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registry, StringComparison.Ordinal);
-        Assert.Contains("sizeof(algorithmDescriptors) / sizeof(HashAlgorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registry, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registry, StringComparison.Ordinal);
         Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
         Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registry, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registry, StringComparison.Ordinal);
@@ -315,5 +317,14 @@ public sealed class CommonSeamUnitTests
             "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
             "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
             "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore");
+    }
+
+    [Fact]
+    public void WinUiProject_UsesStableWindowsAppSdkPackage()
+    {
+        string winUiProject = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinUI\fHashWUI.csproj");
+
+        Assert.Contains("<PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.8.260317003\" />", winUiProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("2.0.0-experimental", winUiProject, StringComparison.Ordinal);
     }
 }
