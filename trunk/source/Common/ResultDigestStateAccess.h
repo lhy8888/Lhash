@@ -19,7 +19,7 @@ static inline bool TryResolveDigestStorageIndex(ResultDigestType digestType, siz
 
 static inline sunjwbase::tstring& GetInvalidDigestStorageScratch()
 {
-	static thread_local sunjwbase::tstring invalidDigestStorageScratch;
+	static sunjwbase::tstring invalidDigestStorageScratch;
 	invalidDigestStorageScratch.clear();
 	return invalidDigestStorageScratch;
 }
