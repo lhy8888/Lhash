@@ -4,7 +4,6 @@
 #include "CxHelper.h"
 #include "Common/ManagedHashMgmtAccess.h"
 #include "Common/HashThreadLaunch.h"
-#include "Common/HashThreadEntry.h"
 using namespace std;
 using namespace Platform;
 using namespace FilesHashUwp;
@@ -116,12 +115,8 @@ void HashMgmt::StartHashThread()
 		throw ref new FailureException(L"At least one hash algorithm must be enabled.");
 	}
 
-	if (m_hWorkThread)
-	{
-		CloseHandle(m_hWorkThread);
-	}
 	unsigned int thredID = 0;
-	m_hWorkThread = StartHashWorkerThread(&m_threadData, &thredID);
+	RestartHashWorkerThread(&m_hWorkThread, &m_threadData, &thredID);
 }
 
 Array<HashResultNet>^ HashMgmt::FindHashResults(String^ pstrHashToFind)

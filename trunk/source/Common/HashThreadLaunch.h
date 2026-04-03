@@ -5,6 +5,10 @@
 
 #include "Common/HashThreadEntry.h"
 
+#if defined (_WIN32)
+#include <WinBase.h>
+#endif
+
 static inline HANDLE StartHashWorkerThread(ThreadData *threadData, unsigned int *threadId)
 {
 	return reinterpret_cast<HANDLE>(_beginthreadex(
@@ -14,6 +18,28 @@ static inline HANDLE StartHashWorkerThread(ThreadData *threadData, unsigned int 
 		threadData,
 		0,
 		threadId));
+}
+
+static inline void CloseHashWorkerThreadHandle(HANDLE *threadHandle)
+{
+	if (threadHandle == NULL || *threadHandle == NULL)
+	{
+		return;
+	}
+
+	CloseHandle(*threadHandle);
+	*threadHandle = NULL;
+}
+
+static inline HANDLE RestartHashWorkerThread(HANDLE *existingThreadHandle, ThreadData *threadData, unsigned int *threadId)
+{
+	CloseHashWorkerThreadHandle(existingThreadHandle);
+	HANDLE workThreadHandle = StartHashWorkerThread(threadData, threadId);
+	if (existingThreadHandle != NULL)
+	{
+		*existingThreadHandle = workThreadHandle;
+	}
+	return workThreadHandle;
 }
 
 #endif

@@ -2620,12 +2620,12 @@ internal static class Program
             AssertContains(sessionControllerHeader, "void SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 21 session controller is missing the grouped working-state UI seam.");
             AssertContains(sessionControllerHeader, "void PrepareDropTarget(CWnd* pWnd, BOOL bAccept);", "Phase 21 session controller is missing the grouped drop-target helper.");
 
-            AssertContains(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller does not yet own thread startup through HashThreadEntry.h.");
             AssertContains(sessionController, "#include \"Common/HashThreadLaunch.h\"", "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
+            AssertDoesNotContain(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller should consume HashThreadLaunch.h instead of directly including HashThreadEntry.h.");
             AssertContains(sessionController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 21 session controller does not yet consume the ThreadData execution seam.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->SyncSelections();", "Phase 21 session controller does not yet own hash-algorithm selection sync.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "Phase 21 session controller does not yet own hash-algorithm validation.");
-            AssertContains(sessionController, "StartHashWorkerThread(m_threadData", "Phase 21 session controller does not yet own work-thread startup through the shared launch seam.");
+            AssertContains(sessionController, "RestartHashWorkerThread(&m_hWorkThread, m_threadData, &thredID);", "Phase 21 session controller does not yet own work-thread restart through the shared launch seam.");
             AssertContains(sessionController, "SetThreadDataStop(*m_threadData, true);", "Phase 21 session controller does not yet own stop-request signaling.");
             AssertContains(sessionController, "PrepareDropTarget(m_parentWnd, TRUE);", "Phase 21 session controller does not yet restore the dialog drop target.");
             AssertContains(sessionController, "PrepareDropTarget(m_mainEditDropTarget, TRUE);", "Phase 21 session controller does not yet restore the result-view drop target.");

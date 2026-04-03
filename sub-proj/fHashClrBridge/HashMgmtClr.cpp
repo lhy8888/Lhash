@@ -4,7 +4,6 @@
 #include "ClrHelper.h"
 #include "Common/ManagedHashMgmtAccess.h"
 #include "Common/HashThreadLaunch.h"
-#include "Common/HashThreadEntry.h"
 using namespace std;
 using namespace System;
 using namespace FilesHashWUI;
@@ -57,8 +56,7 @@ HashMgmtClr::!HashMgmtClr()
 		delete m_pUiBridgeWUI;
 	if (m_pThreadData)
 		delete m_pThreadData;
-	if (m_hWorkThread)
-		CloseHandle(m_hWorkThread);
+	CloseHashWorkerThreadHandle(&m_hWorkThread);
 }
 
 void HashMgmtClr::Init()
@@ -127,13 +125,8 @@ void HashMgmtClr::StartHashThread()
 		throw gcnew InvalidOperationException("At least one hash algorithm must be enabled.");
 	}
 
-	if (m_hWorkThread)
-	{
-		CloseHandle(m_hWorkThread);
-		m_hWorkThread = NULL;
-	}
 	unsigned int thredID = 0;
-	m_hWorkThread = StartHashWorkerThread(m_pThreadData, &thredID);
+	RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);
 }
 
 cli::array<HashResultNet>^ HashMgmtClr::FindHashResults(String^ sstrHashToFind)

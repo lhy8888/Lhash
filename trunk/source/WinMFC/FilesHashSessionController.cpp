@@ -5,7 +5,6 @@
 #include "FilesHashSessionController.h"
 
 #include "Common/HashThreadLaunch.h"
-#include "Common/HashThreadEntry.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
 
@@ -73,11 +72,10 @@ void FilesHashSessionController::StartHashThread()
 		return;
 	}
 
-	CloseWorkThreadHandle();
 	SetThreadDataStop(*m_threadData, false);
 
-	DWORD thredID = 0;
-	m_hWorkThread = StartHashWorkerThread(m_threadData, reinterpret_cast<unsigned int*>(&thredID));
+	unsigned int thredID = 0;
+	RestartHashWorkerThread(&m_hWorkThread, m_threadData, &thredID);
 }
 
 void FilesHashSessionController::StopWorkingThread()
@@ -215,9 +213,5 @@ void FilesHashSessionController::PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
 
 void FilesHashSessionController::CloseWorkThreadHandle()
 {
-	if (m_hWorkThread != NULL)
-	{
-		CloseHandle(m_hWorkThread);
-		m_hWorkThread = NULL;
-	}
+	CloseHashWorkerThreadHandle(&m_hWorkThread);
 }
