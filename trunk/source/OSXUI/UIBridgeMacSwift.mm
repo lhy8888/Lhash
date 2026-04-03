@@ -17,8 +17,8 @@
 
 #include "Common/strhelper.h"
 #include "Common/Utils.h"
+#include "Common/HashResult.h"
 #include "MacUtils.h"
-#include "Common/Global.h"
 
 using namespace std;
 using namespace sunjwbase;
@@ -159,10 +159,10 @@ ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& re
     {
         const HashDigestResult& digestResult = result.digests[digestIndex];
         NSString *digestValue = MacUtils::ConvertUTF8StringToNSString(tstrtostr(digestResult.value));
-        std::string algorithmId = tstrtostr(NormalizeHashAlgorithmId(digestResult.algorithmId));
+        std::string algorithmId = tstrtostr(ResolveHashDigestResultAlgorithmId(digestResult));
         if (algorithmId.empty())
         {
-            algorithmId = tstrtostr(NormalizeHashAlgorithmId(digestResult.stableName));
+            continue;
         }
 
         if (algorithmId == "md5")
@@ -183,25 +183,6 @@ ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& re
         if (algorithmId == "sha512")
         {
             resultDataSwift.strSHA512 = digestValue;
-            continue;
-        }
-
-        switch (digestResult.type)
-        {
-        case RESULT_DIGEST_MD5:
-            resultDataSwift.strMD5 = digestValue;
-            break;
-        case RESULT_DIGEST_SHA1:
-            resultDataSwift.strSHA1 = digestValue;
-            break;
-        case RESULT_DIGEST_SHA256:
-            resultDataSwift.strSHA256 = digestValue;
-            break;
-        case RESULT_DIGEST_SHA512:
-            resultDataSwift.strSHA512 = digestValue;
-            break;
-        default:
-            break;
         }
     }
 

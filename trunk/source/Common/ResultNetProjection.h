@@ -45,13 +45,18 @@ static inline bool IsResultDigestStableName(ResultDigestType digestType, const c
 
 static inline bool IsResultDigestStableNameById(const HashAlgorithmId& algorithmId, const char *stableName)
 {
-	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
-	if (!TryGetHashAlgorithmTypeById(algorithmId, &digestType))
+	const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
+	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor))
 	{
 		return false;
 	}
 
-	return IsResultDigestStableName(digestType, stableName);
+	if (algorithmDescriptor == NULL || algorithmDescriptor->stableName == NULL || stableName == NULL)
+	{
+		return false;
+	}
+
+	return std::strcmp(algorithmDescriptor->stableName, stableName) == 0;
 }
 
 template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>

@@ -20,10 +20,10 @@ static inline TResultDataNet AssignHashResultDigestsToNet(TResultDataNet resultD
 	for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
 	{
 		const HashDigestResult& digestResult = result.digests[digestIndex];
-		HashAlgorithmId algorithmId = NormalizeHashAlgorithmId(digestResult.algorithmId);
+		HashAlgorithmId algorithmId = ResolveHashDigestResultAlgorithmId(digestResult);
 		if (algorithmId.empty())
 		{
-			algorithmId = GetHashAlgorithmId(digestResult.type);
+			continue;
 		}
 
 		resultDataNet = AssignResultDigestToNetById(resultDataNet, algorithmId, convertString(digestResult.value.c_str()));

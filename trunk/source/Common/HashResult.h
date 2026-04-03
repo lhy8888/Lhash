@@ -3,6 +3,29 @@
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestMetadataAccess.h"
 #include "Common/ResultDigestValueAccess.h"
+
+static inline HashAlgorithmId ResolveHashDigestResultAlgorithmId(const HashDigestResult& digestResult)
+{
+	HashAlgorithmId algorithmId = NormalizeHashAlgorithmId(digestResult.algorithmId);
+	if (!algorithmId.empty())
+	{
+		return algorithmId;
+	}
+
+	HashAlgorithmId stableNameAlgorithmId = NormalizeHashAlgorithmId(digestResult.stableName);
+	if (!stableNameAlgorithmId.empty() && IsRegisteredHashAlgorithmId(stableNameAlgorithmId))
+	{
+		return stableNameAlgorithmId;
+	}
+
+	if (IsRegisteredHashAlgorithmType(digestResult.type))
+	{
+		return GetHashAlgorithmId(digestResult.type);
+	}
+
+	return HashAlgorithmId();
+}
+
 static inline const HashResult& ProjectHashResult(const HashResult& result)
 {
 	return result;
@@ -24,8 +47,8 @@ static inline HashResult ProjectHashResult(const ResultData& result)
 			return true;
 		}
 		HashDigestResult digestResult;
-		digestResult.type = GetResultDigestMetadataType(digestMetadata);
 		digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);
+		digestResult.type = GetHashAlgorithmDescriptorType(digestMetadata);
 		digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
 		digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
 		digestResult.value = digestValue;
