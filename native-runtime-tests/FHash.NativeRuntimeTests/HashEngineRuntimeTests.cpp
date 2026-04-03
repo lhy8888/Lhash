@@ -445,12 +445,12 @@ namespace
 
 	static void HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport()
 	{
-		HashDigestOperationDescriptor descriptor = {};
+		HashEngineInternal::HashDigestOperationDescriptor descriptor = {};
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA512, &descriptor), "Known SHA512 descriptors should resolve.");
 		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(descriptor), "Resolved registry descriptors should be complete.");
 		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_SHA512), "Known SHA512 descriptors should be reported as supported.");
 
-		HashDigestOperationDescriptor incompleteDescriptor = descriptor;
+		HashEngineInternal::HashDigestOperationDescriptor incompleteDescriptor = descriptor;
 		incompleteDescriptor.updateAction = NULL;
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorComplete(incompleteDescriptor), "Descriptors missing update actions should be rejected as incomplete.");
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_UNKNOWN), "Unknown digest types should not be reported as supported.");
