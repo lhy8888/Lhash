@@ -53,7 +53,10 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 int WINAPI HashThreadFunc(void *param)
 {
 	ThreadData *thrdData = (ThreadData *)param;
-	HashExecutionContext executionContext = CreateHashExecutionContext(*thrdData);
+	HashExecutionContext executionContext = CreateHashExecutionContext(
+		GetThreadDataObserver(*thrdData),
+		GetMutableThreadDataHashJobState(*thrdData),
+		GetMutableThreadDataHashCancellationState(*thrdData));
 	HashRequest request = CreateHashRequest(*thrdData);
 
 	return RunHashRequest(&executionContext, request);

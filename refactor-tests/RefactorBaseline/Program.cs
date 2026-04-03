@@ -3158,11 +3158,15 @@ internal static class Program
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
-            AssertContains(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context does not yet project ThreadData into the execution context.");
+            AssertContains(hashExecutionContext, "CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", "Phase 35 hash execution context does not yet expose explicit execution-context construction dependencies.");
+            AssertDoesNotContain(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context still directly depends on ThreadData.");
             AssertContains(hashEngineHeader, "struct HashExecutionContext;", "Phase 33 HashEngine header does not yet forward declare HashExecutionContext.");
             AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
-            AssertContains(hashEngine, "HashExecutionContext executionContext = CreateHashExecutionContext(*thrdData);", "Phase 35 HashThreadFunc does not yet project ThreadData into HashExecutionContext before dispatch.");
+            AssertContains(hashEngine, "HashExecutionContext executionContext = CreateHashExecutionContext(", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through explicit dependency injection.");
+            AssertContains(hashEngine, "GetThreadDataObserver(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData observer through execution-state accessors.");
+            AssertContains(hashEngine, "GetMutableThreadDataHashJobState(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData job state through execution-state accessors.");
+            AssertContains(hashEngine, "GetMutableThreadDataHashCancellationState(*thrdData)", "Phase 35 HashThreadFunc does not yet map ThreadData cancellation state through execution-state accessors.");
             AssertContains(hashEngine, "return RunHashRequest(&executionContext, request);", "Phase 33 HashThreadFunc does not yet delegate into RunHashRequest through HashExecutionContext.");
             AssertContains(hashEngine, "HashRequest request = CreateHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest before dispatch.");
         }, failures);

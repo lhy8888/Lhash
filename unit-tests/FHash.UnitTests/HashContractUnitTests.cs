@@ -189,7 +189,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashJobState jobState;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext", executionContext, StringComparison.Ordinal);
-        Assert.Contains("CreateHashExecutionContext(ThreadData& threadData)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashExecutionContext(ThreadData& threadData)", executionContext, StringComparison.Ordinal);
         Assert.Contains("GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
         Assert.Contains("ShouldStopHashExecution(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
         Assert.Contains("AppendHashExecutionResult(HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
@@ -205,7 +206,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
-        Assert.Contains("HashExecutionContext executionContext = CreateHashExecutionContext(*thrdData);", engine, StringComparison.Ordinal);
+        Assert.Contains("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(*thrdData)", engine, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashJobState(*thrdData)", engine, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashCancellationState(*thrdData)", engine, StringComparison.Ordinal);
         Assert.Contains("return RunHashRequest(&executionContext, request);", engine, StringComparison.Ordinal);
         Assert.Contains("InitializeHashJobExecutionPlan(request, &executionPlan);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);

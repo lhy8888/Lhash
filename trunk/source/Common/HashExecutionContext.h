@@ -14,9 +14,9 @@ struct HashExecutionContext
 	HashJobState& jobState;
 	HashCancellationState& cancellationState;
 };
-static inline HashExecutionContext CreateHashExecutionContext(ThreadData& threadData)
+static inline HashExecutionContext CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
 {
-	return HashExecutionContext(threadData.observer, threadData.executionState.jobState, threadData.executionState.cancellation);
+	return HashExecutionContext(progressSink, jobState, cancellationState);
 }
 static inline HashProgressSink *GetHashExecutionProgressSink(const HashExecutionContext& executionContext)
 {
