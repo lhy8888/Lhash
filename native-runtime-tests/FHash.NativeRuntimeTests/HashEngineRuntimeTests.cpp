@@ -618,6 +618,26 @@ namespace
 		NativeAssertEqual(RESULT_DIGEST_SHA512, digestUpdateRequest.operationDescriptors[2].digestType, "Digest update planning should preserve registry order for SHA512.");
 	}
 
+	static void HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency()
+	{
+		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			RESULT_DIGEST_UNKNOWN,
+			"sha3-256",
+			"SHA3-256"
+		}), "Descriptor/id-only algorithms should be registerable before digest operations are implemented.");
+
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationRegistryConsistent(), "Descriptor/id-only algorithm registrations should not invalidate digest operation consistency.");
+
+		HashRequest request;
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha3-256")));
+
+		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
+		NativeAssertEqual(static_cast<size_t>(1), digestUpdateRequest.operationDescriptors.size(), "Descriptor/id-only algorithms without backend operations should be skipped instead of disabling digest planning.");
+		NativeAssertEqual(RESULT_DIGEST_MD5, digestUpdateRequest.operationDescriptors[0].digestType, "Supported digest planning should remain intact when descriptor-only algorithms are present.");
+	}
+
 	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -882,6 +902,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", &HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests });
 	tests.push_back({ "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", &HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport });
 	tests.push_back({ "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", &HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms });
+	tests.push_back({ "HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency", &HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency });
 	tests.push_back({ "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", &HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
 	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });

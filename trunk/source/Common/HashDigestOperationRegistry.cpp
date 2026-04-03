@@ -365,6 +365,12 @@ namespace HashEngineInternal
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
+			if (!IsRegisteredHashAlgorithmType(GetHashAlgorithmDescriptorType(algorithmDescriptor)))
+			{
+				// Descriptor-only algorithms are allowed to exist before a native digest backend lands.
+				return true;
+			}
+
 			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
 			if (!IsHashDigestOperationDescriptorSupportedById(algorithmId))
 			{

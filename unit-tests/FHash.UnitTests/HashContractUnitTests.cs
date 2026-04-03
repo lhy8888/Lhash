@@ -355,6 +355,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptor({", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashDigestOperationDescriptorsRegistered()", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("if (!IsRegisteredHashAlgorithmType(GetHashAlgorithmDescriptorType(algorithmDescriptor)))", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContextById(hashContexts, algorithmId);", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);", digestLifecycle, StringComparison.Ordinal);
