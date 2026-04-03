@@ -6,6 +6,7 @@ public sealed class CommonSeamUnitTests
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashAlgorithmRegistry.h");
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
         RepositoryTestContext.AssertContainsInOrder(
             registry,
@@ -16,6 +17,11 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registry, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registry, StringComparison.Ordinal);
         Assert.Contains("sizeof(algorithmDescriptors) / sizeof(HashAlgorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
+        Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", registry, StringComparison.Ordinal);
+        Assert.DoesNotContain("return algorithmDescriptors[0];", registry, StringComparison.Ordinal);
         Assert.DoesNotContain("compatibilityValueField", registry, StringComparison.Ordinal);
     }
 
@@ -66,6 +72,8 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
         Assert.Contains("GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", access, StringComparison.Ordinal);
+        Assert.Contains("TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", access, StringComparison.Ordinal);
+        Assert.Contains("GetInvalidDigestStorageScratch()", access, StringComparison.Ordinal);
         Assert.Contains("EnsureDigestStorageSize(ResultDigestStorage& digestStorage)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestState(const ResultData& result)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestStorage(const ResultData& result)", access, StringComparison.Ordinal);

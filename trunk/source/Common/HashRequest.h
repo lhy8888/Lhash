@@ -1,9 +1,11 @@
 ﻿#ifndef _HASH_REQUEST_H_
 #define _HASH_REQUEST_H_
 
+#include <algorithm>
 #include <vector>
 
 #include "Common/Global.h"
+#include "Common/HashAlgorithmRegistry.h"
 
 
 struct HashRequest
@@ -45,9 +47,24 @@ static inline bool VisitHashRequestFiles(const HashRequest& request, THashReques
 template<typename THashRequestAlgorithmVisitor>
 static inline bool VisitHashRequestAlgorithms(const HashRequest& request, THashRequestAlgorithmVisitor visitor)
 {
+	std::vector<ResultDigestType> visitedAlgorithms;
+	visitedAlgorithms.reserve(request.algorithms.size());
+
 	for (size_t algorithmIndex = 0; algorithmIndex < request.algorithms.size(); ++algorithmIndex)
 	{
-		if (!visitor(request.algorithms[algorithmIndex]))
+		ResultDigestType digestType = request.algorithms[algorithmIndex];
+		if (!IsRegisteredHashAlgorithmType(digestType))
+		{
+			continue;
+		}
+
+		if (std::find(visitedAlgorithms.begin(), visitedAlgorithms.end(), digestType) != visitedAlgorithms.end())
+		{
+			continue;
+		}
+
+		visitedAlgorithms.push_back(digestType);
+		if (!visitor(digestType))
 		{
 			return false;
 		}

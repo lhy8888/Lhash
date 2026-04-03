@@ -112,13 +112,25 @@ static inline bool GetThreadDataUppercase(const ThreadData& threadData)
 
 static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
 {
-	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[GetHashAlgorithmIndex(digestType)] = enabled;
+	int algorithmIndex;
+	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	{
+		return;
+	}
+
+	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[static_cast<size_t>(algorithmIndex)] = enabled;
 }
 
 static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
 {
+	int algorithmIndex;
+	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	{
+		return false;
+	}
+
 	const HashAlgorithmSelectionState& hashAlgorithmSelectionState = GetThreadDataHashAlgorithmSelectionState(threadData);
-	size_t digestIndex = static_cast<size_t>(GetHashAlgorithmIndex(digestType));
+	size_t digestIndex = static_cast<size_t>(algorithmIndex);
 	if (digestIndex >= hashAlgorithmSelectionState.enabled.size())
 	{
 		return true;

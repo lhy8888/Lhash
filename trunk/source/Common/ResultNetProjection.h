@@ -27,13 +27,18 @@ static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)
 
 static inline bool IsResultDigestStableName(ResultDigestType digestType, const char *stableName)
 {
-	const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptor(digestType);
-	if (algorithmDescriptor.stableName == NULL || stableName == NULL)
+	const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
+	if (!TryGetHashAlgorithmDescriptor(digestType, &algorithmDescriptor))
 	{
 		return false;
 	}
 
-	return std::strcmp(algorithmDescriptor.stableName, stableName) == 0;
+	if (algorithmDescriptor == NULL || algorithmDescriptor->stableName == NULL || stableName == NULL)
+	{
+		return false;
+	}
+
+	return std::strcmp(algorithmDescriptor->stableName, stableName) == 0;
 }
 
 template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>

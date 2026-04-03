@@ -2210,7 +2210,7 @@ internal static class Program
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess does not yet route digest index lookup through the registry seam.");
 
             AssertContains(threadAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ThreadData access seams do not yet consume the hash-algorithm registry seam.");
-            AssertContains(threadAccess, "GetHashAlgorithmIndex(digestType)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
+            AssertContains(threadAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadData access seams do not yet route enabled-algorithm iteration through the registry seam.");
             AssertContains(threadAccess, "ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);", "ThreadData access seams do not yet resolve enabled algorithm types through the registry seam.");
         }, failures);
@@ -5075,6 +5075,43 @@ internal static class Program
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 UWP native filters do not yet expose HashDigestOperationRegistry.cpp.");
             AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashDigestOperationRegistry.h", "Phase 83 UWP native filters do not yet expose HashDigestOperationRegistry.h.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashDigestOperationRegistry.cpp", "Phase 83 WinUI native project should keep consuming the shared native core instead of compiling HashDigestOperationRegistry.cpp directly.");
+        }, failures);
+
+        Run("Phase 84 hardens algorithm-registry lookup seams against implicit MD5 fallback and unknown digest leakage", () =>
+        {
+            string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
+            string digestMetadataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h");
+            string digestStateAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestStateAccess.h");
+            string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
+
+            AssertContains(global, "RESULT_DIGEST_UNKNOWN = -1", "Phase 84 Global.h does not yet expose the unknown digest sentinel.");
+            AssertContains(global, ": type(RESULT_DIGEST_UNKNOWN)", "Phase 84 HashDigestResult does not yet default to the unknown digest sentinel.");
+
+            AssertContains(hashAlgorithmRegistry, "GetUnknownHashAlgorithmDescriptor()", "Phase 84 HashAlgorithmRegistry does not yet expose the unknown descriptor fallback seam.");
+            AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", "Phase 84 HashAlgorithmRegistry does not yet expose safe algorithm-index lookup.");
+            AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", "Phase 84 HashAlgorithmRegistry does not yet expose safe descriptor lookup.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "return algorithmDescriptors[0];", "Phase 84 HashAlgorithmRegistry should no longer implicitly fall back to MD5 for invalid indices.");
+            AssertContains(hashAlgorithmRegistry, "int algorithmIndex = -1;", "Phase 84 HashAlgorithmRegistry does not yet initialize unresolved algorithm index to -1.");
+
+            AssertContains(hashRequest, "#include \"Common/HashAlgorithmRegistry.h\"", "Phase 84 HashRequest does not yet consume the hash-algorithm registry seam for algorithm sanitization.");
+            AssertContains(hashRequest, "std::find(visitedAlgorithms.begin(), visitedAlgorithms.end(), digestType)", "Phase 84 HashRequest algorithm traversal does not yet deduplicate algorithm selections.");
+            AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmType(digestType))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
+
+            AssertContains(threadExecutionAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
+            AssertDoesNotContain(threadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
+
+            AssertContains(digestMetadataAccess, "TryGetResultDigestIndex(ResultDigestType digestType, int *index)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-index lookup.");
+            AssertContains(digestMetadataAccess, "TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-metadata lookup.");
+
+            AssertContains(digestStateAccess, "TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", "Phase 84 ResultDigestStateAccess does not yet expose safe digest-storage index resolution.");
+            AssertContains(digestStateAccess, "GetInvalidDigestStorageScratch()", "Phase 84 ResultDigestStateAccess does not yet expose inert scratch storage for invalid digest writes.");
+            AssertContains(digestStateAccess, "if (!TryResolveDigestStorageIndex(digestType, &digestIndex))", "Phase 84 ResultDigestStateAccess does not yet guard digest storage lookups.");
+
+            AssertContains(resultNetProjection, "TryGetHashAlgorithmDescriptor(digestType, &algorithmDescriptor)", "Phase 84 ResultNetProjection does not yet guard stable-name mapping with safe descriptor lookup.");
+            AssertDoesNotContain(resultNetProjection, "const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptor(digestType);", "Phase 84 ResultNetProjection still resolves digest stable names through unsafe descriptor fallback.");
         }, failures);
 
         if (failures.Count > 0)

@@ -3,6 +3,27 @@
 
 #include "Common/ResultDigestMetadataAccess.h"
 
+static inline bool TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)
+{
+	int index = -1;
+	if (!TryGetResultDigestIndex(digestType, &index) || index < 0)
+	{
+		return false;
+	}
+	if (digestIndex != NULL)
+	{
+		*digestIndex = static_cast<size_t>(index);
+	}
+	return true;
+}
+
+static inline sunjwbase::tstring& GetInvalidDigestStorageScratch()
+{
+	static thread_local sunjwbase::tstring invalidDigestStorageScratch;
+	invalidDigestStorageScratch.clear();
+	return invalidDigestStorageScratch;
+}
+
 static inline void EnsureDigestStorageSize(ResultDigestStorage& digestStorage)
 {
 	size_t digestCount = static_cast<size_t>(GetResultDigestCount());
@@ -14,7 +35,12 @@ static inline void EnsureDigestStorageSize(ResultDigestStorage& digestStorage)
 
 static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
-	size_t digestIndex = static_cast<size_t>(GetResultDigestIndex(digestType));
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndex(digestType, &digestIndex))
+	{
+		static const sunjwbase::tstring emptyDigestValue;
+		return emptyDigestValue;
+	}
 	if (digestIndex >= digestStorage.values.size())
 	{
 		static const sunjwbase::tstring emptyDigestValue;
@@ -25,8 +51,14 @@ static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigest
 
 static inline sunjwbase::tstring& GetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndex(digestType, &digestIndex))
+	{
+		return GetInvalidDigestStorageScratch();
+	}
+
 	EnsureDigestStorageSize(digestStorage);
-	return digestStorage.values[GetResultDigestIndex(digestType)];
+	return digestStorage.values[digestIndex];
 }
 
 static inline bool HasDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)
@@ -36,12 +68,26 @@ static inline bool HasDigestStorageValue(const ResultDigestStorage& digestStorag
 
 static inline void SetDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, const sunjwbase::tstring& digestValue)
 {
-	GetMutableDigestStorageValue(digestStorage, digestType) = digestValue;
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndex(digestType, &digestIndex))
+	{
+		return;
+	}
+
+	EnsureDigestStorageSize(digestStorage);
+	digestStorage.values[digestIndex] = digestValue;
 }
 
 static inline void ClearDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
 {
-	GetMutableDigestStorageValue(digestStorage, digestType).clear();
+	size_t digestIndex = 0;
+	if (!TryResolveDigestStorageIndex(digestType, &digestIndex))
+	{
+		return;
+	}
+
+	EnsureDigestStorageSize(digestStorage);
+	digestStorage.values[digestIndex].clear();
 }
 
 static inline const ResultDigestState& GetResultDigestState(const ResultData& result)

@@ -14,6 +14,17 @@ struct HashAlgorithmDescriptorRegistry
 	int count;
 };
 
+static inline const HashAlgorithmDescriptor& GetUnknownHashAlgorithmDescriptor()
+{
+	static const HashAlgorithmDescriptor unknownAlgorithmDescriptor =
+	{
+		RESULT_DIGEST_UNKNOWN,
+		"unknown",
+		"UNKNOWN"
+	};
+	return unknownAlgorithmDescriptor;
+}
+
 static inline ResultDigestType GetHashAlgorithmDescriptorType(const HashAlgorithmDescriptor& algorithmDescriptor)
 {
 	return algorithmDescriptor.type;
@@ -61,7 +72,7 @@ static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int in
 	const HashAlgorithmDescriptor *algorithmDescriptors = GetRegisteredHashAlgorithmDescriptors();
 	if (index < 0 || index >= GetRegisteredHashAlgorithmCount())
 	{
-		return algorithmDescriptors[0];
+		return GetUnknownHashAlgorithmDescriptor();
 	}
 	return algorithmDescriptors[index];
 }
@@ -80,7 +91,7 @@ static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
 }
 static inline int GetHashAlgorithmIndex(ResultDigestType digestType)
 {
-	int algorithmIndex = 0;
+	int algorithmIndex = -1;
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		if (GetHashAlgorithmDescriptorType(algorithmDescriptor) == digestType)
@@ -93,26 +104,65 @@ static inline int GetHashAlgorithmIndex(ResultDigestType digestType)
 	return algorithmIndex;
 }
 
+static inline bool TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)
+{
+	int resolvedIndex = GetHashAlgorithmIndex(digestType);
+	if (resolvedIndex < 0)
+	{
+		return false;
+	}
+
+	if (algorithmIndex != NULL)
+	{
+		*algorithmIndex = resolvedIndex;
+	}
+	return true;
+}
+
 static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptor(ResultDigestType digestType)
 {
-	return GetHashAlgorithmDescriptorAt(GetHashAlgorithmIndex(digestType));
+	int algorithmIndex;
+	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	{
+		return GetUnknownHashAlgorithmDescriptor();
+	}
+	return GetHashAlgorithmDescriptorAt(algorithmIndex);
+}
+
+static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)
+{
+	int algorithmIndex;
+	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	{
+		return false;
+	}
+
+	if (algorithmDescriptor != NULL)
+	{
+		*algorithmDescriptor = &GetHashAlgorithmDescriptorAt(algorithmIndex);
+	}
+	return true;
 }
 
 static inline ResultDigestType GetHashAlgorithmTypeAt(int index)
 {
-	return GetHashAlgorithmDescriptorType(GetHashAlgorithmDescriptorAt(index));
+	const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(index);
+	return GetHashAlgorithmDescriptorType(algorithmDescriptor);
 }
 
 static inline bool IsRegisteredHashAlgorithmType(ResultDigestType digestType)
 {
-	int algorithmIndex = GetHashAlgorithmIndex(digestType);
-	return GetHashAlgorithmTypeAt(algorithmIndex) == digestType;
+	return TryGetHashAlgorithmIndex(digestType, NULL);
 }
 
 static inline bool TryGetHashAlgorithmType(int digestTypeValue, ResultDigestType *digestType)
 {
 	ResultDigestType candidateDigestType = static_cast<ResultDigestType>(digestTypeValue);
 	if (!IsRegisteredHashAlgorithmType(candidateDigestType))
+	{
+		return false;
+	}
+	if (digestType == NULL)
 	{
 		return false;
 	}
