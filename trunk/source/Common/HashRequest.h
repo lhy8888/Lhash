@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "Common/Global.h"
+
 
 struct HashRequest
 {
