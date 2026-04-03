@@ -100,19 +100,12 @@ static inline HashAlgorithmSelectionState CreateHashRequestAlgorithmSelectionSta
 	std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);
 	for (size_t algorithmIndex = 0; algorithmIndex < normalizedAlgorithmIds.size(); ++algorithmIndex)
 	{
-		const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
-		if (!TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor) ||
-			algorithmDescriptor == NULL)
+		int registeredIndex = -1;
+		if (!TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex))
 		{
 			continue;
 		}
 
-		ResultDigestType digestType = GetHashAlgorithmDescriptorType(*algorithmDescriptor);
-		int registeredIndex = -1;
-		if (!TryGetHashAlgorithmIndex(digestType, &registeredIndex))
-		{
-			continue;
-		}
 		size_t normalizedIndex = static_cast<size_t>(registeredIndex);
 		if (normalizedIndex >= selectionState.enabled.size())
 		{

@@ -5255,6 +5255,25 @@ internal static class Program
             }
         }, failures);
 
+        Run("Phase 88 promotes descriptor-id index lookup to the primary request-selection seam", () =>
+        {
+            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
+
+            AssertContains(hashAlgorithmRegistry, "GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index lookup.");
+            AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index probe helpers.");
+            AssertContains(hashAlgorithmRegistry, "algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN", "Phase 88 HashAlgorithmRegistry.h does not yet avoid collapsing unknown digest identities by enum type.");
+            AssertContains(hashRequest, "TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", "Phase 88 HashRequest selection state does not yet resolve registry indices by descriptor id.");
+            AssertDoesNotContain(hashRequest, "TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor)", "Phase 88 HashRequest selection state still resolves registry indices by descriptor type fallback.");
+
+            AssertContains(nativeRuntimeSource, "HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", "Phase 88 native runtime tests do not yet cover descriptor-id selection for unknown digest identities.");
+            AssertContains(nativeRuntimeUnitTests, "HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", "Phase 88 managed tests do not yet gate descriptor-id selection runtime coverage.");
+            AssertContains(hashContractUnitTests, "HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam", "Phase 88 contract tests do not yet gate descriptor-id selection seams.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

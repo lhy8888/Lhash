@@ -77,8 +77,11 @@ static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor
 	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
 	for (size_t descriptorIndex = 0; descriptorIndex < descriptorStorage.size(); ++descriptorIndex)
 	{
-		if (descriptorStorage[descriptorIndex].type != algorithmDescriptor.type &&
-			!IsHashAlgorithmDescriptorIdEqual(descriptorStorage[descriptorIndex], algorithmDescriptor))
+		const bool sameDescriptorId = IsHashAlgorithmDescriptorIdEqual(descriptorStorage[descriptorIndex], algorithmDescriptor);
+		const bool sameDigestType =
+			algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN &&
+			descriptorStorage[descriptorIndex].type == algorithmDescriptor.type;
+		if (!sameDescriptorId && !sameDigestType)
 		{
 			continue;
 		}
@@ -175,6 +178,41 @@ static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int in
 	return algorithmDescriptors[index];
 }
 
+static inline int GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)
+{
+	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
+	if (normalizedAlgorithmId.empty())
+	{
+		return -1;
+	}
+
+	for (int index = 0; index < GetRegisteredHashAlgorithmCount(); ++index)
+	{
+		const HashAlgorithmDescriptor& descriptor = GetHashAlgorithmDescriptorAt(index);
+		if (GetHashAlgorithmDescriptorId(descriptor) == normalizedAlgorithmId)
+		{
+			return index;
+		}
+	}
+
+	return -1;
+}
+
+static inline bool TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)
+{
+	int resolvedIndex = GetHashAlgorithmIndexById(algorithmId);
+	if (resolvedIndex < 0)
+	{
+		return false;
+	}
+
+	if (algorithmIndex != NULL)
+	{
+		*algorithmIndex = resolvedIndex;
+	}
+	return true;
+}
+
 template<typename THashAlgorithmVisitor>
 static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
 {
@@ -190,29 +228,15 @@ static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
 
 static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)
 {
-	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
-	const HashAlgorithmDescriptor *resolvedDescriptor = NULL;
-
-	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& descriptor)
-	{
-		(void)index;
-		if (GetHashAlgorithmDescriptorId(descriptor) != normalizedAlgorithmId)
-		{
-			return true;
-		}
-
-		resolvedDescriptor = &descriptor;
-		return false;
-	});
-
-	if (resolvedDescriptor == NULL)
+	int algorithmIndex = -1;
+	if (!TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex))
 	{
 		return false;
 	}
 
 	if (algorithmDescriptor != NULL)
 	{
-		*algorithmDescriptor = resolvedDescriptor;
+		*algorithmDescriptor = &GetHashAlgorithmDescriptorAt(algorithmIndex);
 	}
 	return true;
 }

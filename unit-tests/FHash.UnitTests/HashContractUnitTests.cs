@@ -32,6 +32,19 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
+    public void HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam()
+    {
+        string registry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashAlgorithmRegistry.h");
+        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
+
+        Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", registry, StringComparison.Ordinal);
+        Assert.Contains("algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN", registry, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor)", request, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");

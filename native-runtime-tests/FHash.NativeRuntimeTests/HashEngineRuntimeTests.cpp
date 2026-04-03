@@ -490,6 +490,40 @@ namespace
 		NativeAssertEqual(static_cast<size_t>(2), digestTypes.size(), "HashRequest digest iteration should resolve deduplicated descriptor/id selections.");
 	}
 
+	static void HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes()
+	{
+		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
+		const int baselineCount = GetRegisteredHashAlgorithmCount();
+
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			RESULT_DIGEST_UNKNOWN,
+			"sha3-256",
+			"SHA3-256"
+		}), "Descriptor/id registration should allow extending unknown digest identities.");
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			RESULT_DIGEST_UNKNOWN,
+			"blake3",
+			"BLAKE3"
+		}), "Descriptor/id registration should allow multiple unknown digest identities.");
+		NativeAssertEqual(baselineCount + 2, GetRegisteredHashAlgorithmCount(), "Unknown digest registrations with different ids should not collapse into one slot.");
+
+		HashRequest request;
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha3-256")));
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("blake3")));
+
+		HashAlgorithmSelectionState selectionState = CreateHashRequestAlgorithmSelectionState(request);
+
+		int sha3Index = -1;
+		int blake3Index = -1;
+		NativeAssertTrue(TryGetHashAlgorithmIndexById(sunjwbase::strtotstr(std::string("sha3-256")), &sha3Index), "Descriptor/id index lookup should resolve SHA3-256.");
+		NativeAssertTrue(TryGetHashAlgorithmIndexById(sunjwbase::strtotstr(std::string("blake3")), &blake3Index), "Descriptor/id index lookup should resolve BLAKE3.");
+		NativeAssertTrue(sha3Index != blake3Index, "Descriptor/id index lookup should keep unknown digest algorithms distinct.");
+		NativeAssertTrue(static_cast<size_t>(sha3Index) < selectionState.enabled.size(), "Selection state should include SHA3-256 index.");
+		NativeAssertTrue(static_cast<size_t>(blake3Index) < selectionState.enabled.size(), "Selection state should include BLAKE3 index.");
+		NativeAssertTrue(selectionState.enabled[static_cast<size_t>(sha3Index)], "Selection state should enable SHA3-256 by descriptor/id.");
+		NativeAssertTrue(selectionState.enabled[static_cast<size_t>(blake3Index)], "Selection state should enable BLAKE3 by descriptor/id.");
+	}
+
 	static void HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots()
 	{
 		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
@@ -836,6 +870,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
 	tests.push_back({ "HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", &HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset });
 	tests.push_back({ "HashRequest_AlgorithmIdsDriveSelectionAndDeduplication", &HashRequest_AlgorithmIdsDriveSelectionAndDeduplication });
+	tests.push_back({ "HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", &HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes });
 	tests.push_back({ "HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots", &HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots });
 	tests.push_back({ "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", &HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry });
 	tests.push_back({ "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", &HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry });

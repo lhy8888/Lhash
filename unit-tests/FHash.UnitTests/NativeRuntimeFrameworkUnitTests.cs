@@ -48,6 +48,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", testSource, StringComparison.Ordinal);
         Assert.Contains("HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", testSource, StringComparison.Ordinal);
         Assert.Contains("HashRequest_AlgorithmIdsDriveSelectionAndDeduplication", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", testSource, StringComparison.Ordinal);
