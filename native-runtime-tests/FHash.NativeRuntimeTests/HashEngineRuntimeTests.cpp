@@ -428,6 +428,40 @@ namespace
 		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "Sanitized requests should still emit exactly one hash-ready event.");
 	}
 
+	static void RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests()
+	{
+		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
+		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
+			RESULT_DIGEST_UNKNOWN,
+			"sha3-256",
+			"SHA3-256"
+		}), "Descriptor/id-only algorithm registration should be allowed.");
+
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("descriptor-only-safe.txt"), "abc");
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+
+		HashRequest request;
+		request.files.push_back(filePath);
+		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha3-256")));
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "RunHashRequest should keep supported digests operational when descriptor-only algorithms are present.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Descriptor/id-only algorithms should not block result publication.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(RESULT_ALL, result.state, "Supported digest execution should still complete the file result.");
+		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Descriptor/id-only algorithms without digest operations should be skipped.");
+		NativeAssertEqual(RESULT_DIGEST_MD5, result.digests[0].type, "Supported MD5 digest should remain available.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), result.digests[0].value, "Supported MD5 digest should keep the expected known vector.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "Supported digest execution should still emit file-hash-ready events.");
+	}
+
 	static void ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection()
 	{
 		ThreadData threadData;
@@ -892,6 +926,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
+	tests.push_back({ "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", &RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests });
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });
 	tests.push_back({ "HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", &HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset });
 	tests.push_back({ "HashRequest_AlgorithmIdsDriveSelectionAndDeduplication", &HashRequest_AlgorithmIdsDriveSelectionAndDeduplication });
