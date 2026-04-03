@@ -114,8 +114,10 @@ struct HashDigestResult
 	HashDigestResult()
 		: type(RESULT_DIGEST_UNKNOWN)
 	{
+		algorithmId.clear();
 	}
 	ResultDigestType type;
+	sunjwbase::tstring algorithmId;
 	sunjwbase::tstring stableName;
 	sunjwbase::tstring displayLabel;
 	sunjwbase::tstring value;

@@ -59,6 +59,7 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("enum ResultDigestType", global, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::tstring algorithmId;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashFileMeta", global, StringComparison.Ordinal);
         Assert.Contains("struct HashResult", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
@@ -68,10 +69,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("std::vector<HashDigestResult> digests;", global, StringComparison.Ordinal);
         Assert.Contains("const HashResult& ProjectHashResult(const HashResult& result)", result, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResult(const ResultData& result)", result, StringComparison.Ordinal);
+        Assert.Contains("digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);", result, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/ResultNetProjection.h\"", projection, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ResultDataProjection.h\"", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultCoreToNet", projection, StringComparison.Ordinal);
         Assert.Contains("AssignHashResultDigestsToNet", projection, StringComparison.Ordinal);
+        Assert.Contains("AssignResultDigestToNetById(resultDataNet, algorithmId", projection, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", projection, StringComparison.Ordinal);
         Assert.Contains("AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);

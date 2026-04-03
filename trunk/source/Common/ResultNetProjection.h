@@ -25,6 +25,8 @@ static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)
 	}
 }
 
+static inline bool IsResultDigestStableNameById(const HashAlgorithmId& algorithmId, const char *stableName);
+
 static inline bool IsResultDigestStableName(ResultDigestType digestType, const char *stableName)
 {
 	const HashAlgorithmDescriptor *algorithmDescriptor = NULL;
@@ -41,29 +43,92 @@ static inline bool IsResultDigestStableName(ResultDigestType digestType, const c
 	return std::strcmp(algorithmDescriptor->stableName, stableName) == 0;
 }
 
-template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>
-static inline void DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)
+static inline bool IsResultDigestStableNameById(const HashAlgorithmId& algorithmId, const char *stableName)
 {
-	if (IsResultDigestStableName(digestType, "md5"))
+	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+	if (!TryGetHashAlgorithmTypeById(algorithmId, &digestType))
+	{
+		return false;
+	}
+
+	return IsResultDigestStableName(digestType, stableName);
+}
+
+template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>
+static inline void DispatchResultDigestValueById(const HashAlgorithmId& algorithmId, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)
+{
+	if (IsResultDigestStableNameById(algorithmId, "md5"))
 	{
 		onMd5();
 		return;
 	}
-	if (IsResultDigestStableName(digestType, "sha1"))
+	if (IsResultDigestStableNameById(algorithmId, "sha1"))
 	{
 		onSha1();
 		return;
 	}
-	if (IsResultDigestStableName(digestType, "sha256"))
+	if (IsResultDigestStableNameById(algorithmId, "sha256"))
 	{
 		onSha256();
 		return;
 	}
-	if (IsResultDigestStableName(digestType, "sha512"))
+	if (IsResultDigestStableNameById(algorithmId, "sha512"))
 	{
 		onSha512();
 		return;
 	}
+}
+
+template<typename TMd5Action, typename TSha1Action, typename TSha256Action, typename TSha512Action>
+static inline void DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)
+{
+	DispatchResultDigestValueById(GetHashAlgorithmId(digestType), onMd5, onSha1, onSha256, onSha512);
+}
+
+template<typename TResultDataNet, typename TResultString>
+static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)
+{
+#if defined (_MANAGED)
+	if (IsResultDigestStableNameById(algorithmId, "md5"))
+	{
+		resultDataNet.MD5 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableNameById(algorithmId, "sha1"))
+	{
+		resultDataNet.SHA1 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableNameById(algorithmId, "sha256"))
+	{
+		resultDataNet.SHA256 = digestValue;
+		return resultDataNet;
+	}
+	if (IsResultDigestStableNameById(algorithmId, "sha512"))
+	{
+		resultDataNet.SHA512 = digestValue;
+		return resultDataNet;
+	}
+#else
+	DispatchResultDigestValueById(algorithmId,
+		[&]()
+	{
+		resultDataNet.MD5 = digestValue;
+	},
+		[&]()
+	{
+		resultDataNet.SHA1 = digestValue;
+	},
+		[&]()
+	{
+		resultDataNet.SHA256 = digestValue;
+	},
+		[&]()
+	{
+		resultDataNet.SHA512 = digestValue;
+	});
+#endif
+	return resultDataNet;
 }
 
 template<typename TResultDataNet, typename TResultString>

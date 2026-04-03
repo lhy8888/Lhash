@@ -65,6 +65,7 @@ namespace HashEngineInternal
 
 			HashDigestResult digestResult;
 			digestResult.type = GetResultDigestMetadataType(*digestMetadata);
+			digestResult.algorithmId = NormalizeHashAlgorithmId(algorithmId);
 			digestResult.stableName = GetResultDigestMetadataStableName(*digestMetadata);
 			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(*digestMetadata);
 			digestResult.value = digestValue;

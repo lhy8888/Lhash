@@ -159,20 +159,49 @@ ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& re
     {
         const HashDigestResult& digestResult = result.digests[digestIndex];
         NSString *digestValue = MacUtils::ConvertUTF8StringToNSString(tstrtostr(digestResult.value));
+        std::string algorithmId = tstrtostr(NormalizeHashAlgorithmId(digestResult.algorithmId));
+        if (algorithmId.empty())
+        {
+            algorithmId = tstrtostr(NormalizeHashAlgorithmId(digestResult.stableName));
+        }
+
+        if (algorithmId == "md5")
+        {
+            resultDataSwift.strMD5 = digestValue;
+            continue;
+        }
+        if (algorithmId == "sha1")
+        {
+            resultDataSwift.strSHA1 = digestValue;
+            continue;
+        }
+        if (algorithmId == "sha256")
+        {
+            resultDataSwift.strSHA256 = digestValue;
+            continue;
+        }
+        if (algorithmId == "sha512")
+        {
+            resultDataSwift.strSHA512 = digestValue;
+            continue;
+        }
+
         switch (digestResult.type)
         {
-            case RESULT_DIGEST_MD5:
-                resultDataSwift.strMD5 = digestValue;
-                break;
-            case RESULT_DIGEST_SHA1:
-                resultDataSwift.strSHA1 = digestValue;
-                break;
-            case RESULT_DIGEST_SHA256:
-                resultDataSwift.strSHA256 = digestValue;
-                break;
-            case RESULT_DIGEST_SHA512:
-                resultDataSwift.strSHA512 = digestValue;
-                break;
+        case RESULT_DIGEST_MD5:
+            resultDataSwift.strMD5 = digestValue;
+            break;
+        case RESULT_DIGEST_SHA1:
+            resultDataSwift.strSHA1 = digestValue;
+            break;
+        case RESULT_DIGEST_SHA256:
+            resultDataSwift.strSHA256 = digestValue;
+            break;
+        case RESULT_DIGEST_SHA512:
+            resultDataSwift.strSHA512 = digestValue;
+            break;
+        default:
+            break;
         }
     }
 

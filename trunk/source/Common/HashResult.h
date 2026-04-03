@@ -25,6 +25,7 @@ static inline HashResult ProjectHashResult(const ResultData& result)
 		}
 		HashDigestResult digestResult;
 		digestResult.type = GetResultDigestMetadataType(digestMetadata);
+		digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);
 		digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
 		digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
 		digestResult.value = digestValue;
