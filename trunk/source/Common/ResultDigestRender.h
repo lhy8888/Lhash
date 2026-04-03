@@ -32,7 +32,8 @@ static inline bool VisitResultDigestDisplayValues(const ResultData& result, bool
 {
 	return VisitResultDigestMetadataValues(result, [&](int index, const ResultDigestMetadata& digestMetadata, const sunjwbase::tstring& digestValueTstr)
 	{
-		if (!HasResultDigest(result, GetResultDigestMetadataType(digestMetadata)))
+		HashAlgorithmId algorithmId = GetResultDigestMetadataId(digestMetadata);
+		if (!HasResultDigestById(result, algorithmId))
 		{
 			return true;
 		}

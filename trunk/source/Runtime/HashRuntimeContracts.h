@@ -3,6 +3,7 @@
 
 #include "Common/HashExecutionContext.h"
 #include "Common/HashEngine.h"
+#include "Runtime/HashDigestOperationRegistryRuntime.h"
 #include "Common/HashResultPublisher.h"
 #include "Common/HashSchedulerPlan.h"
 

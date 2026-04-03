@@ -5,11 +5,6 @@
 
 typedef HashAlgorithmDescriptor ResultDigestMetadata;
 
-static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
-{
-	return GetHashAlgorithmDescriptorType(digestMetadata);
-}
-
 static inline HashAlgorithmId GetResultDigestMetadataId(const ResultDigestMetadata& digestMetadata)
 {
 	return GetHashAlgorithmDescriptorId(digestMetadata);
@@ -30,29 +25,14 @@ static inline int GetResultDigestCount()
 	return GetRegisteredHashAlgorithmCount();
 }
 
-static inline int GetResultDigestIndex(ResultDigestType digestType)
-{
-	return GetHashAlgorithmIndex(digestType);
-}
-
 static inline int GetResultDigestIndexById(const HashAlgorithmId& algorithmId)
 {
 	return GetHashAlgorithmIndexById(algorithmId);
 }
 
-static inline bool TryGetResultDigestIndex(ResultDigestType digestType, int *index)
-{
-	return TryGetHashAlgorithmIndex(digestType, index);
-}
-
 static inline bool TryGetResultDigestIndexById(const HashAlgorithmId& algorithmId, int *index)
 {
 	return TryGetHashAlgorithmIndexById(algorithmId, index);
-}
-
-static inline ResultDigestType GetResultDigestTypeAt(int index)
-{
-	return GetHashAlgorithmTypeAt(index);
 }
 
 static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index)
@@ -65,22 +45,12 @@ static inline HashAlgorithmId GetResultDigestIdAt(int index)
 	return GetResultDigestMetadataId(GetResultDigestMetadataAt(index));
 }
 
-static inline const ResultDigestMetadata& GetResultDigestMetadata(ResultDigestType digestType)
-{
-	return GetHashAlgorithmDescriptor(digestType);
-}
-
-static inline bool TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)
-{
-	return TryGetHashAlgorithmDescriptor(digestType, digestMetadata);
-}
-
 static inline const ResultDigestMetadata& GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)
 {
 	const ResultDigestMetadata *digestMetadata = NULL;
 	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &digestMetadata) || digestMetadata == NULL)
 	{
-		return GetResultDigestMetadata(RESULT_DIGEST_UNKNOWN);
+		return GetUnknownHashAlgorithmDescriptor();
 	}
 
 	return *digestMetadata;
@@ -96,15 +66,10 @@ static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata
 	return GetResultDigestMetadataDisplayLabel(digestMetadata);
 }
 
-static inline sunjwbase::tstring GetResultDigestLabel(ResultDigestType digestType)
-{
-	return GetResultDigestLabel(GetResultDigestMetadata(digestType));
-}
-
 template<typename TResultDigestMetadataVisitor>
 static inline bool VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)
 {
-	for (int index = 0; index < GetResultDigestCount(); index++)
+	for (int index = 0; index < GetResultDigestCount(); ++index)
 	{
 		if (!visitor(index, GetResultDigestMetadataAt(index)))
 		{
@@ -113,16 +78,6 @@ static inline bool VisitResultDigestMetadata(TResultDigestMetadataVisitor visito
 	}
 
 	return true;
-}
-
-template<typename TResultDigestVisitor>
-static inline bool VisitResultDigests(TResultDigestVisitor visitor)
-{
-	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
-	{
-		(void)index;
-		return visitor(GetResultDigestMetadataType(digestMetadata));
-	});
 }
 
 template<typename TResultDigestIdVisitor>

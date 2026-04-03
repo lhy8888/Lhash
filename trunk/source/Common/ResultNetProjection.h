@@ -5,6 +5,7 @@
 
 #include "Common/Global.h"
 #include "Common/ResultDigestMetadataAccess.h"
+#include "LegacyCompat/HashAlgorithmTypeCompat.h"
 
 template<typename TResultStateNet>
 static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)

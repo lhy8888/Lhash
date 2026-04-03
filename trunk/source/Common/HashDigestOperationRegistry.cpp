@@ -7,6 +7,35 @@ using namespace std;
 
 namespace HashEngineInternal
 {
+	static HashAlgorithmId CreateKnownAlgorithmId(const char *stableName)
+	{
+		return NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(stableName)));
+	}
+
+	static const HashAlgorithmId& GetMd5AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("md5");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetSha1AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("sha1");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetSha256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("sha256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetSha512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("sha512");
+		return algorithmId;
+	}
+
 	static void InitializeMD5DigestContext(FileHashContexts *hashContexts)
 	{
 		MD5Init(&hashContexts->mdContext, 0);
@@ -90,7 +119,7 @@ namespace HashEngineInternal
 			hashContexts.mdContext.digest[14],
 			hashContexts.mdContext.digest[15]);
 #endif
-		SetDigestStorageValueById(digestBundle, GetHashAlgorithmId(RESULT_DIGEST_MD5), sunjwbase::strtotstr(string(chHashBuff)));
+		SetDigestStorageValueById(digestBundle, GetMd5AlgorithmId(), sunjwbase::strtotstr(string(chHashBuff)));
 	}
 
 	static void FinalizeSHA1DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -98,7 +127,7 @@ namespace HashEngineInternal
 		char strSHA1[256] = { 0 };
 		hashContexts.sha1.Final();
 		hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
-		SetDigestStorageValueById(digestBundle, GetHashAlgorithmId(RESULT_DIGEST_SHA1), sunjwbase::strtotstr(string(strSHA1)));
+		SetDigestStorageValueById(digestBundle, GetSha1AlgorithmId(), sunjwbase::strtotstr(string(strSHA1)));
 	}
 
 	static void FinalizeSHA256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -106,7 +135,7 @@ namespace HashEngineInternal
 		string strSHA256;
 		sha256_final(&hashContexts.sha256Ctx);
 		sha256_digest(&hashContexts.sha256Ctx, &strSHA256);
-		SetDigestStorageValueById(digestBundle, GetHashAlgorithmId(RESULT_DIGEST_SHA256), sunjwbase::strtotstr(strSHA256));
+		SetDigestStorageValueById(digestBundle, GetSha256AlgorithmId(), sunjwbase::strtotstr(strSHA256));
 	}
 
 	static void FinalizeSHA512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -124,7 +153,7 @@ namespace HashEngineInternal
 #endif
 			strSHA512.append(hexByte);
 		}
-		SetDigestStorageValueById(digestBundle, GetHashAlgorithmId(RESULT_DIGEST_SHA512), sunjwbase::strtotstr(strSHA512));
+		SetDigestStorageValueById(digestBundle, GetSha512AlgorithmId(), sunjwbase::strtotstr(strSHA512));
 	}
 
 	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()
@@ -135,57 +164,24 @@ namespace HashEngineInternal
 
 	static HashAlgorithmId ResolveHashDigestOperationDescriptorAlgorithmId(const HashDigestOperationDescriptor& operationDescriptor)
 	{
-		HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(operationDescriptor.algorithmId);
-		if (!normalizedAlgorithmId.empty())
-		{
-			return normalizedAlgorithmId;
-		}
-
-		if (!IsRegisteredHashAlgorithmType(operationDescriptor.digestType))
-		{
-			return HashAlgorithmId();
-		}
-
-		return NormalizeHashAlgorithmId(GetHashAlgorithmId(operationDescriptor.digestType));
-	}
-
-	static ResultDigestType ResolveHashDigestOperationDescriptorType(const HashDigestOperationDescriptor& operationDescriptor)
-	{
-		if (IsRegisteredHashAlgorithmType(operationDescriptor.digestType))
-		{
-			return operationDescriptor.digestType;
-		}
-
-		ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
-		HashAlgorithmId algorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);
-		if (!algorithmId.empty() && TryGetHashAlgorithmTypeById(algorithmId, &digestType))
-		{
-			return digestType;
-		}
-
-		return RESULT_DIGEST_UNKNOWN;
+		return NormalizeHashAlgorithmId(operationDescriptor.algorithmId);
 	}
 
 	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)
 	{
+		HashAlgorithmId normalizedAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);
+		if (normalizedAlgorithmId.empty())
+		{
+			return false;
+		}
+
+		if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))
+		{
+			return false;
+		}
+
 		HashDigestOperationDescriptor resolvedDescriptor = operationDescriptor;
-		resolvedDescriptor.algorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);
-		resolvedDescriptor.digestType = ResolveHashDigestOperationDescriptorType(operationDescriptor);
-		if (resolvedDescriptor.algorithmId.empty())
-		{
-			return false;
-		}
-
-		if (!IsRegisteredHashAlgorithmId(resolvedDescriptor.algorithmId))
-		{
-			return false;
-		}
-
-		if (!IsRegisteredHashAlgorithmType(resolvedDescriptor.digestType))
-		{
-			return false;
-		}
-
+		resolvedDescriptor.algorithmId = normalizedAlgorithmId;
 		if (!IsHashDigestOperationDescriptorComplete(resolvedDescriptor))
 		{
 			return false;
@@ -196,7 +192,7 @@ namespace HashEngineInternal
 		{
 			HashAlgorithmId existingAlgorithmId =
 				ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptorStorage[descriptorIndex]);
-			if (NormalizeHashAlgorithmId(existingAlgorithmId) != resolvedDescriptor.algorithmId)
+			if (existingAlgorithmId != normalizedAlgorithmId)
 			{
 				continue;
 			}
@@ -218,32 +214,28 @@ namespace HashEngineInternal
 		}
 
 		RegisterHashDigestOperationDescriptor({
-			RESULT_DIGEST_MD5,
+			GetMd5AlgorithmId(),
 			InitializeMD5DigestContext,
 			UpdateMD5DigestContext,
-			FinalizeMD5DigestContext,
-			GetHashAlgorithmId(RESULT_DIGEST_MD5)
+			FinalizeMD5DigestContext
 		});
 		RegisterHashDigestOperationDescriptor({
-			RESULT_DIGEST_SHA1,
+			GetSha1AlgorithmId(),
 			InitializeSHA1DigestContext,
 			UpdateSHA1DigestContext,
-			FinalizeSHA1DigestContext,
-			GetHashAlgorithmId(RESULT_DIGEST_SHA1)
+			FinalizeSHA1DigestContext
 		});
 		RegisterHashDigestOperationDescriptor({
-			RESULT_DIGEST_SHA256,
+			GetSha256AlgorithmId(),
 			InitializeSHA256DigestContext,
 			UpdateSHA256DigestContext,
-			FinalizeSHA256DigestContext,
-			GetHashAlgorithmId(RESULT_DIGEST_SHA256)
+			FinalizeSHA256DigestContext
 		});
 		RegisterHashDigestOperationDescriptor({
-			RESULT_DIGEST_SHA512,
+			GetSha512AlgorithmId(),
 			InitializeSHA512DigestContext,
 			UpdateSHA512DigestContext,
-			FinalizeSHA512DigestContext,
-			GetHashAlgorithmId(RESULT_DIGEST_SHA512)
+			FinalizeSHA512DigestContext
 		});
 		defaultsInitialized = true;
 	}
@@ -270,25 +262,10 @@ namespace HashEngineInternal
 		return operationDescriptors.empty() ? NULL : &operationDescriptors[0];
 	}
 
-	bool TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)
-	{
-		if (!IsRegisteredHashAlgorithmType(digestType))
-		{
-			return false;
-		}
-
-		return TryGetHashDigestOperationDescriptorById(GetHashAlgorithmId(digestType), operationDescriptor);
-	}
-
 	bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor)
 	{
 		HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
-		if (normalizedAlgorithmId.empty())
-		{
-			return false;
-		}
-
-		if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))
+		if (normalizedAlgorithmId.empty() || !IsRegisteredHashAlgorithmId(normalizedAlgorithmId))
 		{
 			return false;
 		}
@@ -299,7 +276,7 @@ namespace HashEngineInternal
 		{
 			HashAlgorithmId descriptorAlgorithmId =
 				ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptors[descriptorIndex]);
-			if (NormalizeHashAlgorithmId(descriptorAlgorithmId) != normalizedAlgorithmId)
+			if (descriptorAlgorithmId != normalizedAlgorithmId)
 			{
 				continue;
 			}
@@ -308,28 +285,12 @@ namespace HashEngineInternal
 			{
 				*operationDescriptor = operationDescriptors[descriptorIndex];
 				operationDescriptor->algorithmId = normalizedAlgorithmId;
-
-				ResultDigestType resolvedDigestType = ResolveHashDigestOperationDescriptorType(*operationDescriptor);
-				if (resolvedDigestType != RESULT_DIGEST_UNKNOWN)
-				{
-					operationDescriptor->digestType = resolvedDigestType;
-				}
 			}
 
 			return true;
 		}
 
 		return false;
-	}
-
-	bool IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)
-	{
-		if (!IsRegisteredHashAlgorithmType(digestType))
-		{
-			return false;
-		}
-
-		return IsHashDigestOperationDescriptorSupportedById(GetHashAlgorithmId(digestType));
 	}
 
 	bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId)
@@ -342,18 +303,11 @@ namespace HashEngineInternal
 
 		HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
 		HashAlgorithmId descriptorAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);
-		if (NormalizeHashAlgorithmId(descriptorAlgorithmId) != normalizedAlgorithmId)
+		if (descriptorAlgorithmId != normalizedAlgorithmId)
 		{
 			return false;
 		}
 
-		ResultDigestType resolvedDigestType = ResolveHashDigestOperationDescriptorType(operationDescriptor);
-		if (resolvedDigestType == RESULT_DIGEST_UNKNOWN)
-		{
-			return false;
-		}
-
-		operationDescriptor.digestType = resolvedDigestType;
 		operationDescriptor.algorithmId = normalizedAlgorithmId;
 		return IsHashDigestOperationDescriptorComplete(operationDescriptor);
 	}
@@ -365,7 +319,7 @@ namespace HashEngineInternal
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
-			if (!IsRegisteredHashAlgorithmType(GetHashAlgorithmDescriptorType(algorithmDescriptor)))
+			if (GetHashAlgorithmDescriptorType(algorithmDescriptor) == RESULT_DIGEST_UNKNOWN)
 			{
 				// Descriptor-only algorithms are allowed to exist before a native digest backend lands.
 				return true;

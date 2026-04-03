@@ -66,31 +66,34 @@ public sealed class CommonSeamUnitTests
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashAlgorithmRegistry.h");
+        string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
+        Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
         RepositoryTestContext.AssertContainsInOrder(
-            registry,
+            registryCore,
             "RESULT_DIGEST_MD5",
             "RESULT_DIGEST_SHA1",
             "RESULT_DIGEST_SHA256",
             "RESULT_DIGEST_SHA512");
-        Assert.Contains("struct HashAlgorithmDescriptorRegistry", registry, StringComparison.Ordinal);
-        Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registry, StringComparison.Ordinal);
-        Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registry, StringComparison.Ordinal);
-        Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registry, StringComparison.Ordinal);
-        Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registry, StringComparison.Ordinal);
-        Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registry, StringComparison.Ordinal);
-        Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registry, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registry, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registry, StringComparison.Ordinal);
-        Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registry, StringComparison.Ordinal);
-        Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registry, StringComparison.Ordinal);
+        Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
-        Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registry, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registry, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", registry, StringComparison.Ordinal);
-        Assert.DoesNotContain("return algorithmDescriptors[0];", registry, StringComparison.Ordinal);
-        Assert.DoesNotContain("compatibilityValueField", registry, StringComparison.Ordinal);
+        Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.DoesNotContain("return algorithmDescriptors[0];", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("compatibilityValueField", registryCore, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -119,12 +122,14 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestMetadataAccess_OwnsMetadataTraversalSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeMetadataCompat.h");
 
         Assert.Contains("typedef HashAlgorithmDescriptor ResultDigestMetadata;", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestCount()", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataAt(int index)", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", access, StringComparison.Ordinal);
-        Assert.Contains("VisitResultDigests(TResultDigestVisitor visitor)", access, StringComparison.Ordinal);
+        Assert.Contains("VisitResultDigestIds(TResultDigestIdVisitor visitor)", access, StringComparison.Ordinal);
+        Assert.Contains("VisitResultDigests(TResultDigestVisitor visitor)", typeCompat, StringComparison.Ordinal);
         Assert.DoesNotContain("ResetResultDigests(ResultData& result)", access, StringComparison.Ordinal);
     }
 
@@ -132,13 +137,15 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestStateAccess_OwnsRegistrySizedStorageSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeStateCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
         Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
-        Assert.Contains("GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", access, StringComparison.Ordinal);
-        Assert.Contains("TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", access, StringComparison.Ordinal);
+        Assert.Contains("GetDigestStorageValueById(const ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
+        Assert.Contains("TryResolveDigestStorageIndexById(const HashAlgorithmId& algorithmId, size_t *digestIndex)", access, StringComparison.Ordinal);
+        Assert.Contains("TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", typeCompat, StringComparison.Ordinal);
         Assert.Contains("GetInvalidDigestStorageScratch()", access, StringComparison.Ordinal);
         Assert.Contains("EnsureDigestStorageSize(ResultDigestStorage& digestStorage)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestState(const ResultData& result)", access, StringComparison.Ordinal);
@@ -152,12 +159,14 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestValueAccess_OwnsReadWriteAndAggregateSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeValueCompat.h");
 
-        Assert.Contains("GetResultDigest(const ResultData& result, ResultDigestType digestType)", access, StringComparison.Ordinal);
-        Assert.Contains("return GetStoredResultDigest(result, digestType);", access, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
+        Assert.Contains("return GetStoredResultDigestById(result, algorithmId);", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", access, StringComparison.Ordinal);
         Assert.Contains("HasAnyResultDigests(const ResultData& result)", access, StringComparison.Ordinal);
-        Assert.Contains("SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", access, StringComparison.Ordinal);
+        Assert.Contains("SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)", access, StringComparison.Ordinal);
+        Assert.Contains("SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", typeCompat, StringComparison.Ordinal);
         Assert.Contains("ResetResultDigests(ResultData& result)", access, StringComparison.Ordinal);
         Assert.DoesNotContain("SetCompatibilityResultDigest(result, digestType, digestValue);", access, StringComparison.Ordinal);
         Assert.DoesNotContain("ClearCompatibilityResultDigest(result, digestType);", access, StringComparison.Ordinal);
@@ -341,13 +350,14 @@ public sealed class CommonSeamUnitTests
         string runtimeContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\HashRuntimeContracts.h");
         string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\LegacyCompatibility.h");
 
-        Assert.Contains("#include \"Common/HashAlgorithmRegistry.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", domainContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResult.h\"", domainContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/ProgressEvent.h\"", domainContracts, StringComparison.Ordinal);
 
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashEngine.h\"", runtimeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);
 
         Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);

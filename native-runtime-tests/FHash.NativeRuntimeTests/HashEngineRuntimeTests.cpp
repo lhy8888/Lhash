@@ -17,7 +17,10 @@
 #include "Common/HashResultSearch.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestValueAccess.h"
+#include "LegacyCompat/HashAlgorithmTypeCompat.h"
+#include "LegacyCompat/HashDigestOperationTypeCompat.h"
 #include "LegacyCompat/HashRequestTypeCompat.h"
+#include "LegacyCompat/ResultDigestTypeValueCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
 
 namespace

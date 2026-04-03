@@ -2,7 +2,7 @@
 #define _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
 
 #include "LegacyCompat/LegacyThreadData.h"
-#include "Common/HashAlgorithmRegistry.h"
+#include "LegacyCompat/HashAlgorithmTypeCompat.h"
 
 static inline void EnsureThreadDataHashAlgorithmSelectionStateSize(HashAlgorithmSelectionState& hashAlgorithmSelectionState)
 {

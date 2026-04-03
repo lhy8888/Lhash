@@ -35,11 +35,6 @@ namespace HashEngineInternal
 		}
 
 		HashAlgorithmId resolvedAlgorithmId = NormalizeHashAlgorithmId(operationDescriptor->algorithmId);
-		if (resolvedAlgorithmId.empty() && IsRegisteredHashAlgorithmType(operationDescriptor->digestType))
-		{
-			resolvedAlgorithmId = NormalizeHashAlgorithmId(GetHashAlgorithmId(operationDescriptor->digestType));
-		}
-
 		return !resolvedAlgorithmId.empty() &&
 			resolvedAlgorithmId == NormalizeHashAlgorithmId(algorithmId) &&
 			IsHashDigestOperationDescriptorComplete(*operationDescriptor);
