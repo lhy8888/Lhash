@@ -2128,7 +2128,9 @@ internal static class Program
             AssertContains(fileRunner, "bool ProcessOpenedFileHashing(", "HashDigestPipeline.cpp no longer owns the opened-file read/update orchestration.");
             AssertDoesNotContain(engine, "int WINAPI HashThreadFunc(void *param)", "HashEngine.cpp should no longer own the thread orchestration entry point after the thread-entry split.");
             AssertContains(hashThreadEntry, "int WINAPI HashThreadFunc(void *param)", "HashThreadEntry.cpp does not yet own the thread orchestration entry point after the thread-entry split.");
-            AssertContains(hashThreadEntry, "#include \"Common/HashThreadEntryProjection.h\"", "HashThreadEntry.cpp does not yet consume the thread-entry projection seam.");
+            AssertContainsAny(hashThreadEntry,
+                new[] { "#include \"Common/HashThreadEntryProjection.h\"", "#include \"LegacyCompat/HashThreadEntryProjection.h\"" },
+                "HashThreadEntry.cpp does not yet consume the thread-entry projection seam.");
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp should not include HashRequestProjection directly after the thread-entry projection seam split.");
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp should not include ThreadData execution access directly after the thread-entry projection seam split.");
             AssertContains(hashThreadEntry, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThreadEntry.cpp does not yet project ThreadData into HashRequest through the thread-entry projection seam.");
@@ -2298,7 +2300,9 @@ internal static class Program
             AssertContains(mfcControllerHeader, "void SyncSelections();", "Phase 13 controller does not yet expose the selection-sync helper.");
             AssertContains(mfcControllerHeader, "BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;", "Phase 13 controller does not yet expose the zero-selection validation helper.");
             AssertContains(mfcControllerHeader, "void SetEnabled(BOOL enabled);", "Phase 13 controller does not yet expose the checkbox enable/disable helper.");
-            AssertContains(mfcController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
+            AssertContainsAny(mfcController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
             AssertContains(mfcController, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 13 controller does not yet route checkbox traversal through the registry seam.");
             AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
             AssertContains(mfcController, "HasEnabledThreadDataHashAlgorithms(*m_threadData)", "Phase 13 controller does not yet validate zero-algorithm selection through ThreadDataAccess.");
@@ -2529,11 +2533,17 @@ internal static class Program
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataResultAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 result seam after thread-entry decoupling.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataAccess.h\"", "HashEngineInternal.h still consumes the umbrella ThreadDataAccess header after the phase 18 seam split.");
 
-            AssertContains(mfcSearchController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC search controller does not yet consume the phase 18 execution seam.");
-            AssertContains(mfcSearchController, "#include \"Common/ThreadDataResultAccess.h\"", "MFC search controller does not yet consume the phase 18 result seam.");
+            AssertContainsAny(mfcSearchController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "MFC search controller does not yet consume the phase 18 execution seam.");
+            AssertContainsAny(mfcSearchController,
+                new[] { "#include \"Common/ThreadDataResultAccess.h\"", "#include \"LegacyCompat/ThreadDataResultAccess.h\"" },
+                "MFC search controller does not yet consume the phase 18 result seam.");
             AssertDoesNotContain(mfcSearchController, "#include \"Common/ThreadDataAccess.h\"", "MFC search controller still depends on the umbrella ThreadDataAccess header after phase 18.");
 
-            AssertContains(mfcAlgorithmController, "#include \"Common/ThreadDataExecutionAccess.h\"", "MFC algorithm controller does not yet consume the phase 18 execution seam.");
+            AssertContainsAny(mfcAlgorithmController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "MFC algorithm controller does not yet consume the phase 18 execution seam.");
             AssertDoesNotContain(mfcAlgorithmController, "#include \"Common/ThreadDataAccess.h\"", "MFC algorithm controller still depends on the umbrella ThreadDataAccess header after phase 18.");
         }, failures);
 
@@ -2595,7 +2605,9 @@ internal static class Program
             AssertContains(inputControllerHeader, "static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line parser seam.");
             AssertContains(inputControllerHeader, "void ClearFilePaths();", "Phase 20 input controller is missing the grouped input-reset helper.");
 
-            AssertContains(inputController, "#include \"Common/ThreadDataInputAccess.h\"", "Phase 20 input controller does not yet consume the dedicated ThreadData input seam.");
+            AssertContainsAny(inputController,
+                new[] { "#include \"Common/ThreadDataInputAccess.h\"", "#include \"LegacyCompat/ThreadDataInputAccess.h\"" },
+                "Phase 20 input controller does not yet consume the dedicated ThreadData input seam.");
             AssertContains(inputController, "CommandLineToArgvW", "Phase 20 input controller does not yet own the hardened command-line parser.");
             AssertContains(inputController, "CopyDraggedPath", "Phase 20 input controller does not yet own long-path-safe drag/drop extraction.");
             AssertContains(inputController, "IsValidCopyDataString", "Phase 20 input controller does not yet own WM_COPYDATA validation.");
@@ -2646,7 +2658,9 @@ internal static class Program
 
             AssertContains(sessionController, "#include \"Common/HashThreadLaunch.h\"", "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
             AssertDoesNotContain(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller should consume HashThreadLaunch.h instead of directly including HashThreadEntry.h.");
-            AssertContains(sessionController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 21 session controller does not yet consume the ThreadData execution seam.");
+            AssertContainsAny(sessionController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "Phase 21 session controller does not yet consume the ThreadData execution seam.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->SyncSelections();", "Phase 21 session controller does not yet own hash-algorithm selection sync.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "Phase 21 session controller does not yet own hash-algorithm validation.");
             AssertContains(sessionController, "RestartHashWorkerThread(&m_hWorkThread, m_threadData, &thredID);", "Phase 21 session controller does not yet own work-thread restart through the shared launch seam.");
@@ -2896,7 +2910,9 @@ internal static class Program
             AssertContains(lifecycleControllerHeader, "LRESULT HandleThreadMessage(WPARAM wParam, LPARAM lParam, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 26 lifecycle controller is missing the grouped thread-message seam.");
             AssertContains(lifecycleControllerHeader, "BOOL HandleClose();", "Phase 26 lifecycle controller is missing the close-handling seam.");
 
-            AssertContains(lifecycleController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 26 lifecycle controller does not yet consume the ThreadData execution seam.");
+            AssertContainsAny(lifecycleController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "Phase 26 lifecycle controller does not yet consume the ThreadData execution seam.");
             AssertContains(lifecycleController, "m_hashSearchController->ClearSearch(clearButtonText);", "Phase 26 lifecycle controller does not yet own search-reset before hashing.");
             AssertContains(lifecycleController, "m_hashProgressController->PrepareAdvTaskbar();", "Phase 26 lifecycle controller does not yet own taskbar preparation.");
             AssertContains(lifecycleController, "m_hashSessionController->PrepareHashStart(noSelectionMessage)", "Phase 26 lifecycle controller does not yet own hash-start validation.");
@@ -2947,7 +2963,9 @@ internal static class Program
 
             AssertContains(commandController, "#include \"AboutDlg.h\"", "Phase 27 command controller does not yet own the About dialog include.");
             AssertContains(commandController, "#include \"FindDlg.h\"", "Phase 27 command controller does not yet own the Find dialog include.");
-            AssertContains(commandController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 27 command controller does not yet consume the execution seam.");
+            AssertContainsAny(commandController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "Phase 27 command controller does not yet consume the execution seam.");
             AssertContains(commandController, "m_hashInputController->LoadOpenFileDialogSelection(fileFilter)", "Phase 27 command controller does not yet own open-dialog file loading.");
             AssertContains(commandController, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "Phase 27 command controller does not yet own open-button hash starts.");
             AssertContains(commandController, "m_hashSessionController->StopWorkingThread();", "Phase 27 command controller does not yet own open-button stop behavior.");
@@ -3000,7 +3018,9 @@ internal static class Program
             AssertContains(messageControllerHeader, "void HandleCopyHash() const;", "Phase 28 message controller is missing the copy-hash seam.");
             AssertContains(messageControllerHeader, "void UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const;", "Phase 28 message controller is missing the copy-menu-text seam.");
 
-            AssertContains(messageController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 28 message controller does not yet consume the execution seam.");
+            AssertContainsAny(messageController,
+                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
+                "Phase 28 message controller does not yet consume the execution seam.");
             AssertContains(messageController, "m_parentWnd->IsIconic()", "Phase 28 message controller does not yet own iconic-paint gating.");
             AssertContains(messageController, "dc.DrawIcon(x, y, icon);", "Phase 28 message controller does not yet own icon rendering.");
             AssertContains(messageController, "m_parentWnd->DragAcceptFiles(FALSE);", "Phase 28 message controller does not yet own drop-target suspension during drag ingestion.");
@@ -3218,7 +3238,9 @@ internal static class Program
             AssertDoesNotContain(hashEngineHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashEngine header should no longer expose the thread-entry declaration after the thread-entry header split.");
             AssertContains(hashThreadEntryHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashThreadEntry header does not yet expose the thread-entry declaration.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
-            AssertContains(hashEngine, "#include \"Common/HashThreadEntryProjection.h\"", "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
+            AssertContainsAny(hashEngine,
+                new[] { "#include \"Common/HashThreadEntryProjection.h\"", "#include \"LegacyCompat/HashThreadEntryProjection.h\"" },
+                "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
             AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");
             AssertContains(hashEngine, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through the thread-entry projection seam.");
             AssertContains(hashEngine, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest through the thread-entry projection seam.");
@@ -5419,6 +5441,19 @@ internal static class Program
         {
             throw new InvalidOperationException(failureMessage);
         }
+    }
+
+    private static void AssertContainsAny(string content, IReadOnlyList<string> expectedFragments, string failureMessage)
+    {
+        foreach (string expected in expectedFragments)
+        {
+            if (content.Contains(expected, StringComparison.Ordinal))
+            {
+                return;
+            }
+        }
+
+        throw new InvalidOperationException(failureMessage);
     }
 
     private static void AssertDoesNotContain(string content, string expected, string failureMessage)

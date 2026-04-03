@@ -4,10 +4,10 @@
 #include "Common/HashAlgorithmRegistry.h"
 #include "Common/HashResultProjection.h"
 #include "Common/HashResultSearch.h"
-#include "Common/ThreadDataAccess.h"
-#include "Common/ThreadDataExecutionAccess.h"
-#include "Common/ThreadDataInputAccess.h"
-#include "Common/ThreadDataResultAccess.h"
+#include "LegacyCompat/ThreadDataAccess.h"
+#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "LegacyCompat/ThreadDataInputAccess.h"
+#include "LegacyCompat/ThreadDataResultAccess.h"
 
 static inline bool TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
 {

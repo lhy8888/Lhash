@@ -4,7 +4,7 @@
 
 #include "resource.h"
 
-#include "Common/ThreadDataAccess.h"
+#include "LegacyCompat/ThreadDataAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
 #include "FilesHashCommandController.h"
 #include "FilesHashContextMenuController.h"

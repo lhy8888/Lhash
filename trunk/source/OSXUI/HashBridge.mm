@@ -15,7 +15,7 @@
 #include "Common/Global.h"
 #include "Common/HashThreadEntry.h"
 #include "Common/HashResult.h"
-#include "Common/ThreadDataResultAccess.h"
+#include "LegacyCompat/ThreadDataResultAccess.h"
 
 #import <Cocoa/Cocoa.h>
 #import "fHash-Swift-Header.h"

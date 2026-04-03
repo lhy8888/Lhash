@@ -2,7 +2,7 @@
 
 #include "FilesHashLifecycleController.h"
 
-#include "Common/ThreadDataExecutionAccess.h"
+#include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 #include "FilesHashSearchController.h"

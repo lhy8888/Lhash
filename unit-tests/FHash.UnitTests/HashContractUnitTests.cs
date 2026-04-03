@@ -255,7 +255,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", threadEntry, StringComparison.Ordinal);

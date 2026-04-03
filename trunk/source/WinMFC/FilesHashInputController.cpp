@@ -4,7 +4,7 @@
 
 #include "FilesHashInputController.h"
 
-#include "Common/ThreadDataInputAccess.h"
+#include "LegacyCompat/ThreadDataInputAccess.h"
 #include "Common/strhelper.h"
 
 using namespace sunjwbase;

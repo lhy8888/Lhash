@@ -5,7 +5,7 @@
 #include "resource.h"
 
 #include "AboutDlg.h"
-#include "Common/ThreadDataExecutionAccess.h"
+#include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashProgressController.h"

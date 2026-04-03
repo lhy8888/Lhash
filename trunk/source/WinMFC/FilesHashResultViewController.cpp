@@ -4,7 +4,7 @@
 
 #include "resource.h"
 
-#include "Common/ThreadDataResultAccess.h"
+#include "LegacyCompat/ThreadDataResultAccess.h"
 #include "FilesHashSearchController.h"
 #include "WindowsUtils.h"
 
