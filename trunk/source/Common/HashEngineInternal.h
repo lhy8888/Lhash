@@ -30,6 +30,7 @@
 #include "Common/HashExecutionContext.h"
 #include "Common/HashProgressSink.h"
 #include "Common/HashErrorResultWorkflow.h"
+#include "Common/HashResultEventWorkflow.h"
 #include "Common/HashResultPublisher.h"
 #include "Common/HashSuccessfulFileCompletionWorkflow.h"
 #include "Common/HashRequest.h"

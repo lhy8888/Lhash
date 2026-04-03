@@ -23,23 +23,17 @@ namespace HashEngineInternal
 
 	void EmitMetaResult(HashExecutionContext *executionContext, HashResult& result)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		result.state = RESULT_META;
-		observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));
+		PublishMetaResultEvent(executionContext, result);
 	}
 
 	void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		result.state = RESULT_ALL;
-		observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));
+		PublishHashResultEvent(executionContext, result, uppercase);
 	}
 
 	void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		result.state = RESULT_ERROR;
-		observer->onProgressEvent(CreateFileFailedProgressEvent(result));
+		PublishErrorResultEvent(executionContext, result);
 	}
 
 	void EmitErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)
@@ -59,8 +53,7 @@ namespace HashEngineInternal
 
 	void FinishFileProcessing(HashExecutionContext *executionContext)
 	{
-		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		observer->onProgressEvent(CreateFileFinishedProgressEvent());
+		PublishFileFinishedEvent(executionContext);
 	}
 
 	void CompleteFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,

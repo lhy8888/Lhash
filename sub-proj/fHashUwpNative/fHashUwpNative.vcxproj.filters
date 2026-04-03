@@ -111,6 +111,9 @@
     <ClInclude Include="..\..\trunk\source\Common\HashErrorResultWorkflow.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashResultEventWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -264,6 +267,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashErrorResultWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashResultEventWorkflow.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp">

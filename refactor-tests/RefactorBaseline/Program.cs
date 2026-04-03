@@ -3184,6 +3184,7 @@ internal static class Program
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
@@ -3234,6 +3235,7 @@ internal static class Program
             string hashEngineResult = string.Join("\r\n",
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp"),
+                ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.cpp"),
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
 
             AssertContains(progressEvent, "CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", "Phase 35 does not yet expose ProgressEvent creation directly from HashResult.");
@@ -4892,6 +4894,55 @@ internal static class Program
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashErrorResultWorkflow.cpp", "Phase 80 WinUI native project should keep consuming the shared native core instead of compiling HashErrorResultWorkflow.cpp directly.");
         }, failures);
 
+        Run("Phase 81 extracts semantic result-event publication into a dedicated result-event workflow seam", () =>
+        {
+            string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
+            string hashResultEventWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.cpp");
+            string hashResultEventWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+
+            AssertContains(hashResultEventWorkflowHeader, "void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result);", "Phase 81 HashResultEventWorkflow.h does not yet expose meta-result publication.");
+            AssertContains(hashResultEventWorkflowHeader, "void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", "Phase 81 HashResultEventWorkflow.h does not yet expose hash-result publication.");
+            AssertContains(hashResultEventWorkflowHeader, "void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result);", "Phase 81 HashResultEventWorkflow.h does not yet expose error-result publication.");
+            AssertContains(hashResultEventWorkflowHeader, "void PublishFileFinishedEvent(HashExecutionContext *executionContext);", "Phase 81 HashResultEventWorkflow.h does not yet expose file-finished publication.");
+            AssertContains(hashResultEventWorkflow, "void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result)", "Phase 81 HashResultEventWorkflow.cpp does not yet own meta-result publication.");
+            AssertContains(hashResultEventWorkflow, "void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", "Phase 81 HashResultEventWorkflow.cpp does not yet own hash-result publication.");
+            AssertContains(hashResultEventWorkflow, "void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result)", "Phase 81 HashResultEventWorkflow.cpp does not yet own error-result publication.");
+            AssertContains(hashResultEventWorkflow, "void PublishFileFinishedEvent(HashExecutionContext *executionContext)", "Phase 81 HashResultEventWorkflow.cpp does not yet own file-finished publication.");
+            AssertContains(hashResultEventWorkflow, "result.state = RESULT_META;", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve meta-result state publication.");
+            AssertContains(hashResultEventWorkflow, "result.state = RESULT_ALL;", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve hash-result state publication.");
+            AssertContains(hashResultEventWorkflow, "result.state = RESULT_ERROR;", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve error-result state publication.");
+            AssertContains(hashResultEventWorkflow, "observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve meta-result event publication.");
+            AssertContains(hashResultEventWorkflow, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve hash-result event publication.");
+            AssertContains(hashResultEventWorkflow, "observer->onProgressEvent(CreateFileFailedProgressEvent(result));", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve failed-result event publication.");
+            AssertContains(hashResultEventWorkflow, "observer->onProgressEvent(CreateFileFinishedProgressEvent());", "Phase 81 HashResultEventWorkflow.cpp does not yet preserve file-finished event publication.");
+
+            AssertContains(hashResultPublisher, "PublishMetaResultEvent(executionContext, result);", "Phase 81 HashResultPublisher.cpp does not yet delegate meta-result publication.");
+            AssertContains(hashResultPublisher, "PublishHashResultEvent(executionContext, result, uppercase);", "Phase 81 HashResultPublisher.cpp does not yet delegate hash-result publication.");
+            AssertContains(hashResultPublisher, "PublishErrorResultEvent(executionContext, result);", "Phase 81 HashResultPublisher.cpp does not yet delegate error-result publication.");
+            AssertContains(hashResultPublisher, "PublishFileFinishedEvent(executionContext);", "Phase 81 HashResultPublisher.cpp does not yet delegate file-finished publication.");
+            AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));", "Phase 81 HashResultPublisher.cpp should no longer inline meta-result publication.");
+            AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", "Phase 81 HashResultPublisher.cpp should no longer inline hash-result publication.");
+            AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileFailedProgressEvent(result));", "Phase 81 HashResultPublisher.cpp should no longer inline failed-result publication.");
+            AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileFinishedProgressEvent());", "Phase 81 HashResultPublisher.cpp should no longer inline file-finished publication.");
+            AssertContains(hashEngineInternal, "#include \"Common/HashResultEventWorkflow.h\"", "Phase 81 HashEngineInternal.h does not yet consume HashResultEventWorkflow.");
+
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 desktop native core project does not yet compile HashResultEventWorkflow.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.h", "Phase 81 desktop native core project does not yet include HashResultEventWorkflow.h.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 desktop native core filters do not yet expose HashResultEventWorkflow.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultEventWorkflow.h", "Phase 81 desktop native core filters do not yet expose HashResultEventWorkflow.h.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 UWP native project does not yet compile HashResultEventWorkflow.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.h", "Phase 81 UWP native project does not yet include HashResultEventWorkflow.h.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 UWP native filters do not yet expose HashResultEventWorkflow.cpp.");
+            AssertContains(uwpNativeFilters, @"..\..\trunk\source\Common\HashResultEventWorkflow.h", "Phase 81 UWP native filters do not yet expose HashResultEventWorkflow.h.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashResultEventWorkflow.cpp", "Phase 81 WinUI native project should keep consuming the shared native core instead of compiling HashResultEventWorkflow.cpp directly.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -4952,6 +5003,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp"));

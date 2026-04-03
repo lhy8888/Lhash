@@ -170,6 +170,8 @@ public sealed class HashContractUnitTests
         string successfulFileCompletionWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h");
         string errorResultWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.cpp");
         string errorResultWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.h");
+        string resultEventWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.cpp");
+        string resultEventWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.h");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
@@ -450,6 +452,18 @@ public sealed class HashContractUnitTests
         Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)", errorResultWorkflow, StringComparison.Ordinal);
         Assert.Contains("result.error = errorText;", errorResultWorkflow, StringComparison.Ordinal);
         Assert.Contains("EmitErrorResult(executionContext, result);", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileFinishedEvent(HashExecutionContext *executionContext);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileFinishedEvent(HashExecutionContext *executionContext)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", resultEventWorkflow, StringComparison.Ordinal);
 
         Assert.Contains("void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", publisher, StringComparison.Ordinal);
         Assert.Contains("void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
@@ -463,9 +477,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("PublishErrorMessageResult(executionContext, result, errorText);", publisher, StringComparison.Ordinal);
         Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));", publisher, StringComparison.Ordinal);
         Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string(\"Failed to read file while hashing.\")));", publisher, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", publisher, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", publisher, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishMetaResultEvent(executionContext, result);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishHashResultEvent(executionContext, result, uppercase);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishErrorResultEvent(executionContext, result);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishFileFinishedEvent(executionContext);", publisher, StringComparison.Ordinal);
 
         Assert.Contains("#include \"Common/HashDigestExecution.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashDigestExecutionMode.h\"", internalHeader, StringComparison.Ordinal);
@@ -493,6 +508,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashPreparationWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashErrorResultWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultEventWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
