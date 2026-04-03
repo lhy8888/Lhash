@@ -3,6 +3,7 @@
 #include "HashMgmt.h"
 #include "CxHelper.h"
 #include "Common/ManagedHashMgmtAccess.h"
+#include "Common/HashThreadLaunch.h"
 #include "Common/HashThreadEntry.h"
 using namespace std;
 using namespace Platform;
@@ -119,13 +120,8 @@ void HashMgmt::StartHashThread()
 	{
 		CloseHandle(m_hWorkThread);
 	}
-	DWORD thredID;
-	m_hWorkThread = (HANDLE)_beginthreadex(NULL,
-										0,
-										(unsigned int (WINAPI*)(void*))HashThreadFunc,
-										&m_threadData,
-										0,
-										(unsigned int*)&thredID);
+	unsigned int thredID = 0;
+	m_hWorkThread = StartHashWorkerThread(&m_threadData, &thredID);
 }
 
 Array<HashResultNet>^ HashMgmt::FindHashResults(String^ pstrHashToFind)

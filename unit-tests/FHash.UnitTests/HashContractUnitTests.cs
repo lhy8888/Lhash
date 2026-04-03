@@ -621,6 +621,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("public enum class HashResultStateNet", clrHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);
         Assert.Contains("cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("StartHashWorkerThread(m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
+        Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("FindResult(System::String^ sstrHashToFind)", clrMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", clrMgmt, StringComparison.Ordinal);
@@ -634,6 +637,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("public enum class HashResultStateNet", uwpHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", uwpHashResultNet, StringComparison.Ordinal);
         Assert.Contains("Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashThreadLaunch.h\"", uwpMgmt, StringComparison.Ordinal);
+        Assert.Contains("StartHashWorkerThread(&m_threadData, &thredID);", uwpMgmt, StringComparison.Ordinal);
+        Assert.DoesNotContain("_beginthreadex", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", uwpMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("FindResult(Platform::String^ pstrHashToFind)", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", uwpMgmt, StringComparison.Ordinal);

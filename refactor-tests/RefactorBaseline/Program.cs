@@ -2621,10 +2621,11 @@ internal static class Program
             AssertContains(sessionControllerHeader, "void PrepareDropTarget(CWnd* pWnd, BOOL bAccept);", "Phase 21 session controller is missing the grouped drop-target helper.");
 
             AssertContains(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller does not yet own thread startup through HashThreadEntry.h.");
+            AssertContains(sessionController, "#include \"Common/HashThreadLaunch.h\"", "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
             AssertContains(sessionController, "#include \"Common/ThreadDataExecutionAccess.h\"", "Phase 21 session controller does not yet consume the ThreadData execution seam.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->SyncSelections();", "Phase 21 session controller does not yet own hash-algorithm selection sync.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "Phase 21 session controller does not yet own hash-algorithm validation.");
-            AssertContains(sessionController, "_beginthreadex", "Phase 21 session controller does not yet own work-thread startup.");
+            AssertContains(sessionController, "StartHashWorkerThread(m_threadData", "Phase 21 session controller does not yet own work-thread startup through the shared launch seam.");
             AssertContains(sessionController, "SetThreadDataStop(*m_threadData, true);", "Phase 21 session controller does not yet own stop-request signaling.");
             AssertContains(sessionController, "PrepareDropTarget(m_parentWnd, TRUE);", "Phase 21 session controller does not yet restore the dialog drop target.");
             AssertContains(sessionController, "PrepareDropTarget(m_mainEditDropTarget, TRUE);", "Phase 21 session controller does not yet restore the result-view drop target.");

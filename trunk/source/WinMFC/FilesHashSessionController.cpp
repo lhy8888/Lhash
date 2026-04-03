@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
 #include <CommCtrl.h>
-#include <process.h>
 
 #include "FilesHashSessionController.h"
 
+#include "Common/HashThreadLaunch.h"
 #include "Common/HashThreadEntry.h"
 #include "Common/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
@@ -77,12 +77,7 @@ void FilesHashSessionController::StartHashThread()
 	SetThreadDataStop(*m_threadData, false);
 
 	DWORD thredID = 0;
-	m_hWorkThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL,
-		0,
-		reinterpret_cast<unsigned int (WINAPI *)(void*)>(HashThreadFunc),
-		m_threadData,
-		0,
-		reinterpret_cast<unsigned int*>(&thredID)));
+	m_hWorkThread = StartHashWorkerThread(m_threadData, reinterpret_cast<unsigned int*>(&thredID));
 }
 
 void FilesHashSessionController::StopWorkingThread()
