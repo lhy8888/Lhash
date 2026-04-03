@@ -4269,7 +4269,7 @@ internal static class Program
             AssertContains(hashJobExecutionPlan, "const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan)", "Phase 65 HashJobExecutionPlan.cpp does not yet own preparation-plan retrieval.");
             AssertContains(hashJobExecutionPlan, "return executionPlan.preparationPlan;", "Phase 65 HashJobExecutionPlan.cpp does not yet return planned preparation controls.");
 
-            AssertContains(hashEngine, "HashJobExecutionPlan executionPlan = { 0 };", "Phase 65 HashEngine.cpp does not yet allocate a shared execution plan per request.");
+            AssertContains(hashEngine, "HashJobExecutionPlan executionPlan = {};", "Phase 65 HashEngine.cpp does not yet allocate a shared execution plan per request.");
             AssertContains(hashEngine, "InitializeHashJobExecutionPlan(request, &executionPlan);", "Phase 65 HashEngine.cpp does not yet initialize the shared execution plan.");
             AssertContains(hashEngine, "PrepareHashingWork(executionContext, request, GetHashJobPreparationPlan(executionPlan), fSizes, &wasCancelled)", "Phase 65 HashEngine.cpp does not yet consume preparation planning through the shared execution plan.");
             AssertContains(hashEngine, "RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", "Phase 65 HashEngine.cpp does not yet pass the shared execution plan into scheduling.");
@@ -4988,6 +4988,7 @@ internal static class Program
 
         Run("Phase 83 promotes digest dispatch to algorithm-list seams while keeping legacy compatibility paths", () =>
         {
+            string hashEngine = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp");
             string hashDigestUpdater = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp");
             string hashDigestUpdaterHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.h");
             string hashDigestContextOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.cpp");
@@ -5013,6 +5014,9 @@ internal static class Program
             AssertContains(hashDigestUpdater, "VisitDigestUpdateRequestAlgorithms(digestUpdateRequest, [&](ResultDigestType digestType)", "Phase 83 HashDigestUpdater.cpp does not yet route updates through digest-update algorithm iteration.");
             AssertContains(hashDigestUpdater, "std::vector<std::future<void>> extensionDigestUpdateTasks;", "Phase 83 HashDigestUpdater.cpp does not yet preserve extension-task fan-out for algorithm-list updates.");
             AssertContains(hashDigestUpdater, "TryUpdateDigestContext(RESULT_DIGEST_SHA256, hashContexts, data, dataLen);", "Phase 83 HashDigestUpdater.cpp does not yet route legacy SHA256 updates through registry-backed helpers.");
+            AssertDoesNotContain(hashDigestUpdater, "DigestUpdateRequest digestUpdateRequest = { 0 };", "Phase 83 HashDigestUpdater.cpp still uses legacy scalar brace initialization that breaks std::vector-based digest requests on MSVC.");
+            AssertDoesNotContain(hashDigestRuntimePlan, "static const DigestUpdateRequest emptyDigestUpdateRequest = { 0 };", "Phase 83 HashDigestRuntimePlan.cpp still uses legacy scalar brace initialization for digest requests on MSVC.");
+            AssertDoesNotContain(hashEngine, "HashJobExecutionPlan executionPlan = { 0 };", "Phase 83 HashEngine.cpp still uses legacy scalar brace initialization for execution plans on MSVC.");
 
             AssertContains(hashDigestContextOpsHeader, "void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
             AssertContains(hashDigestContextOpsHeader, "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");

@@ -56,7 +56,7 @@ namespace HashEngineInternal
 
 	DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)
 	{
-		DigestUpdateRequest digestUpdateRequest = { 0 };
+		DigestUpdateRequest digestUpdateRequest = {};
 
 		VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)
 		{

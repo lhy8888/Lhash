@@ -6,7 +6,7 @@ namespace HashEngineInternal
 {
 	HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan)
 	{
-		HashDigestRuntimePlan digestRuntimePlan = { 0 };
+		HashDigestRuntimePlan digestRuntimePlan = {};
 		digestRuntimePlan.digestUpdateRequest = &GetHashJobDigestUpdateRequest(executionPlan);
 		digestRuntimePlan.digestExecutionMode = GetHashJobDigestExecutionMode(executionPlan);
 		digestRuntimePlan.preferredBufferLength = GetHashDigestBufferPreferredLength(GetHashJobDigestBufferPlan(executionPlan));
@@ -16,7 +16,7 @@ namespace HashEngineInternal
 
 	const DigestUpdateRequest& GetHashDigestRuntimeUpdateRequest(const HashDigestRuntimePlan& digestRuntimePlan)
 	{
-		static const DigestUpdateRequest emptyDigestUpdateRequest = { 0 };
+		static const DigestUpdateRequest emptyDigestUpdateRequest = {};
 		if (digestRuntimePlan.digestUpdateRequest == NULL)
 		{
 			return emptyDigestUpdateRequest;

@@ -360,6 +360,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestRuntimeQueuePlan(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
         Assert.Contains("HasDigestUpdateRequestAlgorithm(digestUpdateRequest, RESULT_DIGEST_SHA256)", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("DigestUpdateRequest digestUpdateRequest = { 0 };", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("static const DigestUpdateRequest emptyDigestUpdateRequest = { 0 };", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashJobExecutionPlan executionPlan = { 0 };", engine, StringComparison.Ordinal);
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("future<void> taskSHA512Update", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("future<void> taskSHA256Update", digestUpdater, StringComparison.Ordinal);

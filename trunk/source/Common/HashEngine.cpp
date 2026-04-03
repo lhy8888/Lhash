@@ -28,7 +28,7 @@ int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& re
 {
 	SetHashExecutionWorking(*executionContext, true);
 
-	HashJobExecutionPlan executionPlan = { 0 };
+	HashJobExecutionPlan executionPlan = {};
 	InitializeHashJobExecutionPlan(request, &executionPlan);
 
 	ResetHashExecutionTotalSize(*executionContext);
