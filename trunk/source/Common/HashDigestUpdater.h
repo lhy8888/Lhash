@@ -4,9 +4,7 @@
 #include "Common/HashRequest.h"
 #include "Common/HashDigestOperationRegistry.h"
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 class ThreadPool;
-#endif
 
 namespace HashEngineInternal
 {
@@ -35,9 +33,7 @@ namespace HashEngineInternal
 
 	void UpdateDigestContextsSequential(const DigestUpdateRequest& digestUpdateRequest, FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen);
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest, FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen, ThreadPool *threadPool);
-#endif
 }
 
 #endif

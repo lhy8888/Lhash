@@ -1,10 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
-
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 #include "Common/ThreadPool.h"
-#endif
 
 #include <condition_variable>
 #include <future>
@@ -59,7 +56,6 @@ namespace HashEngineInternal
 		return !executionState->fileAttemptState.readFailed;
 	}
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
 		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
@@ -141,5 +137,4 @@ namespace HashEngineInternal
 
 		return ShouldStopHashExecution(*executionContext);
 	}
-#endif
 }

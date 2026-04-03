@@ -7,20 +7,14 @@
 #include "Common/HashDigestRuntimePlan.h"
 #include "Common/HashDigestUpdater.h"
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 class ThreadPool;
-#endif
 
 namespace HashEngineInternal
 {
 	struct FileExecutionState;
 
 	bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,
-		FileExecutionState *executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		, ThreadPool *threadPool
-#endif
-	);
+		FileExecutionState *executionState, ThreadPool *threadPool);
 }
 
 #endif

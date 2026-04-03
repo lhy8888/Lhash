@@ -20,11 +20,7 @@ namespace HashEngineInternal
 	}
 
 	bool ExecuteFileHashAttemptWorkflow(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath,
-		bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		, ThreadPool *threadPool
-#endif
-	)
+		bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
 		if (ShouldStopHashExecution(*executionContext))
 		{
@@ -46,11 +42,7 @@ namespace HashEngineInternal
 		OpenFileForHashing(&executionState->fileAttemptState, (void *)&fExc);
 		if (executionState->fileAttemptState.isFileOpened)
 		{
-			bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-				, threadPool
-#endif
-			);
+			bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState, threadPool);
 			if (wasStopped)
 			{
 				return false;

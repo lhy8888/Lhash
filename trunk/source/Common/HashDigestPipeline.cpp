@@ -5,11 +5,7 @@
 namespace HashEngineInternal
 {
 	bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,
-		bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		, ThreadPool *threadPool
-#endif
-	)
+		bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
 		HashDigestRuntimePlan digestRuntimePlan = CreateHashDigestRuntimePlan(executionState->executionPlan);
@@ -20,11 +16,7 @@ namespace HashEngineInternal
 		uint64_t times = CalculateFileChunkIterations(fsize, preferredBufferLength);
 		(void)times;
 
-		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-			, threadPool
-#endif
-		);
+		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState, threadPool);
 		if (CompleteOpenedFileDigestExecution(executionContext, executionState, wasStopped))
 		{
 			return true;

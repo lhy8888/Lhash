@@ -1,10 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
-
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 #include "Common/ThreadPool.h"
-#endif
 
 #include <future>
 
@@ -92,7 +89,6 @@ namespace HashEngineInternal
 		});
 	}
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest, FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen, ThreadPool *threadPool)
 	{
 		std::vector<std::future<void>> digestUpdateTasks;
@@ -117,5 +113,4 @@ namespace HashEngineInternal
 			digestUpdateTasks[taskIndex].wait();
 		}
 	}
-#endif
 }

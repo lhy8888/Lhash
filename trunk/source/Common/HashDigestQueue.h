@@ -5,9 +5,7 @@
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestUpdater.h"
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 class ThreadPool;
-#endif
 
 namespace HashEngineInternal
 {
@@ -28,10 +26,8 @@ namespace HashEngineInternal
 	uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
 		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool);
-#endif
 }
 
 #endif

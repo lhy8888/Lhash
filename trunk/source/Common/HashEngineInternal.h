@@ -48,9 +48,7 @@
 #include "Algorithms/sha256.h"
 #include "Algorithms/sha512.h"
 
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
 class ThreadPool;
-#endif
 
 namespace HashEngineInternal
 {
@@ -98,11 +96,7 @@ namespace HashEngineInternal
 	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes);
 
 	bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,
-		FileExecutionState *executionState
-#if !defined (FHASH_SINGLE_THREAD_HASH_UPDATE)
-		, ThreadPool *threadPool
-#endif
-	);
+		FileExecutionState *executionState, ThreadPool *threadPool);
 
 	void EmitPathResult(HashExecutionContext *executionContext, HashResult& result);
 	HashResult& BeginFileResult(HashExecutionContext *executionContext, const sunjwbase::tstring& path);
