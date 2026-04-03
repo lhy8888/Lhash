@@ -14,35 +14,8 @@ namespace HashEngineInternal
 
 	struct DigestUpdateRequest
 	{
-		std::vector<ResultDigestType> algorithms;
 		std::vector<HashDigestOperationDescriptor> operationDescriptors;
 	};
-
-	template<typename TDigestTypeVisitor>
-	static inline bool VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest, TDigestTypeVisitor visitor)
-	{
-		for (size_t index = 0; index < digestUpdateRequest.algorithms.size(); ++index)
-		{
-			if (!visitor(digestUpdateRequest.algorithms[index]))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	static inline bool HasDigestUpdateRequestAlgorithm(const DigestUpdateRequest& digestUpdateRequest, ResultDigestType digestType)
-	{
-		for (size_t index = 0; index < digestUpdateRequest.algorithms.size(); ++index)
-		{
-			if (digestUpdateRequest.algorithms[index] == digestType)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
 
 	template<typename TDigestUpdateOperationVisitor>
 	static inline bool VisitDigestUpdateRequestOperations(const DigestUpdateRequest& digestUpdateRequest, TDigestUpdateOperationVisitor visitor)

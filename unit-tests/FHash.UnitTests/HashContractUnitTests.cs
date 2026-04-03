@@ -285,10 +285,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("FinalizeHashDigestContext(hashContexts, digestType, digestBundle);", digestLifecycle, StringComparison.Ordinal);
         Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
-        Assert.Contains("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
-        Assert.Contains("VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", digestUpdater, StringComparison.Ordinal);
-        Assert.Contains("digestUpdateRequest.algorithms.push_back(digestType);", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("ContainsDigestUpdateOperation(digestUpdateRequest, digestType)", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("digestUpdateRequest.algorithms.push_back(digestType);", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("enum HashDigestExecutionMode", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request);", digestExecutionModeHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsParallelHashDigestExecutionMode(HashDigestExecutionMode executionMode);", digestExecutionModeHeader, StringComparison.Ordinal);

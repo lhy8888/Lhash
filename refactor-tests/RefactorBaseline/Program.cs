@@ -4999,12 +4999,13 @@ internal static class Program
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
-            AssertContains(hashDigestUpdaterHeader, "std::vector<ResultDigestType> algorithms;", "Phase 83 HashDigestUpdater.h does not yet preserve algorithm-list state in digest update requests.");
+            AssertDoesNotContain(hashDigestUpdaterHeader, "std::vector<ResultDigestType> algorithms;", "Phase 83 HashDigestUpdater.h still carries legacy algorithm-list state in digest update requests.");
             AssertContains(hashDigestUpdaterHeader, "std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 83 HashDigestUpdater.h does not yet preserve operation-descriptor state in digest update requests.");
-            AssertContains(hashDigestUpdaterHeader, "VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h does not yet expose digest-update algorithm iteration.");
+            AssertDoesNotContain(hashDigestUpdaterHeader, "VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h still exposes legacy digest-update algorithm iteration.");
             AssertContains(hashDigestUpdaterHeader, "VisitDigestUpdateRequestOperations(const DigestUpdateRequest& digestUpdateRequest", "Phase 83 HashDigestUpdater.h does not yet expose digest-update operation iteration.");
             AssertContains(hashDigestUpdater, "VisitHashRequestAlgorithms(request, [&](ResultDigestType digestType)", "Phase 83 HashDigestUpdater.cpp does not yet project request algorithms into digest update plans.");
-            AssertContains(hashDigestUpdater, "digestUpdateRequest.algorithms.push_back(digestType);", "Phase 83 HashDigestUpdater.cpp does not yet preserve request-driven digest algorithm ordering.");
+            AssertContains(hashDigestUpdater, "ContainsDigestUpdateOperation(digestUpdateRequest, digestType)", "Phase 83 HashDigestUpdater.cpp does not yet deduplicate digest operations by descriptor type.");
+            AssertDoesNotContain(hashDigestUpdater, "digestUpdateRequest.algorithms.push_back(digestType);", "Phase 83 HashDigestUpdater.cpp should no longer persist legacy algorithm-list slots.");
             AssertContains(hashDigestUpdater, "digestUpdateRequest.operationDescriptors.push_back(operationDescriptor);", "Phase 83 HashDigestUpdater.cpp does not yet preserve request-driven digest operation descriptors.");
             AssertContains(hashDigestUpdater, "VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", "Phase 83 HashDigestUpdater.cpp does not yet route updates through digest-update operation iteration.");
             AssertContains(hashDigestUpdater, "std::vector<std::future<void>> digestUpdateTasks;", "Phase 83 HashDigestUpdater.cpp does not yet preserve generic operation-task fan-out for algorithm-list updates.");

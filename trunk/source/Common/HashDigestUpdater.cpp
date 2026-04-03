@@ -10,11 +10,11 @@
 
 namespace HashEngineInternal
 {
-	static bool ContainsDigestUpdateAlgorithm(const DigestUpdateRequest& digestUpdateRequest, ResultDigestType digestType)
+	static bool ContainsDigestUpdateOperation(const DigestUpdateRequest& digestUpdateRequest, ResultDigestType digestType)
 	{
-		for (size_t algorithmIndex = 0; algorithmIndex < digestUpdateRequest.algorithms.size(); ++algorithmIndex)
+		for (size_t operationIndex = 0; operationIndex < digestUpdateRequest.operationDescriptors.size(); ++operationIndex)
 		{
-			if (digestUpdateRequest.algorithms[algorithmIndex] == digestType)
+			if (digestUpdateRequest.operationDescriptors[operationIndex].digestType == digestType)
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ namespace HashEngineInternal
 			{
 				return true;
 			}
-			if (ContainsDigestUpdateAlgorithm(digestUpdateRequest, digestType))
+			if (ContainsDigestUpdateOperation(digestUpdateRequest, digestType))
 			{
 				return true;
 			}
@@ -44,7 +44,6 @@ namespace HashEngineInternal
 				return true;
 			}
 
-			digestUpdateRequest.algorithms.push_back(digestType);
 			digestUpdateRequest.operationDescriptors.push_back(operationDescriptor);
 			return true;
 		});
