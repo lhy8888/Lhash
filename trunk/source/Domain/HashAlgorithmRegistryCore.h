@@ -18,19 +18,19 @@ struct HashAlgorithmDescriptorRegistry
 	int count;
 };
 
-static inline std::vector<HashAlgorithmDescriptor>& GetMutableHashAlgorithmDescriptorStorage()
+inline std::vector<HashAlgorithmDescriptor>& GetMutableHashAlgorithmDescriptorStorage()
 {
 	static std::vector<HashAlgorithmDescriptor> descriptorStorage;
 	return descriptorStorage;
 }
 
-static inline bool& GetHashAlgorithmDefaultsInitializedFlag()
+inline bool& GetHashAlgorithmDefaultsInitializedFlag()
 {
 	static bool defaultsInitialized = false;
 	return defaultsInitialized;
 }
 
-static inline HashAlgorithmDescriptorRegistry& GetMutableHashAlgorithmDescriptorRegistryView()
+inline HashAlgorithmDescriptorRegistry& GetMutableHashAlgorithmDescriptorRegistryView()
 {
 	static HashAlgorithmDescriptorRegistry registryView = { NULL, 0 };
 	return registryView;
