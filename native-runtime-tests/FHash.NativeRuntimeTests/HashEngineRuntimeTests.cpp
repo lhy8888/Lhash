@@ -49,7 +49,9 @@ namespace
 			: progressMaximum_(progressMaximum),
 			stopRequestedFlag_(NULL),
 			stopEventType_(PROGRESS_EVENT_NONE),
-			stopEventMinimumValue_(0)
+			stopEventMinimumValue_(0),
+			traceToStdout_(false),
+			traceLabel_()
 		{
 		}
 
@@ -60,6 +62,15 @@ namespace
 
 		virtual void onProgressEvent(const ProgressEvent& progressEvent)
 		{
+			if (traceToStdout_)
+			{
+				std::cout
+					<< "TRACE_EVENT[" << traceLabel_ << "]: type=" << static_cast<int>(progressEvent.type)
+					<< ", value=" << progressEvent.value
+					<< ", uppercase=" << (progressEvent.uppercaseDigest ? 1 : 0)
+					<< std::endl;
+			}
+
 			{
 				std::lock_guard<std::mutex> lock(eventsMutex_);
 				events_.push_back(progressEvent);
@@ -78,6 +89,12 @@ namespace
 			stopRequestedFlag_ = stopRequestedFlag;
 			stopEventType_ = eventType;
 			stopEventMinimumValue_ = minimumValue;
+		}
+
+		void EnableConsoleTrace(const std::string& traceLabel)
+		{
+			traceToStdout_ = true;
+			traceLabel_ = traceLabel;
 		}
 
 		bool HasEvent(ProgressEventType eventType) const
@@ -149,6 +166,8 @@ namespace
 		std::atomic<bool> *stopRequestedFlag_;
 		ProgressEventType stopEventType_;
 		int stopEventMinimumValue_;
+		bool traceToStdout_;
+		std::string traceLabel_;
 		mutable std::mutex eventsMutex_;
 		std::vector<ProgressEvent> events_;
 	};
@@ -279,9 +298,14 @@ namespace
 
 	static int RunHashThreadData(ThreadData& threadData)
 	{
+		std::cout << "TRACE_PHASE: CreateThreadDataHashExecutionContext" << std::endl;
 		HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(threadData);
+		std::cout << "TRACE_PHASE: CreateThreadDataHashRequest" << std::endl;
 		HashRequest request = CreateThreadDataHashRequest(threadData);
-		return RunHashRequest(&executionContext, request);
+		std::cout << "TRACE_PHASE: RunHashRequest begin" << std::endl;
+		int exitCode = RunHashRequest(&executionContext, request);
+		std::cout << "TRACE_PHASE: RunHashRequest end, exitCode=" << exitCode << std::endl;
+		return exitCode;
 	}
 
 	static HashAlgorithmId ResolveDigestResultAlgorithmId(const HashDigestResult& digestResult)
@@ -328,6 +352,7 @@ namespace
 		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("abc.txt"), "abc");
 
 		CapturingProgressSink progressSink;
+		progressSink.EnableConsoleTrace("single-file");
 		ThreadData threadData;
 		std::vector<ResultDigestType> algorithms;
 		algorithms.push_back(RESULT_DIGEST_MD5);
@@ -335,8 +360,10 @@ namespace
 		algorithms.push_back(RESULT_DIGEST_SHA256);
 		algorithms.push_back(RESULT_DIGEST_SHA512);
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+		std::cout << "TRACE_PHASE: single-file configured thread data" << std::endl;
 
 		int exitCode = RunHashThreadData(threadData);
+		std::cout << "TRACE_PHASE: single-file after RunHashThreadData" << std::endl;
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an existing file.");
 		NativeAssertTrue(!IsThreadDataWorking(threadData), "ThreadData should not remain in the working state after hashing completes.");
 		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "HashThreadFunc should append exactly one result for a single file.");
