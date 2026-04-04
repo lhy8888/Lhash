@@ -13,10 +13,12 @@ int main()
 
 	std::vector<NativeTestCase> tests;
 	RegisterHashEngineRuntimeTests(tests);
+	std::cout << "Native runtime tests discovered: " << tests.size() << std::endl;
 
 	size_t passedCount = 0;
 	for (size_t testIndex = 0; testIndex < tests.size(); ++testIndex)
 	{
+		std::cout << "RUN: " << tests[testIndex].name << std::endl;
 		if (RunNativeTestCase(tests[testIndex]))
 		{
 			++passedCount;

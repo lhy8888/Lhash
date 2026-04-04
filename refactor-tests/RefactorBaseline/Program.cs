@@ -4654,7 +4654,7 @@ internal static class Program
             AssertContains(hashDigestQueueHeader, "uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);", "Phase 67 HashDigestQueue.h does not yet expose explicit chunk-iteration sizing.");
             AssertContains(hashDigestQueue, "DigestDataBuffer::DigestDataBuffer(unsigned int preferredLength):datalen(0), capacity(NormalizeDigestDataBufferPreferredLength(preferredLength)), data(NULL)", "Phase 67 HashDigestQueue.cpp does not yet initialize per-buffer capacity.");
             AssertContains(hashDigestQueue, "int64_t readRet = executionState->fileAttemptState.osFile->read(dataBuffer.data, dataBuffer.capacity);", "Phase 67 HashDigestQueue.cpp does not yet read using per-buffer capacity.");
-            AssertContains(hashDigestQueue, "isFileFinished = (ptrDataBufFile->datalen < ptrDataBufFile->capacity);", "Phase 67 HashDigestQueue.cpp does not yet route completion checks through per-buffer capacity.");
+        AssertContains(hashDigestQueue, "isFileFinished.store(ptrDataBufFile->datalen < ptrDataBufFile->capacity);", "Phase 67 HashDigestQueue.cpp does not yet route completion checks through per-buffer capacity.");
             AssertDoesNotContain(hashDigestQueue, "DigestDataBuffer::preflen", "Phase 67 HashDigestQueue.cpp should no longer rely on global static digest-buffer length.");
             AssertDoesNotContain(hashDigestQueue, "SetDigestDataBufferPreferredLength(", "Phase 67 HashDigestQueue.cpp should no longer expose global digest-buffer mutation helpers.");
 

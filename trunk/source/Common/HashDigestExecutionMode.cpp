@@ -17,7 +17,9 @@ namespace HashEngineInternal
 			return HASH_DIGEST_EXECUTION_MODE_PARALLEL;
 		}
 
-		return HASH_DIGEST_EXECUTION_MODE_PARALLEL;
+		// Keep AUTO on the safer single-pass path by default.
+		// Parallel digest-updates remain opt-in via HASH_REQUEST_DIGEST_EXECUTION_POLICY_PARALLEL.
+		return HASH_DIGEST_EXECUTION_MODE_SINGLE_PASS;
 	}
 
 	bool IsParallelHashDigestExecutionMode(HashDigestExecutionMode executionMode)

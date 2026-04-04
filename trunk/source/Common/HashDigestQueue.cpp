@@ -3,6 +3,7 @@
 #include "Common/HashEngineInternal.h"
 #include "Common/ThreadPool.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -59,7 +60,7 @@ namespace HashEngineInternal
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
 		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
-		bool isFileFinished = false;
+		std::atomic<bool> isFileFinished(false);
 
 		queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;
 		mutex mtxQueue;
@@ -76,10 +77,10 @@ namespace HashEngineInternal
 					unique_lock<mutex> lock(mtxQueue);
 					cvCalc.wait(lock, [&]
 					{
-						return (!queueDataBuffer.empty() || isFileFinished || ShouldStopHashExecution(*executionContext));
+						return (!queueDataBuffer.empty() || isFileFinished.load() || ShouldStopHashExecution(*executionContext));
 					});
 
-					if (queueDataBuffer.empty() && isFileFinished)
+					if (queueDataBuffer.empty() && isFileFinished.load())
 					{
 						break;
 					}
@@ -118,7 +119,7 @@ namespace HashEngineInternal
 			unique_ptr<DigestDataBuffer> ptrDataBufFile = make_unique<DigestDataBuffer>(preferredBufferLength);
 			if (ReadDigestDataBuffer(executionState, *ptrDataBufFile))
 			{
-				isFileFinished = (ptrDataBufFile->datalen < ptrDataBufFile->capacity);
+				isFileFinished.store(ptrDataBufFile->datalen < ptrDataBufFile->capacity);
 
 				unique_lock<mutex> lock(mtxQueue);
 				cvFile.wait(lock, [&]
@@ -129,9 +130,9 @@ namespace HashEngineInternal
 			}
 			cvCalc.notify_all();
 		}
-		while (!isFileFinished && !executionState->fileAttemptState.readFailed);
+		while (!isFileFinished.load() && !executionState->fileAttemptState.readFailed);
 
-		isFileFinished = true;
+		isFileFinished.store(true);
 		cvCalc.notify_all();
 		taskHash.wait();
 
