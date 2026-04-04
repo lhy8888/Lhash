@@ -60,7 +60,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc(&threadData)", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashThreadData(threadData)", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest(&executionContext, request)", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults", testSource, StringComparison.Ordinal);

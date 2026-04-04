@@ -19,6 +19,7 @@
 #include "Common/ResultDigestValueAccess.h"
 #include "LegacyCompat/HashAlgorithmTypeCompat.h"
 #include "LegacyCompat/HashDigestOperationTypeCompat.h"
+#include "LegacyCompat/HashThreadEntryProjection.h"
 #include "LegacyCompat/HashRequestTypeCompat.h"
 #include "LegacyCompat/ResultDigestTypeValueCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
@@ -276,6 +277,13 @@ namespace
 		return request;
 	}
 
+	static int RunHashThreadData(ThreadData& threadData)
+	{
+		HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(threadData);
+		HashRequest request = CreateThreadDataHashRequest(threadData);
+		return RunHashRequest(&executionContext, request);
+	}
+
 	static HashAlgorithmId ResolveDigestResultAlgorithmId(const HashDigestResult& digestResult)
 	{
 		HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(digestResult.algorithmId);
@@ -328,7 +336,7 @@ namespace
 		algorithms.push_back(RESULT_DIGEST_SHA512);
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an existing file.");
 		NativeAssertTrue(!IsThreadDataWorking(threadData), "ThreadData should not remain in the working state after hashing completes.");
 		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "HashThreadFunc should append exactly one result for a single file.");
@@ -367,7 +375,7 @@ namespace
 		filePaths.push_back(helloPath);
 		ConfigureThreadDataFiles(threadData, progressSink, filePaths, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a multi-file request.");
 		NativeAssertEqual(static_cast<uint64_t>(2), GetThreadDataResultCount(threadData), "A two-file request should append two results.");
 		NativeAssertEqual(static_cast<uint64_t>(8), GetThreadDataTotalSize(threadData), "The counted runtime size should match the sum of the two input files.");
@@ -404,7 +412,7 @@ namespace
 		algorithms.push_back(RESULT_DIGEST_SHA256);
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a SHA256-only request.");
 		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "A SHA256-only request should still produce one file result.");
 
@@ -713,7 +721,7 @@ namespace
 		std::vector<ResultDigestType> algorithms;
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed even when no digest algorithms are enabled.");
 		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "A metadata-only request should still produce one file result.");
 
@@ -737,7 +745,7 @@ namespace
 		algorithms.push_back(RESULT_DIGEST_MD5);
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a searchable digest result.");
 
 		const HashResultList& results = GetThreadDataResults(threadData);
@@ -763,7 +771,7 @@ namespace
 		filePaths.push_back(betaPath);
 		ConfigureThreadDataFiles(threadData, progressSink, filePaths, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for path+digest runtime search coverage.");
 
 		std::vector<sunjwbase::tstring> matchedPaths;
@@ -801,7 +809,7 @@ namespace
 		algorithms.push_back(RESULT_DIGEST_SHA512);
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
 
-		int exitCode = HashThreadFunc(&threadData);
+		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an empty file.");
 
 		const HashResult& result = GetThreadDataResults(threadData).front();
