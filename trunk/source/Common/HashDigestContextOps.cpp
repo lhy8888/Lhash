@@ -6,7 +6,7 @@ namespace HashEngineInternal
 {
 	void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId)
 	{
-		HashDigestOperationDescriptor operationDescriptor = { 0 };
+		HashDigestOperationDescriptor operationDescriptor = {};
 		if (!TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor))
 		{
 			return;
@@ -22,7 +22,7 @@ namespace HashEngineInternal
 
 	void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)
 	{
-		HashDigestOperationDescriptor operationDescriptor = { 0 };
+		HashDigestOperationDescriptor operationDescriptor = {};
 		if (!TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor))
 		{
 			return;

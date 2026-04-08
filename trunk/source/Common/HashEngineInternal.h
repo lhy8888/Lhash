@@ -1,6 +1,8 @@
 #ifndef _HASH_ENGINE_INTERNAL_H_
 #define _HASH_ENGINE_INTERNAL_H_
 
+#include <cstring>
+
 #include "Common/HashEngine.h"
 #include "Common/HashDigestBufferPlan.h"
 #include "Common/HashDigestCompletion.h"
@@ -54,6 +56,14 @@ namespace HashEngineInternal
 {
 	struct FileProgressState
 	{
+		FileProgressState()
+			: finishedSize(0),
+			finishedSizeWhole(0),
+			position(0),
+			positionWhole(0)
+		{
+		}
+
 		uint64_t finishedSize;
 		uint64_t finishedSizeWhole;
 		int position;
@@ -62,6 +72,16 @@ namespace HashEngineInternal
 
 	struct FileAttemptState
 	{
+		FileAttemptState()
+			: path(NULL),
+			osFile(NULL),
+			fileVersion(),
+			readFailed(false),
+			isFileOpened(false),
+			openErrorText(NULL)
+		{
+		}
+
 		const TCHAR *path;
 		sunjwbase::OsFile *osFile;
 		sunjwbase::tstring fileVersion;
@@ -72,6 +92,15 @@ namespace HashEngineInternal
 
 	struct FileHashContexts
 	{
+		FileHashContexts()
+			: mdContext(),
+			sha1(),
+			sha256Ctx(),
+			sha512Ctx()
+		{
+			std::memset(digestSHA512, 0, sizeof(digestSHA512));
+		}
+
 		MD5_CTX mdContext;
 		CSHA1 sha1;
 		SHA256_CTX sha256Ctx;
@@ -83,6 +112,15 @@ namespace HashEngineInternal
 
 	struct FileExecutionState
 	{
+		FileExecutionState()
+			: progressState(),
+			fileAttemptState(),
+			hashContexts(),
+			executionPlan(),
+			digestBundle()
+		{
+		}
+
 		FileProgressState progressState;
 		FileAttemptState fileAttemptState;
 		FileHashContexts hashContexts;

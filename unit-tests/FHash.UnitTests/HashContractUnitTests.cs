@@ -299,7 +299,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes)", scheduler, StringComparison.Ordinal);
         Assert.Contains("executionState.executionPlan = executionPlan;", scheduler, StringComparison.Ordinal);
         Assert.Contains("ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState", scheduler, StringComparison.Ordinal);
-        Assert.Contains("FileExecutionState executionState = { 0 };", scheduler, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState executionState;", scheduler, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState()", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("FileHashContexts()", internalHeader, StringComparison.Ordinal);
         Assert.Contains("const HashSchedulerPlan& schedulerPlan = GetHashJobSchedulerPlan(executionState.executionPlan);", scheduler, StringComparison.Ordinal);
         Assert.Contains("ThreadPool threadPool(GetHashSchedulerWorkerThreadCount(schedulerPlan));", scheduler, StringComparison.Ordinal);
         Assert.Contains("bool ExecuteScheduledHashRequestFiles(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState", schedulerDispatch, StringComparison.Ordinal);

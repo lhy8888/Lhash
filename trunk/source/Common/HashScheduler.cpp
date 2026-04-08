@@ -9,7 +9,7 @@ namespace HashEngineInternal
 {
 	bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes)
 	{
-		FileExecutionState executionState = { 0 };
+		FileExecutionState executionState;
 		executionState.executionPlan = executionPlan;
 
 		const HashSchedulerPlan& schedulerPlan = GetHashJobSchedulerPlan(executionState.executionPlan);

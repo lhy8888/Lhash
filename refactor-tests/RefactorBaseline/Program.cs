@@ -177,7 +177,7 @@ internal static class Program
             AssertContains(fileRunner, "YieldHashThread();", "HashFileRunner no longer routes per-file scheduler yielding through the tiny helper.");
             AssertContains(engineImpl, "std::vector<std::future<void>> digestUpdateTasks;", "HashEngine implementation set no longer fans out digest updates through generic worker-task vectors.");
             AssertContains(engineImpl, "digestUpdateTasks.push_back(threadPool->enqueue([&hashContexts, data, dataLen, operationDescriptor]()", "HashEngine implementation set no longer dispatches digest update tasks through operation descriptors.");
-            AssertContains(engineImpl, "FileExecutionState executionState = { 0 };", "HashEngine implementation set no longer creates the grouped file-execution state bundle.");
+            AssertContains(engineImpl, "FileExecutionState executionState;", "HashEngine implementation set no longer creates the grouped file-execution state bundle.");
             AssertContains(fileRunner, "HashResult& result = BeginFileHashAttempt(executionContext, fullPath, executionState, &path);", "HashFileRunner no longer routes the file-attempt setup through the grouped file-execution helper.");
             AssertContains(fileRunner, "InitializeFileAttemptState(path, &osFile, &executionState->fileAttemptState);", "HashFileRunner no longer routes file-attempt state initialization through the grouped execution helper.");
             AssertContains(fileRunner, "OpenFileForHashing(&executionState->fileAttemptState, (void *)&fExc);", "HashFileRunner no longer routes the file-open attempt through the grouped execution helper.");
@@ -2338,7 +2338,7 @@ internal static class Program
             AssertContains(resultPublisher, "void CompleteSuccessfulFileHashing(", "HashResultPublisher.cpp does not yet own successful-file completion.");
             AssertContains(resultPublisher, "void CompleteFileAttempt(", "HashResultPublisher.cpp does not yet own file-attempt completion.");
             AssertContains(fileRunner, "bool RunFileHashAttempt(", "HashFileRunner.cpp does not yet own the single-file execution seam.");
-            AssertContains(scheduler, "FileExecutionState executionState = { 0 };", "HashScheduler.cpp does not yet preserve grouped file-execution state for the runner seam.");
+            AssertContains(scheduler, "FileExecutionState executionState;", "HashScheduler.cpp does not yet preserve grouped file-execution state for the runner seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core project does not yet compile HashFileRunner.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "Desktop native core project does not yet compile HashThreadEntry.cpp.");
@@ -3919,7 +3919,7 @@ internal static class Program
             AssertContains(hashFileRunner, "bool RunFileHashAttempt(", "Phase 49 HashFileRunner.cpp does not yet expose the single-file execution seam.");
             AssertContains(hashFileRunner, "YieldHashThread();", "Phase 49 HashFileRunner.cpp does not yet own per-file scheduler yielding.");
             AssertDoesNotContain(hashFileRunner, "FileExecutionState executionState = { 0 };", "Phase 49 HashFileRunner.cpp should reuse grouped execution state from HashEngine.cpp instead of creating a new local bundle.");
-            AssertContains(hashScheduler, "FileExecutionState executionState = { 0 };", "Phase 49 HashScheduler.cpp does not yet preserve grouped file execution state for the runner seam.");
+            AssertContains(hashScheduler, "FileExecutionState executionState;", "Phase 49 HashScheduler.cpp does not yet preserve grouped file execution state for the runner seam.");
             AssertContains(hashSchedulerDispatch, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const sunjwbase::tstring& fullPath)", "Phase 49 HashSchedulerDispatch.cpp does not yet own request-file iteration.");
             AssertContains(hashSchedulerDispatch, "RunFileHashAttempt(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes,", "Phase 49 HashSchedulerDispatch.cpp does not yet route single-file work into HashFileRunner.");
             AssertContains(hashEngineInternal, "bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", "Phase 49 HashEngineInternal.h does not yet declare the single-file runner seam.");
