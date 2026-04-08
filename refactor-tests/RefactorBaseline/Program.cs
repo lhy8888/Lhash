@@ -4924,14 +4924,18 @@ internal static class Program
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
+            AssertContains(hashFileSizeAccountingHeader, "uint64_t TrackHashResolvedFileSize(HashExecutionContext *executionContext, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result, uint64_t fsize);", "Phase 71 HashFileSizeAccounting.h does not yet expose the direct tracked-size seam.");
             AssertContains(hashFileSizeAccountingHeader, "uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result);", "Phase 71 HashFileSizeAccounting.h does not yet expose file-size accounting seams.");
+            AssertContains(hashFileSizeAccounting, "uint64_t TrackHashResolvedFileSize(HashExecutionContext *executionContext, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result, uint64_t fsize)", "Phase 71 HashFileSizeAccounting.cpp does not yet expose direct tracked-size accounting.");
             AssertContains(hashFileSizeAccounting, "uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result)", "Phase 71 HashFileSizeAccounting.cpp does not yet own file-size accounting.");
-            AssertContains(hashFileSizeAccounting, "uint64_t fsize = osFile.getLength();", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve file-size retrieval.");
             AssertContains(hashFileSizeAccounting, "result.meta.size = fsize;", "Phase 71 HashFileSizeAccounting.cpp does not yet project file-size metadata.");
             AssertContains(hashFileSizeAccounting, "AddHashExecutionTotalSize(*executionContext, fsize);", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve uncounted-size accumulation.");
             AssertContains(hashFileSizeAccounting, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size replacement.");
             AssertContains(hashFileSizeAccounting, "fSizes[fileIndex] = fsize;", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size cache updates.");
-            AssertContains(hashEngineResult, "uint64_t fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", "Phase 71 HashEngineResult.cpp does not yet delegate file-size accounting.");
+            AssertContains(hashFileSizeAccounting, "return TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, osFile.getLength());", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve OsFile length retrieval through the tracked-size seam.");
+            AssertContains(hashEngineResult, "TryResolveWindowsPathFileMeta(path, &resolvedMeta)", "Phase 71 HashEngineResult.cpp does not yet support path-based metadata projection for the safer native runtime path.");
+            AssertContains(hashEngineResult, "fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", "Phase 71 HashEngineResult.cpp does not yet reuse tracked-size accounting for path-based metadata.");
+            AssertContains(hashEngineResult, "fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", "Phase 71 HashEngineResult.cpp does not yet delegate fallback file-size accounting.");
             AssertDoesNotContain(hashEngineResult, "uint64_t fsize = osFile.getLength();", "Phase 71 HashEngineResult.cpp should no longer inline file-size retrieval.");
             AssertContains(hashEngineInternal, "#include \"Common/HashFileSizeAccounting.h\"", "Phase 71 HashEngineInternal.h does not yet consume HashFileSizeAccounting.");
 
