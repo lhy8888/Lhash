@@ -3340,7 +3340,8 @@ internal static class Program
             string hashResultShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
             string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Domain\ProgressEvent.h");
             string progressEventShim = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
-            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
+            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashProgressSink.h");
+            string hashProgressSinkShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
@@ -3376,6 +3377,7 @@ internal static class Program
             AssertDoesNotContain(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 42 still keeps the legacy ResultData-based hash-ready progress event overload.");
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose hash-ready progress events directly from HashResult.");
 
+            AssertContains(hashProgressSinkShim, "#include \"Runtime/HashProgressSink.h\"", "Phase 90 Common HashProgressSink.h should now be a thin Runtime shim.");
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 31 does not yet define a neutral hash progress sink contract.");
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 31 hash progress sink does not yet own progress max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 31 hash progress sink does not yet own semantic progress-event dispatch.");
@@ -3459,7 +3461,8 @@ internal static class Program
 
         Run("Phase 34 narrows core hashing execution onto HashProgressSink while keeping HashEngineObserver as a compatibility adapter", () =>
         {
-            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
+            string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashProgressSink.h");
+            string hashProgressSinkShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
@@ -3473,12 +3476,13 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(hashProgressSink, "#include \"Domain/ProgressEvent.h\"", "Phase 89 HashProgressSink should now consume ProgressEvent through the Domain contract.");
+            AssertContains(hashProgressSinkShim, "#include \"Runtime/HashProgressSink.h\"", "Phase 90 Common HashProgressSink.h should now be a thin Runtime shim.");
+            AssertContains(hashProgressSink, "#include \"Domain/ProgressEvent.h\"", "Phase 90 HashProgressSink should now consume ProgressEvent through the Runtime contract.");
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 34 hash progress sink header is missing the neutral sink seam.");
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 34 hash progress sink does not yet own progress-max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 34 hash progress sink does not yet own semantic event dispatch.");
 
-            AssertContains(hashEngineObserver, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashProgressEventBridge does not yet layer on top of HashProgressSink.");
+            AssertContains(hashEngineObserver, "#include \"Runtime/HashProgressSink.h\"", "Phase 90 HashProgressEventBridge should now layer directly on top of the Runtime HashProgressSink seam.");
             AssertContains(hashEngineObserver, "class HashProgressEventBridge: public HashProgressSink", "Phase 34 HashProgressEventBridge is not yet narrowed into a compatibility adapter on top of HashProgressSink.");
             AssertContains(hashEngineObserver, "typedef HashProgressEventBridge HashEngineObserver;", "Phase 34 HashEngineObserver compatibility alias is missing.");
             AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashProgressEventBridge no longer satisfies the progress-max sink contract.");
@@ -3495,7 +3499,7 @@ internal static class Program
             AssertDoesNotContain(hashEngineHeader, "class HashEngineObserver;", "Phase 34 HashEngine header still directly depends on HashEngineObserver.");
             AssertDoesNotContain(hashEngineHeader, "HashProgressSink *observer", "Phase 35 HashEngine header still routes the core entry through the older progress-sink argument.");
 
-            AssertContains(hashEngineInternal, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashEngineInternal does not yet consume HashProgressSink.");
+            AssertContains(hashEngineInternal, "#include \"Runtime/HashProgressSink.h\"", "Phase 90 HashEngineInternal should now consume the Runtime HashProgressSink seam.");
             AssertContains(hashEngineInternal, "#include \"Common/HashExecutionContext.h\"", "Phase 35 HashEngineInternal does not yet consume HashExecutionContext.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/HashEngineObserver.h\"", "Phase 34 HashEngineInternal still directly depends on HashEngineObserver.");
             AssertContains(hashEngineInternal, "HashExecutionContext *executionContext", "Phase 35 HashEngineInternal does not yet route execution seams through HashExecutionContext.");

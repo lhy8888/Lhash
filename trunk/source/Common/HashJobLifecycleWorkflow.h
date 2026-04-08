@@ -2,7 +2,7 @@
 #define _HASH_JOB_LIFECYCLE_WORKFLOW_H_
 
 #include "Common/HashExecutionContext.h"
-#include "Common/HashProgressSink.h"
+#include "Runtime/HashProgressSink.h"
 
 namespace HashEngineInternal
 {

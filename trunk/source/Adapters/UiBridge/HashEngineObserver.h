@@ -1,7 +1,7 @@
 #ifndef _HASH_ENGINE_OBSERVER_H_
 #define _HASH_ENGINE_OBSERVER_H_
 
-#include "Common/HashProgressSink.h"
+#include "Runtime/HashProgressSink.h"
 
 class HashProgressEventBridge: public HashProgressSink
 {

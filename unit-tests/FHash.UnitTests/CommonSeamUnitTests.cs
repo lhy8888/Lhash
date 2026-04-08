@@ -376,6 +376,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"Domain/ProgressEvent.h\"", domainContracts, StringComparison.Ordinal);
 
         Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", runtimeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashEngine.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);

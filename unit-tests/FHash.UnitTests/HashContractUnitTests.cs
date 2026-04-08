@@ -120,7 +120,8 @@ public sealed class HashContractUnitTests
     {
         string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\ProgressEvent.h");
         string progressEventShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ProgressEvent.h");
-        string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressSink.h");
+        string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashProgressSink.h");
+        string progressSinkShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressSink.h");
         string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
         string legacyObserverPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineObserver.h");
         string legacyBridgePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineBridge.h");
@@ -138,10 +139,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", progressEvent, StringComparison.Ordinal);
         Assert.Contains("CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", progressEvent, StringComparison.Ordinal);
 
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", progressSinkShim, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/ProgressEvent.h\"", progressSink, StringComparison.Ordinal);
         Assert.Contains("class HashProgressSink", progressSink, StringComparison.Ordinal);
         Assert.Contains("virtual int progressMax() = 0;", progressSink, StringComparison.Ordinal);
         Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", progressSink, StringComparison.Ordinal);
 
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", observer, StringComparison.Ordinal);
         Assert.Contains("class HashProgressEventBridge: public HashProgressSink", observer, StringComparison.Ordinal);
         Assert.Contains("typedef HashProgressEventBridge HashEngineObserver;", observer, StringComparison.Ordinal);
         Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent)", observer, StringComparison.Ordinal);
@@ -673,7 +677,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerDispatch.h\"", internalHeader, StringComparison.Ordinal);

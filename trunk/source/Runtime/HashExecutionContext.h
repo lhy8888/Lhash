@@ -2,7 +2,7 @@
 #define _RUNTIME_HASH_EXECUTION_CONTEXT_H_
 
 #include "Common/Global.h"
-#include "Common/HashProgressSink.h"
+#include "Runtime/HashProgressSink.h"
 
 struct HashExecutionContext
 {

@@ -12,7 +12,7 @@
 #include "Common/HashEngine.h"
 #include "LegacyCompat/HashThreadEntry.h"
 #include "Common/HashExecutionContext.h"
-#include "Common/HashProgressSink.h"
+#include "Runtime/HashProgressSink.h"
 #include "Common/HashRequest.h"
 #include "Common/HashResultSearch.h"
 #include "Common/ResultDataAccess.h"

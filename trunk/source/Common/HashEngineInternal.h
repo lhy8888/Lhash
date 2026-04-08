@@ -32,7 +32,7 @@
 #include "Common/HashPreparationWorkflow.h"
 #include "Common/HashProgressTracker.h"
 #include "Common/HashExecutionContext.h"
-#include "Common/HashProgressSink.h"
+#include "Runtime/HashProgressSink.h"
 #include "Common/HashErrorResultWorkflow.h"
 #include "Common/HashResultEventWorkflow.h"
 #include "Common/HashResultPublisher.h"
