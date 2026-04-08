@@ -73,6 +73,7 @@ public sealed class CommonSeamUnitTests
         string registry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashAlgorithmRegistry.h");
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
+        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
@@ -94,7 +95,9 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registryCore, StringComparison.Ordinal);
-        Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
+        Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
+        Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", legacyDigestType, StringComparison.Ordinal);
+        Assert.DoesNotContain("enum ResultDigestType", global, StringComparison.Ordinal);
         Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);

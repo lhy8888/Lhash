@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "Common/Global.h"
 #include "Common/HashAlgorithmRegistry.h"
+#include "LegacyCompat/ResultDigestTypeCompat.h"
 
 static inline bool TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgorithmId *algorithmId)
 {

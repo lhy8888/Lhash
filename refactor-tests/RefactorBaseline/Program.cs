@@ -584,6 +584,7 @@ internal static class Program
         Run("Phase 2 routes digest access through a neutral ResultData seam while keeping the fixed four-digest contract", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string legacyDigestType = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
@@ -598,11 +599,12 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(global, "enum ResultDigestType", "Global.h is missing the neutral digest enum that now anchors the mainline result contract.");
-            AssertContains(global, "RESULT_DIGEST_MD5", "Global.h no longer exposes the MD5 digest slot.");
-            AssertContains(global, "RESULT_DIGEST_SHA1", "Global.h no longer exposes the SHA1 digest slot.");
-            AssertContains(global, "RESULT_DIGEST_SHA256", "Global.h no longer exposes the SHA256 digest slot.");
-            AssertContains(global, "RESULT_DIGEST_SHA512", "Global.h no longer exposes the SHA512 digest slot.");
+            AssertDoesNotContain(global, "enum ResultDigestType", "Global.h should no longer anchor the compatibility digest enum after the algorithm-id cleanup.");
+            AssertContains(legacyDigestType, "enum ResultDigestType", "LegacyCompat should retain the digest enum for compatibility callers.");
+            AssertContains(legacyDigestType, "RESULT_DIGEST_MD5", "LegacyCompat no longer exposes the MD5 digest slot.");
+            AssertContains(legacyDigestType, "RESULT_DIGEST_SHA1", "LegacyCompat no longer exposes the SHA1 digest slot.");
+            AssertContains(legacyDigestType, "RESULT_DIGEST_SHA256", "LegacyCompat no longer exposes the SHA256 digest slot.");
+            AssertContains(legacyDigestType, "RESULT_DIGEST_SHA512", "LegacyCompat no longer exposes the SHA512 digest slot.");
             AssertContains(digestAccess, "GetResultDigestCount()", "ResultDigestAccess is missing the neutral digest count helper.");
             AssertContains(digestAccess, "GetResultDigestTypeAt(int index)", "ResultDigestAccess is missing the neutral digest order helper.");
             AssertContains(digestAccess, "GetResultDigestLabel(ResultDigestType digestType)", "ResultDigestAccess is missing the neutral digest label helper.");
@@ -5445,6 +5447,7 @@ internal static class Program
         Run("Phase 84 hardens algorithm-registry lookup seams against implicit MD5 fallback and unknown digest leakage", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string legacyDigestType = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
@@ -5452,7 +5455,8 @@ internal static class Program
             string digestStateAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
-            AssertContains(global, "RESULT_DIGEST_UNKNOWN = -1", "Phase 84 Global.h does not yet expose the unknown digest sentinel.");
+            AssertDoesNotContain(global, "RESULT_DIGEST_UNKNOWN = -1", "Phase 84 Global.h should no longer own the compatibility digest sentinel.");
+            AssertContains(legacyDigestType, "RESULT_DIGEST_UNKNOWN = -1", "Phase 84 LegacyCompat does not yet expose the unknown digest sentinel.");
             AssertContains(global, "sunjwbase::tstring algorithmId;", "Phase 84 HashDigestResult does not yet expose descriptor/id identity storage.");
             AssertDoesNotContain(global, ": type(RESULT_DIGEST_UNKNOWN)", "Phase 84 HashDigestResult should not carry legacy digest-type default initialization.");
 

@@ -64,13 +64,15 @@ public sealed class HashContractUnitTests
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
         string resultNetProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultNetProjection.h");
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
-        Assert.Contains("enum ResultDigestType", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("enum ResultDigestType", global, StringComparison.Ordinal);
+        Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::tstring algorithmId;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashFileMeta", global, StringComparison.Ordinal);

@@ -26,15 +26,6 @@ class HashProgressSink;
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 
-enum ResultDigestType
-{
-	RESULT_DIGEST_UNKNOWN = -1,
-	RESULT_DIGEST_MD5 = 0,
-	RESULT_DIGEST_SHA1,
-	RESULT_DIGEST_SHA256,
-	RESULT_DIGEST_SHA512
-};
-
 #define MAX_FILES_NUM 8192
 
 enum ResultState
