@@ -677,8 +677,8 @@ internal static class Program
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>", "ResultDataProjection does not yet expose the centralized ResultDataNet projection template.");
             AssertContains(resultProjection, "static inline TResultDataNet ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized ResultDataNet projection helper.");
             AssertContains(resultProjection, "AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);", "ResultDataProjection does not yet route managed digest projection through HashResultProjection.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the centralized projection helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the centralized projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeWui, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "WinUI bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
             AssertDoesNotContain(bridgeWui, "static void AssignDigestToNet(ResultDataNet% resultDataNet, ResultDigestType digestType, String^ digestValue)", "WinUI bridge still keeps a local digest-assignment helper instead of using the centralized ResultDataNet seam.");
             AssertDoesNotContain(bridgeWui, "resultDataNet.MD5 = digestValue;\r\n\t\t\tbreak;", "WinUI bridge still inlines MD5 digest assignment inside the iteration path instead of using the bridge-local assignment helper.");
@@ -690,8 +690,8 @@ internal static class Program
             AssertDoesNotContain(bridgeWui, "GetResultDigest(result, RESULT_DIGEST_SHA256)", "WinUI bridge still hardcodes the SHA256 digest slot instead of iterating through the neutral digest seam.");
             AssertDoesNotContain(bridgeWui, "GetResultDigest(result, RESULT_DIGEST_SHA512)", "WinUI bridge still hardcodes the SHA512 digest slot instead of iterating through the neutral digest seam.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the centralized projection helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the centralized projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultNet projection through the dedicated managed bridge helper.");
             AssertDoesNotContain(bridgeUwp, "VisitResultDigestValues(result, [&](ResultDigestType digestType, const tstring& digestValueTstr)", "UWP bridge still keeps local digest iteration instead of using the centralized ResultDataNet projection seam.");
             AssertDoesNotContain(bridgeUwp, "static void AssignDigestToNet(ResultDataNet& resultDataNet, ResultDigestType digestType, String^ digestValue)", "UWP bridge still keeps a local digest-assignment helper instead of using the centralized ResultDataNet seam.");
             AssertDoesNotContain(bridgeUwp, "resultDataNet.MD5 = digestValue;\r\n\t\t\tbreak;", "UWP bridge still inlines MD5 digest assignment inside the iteration path instead of using the bridge-local assignment helper.");
@@ -955,10 +955,10 @@ internal static class Program
                 "ResultDigestAccess digest-value visitor helper does not yet feed values through the neutral digest seam.");
 
             AssertContains(resultProjection, "AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);", "ResultDataProjection does not yet consume digest values through HashResultProjection when projecting managed result data.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeWui, "String^ digestValue = ConvertTstrToSystemString(GetResultDigest(result, digestType).c_str());", "WinUI bridge still performs inline digest lookup instead of consuming the digest-value visitor payload.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet consume digest values through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeUwp, "String^ digestValue = ConvertToPlatStr(GetResultDigest(result, digestType).c_str());", "UWP bridge still performs inline digest lookup instead of consuming the digest-value visitor payload.");
         }, failures);
 
@@ -1131,9 +1131,9 @@ internal static class Program
             AssertContains(resultProjection, "TResultDataNet resultDataNet = AssignResultCoreToNet<TResultDataNet, TResultStateNet>(TResultDataNet(), result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized core assignment helper.");
             AssertContains(resultProjection, "return AssignResultDigestsToNet(resultDataNet, result, convertString);", "ResultDataProjection does not yet route ResultDataNet projection through the centralized digest assignment helper.");
 
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route non-digest reads through the centralized HashResultNet projection helper.");
 
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             AssertContains(filesHashSearchController, "#include \"Common/HashResultSearch.h\"", "Legacy MFC search flow does not yet consume the shared HashResult search seam.");
@@ -1188,8 +1188,8 @@ internal static class Program
             AssertDoesNotContain(bridgeMfc, "if (result.enumState == RESULT_NONE)", "Legacy MFC renderer still branches directly on ResultData::enumState.");
 
             AssertContains(resultProjection, "AssignHashResultCoreToNet<TResultDataNet, TResultStateNet>(resultDataNet, ProjectHashResult(result), convertString);", "ResultDataProjection does not yet route managed ResultState projection through HashResultProjection.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet read HashResultState through the centralized HashResultNet projection helper.");
         }, failures);
 
         Run("Phase 5 routes MFC result-section rendering policy through dedicated ResultDataAccess helpers", () =>
@@ -1318,21 +1318,21 @@ internal static class Program
 
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still depends on the deprecated managed-bridge helper header.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileName(hashResultNet);", "WinUI bridge no longer forwards projected file-name results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileMeta(hashResultNet);", "WinUI bridge no longer forwards projected file-meta results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", "WinUI bridge no longer forwards projected file-hash results through the current delegate path.");
-            AssertContains(bridgeWui, "m_uiBridgeDelegates->ShowFileErr(hashResultNet);", "WinUI bridge no longer forwards projected file-error results through the current delegate path.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
+            AssertContains(bridgeWui, "m_hashUiEvents->PublishFileStarted(hashResultNet);", "WinUI bridge no longer forwards projected file-name results through the current delegate path.");
+            AssertContains(bridgeWui, "m_hashUiEvents->PublishFileMetadata(hashResultNet);", "WinUI bridge no longer forwards projected file-meta results through the current delegate path.");
+            AssertContains(bridgeWui, "m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", "WinUI bridge no longer forwards projected file-hash results through the current delegate path.");
+            AssertContains(bridgeWui, "m_hashUiEvents->PublishFileError(hashResultNet);", "WinUI bridge no longer forwards projected file-error results through the current delegate path.");
             AssertDoesNotContain(bridgeWuiHeader, "void ProjectManagedResultAndDispatch(const ResultData& result, TResultHandler resultHandler)", "WinUI bridge still keeps the local managed projection-dispatch template instead of using the centralized seam.");
             AssertDoesNotContain(bridgeWui, "ResultDataNet resultDataNet = ConvertResultDataToNet(result);", "WinUI bridge still inlines projected result creation inside showFile* methods instead of using the dedicated helper.");
 
             AssertContains(bridgeUwpHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "UWP bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "UWP bridge header still depends on the deprecated managed-bridge helper header.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileName(hashResultNet);", "UWP bridge no longer forwards projected file-name results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileMeta(hashResultNet);", "UWP bridge no longer forwards projected file-meta results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", "UWP bridge no longer forwards projected file-hash results through the current delegate path.");
-            AssertContains(bridgeUwp, "m_uiBridgeDelegate->ShowFileErr(hashResultNet);", "UWP bridge no longer forwards projected file-error results through the current delegate path.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route showFile* methods through the common managed projection-dispatch helper.");
+            AssertContains(bridgeUwp, "m_hashUiEvents->PublishFileStarted(hashResultNet);", "UWP bridge no longer forwards projected file-name results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_hashUiEvents->PublishFileMetadata(hashResultNet);", "UWP bridge no longer forwards projected file-meta results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", "UWP bridge no longer forwards projected file-hash results through the current delegate path.");
+            AssertContains(bridgeUwp, "m_hashUiEvents->PublishFileError(hashResultNet);", "UWP bridge no longer forwards projected file-error results through the current delegate path.");
             AssertDoesNotContain(bridgeUwpHeader, "void ProjectManagedResultAndDispatch(const ResultData& result, TResultHandler resultHandler)", "UWP bridge still keeps the local managed projection-dispatch template instead of using the centralized seam.");
             AssertDoesNotContain(bridgeUwp, "ResultDataNet resultDataNet = ConvertResultDataToNet(result);", "UWP bridge still inlines projected result creation inside showFile* methods instead of using the dedicated helper.");
         }, failures);
@@ -1345,29 +1345,30 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(managedDispatch, "enum ManagedResultDispatchType", "Common managed-bridge dispatch header does not yet expose the dedicated managed result-dispatch type.");
-            AssertContains(managedDispatch, "DispatchManagedResultByType(ManagedResultDispatchType dispatchType, TResultDataNet resultDataNet, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
-            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result, ManagedResultDispatchType dispatchType, bool uppercase", "Common managed-bridge dispatch header still exposes the deprecated ResultData-based managed result-dispatch wrapper.");
-            AssertContains(managedDispatch, "DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
+            AssertContains(managedDispatch, "enum ManagedResultEventType", "Common managed-bridge dispatch header does not yet expose the dedicated managed result-dispatch type.");
+            AssertContains(managedDispatch, "DispatchManagedResultEventByType(ManagedResultEventType eventType, TResultDataNet resultDataNet, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
+            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultEventByType(const ResultData& result, ManagedResultEventType eventType, bool uppercase", "Common managed-bridge dispatch header still exposes the deprecated ResultData-based managed result-dispatch wrapper.");
+            AssertContains(managedDispatch, "DispatchManagedResultEventByType(eventType, resultDataNet", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
+            AssertContains(managedDispatch, "onFileStarted, onFileMetadata, onFileHash, onFileError", "Common managed-bridge dispatch header does not yet compose managed result dispatch through the lower-level dispatch seam.");
             AssertContains(bridgeWuiHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "WinUI bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "WinUI bridge header still includes the deprecated managed-bridge helper header.");
-            AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
+            AssertContains(bridgeWuiHeader, "void DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeWui, "void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeWui, "GetManagedResultDispatchType(eventType)", "WinUI bridge does not yet derive managed dispatch from ProgressEventType.");
+            AssertContains(bridgeWui, "DispatchProjectedResultEvent(result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWui, "GetManagedResultEventType(eventType)", "WinUI bridge does not yet derive managed dispatch from ProgressEventType.");
             AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::showFileName(const HashResult& result)", "WinUI bridge still exposes the old showFileName bridge method.");
             AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::showFileHash(const HashResult& result, bool uppercase)", "WinUI bridge still exposes the old showFileHash bridge method.");
 
             AssertContains(bridgeUwpHeader, "#include \"Common/ManagedBridgeDispatch.h\"", "UWP bridge header does not yet include the common managed-bridge dispatch header.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/ManagedBridgeHelpers.h\"", "UWP bridge header still includes the deprecated managed-bridge helper header.");
-            AssertContains(bridgeUwpHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
+            AssertContains(bridgeUwpHeader, "void DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
             AssertContains(bridgeUwp, "void UIBridgeUwp::handleFileResultProgressEvent(const HashResult& result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
-            AssertContains(bridgeUwp, "GetManagedResultDispatchType(eventType)", "UWP bridge does not yet derive managed dispatch from ProgressEventType.");
+            AssertContains(bridgeUwp, "DispatchProjectedResultEvent(result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwp, "GetManagedResultEventType(eventType)", "UWP bridge does not yet derive managed dispatch from ProgressEventType.");
             AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::showFileName(const HashResult& result)", "UWP bridge still exposes the old showFileName bridge method.");
             AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::showFileHash(const HashResult& result, bool uppercase)", "UWP bridge still exposes the old showFileHash bridge method.");
         }, failures);
@@ -1378,26 +1379,26 @@ internal static class Program
             string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(managedDispatch, "DispatchManagedBridgeDelegateActionByType(ManagedDelegateActionType actionType, int value", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-action wrapper.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeDelegateQueryByType(ManagedDelegateQueryType queryType, TProgMaxQuery queryProgMax)", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-query wrapper.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-action wrapper.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-query wrapper.");
             AssertDoesNotContain(managedDispatch, "ProjectManagedBridgeResultAndDispatch", "Common managed-bridge dispatch header still keeps the redundant bridge-level projection wrapper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()", "WinUI bridge does not yet route delegate actions through the common forwarding helper.");
-            AssertContains(bridgeWui, "return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()", "WinUI bridge does not yet route delegate queries through the common forwarding helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::preparingCalc()\r\n{\r\n\tm_uiBridgeDelegates->PreparingCalc();\r\n}", "WinUI bridge still forwards PreparingCalc inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::removePreparingCalc()\r\n{\r\n\tm_uiBridgeDelegates->RemovePreparingCalc();\r\n}", "WinUI bridge still forwards RemovePreparingCalc inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcStop()\r\n{\r\n\tm_uiBridgeDelegates->CalcStop();\r\n}", "WinUI bridge still forwards CalcStop inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcFinish()\r\n{\r\n\tm_uiBridgeDelegates->CalcFinish();\r\n}", "WinUI bridge still forwards CalcFinish inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeWui, "int UIBridgeWUI::getProgMax()\r\n{\r\n\treturn m_uiBridgeDelegates->GetProgMax();\r\n}", "WinUI bridge still forwards GetProgMax inline instead of using the dedicated delegate-query helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::updateProgWhole(int value)\r\n{\r\n\tm_uiBridgeDelegates->UpdateProgWhole(value);\r\n}", "WinUI bridge still forwards UpdateProgWhole inline instead of using the dedicated delegate-action helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeLifecycleEventByType(eventType, value, [&]()", "WinUI bridge does not yet route delegate actions through the common forwarding helper.");
+            AssertContains(bridgeWui, "return DispatchManagedBridgeQueryByType<int>(queryType, [&]()", "WinUI bridge does not yet route delegate queries through the common forwarding helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::preparingCalc()\r\n{\r\n\tm_hashUiEvents->NotifyJobPreparing();\r\n}", "WinUI bridge still forwards NotifyJobPreparing inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::removeNotifyJobPreparing()\r\n{\r\n\tm_hashUiEvents->RemoveNotifyJobPreparing();\r\n}", "WinUI bridge still forwards RemoveNotifyJobPreparing inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcStop()\r\n{\r\n\tm_hashUiEvents->NotifyJobCancelled();\r\n}", "WinUI bridge still forwards NotifyJobCancelled inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcFinish()\r\n{\r\n\tm_hashUiEvents->NotifyJobCompleted();\r\n}", "WinUI bridge still forwards NotifyJobCompleted inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeWui, "int UIBridgeWUI::getProgMax()\r\n{\r\n\treturn m_hashUiEvents->GetProgressValueMax();\r\n}", "WinUI bridge still forwards GetProgressValueMax inline instead of using the dedicated delegate-query helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::updateProgWhole(int value)\r\n{\r\n\tm_hashUiEvents->PublishTotalProgress(value);\r\n}", "WinUI bridge still forwards PublishTotalProgress inline instead of using the dedicated delegate-action helper.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()", "UWP bridge does not yet route delegate actions through the common forwarding helper.");
-            AssertContains(bridgeUwp, "return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()", "UWP bridge does not yet route delegate queries through the common forwarding helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::preparingCalc()\r\n{\r\n\tm_uiBridgeDelegate->PreparingCalc();\r\n}", "UWP bridge still forwards PreparingCalc inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::removePreparingCalc()\r\n{\r\n\tm_uiBridgeDelegate->RemovePreparingCalc();\r\n}", "UWP bridge still forwards RemovePreparingCalc inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcStop()\r\n{\r\n\tm_uiBridgeDelegate->CalcStop();\r\n}", "UWP bridge still forwards CalcStop inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcFinish()\r\n{\r\n\tm_uiBridgeDelegate->CalcFinish();\r\n}", "UWP bridge still forwards CalcFinish inline instead of using the dedicated delegate-action helper.");
-            AssertDoesNotContain(bridgeUwp, "int UIBridgeUwp::getProgMax()\r\n{\r\n\treturn m_uiBridgeDelegate->GetProgMax();\r\n}", "UWP bridge still forwards GetProgMax inline instead of using the dedicated delegate-query helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::updateProgWhole(int value)\r\n{\r\n\tm_uiBridgeDelegate->UpdateProgWhole(value);\r\n}", "UWP bridge still forwards UpdateProgWhole inline instead of using the dedicated delegate-action helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeLifecycleEventByType(eventType, value, [&]()", "UWP bridge does not yet route delegate actions through the common forwarding helper.");
+            AssertContains(bridgeUwp, "return DispatchManagedBridgeQueryByType<int>(queryType, [&]()", "UWP bridge does not yet route delegate queries through the common forwarding helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::preparingCalc()\r\n{\r\n\tm_hashUiEvents->NotifyJobPreparing();\r\n}", "UWP bridge still forwards NotifyJobPreparing inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::removeNotifyJobPreparing()\r\n{\r\n\tm_hashUiEvents->RemoveNotifyJobPreparing();\r\n}", "UWP bridge still forwards RemoveNotifyJobPreparing inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcStop()\r\n{\r\n\tm_hashUiEvents->NotifyJobCancelled();\r\n}", "UWP bridge still forwards NotifyJobCancelled inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcFinish()\r\n{\r\n\tm_hashUiEvents->NotifyJobCompleted();\r\n}", "UWP bridge still forwards NotifyJobCompleted inline instead of using the dedicated delegate-action helper.");
+            AssertDoesNotContain(bridgeUwp, "int UIBridgeUwp::getProgMax()\r\n{\r\n\treturn m_hashUiEvents->GetProgressValueMax();\r\n}", "UWP bridge still forwards GetProgressValueMax inline instead of using the dedicated delegate-query helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::updateProgWhole(int value)\r\n{\r\n\tm_hashUiEvents->PublishTotalProgress(value);\r\n}", "UWP bridge still forwards PublishTotalProgress inline instead of using the dedicated delegate-action helper.");
             AssertDoesNotContain(managedDispatch, "ForwardManagedDelegateAction(TDelegateAction delegateAction)", "Common managed-bridge dispatch header still keeps the redundant delegate-action forwarding wrapper.");
             AssertDoesNotContain(managedDispatch, "ForwardManagedDelegateQuery(TDelegateQuery delegateQuery)", "Common managed-bridge dispatch header still keeps the redundant delegate-query forwarding wrapper.");
         }, failures);
@@ -1410,22 +1411,22 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(managedDispatch, "enum ManagedDelegateQueryType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-query type.");
-            AssertContains(managedDispatch, "DispatchManagedDelegateQueryByType(ManagedDelegateQueryType queryType, TProgMaxQuery queryProgMax)", "Common managed-bridge dispatch header does not yet expose the centralized delegate-query helper.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeDelegateQueryByType(ManagedDelegateQueryType queryType, TProgMaxQuery queryProgMax)", "Common managed-bridge dispatch header does not yet expose the bridge-level delegate-query wrapper.");
-            AssertContains(managedDispatch, "return DispatchManagedDelegateQueryByType(queryType, [&]()", "Common managed-bridge dispatch header does not yet compose delegate-query forwarding through the dispatch seam.");
+            AssertContains(managedDispatch, "enum ManagedBridgeQueryType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-query type.");
+            AssertContains(managedDispatch, "DispatchManagedQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)", "Common managed-bridge dispatch header does not yet expose the centralized delegate-query helper.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)", "Common managed-bridge dispatch header does not yet expose the bridge-level delegate-query wrapper.");
+            AssertContains(managedDispatch, "return DispatchManagedQueryByType(queryType, [&]()", "Common managed-bridge dispatch header does not yet compose delegate-query forwarding through the dispatch seam.");
             AssertDoesNotContain(managedDispatch, "return ForwardManagedDelegateQuery<TResult>([&]()", "Common managed-bridge dispatch header still keeps the redundant delegate-query forwarding wrapper in the bridge-level helper.");
-            AssertContains(bridgeWuiHeader, "int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);", "WinUI bridge does not yet expose the dedicated delegate-query dispatch helper.");
-            AssertContains(bridgeWui, "int UIBridgeWUI::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)", "WinUI bridge does not yet implement the dedicated delegate-query dispatch helper.");
-            AssertContains(bridgeWui, "return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()", "WinUI bridge delegate-query dispatch helper does not yet route queries through the bridge-level helper.");
-            AssertContains(bridgeWui, "return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);", "WinUI bridge does not yet route GetProgMax through the dedicated delegate-query dispatch helper.");
-            AssertDoesNotContain(bridgeWui, "int UIBridgeWUI::getProgMax()\r\n{\r\n\treturn DispatchDelegateQuery<int>([&]()", "WinUI bridge still keeps GetProgMax's inline delegate-query lambda instead of routing through the dedicated query-type helper.");
+            AssertContains(bridgeWuiHeader, "int DispatchBridgeQuery(ManagedBridgeQueryType queryType);", "WinUI bridge does not yet expose the dedicated delegate-query dispatch helper.");
+            AssertContains(bridgeWui, "int UIBridgeWUI::DispatchBridgeQuery(ManagedBridgeQueryType queryType)", "WinUI bridge does not yet implement the dedicated delegate-query dispatch helper.");
+            AssertContains(bridgeWui, "return DispatchManagedBridgeQueryByType<int>(queryType, [&]()", "WinUI bridge delegate-query dispatch helper does not yet route queries through the bridge-level helper.");
+            AssertContains(bridgeWui, "return DispatchBridgeQuery(MANAGED_BRIDGE_QUERY_PROGRESS_VALUE_MAX);", "WinUI bridge does not yet route GetProgressValueMax through the dedicated delegate-query dispatch helper.");
+            AssertDoesNotContain(bridgeWui, "int UIBridgeWUI::getProgMax()\r\n{\r\n\treturn DispatchDelegateQuery<int>([&]()", "WinUI bridge still keeps GetProgressValueMax's inline delegate-query lambda instead of routing through the dedicated query-type helper.");
 
-            AssertContains(bridgeUwpHeader, "int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);", "UWP bridge does not yet expose the dedicated delegate-query dispatch helper.");
-            AssertContains(bridgeUwp, "int UIBridgeUwp::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)", "UWP bridge does not yet implement the dedicated delegate-query dispatch helper.");
-            AssertContains(bridgeUwp, "return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()", "UWP bridge delegate-query dispatch helper does not yet route queries through the bridge-level helper.");
-            AssertContains(bridgeUwp, "return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);", "UWP bridge does not yet route GetProgMax through the dedicated delegate-query dispatch helper.");
-            AssertDoesNotContain(bridgeUwp, "int UIBridgeUwp::getProgMax()\r\n{\r\n\treturn DispatchDelegateQuery<int>([&]()", "UWP bridge still keeps GetProgMax's inline delegate-query lambda instead of routing through the dedicated query-type helper.");
+            AssertContains(bridgeUwpHeader, "int DispatchBridgeQuery(ManagedBridgeQueryType queryType);", "UWP bridge does not yet expose the dedicated delegate-query dispatch helper.");
+            AssertContains(bridgeUwp, "int UIBridgeUwp::DispatchBridgeQuery(ManagedBridgeQueryType queryType)", "UWP bridge does not yet implement the dedicated delegate-query dispatch helper.");
+            AssertContains(bridgeUwp, "return DispatchManagedBridgeQueryByType<int>(queryType, [&]()", "UWP bridge delegate-query dispatch helper does not yet route queries through the bridge-level helper.");
+            AssertContains(bridgeUwp, "return DispatchBridgeQuery(MANAGED_BRIDGE_QUERY_PROGRESS_VALUE_MAX);", "UWP bridge does not yet route GetProgressValueMax through the dedicated delegate-query dispatch helper.");
+            AssertDoesNotContain(bridgeUwp, "int UIBridgeUwp::getProgMax()\r\n{\r\n\treturn DispatchDelegateQuery<int>([&]()", "UWP bridge still keeps GetProgressValueMax's inline delegate-query lambda instead of routing through the dedicated query-type helper.");
         }, failures);
 
         Run("Phase 5 routes managed bridge delegate actions through dedicated action-type dispatch helpers", () =>
@@ -1436,38 +1437,38 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(managedDispatch, "enum ManagedDelegateActionType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-action type.");
-            AssertContains(managedDispatch, "DispatchManagedDelegateActionByType(ManagedDelegateActionType actionType, int value", "Common managed-bridge dispatch header does not yet expose the centralized delegate-action helper.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeDelegateActionByType(ManagedDelegateActionType actionType, int value", "Common managed-bridge dispatch header does not yet expose the bridge-level delegate-action wrapper.");
-            AssertContains(managedDispatch, "DispatchManagedDelegateActionByType(actionType, value, [&]()", "Common managed-bridge dispatch header does not yet compose delegate-action forwarding through the dispatch seam.");
+            AssertContains(managedDispatch, "enum ManagedBridgeLifecycleEventType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-action type.");
+            AssertContains(managedDispatch, "DispatchManagedLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value", "Common managed-bridge dispatch header does not yet expose the centralized delegate-action helper.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value", "Common managed-bridge dispatch header does not yet expose the bridge-level delegate-action wrapper.");
+            AssertContains(managedDispatch, "DispatchManagedLifecycleEventByType(eventType, value, [&]()", "Common managed-bridge dispatch header does not yet compose delegate-action forwarding through the dispatch seam.");
             AssertDoesNotContain(managedDispatch, "ForwardManagedDelegateAction([&]()", "Common managed-bridge dispatch header still keeps the redundant delegate-action forwarding wrapper in the bridge-level helper.");
-            AssertContains(bridgeWuiHeader, "void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);", "WinUI bridge does not yet expose the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value)", "WinUI bridge does not yet implement the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()", "WinUI bridge delegate-action dispatch helper does not yet route actions through the bridge-level helper.");
-            AssertContains(bridgeWui, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);", "WinUI bridge does not yet route PreparingCalc through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);", "WinUI bridge does not yet route RemovePreparingCalc through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);", "WinUI bridge does not yet route CalcStop through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);", "WinUI bridge does not yet route CalcFinish through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeWui, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);", "WinUI bridge does not yet route UpdateProgWhole through the dedicated delegate-action dispatch helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::preparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps PreparingCalc's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::removePreparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps RemovePreparingCalc's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcStop()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps CalcStop's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcFinish()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps CalcFinish's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::updateProgWhole(int value)\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps UpdateProgWhole's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertContains(bridgeWuiHeader, "void DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value = 0);", "WinUI bridge does not yet expose the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "void UIBridgeWUI::DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value)", "WinUI bridge does not yet implement the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeLifecycleEventByType(eventType, value, [&]()", "WinUI bridge delegate-action dispatch helper does not yet route actions through the bridge-level helper.");
+            AssertContains(bridgeWui, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARING);", "WinUI bridge does not yet route NotifyJobPreparing through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARATION_FINISHED);", "WinUI bridge does not yet route RemoveNotifyJobPreparing through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_CANCELLED);", "WinUI bridge does not yet route NotifyJobCancelled through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_COMPLETED);", "WinUI bridge does not yet route NotifyJobCompleted through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeWui, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_TOTAL_PROGRESS, value);", "WinUI bridge does not yet route PublishTotalProgress through the dedicated delegate-action dispatch helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::preparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps NotifyJobPreparing's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::removeNotifyJobPreparing()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps RemoveNotifyJobPreparing's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcStop()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps NotifyJobCancelled's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::calcFinish()\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps NotifyJobCompleted's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::updateProgWhole(int value)\r\n{\r\n\tDispatchDelegateAction([&]()", "WinUI bridge still keeps PublishTotalProgress's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
 
-            AssertContains(bridgeUwpHeader, "void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);", "UWP bridge does not yet expose the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value)", "UWP bridge does not yet implement the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()", "UWP bridge delegate-action dispatch helper does not yet route actions through the bridge-level helper.");
-            AssertContains(bridgeUwp, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);", "UWP bridge does not yet route PreparingCalc through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);", "UWP bridge does not yet route RemovePreparingCalc through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);", "UWP bridge does not yet route CalcStop through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);", "UWP bridge does not yet route CalcFinish through the dedicated delegate-action dispatch helper.");
-            AssertContains(bridgeUwp, "DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);", "UWP bridge does not yet route UpdateProgWhole through the dedicated delegate-action dispatch helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::preparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps PreparingCalc's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::removePreparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps RemovePreparingCalc's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcStop()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps CalcStop's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcFinish()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps CalcFinish's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
-            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::updateProgWhole(int value)\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps UpdateProgWhole's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertContains(bridgeUwpHeader, "void DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value = 0);", "UWP bridge does not yet expose the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value)", "UWP bridge does not yet implement the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeLifecycleEventByType(eventType, value, [&]()", "UWP bridge delegate-action dispatch helper does not yet route actions through the bridge-level helper.");
+            AssertContains(bridgeUwp, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARING);", "UWP bridge does not yet route NotifyJobPreparing through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARATION_FINISHED);", "UWP bridge does not yet route RemoveNotifyJobPreparing through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_CANCELLED);", "UWP bridge does not yet route NotifyJobCancelled through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_COMPLETED);", "UWP bridge does not yet route NotifyJobCompleted through the dedicated delegate-action dispatch helper.");
+            AssertContains(bridgeUwp, "DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_TOTAL_PROGRESS, value);", "UWP bridge does not yet route PublishTotalProgress through the dedicated delegate-action dispatch helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::preparingCalc()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps NotifyJobPreparing's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::removeNotifyJobPreparing()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps RemoveNotifyJobPreparing's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcStop()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps NotifyJobCancelled's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::calcFinish()\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps NotifyJobCompleted's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
+            AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::updateProgWhole(int value)\r\n{\r\n\tDispatchDelegateAction([&]()", "UWP bridge still keeps PublishTotalProgress's inline delegate-action lambda instead of routing through the dedicated action-type helper.");
         }, failures);
 
         Run("Phase 5 routes managed bridge text conversion through dedicated bridge helpers", () =>
@@ -1728,11 +1729,11 @@ internal static class Program
             AssertContains(resultNetProjection, "template<typename TResultStateNet>", "ResultNetProjection does not yet expose the centralized ResultStateNet conversion template introduced after phase 4.");
             AssertContains(resultNetProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "ResultNetProjection does not yet expose the centralized ResultStateNet conversion helper introduced after phase 4.");
             AssertContains(resultProjection, "AssignHashResultCoreToNet<TResultDataNet, TResultStateNet>(resultDataNet, ProjectHashResult(result), convertString);", "ResultDataProjection does not yet route ResultStateNet assignment through HashResultProjection.");
-            AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeWui, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeWui, "switch (GetResultState(result))", "WinUI bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeWui, "static ResultStateNet ConvertResultStateToNet(ResultState resultState)", "WinUI bridge still keeps a local ResultStateNet conversion helper instead of using the centralized ResultDataAccess helper.");
 
-            AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
+            AssertContains(bridgeUwp, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)", "UWP bridge does not yet route HashResultStateNet assignment through the centralized HashResultNet projection helper.");
             AssertDoesNotContain(bridgeUwp, "switch (GetResultState(result))", "UWP bridge still inlines ResultStateNet conversion instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeUwp, "static ResultStateNet ConvertResultStateToNet(ResultState resultState)", "UWP bridge still keeps a local ResultStateNet conversion helper instead of using the centralized ResultDataAccess helper.");
         }, failures);
@@ -3597,20 +3598,20 @@ internal static class Program
             AssertContains(hashResultProjection, "ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", "Phase 36 does not yet expose direct HashResult-to-managed projection.");
 
             AssertContains(managedDispatch, "#include \"Common/HashResultProjection.h\"", "Phase 36 managed bridge dispatch does not yet depend on HashResultProjection.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 36 managed bridge dispatch does not yet expose HashResult-based projection dispatch.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeResultEventByType(const HashResult& result", "Phase 36 managed bridge dispatch does not yet expose HashResult-based projection dispatch.");
             AssertContains(managedDispatch, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", "Phase 36 managed bridge dispatch does not yet project HashResult directly.");
 
             AssertContains(bridgeMfcHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 MFC bridge header does not yet accept HashResult file-result consumption.");
 
             AssertContains(bridgeWuiHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 WinUI bridge header does not yet accept HashResult file-result consumption.");
-            AssertContains(bridgeWuiHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
-            AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
-            AssertContains(bridgeWuiSource, "GetManagedResultDispatchType(eventType)", "Phase 36 WinUI bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
+            AssertContains(bridgeWuiHeader, "DispatchProjectedResultEvent(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
+            AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
+            AssertContains(bridgeWuiSource, "GetManagedResultEventType(eventType)", "Phase 36 WinUI bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
 
             AssertContains(bridgeUwpHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 UWP bridge header does not yet accept HashResult file-result consumption.");
-            AssertContains(bridgeUwpHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 UWP bridge helper does not yet narrow to HashResult.");
-            AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
-            AssertContains(bridgeUwpSource, "GetManagedResultDispatchType(eventType)", "Phase 36 UWP bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
+            AssertContains(bridgeUwpHeader, "DispatchProjectedResultEvent(const HashResult& result", "Phase 36 UWP bridge helper does not yet narrow to HashResult.");
+            AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
+            AssertContains(bridgeUwpSource, "GetManagedResultEventType(eventType)", "Phase 36 UWP bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
         }, failures);
 
         Run("Phase 37 routes managed digest-search projection through HashResult search and projection seams", () =>
@@ -3692,23 +3693,23 @@ internal static class Program
 
             AssertContains(clrDelegatesHeader, "#include \"HashResultNet.h\"", "Phase 39 CLR delegate header does not yet consume HashResultNet.");
             AssertContains(clrDelegatesHeader, "public delegate void HashResultEventHandler(HashResultNet);", "Phase 39 CLR delegate header does not yet expose HashResultNet event handlers.");
-            AssertContains(clrDelegatesHeader, "void ShowFileHash(HashResultNet hashResultNet, bool uppercase);", "Phase 39 CLR delegate header does not yet switch ShowFileHash to HashResultNet.");
-            AssertContains(clrDelegatesSource, "void UIBridgeDelegates::ShowFileHash(HashResultNet hashResultNet, bool uppercase)", "Phase 39 CLR delegate implementation does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(clrDelegatesHeader, "void PublishFileHash(HashResultNet hashResultNet, bool uppercase);", "Phase 39 CLR delegate header does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(clrDelegatesSource, "void UIBridgeDelegates::PublishFileHash(HashResultNet hashResultNet, bool uppercase)", "Phase 39 CLR delegate implementation does not yet switch ShowFileHash to HashResultNet.");
 
             AssertContains(uwpDelegateHeader, "#include \"HashResultNet.h\"", "Phase 39 UWP delegate header does not yet consume HashResultNet.");
             AssertContains(uwpDelegateHeader, "public delegate void HashResultEventHandler(HashResultNet);", "Phase 39 UWP delegate header does not yet expose HashResultNet event handlers.");
-            AssertContains(uwpDelegateHeader, "void ShowFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", "Phase 39 UWP delegate header does not yet switch ShowFileHash to HashResultNet.");
-            AssertContains(uwpDelegateSource, "void UIBridgeDelegate::ShowFileHash(HashResultNet hashResultNet, Boolean uppercase)", "Phase 39 UWP delegate implementation does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(uwpDelegateHeader, "void PublishFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", "Phase 39 UWP delegate header does not yet switch ShowFileHash to HashResultNet.");
+            AssertContains(uwpDelegateSource, "void UIBridgeDelegate::PublishFileHash(HashResultNet hashResultNet, Boolean uppercase)", "Phase 39 UWP delegate implementation does not yet switch ShowFileHash to HashResultNet.");
 
-            AssertContains(bridgeWuiSource, "m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", "Phase 39 WinUI bridge does not yet forward realtime hash events as HashResultNet.");
-            AssertContains(bridgeUwpSource, "m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", "Phase 39 UWP bridge does not yet forward realtime hash events as HashResultNet.");
+            AssertContains(bridgeWuiSource, "m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", "Phase 39 WinUI bridge does not yet forward realtime hash events as HashResultNet.");
+            AssertContains(bridgeUwpSource, "m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", "Phase 39 UWP bridge does not yet forward realtime hash events as HashResultNet.");
 
             AssertContains(winUiPage, "private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", "Phase 39 WinUI page does not yet render realtime results directly from HashResultNet.");
-            AssertContains(winUiPage, "private void UIBridgeHandlers_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 WinUI page does not yet accept realtime HashResultNet hash events.");
+            AssertContains(winUiPage, "private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 WinUI page does not yet accept realtime HashResultNet hash events.");
             AssertDoesNotContain(winUiPage, "CreateCompatibilityResultData(", "Phase 39 WinUI page still rebuilds compatibility ResultDataNet for managed rendering.");
 
             AssertContains(winUwpPage, "private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet render realtime results directly from HashResultNet.");
-            AssertContains(winUwpPage, "private void UIBridgeDelegate_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet accept realtime HashResultNet hash events.");
+            AssertContains(winUwpPage, "private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", "Phase 39 UWP page does not yet accept realtime HashResultNet hash events.");
             AssertDoesNotContain(winUwpPage, "CreateCompatibilityResultData(", "Phase 39 UWP page still rebuilds compatibility ResultDataNet for managed rendering.");
         }, failures);
 
@@ -3743,8 +3744,8 @@ internal static class Program
             AssertContains(resultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 ResultDataProjection does not yet depend on the neutral ResultNetProjection seam.");
             AssertContains(hashResultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 HashResultProjection does not yet depend on the neutral ResultNetProjection seam.");
             AssertDoesNotContain(hashResultProjection, "#include \"Common/ResultDataProjection.h\"", "Phase 41 HashResultProjection still depends on the legacy ResultDataProjection header.");
-            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultByType(const ResultData& result", "Phase 41 ManagedBridgeDispatch still exposes the deprecated ResultData-based managed dispatch overload.");
-            AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 41 ManagedBridgeDispatch does not yet expose the HashResult-only managed dispatch overload.");
+            AssertDoesNotContain(managedDispatch, "DispatchManagedBridgeResultEventByType(const ResultData& result", "Phase 41 ManagedBridgeDispatch still exposes the deprecated ResultData-based managed dispatch overload.");
+            AssertContains(managedDispatch, "DispatchManagedBridgeResultEventByType(const HashResult& result", "Phase 41 ManagedBridgeDispatch does not yet expose the HashResult-only managed dispatch overload.");
         }, failures);
 
         Run("Phase 42 removes ResultData-based progress and observer compatibility overloads so HashResult stays a pure event contract", () =>
@@ -5865,3 +5866,4 @@ internal static class Program
         }
     }
 }
+

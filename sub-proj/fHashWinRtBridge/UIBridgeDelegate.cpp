@@ -8,52 +8,52 @@ UIBridgeDelegate::UIBridgeDelegate()
 {
 }
 
-int32 UIBridgeDelegate::GetProgMax()
+int32 UIBridgeDelegate::GetProgressValueMax()
 {
 	return 100;
 }
 
-void UIBridgeDelegate::PreparingCalc()
+void UIBridgeDelegate::NotifyJobPreparing()
 {
-	PreparingCalcHandler();
+	JobPreparingHandler();
 }
 
-void UIBridgeDelegate::RemovePreparingCalc()
+void UIBridgeDelegate::NotifyJobPreparationFinished()
 {
-	RemovePreparingCalcHandler();
+	JobPreparationFinishedHandler();
 }
 
-void UIBridgeDelegate::CalcStop()
+void UIBridgeDelegate::NotifyJobCancelled()
 {
-	CalcStopHandler();
+	JobCancelledHandler();
 }
 
-void UIBridgeDelegate::CalcFinish()
+void UIBridgeDelegate::NotifyJobCompleted()
 {
-	CalcFinishHandler();
+	JobCompletedHandler();
 }
 
-void UIBridgeDelegate::ShowFileName(HashResultNet hashResultNet)
+void UIBridgeDelegate::PublishFileStarted(HashResultNet hashResultNet)
 {
-	ShowFileNameHandler(hashResultNet);
+	FileStartedHandler(hashResultNet);
 }
 
-void UIBridgeDelegate::ShowFileMeta(HashResultNet hashResultNet)
+void UIBridgeDelegate::PublishFileMetadata(HashResultNet hashResultNet)
 {
-	ShowFileMetaHandler(hashResultNet);
+	FileMetadataHandler(hashResultNet);
 }
 
-void UIBridgeDelegate::ShowFileHash(HashResultNet hashResultNet, Boolean uppercase)
+void UIBridgeDelegate::PublishFileHash(HashResultNet hashResultNet, Boolean uppercase)
 {
-	ShowFileHashHandler(hashResultNet, uppercase);
+	FileHashHandler(hashResultNet, uppercase);
 }
 
-void UIBridgeDelegate::ShowFileErr(HashResultNet hashResultNet)
+void UIBridgeDelegate::PublishFileError(HashResultNet hashResultNet)
 {
-	ShowFileErrHandler(hashResultNet);
+	FileErrorHandler(hashResultNet);
 }
 
-void UIBridgeDelegate::UpdateProgWhole(int32 value)
+void UIBridgeDelegate::PublishTotalProgress(int32 value)
 {
-	UpdateProgWholeHandler(value);
+	TotalProgressHandler(value);
 }

@@ -60,7 +60,7 @@ namespace FilesHashUwp
         private Hyperlink m_hyperlinkClicked = null;
         private Run m_runPrepare = null;
 
-        private UIBridgeDelegate m_uiBridgeDelegate;
+        private UIBridgeDelegate m_hashUiEvents;
         private HashMgmt m_hashMgmt;
 
         private MainPageControlStat m_mainPageStat;
@@ -78,18 +78,18 @@ namespace FilesHashUwp
             Window.Current.SizeChanged += WindowSizeChanged;
 
             // Init native
-            m_uiBridgeDelegate = new UIBridgeDelegate();
-            m_uiBridgeDelegate.PreparingCalcHandler += UIBridgeDelegate_PreparingCalcHandler;
-            m_uiBridgeDelegate.RemovePreparingCalcHandler += UIBridgeDelegate_RemovePreparingCalcHandler;
-            m_uiBridgeDelegate.CalcStopHandler += UIBridgeDelegate_CalcStopHandler;
-            m_uiBridgeDelegate.CalcFinishHandler += UIBridgeDelegate_CalcFinishHandler;
-            m_uiBridgeDelegate.ShowFileNameHandler += UIBridgeDelegate_ShowFileNameHandler;
-            m_uiBridgeDelegate.ShowFileMetaHandler += UIBridgeDelegate_ShowFileMetaHandler;
-            m_uiBridgeDelegate.ShowFileHashHandler += UIBridgeDelegate_ShowFileHashHandler;
-            m_uiBridgeDelegate.ShowFileErrHandler += UIBridgeDelegate_ShowFileErrHandler;
-            m_uiBridgeDelegate.UpdateProgWholeHandler += UIBridgeDelegate_UpdateProgWholeHandler;
+            m_hashUiEvents = new UIBridgeDelegate();
+            m_hashUiEvents.JobPreparingHandler += HashUiEvents_JobPreparingHandler;
+            m_hashUiEvents.JobPreparationFinishedHandler += HashUiEvents_JobPreparationFinishedHandler;
+            m_hashUiEvents.JobCancelledHandler += HashUiEvents_JobCancelledHandler;
+            m_hashUiEvents.JobCompletedHandler += HashUiEvents_JobCompletedHandler;
+            m_hashUiEvents.FileStartedHandler += HashUiEvents_FileStartedHandler;
+            m_hashUiEvents.FileMetadataHandler += HashUiEvents_FileMetadataHandler;
+            m_hashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;
+            m_hashUiEvents.FileErrorHandler += HashUiEvents_FileErrorHandler;
+            m_hashUiEvents.TotalProgressHandler += HashUiEvents_TotalProgressHandler;
 
-            m_hashMgmt = new HashMgmt(m_uiBridgeDelegate);
+            m_hashMgmt = new HashMgmt(m_hashUiEvents);
             m_hashMgmt.Init();
 
             // Init resource and titlebar
@@ -572,7 +572,7 @@ namespace FilesHashUwp
         private void CalculateFinished()
         {
             SetPageControlStat(MainPageControlStat.MainPageCalcFinish);
-            ProgressBarMain.Value = m_uiBridgeDelegate.GetProgMax();
+            ProgressBarMain.Value = m_hashUiEvents.GetProgressValueMax();
 
             long calcDurationTime = m_calcEndTime - m_calcStartTime;
             if (calcDurationTime > 10)
@@ -1135,7 +1135,7 @@ namespace FilesHashUwp
             ScrollViewerMain.ChangeView(scrollViewerNewOffX, scrollViewerNewOffY, null);
         }
 
-        private void UIBridgeDelegate_PreparingCalcHandler()
+        private void HashUiEvents_JobPreparingHandler()
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1145,7 +1145,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_RemovePreparingCalcHandler()
+        private void HashUiEvents_JobPreparationFinishedHandler()
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1156,7 +1156,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_CalcStopHandler()
+        private void HashUiEvents_JobCancelledHandler()
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1164,7 +1164,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_CalcFinishHandler()
+        private void HashUiEvents_JobCompletedHandler()
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1172,7 +1172,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_ShowFileNameHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileStartedHandler(HashResultNet hashResult)
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1180,7 +1180,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_ShowFileMetaHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileMetadataHandler(HashResultNet hashResult)
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1188,7 +1188,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)
+        private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1196,7 +1196,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_ShowFileErrHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileErrorHandler(HashResultNet hashResult)
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
@@ -1204,7 +1204,7 @@ namespace FilesHashUwp
             }));
         }
 
-        private void UIBridgeDelegate_UpdateProgWholeHandler(int value)
+        private void HashUiEvents_TotalProgressHandler(int value)
         {
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {

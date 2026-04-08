@@ -8,8 +8,8 @@ using namespace System;
 using namespace FilesHashWUI;
 using namespace sunjwbase;
 
-UIBridgeWUI::UIBridgeWUI(UIBridgeDelegates^ uiBridgeDelegates)
-	:m_uiBridgeDelegates(uiBridgeDelegates)
+UIBridgeWUI::UIBridgeWUI(UIBridgeDelegates^ hashUiEvents)
+	:m_hashUiEvents(hashUiEvents)
 {
 }
 
@@ -27,19 +27,19 @@ void UIBridgeWUI::unlockBridgeData()
 	// No need here.
 }
 
-static ManagedResultDispatchType GetManagedResultDispatchType(ProgressEventType eventType)
+static ManagedResultEventType GetManagedResultEventType(ProgressEventType eventType)
 {
 	switch (eventType)
 	{
 	case PROGRESS_EVENT_FILE_STARTED:
-		return MANAGED_RESULT_DISPATCH_FILE_NAME;
+		return MANAGED_RESULT_EVENT_FILE_STARTED;
 	case PROGRESS_EVENT_FILE_META_READY:
-		return MANAGED_RESULT_DISPATCH_FILE_META;
+		return MANAGED_RESULT_EVENT_FILE_META_READY;
 	case PROGRESS_EVENT_FILE_HASH_READY:
-		return MANAGED_RESULT_DISPATCH_FILE_HASH;
+		return MANAGED_RESULT_EVENT_FILE_HASH_READY;
 	case PROGRESS_EVENT_FILE_FAILED:
 	default:
-		return MANAGED_RESULT_DISPATCH_FILE_ERROR;
+		return MANAGED_RESULT_EVENT_FILE_FAILED;
 	}
 }
 
@@ -48,86 +48,86 @@ String^ UIBridgeWUI::ConvertManagedResultText(const TCHAR* resultText)
 	return ConvertTstrToSystemString(resultText);
 }
 
-void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)
+void UIBridgeWUI::DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase)
 {
-	DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)
+	DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase, [&](const TCHAR* resultText)
 	{
 		return ConvertManagedResultText(resultText);
 	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileName(hashResultNet);
+		m_hashUiEvents->PublishFileStarted(hashResultNet);
 	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileMeta(hashResultNet);
+		m_hashUiEvents->PublishFileMetadata(hashResultNet);
 	}, [&](HashResultNet hashResultNet, bool hashUppercase)
 	{
-		m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);
+		m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);
 	}, [&](HashResultNet hashResultNet)
 	{
-		m_uiBridgeDelegates->ShowFileErr(hashResultNet);
+		m_hashUiEvents->PublishFileError(hashResultNet);
 	});
 }
 
-void UIBridgeWUI::DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value)
+void UIBridgeWUI::DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value)
 {
-	DispatchManagedBridgeDelegateActionByType(actionType, value, [&]()
+	DispatchManagedBridgeLifecycleEventByType(eventType, value, [&]()
 	{
-		m_uiBridgeDelegates->PreparingCalc();
+		m_hashUiEvents->NotifyJobPreparing();
 	}, [&]()
 	{
-		m_uiBridgeDelegates->RemovePreparingCalc();
+		m_hashUiEvents->NotifyJobPreparationFinished();
 	}, [&]()
 	{
-		m_uiBridgeDelegates->CalcStop();
+		m_hashUiEvents->NotifyJobCancelled();
 	}, [&]()
 	{
-		m_uiBridgeDelegates->CalcFinish();
+		m_hashUiEvents->NotifyJobCompleted();
 	}, [&](int progressValue)
 	{
-		m_uiBridgeDelegates->UpdateProgWhole(progressValue);
+		m_hashUiEvents->PublishTotalProgress(progressValue);
 	});
 }
 
-int UIBridgeWUI::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)
+int UIBridgeWUI::DispatchBridgeQuery(ManagedBridgeQueryType queryType)
 {
-	return DispatchManagedBridgeDelegateQueryByType<int>(queryType, [&]()
+	return DispatchManagedBridgeQueryByType<int>(queryType, [&]()
 	{
-		return m_uiBridgeDelegates->GetProgMax();
+		return m_hashUiEvents->GetProgressValueMax();
 	});
 }
 
 void UIBridgeWUI::handleJobPreparingEvent()
 {
-	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);
+	DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARING);
 }
 
 void UIBridgeWUI::handleJobPreparationFinishedEvent()
 {
-	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);
+	DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARATION_FINISHED);
 }
 
 void UIBridgeWUI::handleJobCancelledEvent()
 {
-	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);
+	DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_CANCELLED);
 }
 
 void UIBridgeWUI::handleJobCompletedEvent()
 {
-	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
+	DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_JOB_COMPLETED);
 }
 
 void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,
 													ProgressEventType eventType,
 													bool uppercaseDigest)
 {
-	DispatchProjectedResultToDelegate(result,
-										GetManagedResultDispatchType(eventType),
-										uppercaseDigest);
+	DispatchProjectedResultEvent(result,
+									GetManagedResultEventType(eventType),
+									uppercaseDigest);
 }
 
 int UIBridgeWUI::getProgressValueMax()
 {
-	return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);
+	return DispatchBridgeQuery(MANAGED_BRIDGE_QUERY_PROGRESS_VALUE_MAX);
 }
 
 void UIBridgeWUI::handleFileProgressEvent(int value)
@@ -136,7 +136,7 @@ void UIBridgeWUI::handleFileProgressEvent(int value)
 
 void UIBridgeWUI::handleTotalProgressEvent(int value)
 {
-	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);
+	DispatchBridgeLifecycleEvent(MANAGED_BRIDGE_LIFECYCLE_TOTAL_PROGRESS, value);
 }
 
 void UIBridgeWUI::handleFileCalculatedEvent()

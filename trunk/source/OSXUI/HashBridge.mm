@@ -79,7 +79,7 @@ using namespace sunjwbase;
     _thrdData->uppercase = val;
 }
 
-- (int)getProgMax {
+- (int)getProgressValueMax {
     return _uiBridgeSwift->getProgressValueMax();
 }
 

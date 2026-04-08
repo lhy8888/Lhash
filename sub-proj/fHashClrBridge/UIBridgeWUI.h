@@ -14,7 +14,7 @@ namespace FilesHashWUI
 	class UIBridgeWUI : public HashUiBridgeAdapter
 	{
 	public:
-		UIBridgeWUI(UIBridgeDelegates^ uiBridgeDelegates);
+		UIBridgeWUI(UIBridgeDelegates^ hashUiEvents);
 		virtual ~UIBridgeWUI();
 
 		virtual void lockBridgeData();
@@ -38,10 +38,10 @@ namespace FilesHashWUI
 
 	private:
 		static System::String^ ConvertManagedResultText(const TCHAR* resultText);
-		void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
-		void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);
-		int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);
+		void DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase = false);
+		void DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value = 0);
+		int DispatchBridgeQuery(ManagedBridgeQueryType queryType);
 
-		msclr::auto_gcroot<UIBridgeDelegates^> m_uiBridgeDelegates;
+		msclr::auto_gcroot<UIBridgeDelegates^> m_hashUiEvents;
 	};
 }

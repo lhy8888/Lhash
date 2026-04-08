@@ -3,117 +3,117 @@
 
 #include "Common/HashResultProjection.h"
 
-enum ManagedResultDispatchType
+enum ManagedResultEventType
 {
-	MANAGED_RESULT_DISPATCH_FILE_NAME,
-	MANAGED_RESULT_DISPATCH_FILE_META,
-	MANAGED_RESULT_DISPATCH_FILE_HASH,
-	MANAGED_RESULT_DISPATCH_FILE_ERROR
+	MANAGED_RESULT_EVENT_FILE_STARTED,
+	MANAGED_RESULT_EVENT_FILE_META_READY,
+	MANAGED_RESULT_EVENT_FILE_HASH_READY,
+	MANAGED_RESULT_EVENT_FILE_FAILED
 };
 
-template<typename TResultDataNet, typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
-static inline void DispatchManagedResultByType(ManagedResultDispatchType dispatchType, TResultDataNet resultDataNet, bool uppercase, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
+template<typename TResultDataNet, typename TFileStartedAction, typename TFileMetadataAction, typename TFileHashAction, typename TFileErrorAction>
+static inline void DispatchManagedResultEventByType(ManagedResultEventType eventType, TResultDataNet resultDataNet, bool uppercase, TFileStartedAction onFileStarted, TFileMetadataAction onFileMetadata, TFileHashAction onFileHash, TFileErrorAction onFileError)
 {
-	switch (dispatchType)
+	switch (eventType)
 	{
-	case MANAGED_RESULT_DISPATCH_FILE_NAME:
-		onFileName(resultDataNet);
+	case MANAGED_RESULT_EVENT_FILE_STARTED:
+		onFileStarted(resultDataNet);
 		break;
-	case MANAGED_RESULT_DISPATCH_FILE_META:
-		onFileMeta(resultDataNet);
+	case MANAGED_RESULT_EVENT_FILE_META_READY:
+		onFileMetadata(resultDataNet);
 		break;
-	case MANAGED_RESULT_DISPATCH_FILE_HASH:
+	case MANAGED_RESULT_EVENT_FILE_HASH_READY:
 		onFileHash(resultDataNet, uppercase);
 		break;
-	case MANAGED_RESULT_DISPATCH_FILE_ERROR:
+	case MANAGED_RESULT_EVENT_FILE_FAILED:
 		onFileError(resultDataNet);
 		break;
 	}
 }
 
-enum ManagedDelegateActionType
+enum ManagedBridgeLifecycleEventType
 {
-	MANAGED_DELEGATE_ACTION_PREPARING_CALC,
-	MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC,
-	MANAGED_DELEGATE_ACTION_CALC_STOP,
-	MANAGED_DELEGATE_ACTION_CALC_FINISH,
-	MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE
+	MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARING,
+	MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARATION_FINISHED,
+	MANAGED_BRIDGE_LIFECYCLE_JOB_CANCELLED,
+	MANAGED_BRIDGE_LIFECYCLE_JOB_COMPLETED,
+	MANAGED_BRIDGE_LIFECYCLE_TOTAL_PROGRESS
 };
 
-template<typename TPreparingCalcAction, typename TRemovePreparingCalcAction, typename TCalcStopAction, typename TCalcFinishAction, typename TUpdateProgWholeAction>
-static inline void DispatchManagedDelegateActionByType(ManagedDelegateActionType actionType, int value, TPreparingCalcAction onPreparingCalc, TRemovePreparingCalcAction onRemovePreparingCalc, TCalcStopAction onCalcStop, TCalcFinishAction onCalcFinish, TUpdateProgWholeAction onUpdateProgWhole)
+template<typename TJobPreparingAction, typename TJobPreparationFinishedAction, typename TJobCancelledAction, typename TJobCompletedAction, typename TTotalProgressAction>
+static inline void DispatchManagedLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value, TJobPreparingAction onJobPreparing, TJobPreparationFinishedAction onJobPreparationFinished, TJobCancelledAction onJobCancelled, TJobCompletedAction onJobCompleted, TTotalProgressAction onTotalProgress)
 {
-	switch (actionType)
+	switch (eventType)
 	{
-	case MANAGED_DELEGATE_ACTION_PREPARING_CALC:
-		onPreparingCalc();
+	case MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARING:
+		onJobPreparing();
 		break;
-	case MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC:
-		onRemovePreparingCalc();
+	case MANAGED_BRIDGE_LIFECYCLE_JOB_PREPARATION_FINISHED:
+		onJobPreparationFinished();
 		break;
-	case MANAGED_DELEGATE_ACTION_CALC_STOP:
-		onCalcStop();
+	case MANAGED_BRIDGE_LIFECYCLE_JOB_CANCELLED:
+		onJobCancelled();
 		break;
-	case MANAGED_DELEGATE_ACTION_CALC_FINISH:
-		onCalcFinish();
+	case MANAGED_BRIDGE_LIFECYCLE_JOB_COMPLETED:
+		onJobCompleted();
 		break;
-	case MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE:
-		onUpdateProgWhole(value);
+	case MANAGED_BRIDGE_LIFECYCLE_TOTAL_PROGRESS:
+		onTotalProgress(value);
 		break;
 	}
 }
 
-enum ManagedDelegateQueryType
+enum ManagedBridgeQueryType
 {
-	MANAGED_DELEGATE_QUERY_PROG_MAX
+	MANAGED_BRIDGE_QUERY_PROGRESS_VALUE_MAX
 };
 
-template<typename TProgMaxQuery>
-static inline int DispatchManagedDelegateQueryByType(ManagedDelegateQueryType queryType, TProgMaxQuery queryProgMax)
+template<typename TProgressValueMaxQuery>
+static inline int DispatchManagedQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)
 {
 	switch (queryType)
 	{
-	case MANAGED_DELEGATE_QUERY_PROG_MAX:
-		return queryProgMax();
+	case MANAGED_BRIDGE_QUERY_PROGRESS_VALUE_MAX:
+		return queryProgressValueMax();
 	}
 
 	return 0;
 }
 
-template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TFileNameAction, typename TFileMetaAction, typename TFileHashAction, typename TFileErrorAction>
-static inline void DispatchManagedBridgeResultByType(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase, TStringConverter convertString, TFileNameAction onFileName, TFileMetaAction onFileMeta, TFileHashAction onFileHash, TFileErrorAction onFileError)
+template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TFileStartedAction, typename TFileMetadataAction, typename TFileHashAction, typename TFileErrorAction>
+static inline void DispatchManagedBridgeResultEventByType(const HashResult& result, ManagedResultEventType eventType, bool uppercase, TStringConverter convertString, TFileStartedAction onFileStarted, TFileMetadataAction onFileMetadata, TFileHashAction onFileHash, TFileErrorAction onFileError)
 {
 	TResultDataNet resultDataNet = ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString);
-	DispatchManagedResultByType(dispatchType, resultDataNet, uppercase, onFileName, onFileMeta, onFileHash, onFileError);
+	DispatchManagedResultEventByType(eventType, resultDataNet, uppercase, onFileStarted, onFileMetadata, onFileHash, onFileError);
 }
 
-template<typename TPreparingCalcAction, typename TRemovePreparingCalcAction, typename TCalcStopAction, typename TCalcFinishAction, typename TUpdateProgWholeAction>
-static inline void DispatchManagedBridgeDelegateActionByType(ManagedDelegateActionType actionType, int value, TPreparingCalcAction onPreparingCalc, TRemovePreparingCalcAction onRemovePreparingCalc, TCalcStopAction onCalcStop, TCalcFinishAction onCalcFinish, TUpdateProgWholeAction onUpdateProgWhole)
+template<typename TJobPreparingAction, typename TJobPreparationFinishedAction, typename TJobCancelledAction, typename TJobCompletedAction, typename TTotalProgressAction>
+static inline void DispatchManagedBridgeLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value, TJobPreparingAction onJobPreparing, TJobPreparationFinishedAction onJobPreparationFinished, TJobCancelledAction onJobCancelled, TJobCompletedAction onJobCompleted, TTotalProgressAction onTotalProgress)
 {
-	DispatchManagedDelegateActionByType(actionType, value, [&]()
+	DispatchManagedLifecycleEventByType(eventType, value, [&]()
 	{
-		onPreparingCalc();
+		onJobPreparing();
 	}, [&]()
 	{
-		onRemovePreparingCalc();
+		onJobPreparationFinished();
 	}, [&]()
 	{
-		onCalcStop();
+		onJobCancelled();
 	}, [&]()
 	{
-		onCalcFinish();
+		onJobCompleted();
 	}, [&](int progressValue)
 	{
-		onUpdateProgWhole(progressValue);
+		onTotalProgress(progressValue);
 	});
 }
 
-template<typename TResult, typename TProgMaxQuery>
-static inline TResult DispatchManagedBridgeDelegateQueryByType(ManagedDelegateQueryType queryType, TProgMaxQuery queryProgMax)
+template<typename TResult, typename TProgressValueMaxQuery>
+static inline TResult DispatchManagedBridgeQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)
 {
-	return DispatchManagedDelegateQueryByType(queryType, [&]()
+	return DispatchManagedQueryByType(queryType, [&]()
 	{
-		return queryProgMax();
+		return queryProgressValueMax();
 	});
 }
 

@@ -12,7 +12,7 @@ namespace FilesHashUwp
 	class UIBridgeUwp : public HashUiBridgeAdapter
 	{
 	public:
-		UIBridgeUwp(UIBridgeDelegate^ uiBridgeDelegate);
+		UIBridgeUwp(UIBridgeDelegate^ hashUiEvents);
 		virtual ~UIBridgeUwp();
 
 		virtual void lockBridgeData();
@@ -36,10 +36,10 @@ namespace FilesHashUwp
 
 	private:
 		static Platform::String^ ConvertManagedResultText(const TCHAR* resultText);
-		void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);
-		void DispatchDelegateActionByType(ManagedDelegateActionType actionType, int value = 0);
-		int DispatchDelegateQueryByType(ManagedDelegateQueryType queryType);
+		void DispatchProjectedResultEvent(const HashResult& result, ManagedResultEventType eventType, bool uppercase = false);
+		void DispatchBridgeLifecycleEvent(ManagedBridgeLifecycleEventType eventType, int value = 0);
+		int DispatchBridgeQuery(ManagedBridgeQueryType queryType);
 
-		UIBridgeDelegate^ m_uiBridgeDelegate;
+		UIBridgeDelegate^ m_hashUiEvents;
 	};
 }

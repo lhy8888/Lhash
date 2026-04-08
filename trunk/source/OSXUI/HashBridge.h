@@ -19,7 +19,7 @@
 
 - (void)setStop:(bool)val;
 - (void)setUppercase:(bool)val;
-- (int)getProgMax;
+- (int)getProgressValueMax;
 - (uint64_t)getTotalSize;
 
 - (void)addFiles:(NSArray *)fileNames isURL:(BOOL)isURL;

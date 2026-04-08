@@ -78,15 +78,15 @@ namespace FilesHashWUI
 
             m_mainWindow = MainWindow.CurrentWindow;
 
-            m_mainWindow.UIBridgeHandlers.PreparingCalcHandler += UIBridgeHandlers_PreparingCalcHandler;
-            m_mainWindow.UIBridgeHandlers.RemovePreparingCalcHandler += UIBridgeHandlers_RemovePreparingCalcHandler;
-            m_mainWindow.UIBridgeHandlers.CalcStopHandler += UIBridgeHandlers_CalcStopHandler;
-            m_mainWindow.UIBridgeHandlers.CalcFinishHandler += UIBridgeHandlers_CalcFinishHandler;
-            m_mainWindow.UIBridgeHandlers.ShowFileNameHandler += UIBridgeHandlers_ShowFileNameHandler;
-            m_mainWindow.UIBridgeHandlers.ShowFileMetaHandler += UIBridgeHandlers_ShowFileMetaHandler;
-            m_mainWindow.UIBridgeHandlers.ShowFileHashHandler += UIBridgeHandlers_ShowFileHashHandler;
-            m_mainWindow.UIBridgeHandlers.ShowFileErrHandler += UIBridgeHandlers_ShowFileErrHandler;
-            m_mainWindow.UIBridgeHandlers.UpdateProgWholeHandler += UIBridgeHandlers_UpdateProgWholeHandler;
+            m_mainWindow.HashUiEvents.JobPreparingHandler += HashUiEvents_JobPreparingHandler;
+            m_mainWindow.HashUiEvents.JobPreparationFinishedHandler += HashUiEvents_JobPreparationFinishedHandler;
+            m_mainWindow.HashUiEvents.JobCancelledHandler += HashUiEvents_JobCancelledHandler;
+            m_mainWindow.HashUiEvents.JobCompletedHandler += HashUiEvents_JobCompletedHandler;
+            m_mainWindow.HashUiEvents.FileStartedHandler += HashUiEvents_FileStartedHandler;
+            m_mainWindow.HashUiEvents.FileMetadataHandler += HashUiEvents_FileMetadataHandler;
+            m_mainWindow.HashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;
+            m_mainWindow.HashUiEvents.FileErrorHandler += HashUiEvents_FileErrorHandler;
+            m_mainWindow.HashUiEvents.TotalProgressHandler += HashUiEvents_TotalProgressHandler;
 
             m_mainWindow.IsAbleToCalc = IsAbleToCalcFiles;
             m_mainWindow.IsCalculating = IsCalculating;
@@ -508,7 +508,7 @@ namespace FilesHashWUI
 
             SetPageControlStat(MainPageControlStat.MainPageCalcFinish);
 
-            int progMax = m_mainWindow.UIBridgeHandlers.GetProgMax();
+            int progMax = m_mainWindow.HashUiEvents.GetProgressValueMax();
             ProgressBarMain.Value = progMax;
             m_mainWindow.SetTaskbarProgress((ulong)progMax);
 
@@ -1048,7 +1048,7 @@ namespace FilesHashWUI
             }
         }
 
-        private void UIBridgeHandlers_PreparingCalcHandler()
+        private void HashUiEvents_JobPreparingHandler()
         {
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -1058,7 +1058,7 @@ namespace FilesHashWUI
             });
         }
 
-        private void UIBridgeHandlers_RemovePreparingCalcHandler()
+        private void HashUiEvents_JobPreparationFinishedHandler()
         {
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -1069,41 +1069,41 @@ namespace FilesHashWUI
             });
         }
 
-        private void UIBridgeHandlers_CalcStopHandler()
+        private void HashUiEvents_JobCancelledHandler()
         {
             DispatcherQueue.TryEnqueue(CalculateStopped);
         }
 
-        private void UIBridgeHandlers_CalcFinishHandler()
+        private void HashUiEvents_JobCompletedHandler()
         {
             DispatcherQueue.TryEnqueue(CalculateFinished);
         }
 
-        private void UIBridgeHandlers_ShowFileNameHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileStartedHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
             DispatcherQueue.TryEnqueue(() => AppendFileNameToTextMain(hashResult));
         }
 
-        private void UIBridgeHandlers_ShowFileMetaHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileMetadataHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
             DispatcherQueue.TryEnqueue(() => AppendFileMetaToTextMain(hashResult));
         }
 
-        private void UIBridgeHandlers_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)
+        private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)
         {
             m_inMainQueue += 1;
             DispatcherQueue.TryEnqueue(() => AppendFileHashToTextMain(hashResult, uppercase));
         }
 
-        private void UIBridgeHandlers_ShowFileErrHandler(HashResultNet hashResult)
+        private void HashUiEvents_FileErrorHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
             DispatcherQueue.TryEnqueue(() => AppendFileErrToTextMain(hashResult));
         }
 
-        private void UIBridgeHandlers_UpdateProgWholeHandler(int value)
+        private void HashUiEvents_TotalProgressHandler(int value)
         {
             DispatcherQueue.TryEnqueue(() =>
             {

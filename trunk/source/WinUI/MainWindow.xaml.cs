@@ -65,7 +65,7 @@ namespace FilesHashWUI
         public double Scale { get; private set; } = 1.0;
 
         public HashMgmtClr HashMgmt { get; private set; } = null;
-        public UIBridgeDelegates UIBridgeHandlers { get; private set; } = new();
+        public UIBridgeDelegates HashUiEvents { get; private set; } = new();
         public IsAbleToCalcHandler IsAbleToCalc = null;
         public IsCalculatingHandler IsCalculating = null;
 
@@ -84,7 +84,7 @@ namespace FilesHashWUI
             m_uiSettings = new();
             m_advTaskbarHelper = new(HWNDHandle);
 
-            HashMgmt = new(UIBridgeHandlers);
+            HashMgmt = new(HashUiEvents);
             HashMgmt.Init();
 
             InitTitleBarAndTaskBar();

@@ -4,40 +4,40 @@
 
 namespace FilesHashWUI
 {
-	public delegate void CalcEventHandler();
+	public delegate void HashJobEventHandler();
 	public delegate void HashResultEventHandler(HashResultNet);
 	public delegate void HashResultHashEventHandler(HashResultNet, bool);
-	public delegate void CalcProgEventHandler(System::Int32);
+	public delegate void HashProgressEventHandler(System::Int32);
 
 	public ref class UIBridgeDelegates sealed
 	{
 	public:
 		UIBridgeDelegates();
 
-		System::Int32 GetProgMax();
+		System::Int32 GetProgressValueMax();
 
-		void PreparingCalc();
-		void RemovePreparingCalc();
-		void CalcStop();
-		void CalcFinish();
+		void NotifyJobPreparing();
+		void NotifyJobPreparationFinished();
+		void NotifyJobCancelled();
+		void NotifyJobCompleted();
 
-		void ShowFileName(HashResultNet hashResultNet);
-		void ShowFileMeta(HashResultNet hashResultNet);
-		void ShowFileHash(HashResultNet hashResultNet, bool uppercase);
-		void ShowFileErr(HashResultNet hashResultNet);
+		void PublishFileStarted(HashResultNet hashResultNet);
+		void PublishFileMetadata(HashResultNet hashResultNet);
+		void PublishFileHash(HashResultNet hashResultNet, bool uppercase);
+		void PublishFileError(HashResultNet hashResultNet);
 
-		void UpdateProgWhole(System::Int32 value);
+		void PublishTotalProgress(System::Int32 value);
 
-		event CalcEventHandler^ PreparingCalcHandler;
-		event CalcEventHandler^ RemovePreparingCalcHandler;
-		event CalcEventHandler^ CalcStopHandler;
-		event CalcEventHandler^ CalcFinishHandler;
+		event HashJobEventHandler^ JobPreparingHandler;
+		event HashJobEventHandler^ JobPreparationFinishedHandler;
+		event HashJobEventHandler^ JobCancelledHandler;
+		event HashJobEventHandler^ JobCompletedHandler;
 
-		event HashResultEventHandler^ ShowFileNameHandler;
-		event HashResultEventHandler^ ShowFileMetaHandler;
-		event HashResultHashEventHandler^ ShowFileHashHandler;
-		event HashResultEventHandler^ ShowFileErrHandler;
+		event HashResultEventHandler^ FileStartedHandler;
+		event HashResultEventHandler^ FileMetadataHandler;
+		event HashResultHashEventHandler^ FileHashHandler;
+		event HashResultEventHandler^ FileErrorHandler;
 
-		event CalcProgEventHandler^ UpdateProgWholeHandler;
+		event HashProgressEventHandler^ TotalProgressHandler;
 	};
 }

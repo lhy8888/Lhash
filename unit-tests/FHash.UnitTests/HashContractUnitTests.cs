@@ -702,9 +702,9 @@ public sealed class HashContractUnitTests
         string winUwpPage = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUWP\MainPage.xaml.cs");
 
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedDispatch, StringComparison.Ordinal);
-        Assert.Contains("DispatchManagedBridgeResultByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
+        Assert.Contains("DispatchManagedBridgeResultEventByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", managedDispatch, StringComparison.Ordinal);
-        Assert.DoesNotContain("DispatchManagedBridgeResultByType(const ResultData& result", managedDispatch, StringComparison.Ordinal);
+        Assert.DoesNotContain("DispatchManagedBridgeResultEventByType(const ResultData& result", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", managedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultProjection.h\"", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
@@ -742,10 +742,10 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"HashResultNet.h\"", clrDelegatesHeader, StringComparison.Ordinal);
         Assert.Contains("public delegate void HashResultEventHandler(HashResultNet);", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("void ShowFileHash(HashResultNet hashResultNet, bool uppercase);", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("event HashResultHashEventHandler^ ShowFileHashHandler;", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeDelegates::ShowFileHash(HashResultNet hashResultNet, bool uppercase)", clrDelegatesSource, StringComparison.Ordinal);
-        Assert.Contains("ShowFileHashHandler(hashResultNet, uppercase);", clrDelegatesSource, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileHash(HashResultNet hashResultNet, bool uppercase);", clrDelegatesHeader, StringComparison.Ordinal);
+        Assert.Contains("event HashResultHashEventHandler^ FileHashHandler;", clrDelegatesHeader, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeDelegates::PublishFileHash(HashResultNet hashResultNet, bool uppercase)", clrDelegatesSource, StringComparison.Ordinal);
+        Assert.Contains("FileHashHandler(hashResultNet, uppercase);", clrDelegatesSource, StringComparison.Ordinal);
 
         Assert.Contains("public enum class HashResultStateNet", uwpHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", uwpHashResultNet, StringComparison.Ordinal);
@@ -771,10 +771,10 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"HashResultNet.h\"", uwpDelegateHeader, StringComparison.Ordinal);
         Assert.Contains("public delegate void HashResultEventHandler(HashResultNet);", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("void ShowFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("event HashResultHashEventHandler^ ShowFileHashHandler;", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeDelegate::ShowFileHash(HashResultNet hashResultNet, Boolean uppercase)", uwpDelegateSource, StringComparison.Ordinal);
-        Assert.Contains("ShowFileHashHandler(hashResultNet, uppercase);", uwpDelegateSource, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", uwpDelegateHeader, StringComparison.Ordinal);
+        Assert.Contains("event HashResultHashEventHandler^ FileHashHandler;", uwpDelegateHeader, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeDelegate::PublishFileHash(HashResultNet hashResultNet, Boolean uppercase)", uwpDelegateSource, StringComparison.Ordinal);
+        Assert.Contains("FileHashHandler(hashResultNet, uppercase);", uwpDelegateSource, StringComparison.Ordinal);
 
         Assert.Contains("class UIBridgeMFC: public HashUiBridgeAdapter", mfcHeader, StringComparison.Ordinal);
         Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", mfcHeader, StringComparison.Ordinal);
@@ -793,19 +793,21 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("class UIBridgeWUI : public HashUiBridgeAdapter", wuiHeader, StringComparison.Ordinal);
         Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", wuiHeader, StringComparison.Ordinal);
-        Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", wuiHeader, StringComparison.Ordinal);
+        Assert.Contains("DispatchProjectedResultEvent(const HashResult& result", wuiHeader, StringComparison.Ordinal);
         Assert.Contains("void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("GetManagedResultDispatchType(eventType)", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("m_uiBridgeDelegates->ShowFileHash(hashResultNet, hashUppercase);", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("GetManagedResultEventType(eventType)", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", wuiSource, StringComparison.Ordinal);
+        Assert.Contains("msclr::auto_gcroot<UIBridgeDelegates^> m_hashUiEvents;", wuiHeader, StringComparison.Ordinal);
 
         Assert.Contains("class UIBridgeUwp : public HashUiBridgeAdapter", uwpHeader, StringComparison.Ordinal);
         Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("DispatchProjectedResultToDelegate(const HashResult& result", uwpHeader, StringComparison.Ordinal);
+        Assert.Contains("DispatchProjectedResultEvent(const HashResult& result", uwpHeader, StringComparison.Ordinal);
         Assert.Contains("void UIBridgeUwp::handleFileResultProgressEvent(const HashResult& result,", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("GetManagedResultDispatchType(eventType)", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("m_uiBridgeDelegate->ShowFileHash(hashResultNet, hashUppercase);", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("GetManagedResultEventType(eventType)", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", uwpSource, StringComparison.Ordinal);
+        Assert.Contains("UIBridgeDelegate^ m_hashUiEvents;", uwpHeader, StringComparison.Ordinal);
 
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", macHeader, StringComparison.Ordinal);
         Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", macHeader, StringComparison.Ordinal);
@@ -827,7 +829,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
         Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUiPage, StringComparison.Ordinal);
         Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private void UIBridgeHandlers_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("m_mainWindow.HashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("int progMax = m_mainWindow.HashUiEvents.GetProgressValueMax();", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(", winUiPage, StringComparison.Ordinal);
 
         Assert.Contains("HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);", winUwpPage, StringComparison.Ordinal);
@@ -838,7 +842,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
         Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUwpPage, StringComparison.Ordinal);
         Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private void UIBridgeDelegate_ShowFileHashHandler(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("private UIBridgeDelegate m_hashUiEvents;", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("m_hashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("ProgressBarMain.Value = m_hashUiEvents.GetProgressValueMax();", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultData(", winUwpPage, StringComparison.Ordinal);
     }
 }
