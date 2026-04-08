@@ -53,6 +53,7 @@ namespace SunJWBase
         public static bool IsWindowMaximize(IntPtr hWnd)
         {
             WINDOWPLACEMENT windowPlacement = default;
+            windowPlacement.length = (uint)Marshal.SizeOf<WINDOWPLACEMENT>();
             if (PInvoke.GetWindowPlacement(new HWND(hWnd), ref windowPlacement))
             {
                 if (windowPlacement.showCmd == SHOW_WINDOW_CMD.SW_MAXIMIZE)
@@ -78,9 +79,9 @@ namespace SunJWBase
 
         public static Point GetPointerPoint()
         {
-            Point pointCursor = new();
+            POINT pointCursor = new();
             PInvoke.GetCursorPos(out pointCursor);
-            return pointCursor;
+            return new Point(pointCursor.X, pointCursor.Y);
         }
 
         public static bool SetForegroundWindow(IntPtr hWnd)

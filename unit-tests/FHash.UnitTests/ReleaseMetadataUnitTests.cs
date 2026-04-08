@@ -40,6 +40,22 @@ public sealed class ReleaseMetadataUnitTests
     }
 
     [Fact]
+    public void WinUiProject_Defines_CsWin32_Method_Manifest_For_Desktop_Windowing()
+    {
+        string nativeMethods = RepositoryTestContext.ReadTextFile(@"trunk\source\WinUI\NativeMethods.txt");
+
+        Assert.Contains("GetCurrentPackageId", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("GetDpiForWindow", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("GetWindowPlacement", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("ShowWindow", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("GetCursorPos", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("SetForegroundWindow", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("SetWindowSubclass", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("DefSubclassProc", nativeMethods, StringComparison.Ordinal);
+        Assert.Contains("WM_GETMINMAXINFO", nativeMethods, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MfcAlgorithmSelectionController_UsesRoomierGridLayout()
     {
         string controller = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");

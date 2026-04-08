@@ -1,0 +1,9 @@
+GetCurrentPackageId
+GetDpiForWindow
+GetWindowPlacement
+ShowWindow
+GetCursorPos
+SetForegroundWindow
+SetWindowSubclass
+DefSubclassProc
+WM_GETMINMAXINFO
