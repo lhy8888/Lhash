@@ -748,12 +748,13 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("GetHashAlgorithmEnabledByDigestType(int digestType);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("WinHandleGuard::UniqueWinHandle *m_pWorkThread;", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(&m_hWorkThread);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("m_pWorkThread = new WinHandleGuard::UniqueWinHandle();", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("RestartHashWorkerThread(m_pWorkThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("CloseHashWorkerThreadHandle(m_pWorkThread);", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", clrMgmt, StringComparison.Ordinal);

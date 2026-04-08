@@ -56,6 +56,6 @@ public:
 	private:
 		UIBridgeWUI *m_pUiBridgeWUI;
 		ThreadData *m_pThreadData;
-		WinHandleGuard::UniqueWinHandle m_hWorkThread;
+		WinHandleGuard::UniqueWinHandle *m_pWorkThread;
 	};
 }

@@ -46,10 +46,11 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("RestartHashWorkerThread(WinHandleGuard::UniqueWinHandle *existingThreadHandle", threadLaunch, StringComparison.Ordinal);
 
         Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", sessionController, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", clrHeader, StringComparison.Ordinal);
+        Assert.Contains("WinHandleGuard::UniqueWinHandle *m_pWorkThread;", clrHeader, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(&m_hWorkThread);", clrSource, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);", clrSource, StringComparison.Ordinal);
+        Assert.Contains("m_pWorkThread = new WinHandleGuard::UniqueWinHandle();", clrSource, StringComparison.Ordinal);
+        Assert.Contains("CloseHashWorkerThreadHandle(m_pWorkThread);", clrSource, StringComparison.Ordinal);
+        Assert.Contains("RestartHashWorkerThread(m_pWorkThread, m_pThreadData, &thredID);", clrSource, StringComparison.Ordinal);
 
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", shellCore, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", shellCore, StringComparison.Ordinal);
