@@ -34,6 +34,16 @@ static sunjwbase::tstring ConvertManagedFilePathToTstr(String^ filePath)
 	return tstring(ConvertSystemStringToTstr(filePath));
 }
 
+static sunjwbase::tstring ConvertManagedAlgorithmIdToTstr(String^ algorithmId)
+{
+	if (algorithmId == nullptr)
+	{
+		return tstring();
+	}
+
+	return tstring(ConvertSystemStringToTstr(algorithmId));
+}
+
 static cli::array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDescriptors()
 {
 	return CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>(
@@ -98,6 +108,16 @@ void HashMgmtClr::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bo
 bool HashMgmtClr::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
 {
 	return GetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm));
+}
+
+void HashMgmtClr::SetHashAlgorithmEnabledById(String^ algorithmId, bool val)
+{
+	::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);
+}
+
+bool HashMgmtClr::GetHashAlgorithmEnabledById(String^ algorithmId)
+{
+	return ::GetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId));
 }
 
 void HashMgmtClr::SetHashAlgorithmEnabledByDigestType(int digestTypeValue, bool val)

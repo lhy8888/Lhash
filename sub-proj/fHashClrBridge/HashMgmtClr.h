@@ -20,6 +20,7 @@ namespace FilesHashWUI
 	{
 public:
 		property int DigestType;
+		property System::String^ AlgorithmId;
 		property System::String^ StableName;
 		property System::String^ DisplayLabel;
 	};
@@ -52,6 +53,8 @@ public:
 		cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();
 		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);
 		bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
+		void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);
+		bool GetHashAlgorithmEnabledById(System::String^ algorithmId);
 		void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);
 		bool GetHashAlgorithmEnabledByDigestType(int digestType);
 		System::UInt64 GetTotalSize();

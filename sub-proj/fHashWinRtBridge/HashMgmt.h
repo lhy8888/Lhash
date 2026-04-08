@@ -21,6 +21,7 @@ namespace FilesHashUwp
 	{
 public:
 		property int DigestType;
+		property Platform::String^ AlgorithmId;
 		property Platform::String^ StableName;
 		property Platform::String^ DisplayLabel;
 	};
@@ -39,6 +40,8 @@ public:
 		Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();
 		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);
 		Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
+		void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);
+		Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);
 		void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);
 		Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);
 		uint64 GetTotalSize();

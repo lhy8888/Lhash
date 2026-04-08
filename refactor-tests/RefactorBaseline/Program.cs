@@ -671,7 +671,7 @@ internal static class Program
             string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
             AssertContains(resultNetProjection, "template<typename TResultDataNet, typename TResultString>", "ResultNetProjection does not yet expose the centralized ResultDataNet digest-assignment template.");
-            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "ResultNetProjection does not yet expose the centralized ResultDataNet digest-assignment helper.");
+            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)", "ResultNetProjection does not yet expose the centralized ResultDataNet digest-assignment helper.");
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter>", "ResultDataProjection does not yet expose the centralized ResultDataNet projection template.");
             AssertContains(resultProjection, "static inline TResultDataNet ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataProjection does not yet expose the centralized ResultDataNet projection helper.");
             AssertContains(resultProjection, "AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);", "ResultDataProjection does not yet route managed digest projection through HashResultProjection.");
@@ -1743,11 +1743,11 @@ internal static class Program
 
             AssertContains(resultRender, "DispatchResultStateByType(ResultState resultState, TNoneAction onNone, TPathAction onPath, TMetaAction onMeta, TAllAction onAll, TErrorAction onError)", "ResultDataRender does not yet expose the grouped ResultState dispatch helper.");
             AssertContains(resultRender, "DispatchResultStateByType(resultState,", "ResultDataRender does not yet route ResultState render-policy through the grouped dispatch helper.");
-            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultNetProjection does not yet expose the grouped digest-type dispatch helper.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueById(const HashAlgorithmId& algorithmId, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "ResultNetProjection does not yet expose the grouped descriptor-id dispatch helper.");
             AssertContains(resultNetProjection, "switch (resultState)", "ResultNetProjection ResultStateNet conversion helper does not yet use the compile-safe explicit ResultState switch.");
             AssertContains(resultNetProjection, "return TResultStateNet::ResultPath;", "ResultNetProjection ResultStateNet conversion helper does not yet map RESULT_PATH through the compile-safe explicit switch.");
-            AssertContains(resultNetProjection, "IsResultDigestStableName(ResultDigestType digestType, const char *stableName)", "ResultNetProjection digest assignment helper does not yet route digest-type checks through stable-name metadata.");
-            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(digestType,", "ResultNetProjection digest assignment helper does not yet route assignments through the grouped digest dispatch helper.");
+            AssertContains(resultNetProjection, "IsResultDigestStableNameById(const HashAlgorithmId& algorithmId, const char *stableName)", "ResultNetProjection digest assignment helper does not yet route descriptor-id checks through stable-name metadata.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueById(algorithmId,", "ResultNetProjection digest assignment helper does not yet route assignments through the grouped digest dispatch helper.");
             AssertContains(resultNetProjection, "resultDataNet.MD5 = digestValue;", "ResultNetProjection digest assignment helper does not yet map MD5 through the grouped digest dispatch helper.");
 
             AssertDoesNotContain(resultRender, "static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)\r\n{\r\n\tswitch (resultState)", "ResultDataRender render-policy helper still performs an inline ResultState switch instead of using the grouped dispatch helper.");
@@ -2193,7 +2193,9 @@ internal static class Program
             AssertContains(winUiPage, "m_mainWindow.HashMgmt.ResetHashAlgorithms();", "WinUI page does not yet reset managed selections before reapplying the current checkbox state.");
             AssertContains(winUiPage, "LoadHashAlgorithmControls()", "WinUI page does not yet materialize dynamic hash-algorithm controls.");
             AssertContains(winUiPage, "m_mainWindow.HashMgmt.GetSupportedHashAlgorithms();", "WinUI page does not yet fetch supported algorithms from the managed seam.");
-            AssertContains(winUiPage, "SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);", "WinUI page does not yet forward dynamic hash-algorithm selections.");
+            AssertContains(winUiPage, "SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", "WinUI page does not yet forward dynamic hash-algorithm selections through descriptor ids.");
+            AssertContains(winUiPage, "private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", "WinUI page does not yet normalize dynamic hash-algorithm ids.");
+            AssertContains(winUiPage, "private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = [];", "WinUI page does not yet key algorithm checkboxes by descriptor id.");
             AssertContains(winUiPage, "WinUIHelper.LoadLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm)) ?? true", "WinUI page does not yet default dynamic hash-algorithm entries to enabled on first load.");
             AssertContains(winUiPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "WinUI page does not yet centralize selective digest display rendering.");
             AssertContains(winUiPage, "if (string.IsNullOrEmpty(digestValue))", "WinUI page does not yet skip empty digest values.");
@@ -2208,7 +2210,9 @@ internal static class Program
             AssertContains(uwpPage, "m_hashMgmt.ResetHashAlgorithms();", "UWP page does not yet reset managed selections before reapplying the current checkbox state.");
             AssertContains(uwpPage, "LoadHashAlgorithmControls()", "UWP page does not yet materialize dynamic hash-algorithm controls.");
             AssertContains(uwpPage, "m_hashMgmt.GetSupportedHashAlgorithms();", "UWP page does not yet fetch supported algorithms from the managed seam.");
-            AssertContains(uwpPage, "SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);", "UWP page does not yet forward dynamic hash-algorithm selections.");
+            AssertContains(uwpPage, "SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", "UWP page does not yet forward dynamic hash-algorithm selections through descriptor ids.");
+            AssertContains(uwpPage, "private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", "UWP page does not yet normalize dynamic hash-algorithm ids.");
+            AssertContains(uwpPage, "private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = new Dictionary<string, CheckBox>();", "UWP page does not yet key algorithm checkboxes by descriptor id.");
             AssertContains(uwpPage, "UwpHelper.LoadLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm)) ?? true", "UWP page does not yet default dynamic hash-algorithm entries to enabled on first load.");
             AssertContains(uwpPage, "AppendDigestHashToTextMain(List<Inline> inlines, string digestLabel, string digestValue)", "UWP page does not yet centralize selective digest display rendering.");
             AssertContains(uwpPage, "if (string.IsNullOrEmpty(digestValue))", "UWP page does not yet skip empty digest values.");
@@ -2449,7 +2453,8 @@ internal static class Program
 
             AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic algorithm container.");
             AssertContains(winUiPage, "HashAlgorithmDescriptorNet[] m_hashAlgorithms", "WinUI page does not yet store the managed algorithm descriptor list.");
-            AssertContains(winUiPage, "Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes", "WinUI page does not yet track dynamic algorithm checkboxes by digest type.");
+            AssertContains(winUiPage, "Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes", "WinUI page does not yet track dynamic algorithm checkboxes by descriptor id.");
+            AssertContains(winUiPage, "GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", "WinUI page does not yet normalize dynamic algorithm ids for checkbox tracking.");
             AssertContains(winUiPage, "GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)", "WinUI page does not yet route algorithm persistence through stable-name keys.");
             AssertContains(winUiPage, "LoadHashAlgorithmControls()", "WinUI page does not yet materialize dynamic algorithm controls.");
             AssertContains(winUiPage, "StackPanelHashAlgorithms.Children.Add(checkBox);", "WinUI page does not yet append dynamic algorithm checkboxes.");
@@ -2458,7 +2463,8 @@ internal static class Program
 
             AssertContains(uwpXaml, "StackPanelHashAlgorithms", "UWP page does not yet expose the dynamic algorithm container.");
             AssertContains(uwpPage, "HashAlgorithmDescriptorNet[] m_hashAlgorithms", "UWP page does not yet store the managed algorithm descriptor list.");
-            AssertContains(uwpPage, "Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes", "UWP page does not yet track dynamic algorithm checkboxes by digest type.");
+            AssertContains(uwpPage, "Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes", "UWP page does not yet track dynamic algorithm checkboxes by descriptor id.");
+            AssertContains(uwpPage, "GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", "UWP page does not yet normalize dynamic algorithm ids for checkbox tracking.");
             AssertContains(uwpPage, "GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)", "UWP page does not yet route algorithm persistence through stable-name keys.");
             AssertContains(uwpPage, "LoadHashAlgorithmControls()", "UWP page does not yet materialize dynamic algorithm controls.");
             AssertContains(uwpPage, "StackPanelHashAlgorithms.Children.Add(checkBox);", "UWP page does not yet append dynamic algorithm checkboxes.");
@@ -2735,14 +2741,20 @@ internal static class Program
         {
             string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
             string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 19 common managed access should forward to legacy managed compatibility seam.");
             AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)", "Phase 19 is missing the shared managed digest-type conversion helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)", "Phase 19 is missing the shared managed algorithm-id conversion helper.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->AlgorithmId =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose algorithm ids.");
             AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->StableName =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose stable names.");
             AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->DisplayLabel =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose display labels.");
+            AssertContains(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledById(", "Phase 19 is missing the shared managed algorithm-id enable helper.");
+            AssertContains(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledById(", "Phase 19 is missing the shared managed algorithm-id query helper.");
             AssertContains(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type enable helper.");
             AssertContains(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type query helper.");
             AssertContains(legacyManagedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
@@ -2750,6 +2762,11 @@ internal static class Program
 
             AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>", "CLR HashMgmt does not yet route descriptor projection through the shared managed helper.");
+            AssertContains(hashMgmtClrHeader, "property System::String^ AlgorithmId;", "CLR HashMgmt descriptor surface does not yet expose algorithm ids.");
+            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);", "CLR HashMgmt does not yet expose algorithm-id enablement.");
+            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledById(System::String^ algorithmId);", "CLR HashMgmt does not yet expose algorithm-id queries.");
+            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "CLR HashMgmt does not yet route algorithm-id enablement through the shared managed helper.");
+            AssertContains(hashMgmtClr, "return ::GetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", "CLR HashMgmt does not yet route algorithm-id queries through the shared managed helper.");
             AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);", "CLR HashMgmt does not yet route digest-type enablement through the shared managed helper.");
             AssertContains(hashMgmtClr, "::GetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue);", "CLR HashMgmt does not yet route digest-type queries through the shared managed helper.");
             AssertContains(hashMgmtClr, "ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);", "CLR HashMgmt does not yet route managed file ingestion through the shared managed helper.");
@@ -2760,6 +2777,11 @@ internal static class Program
 
             AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
             AssertContains(hashMgmtUwp, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, Array<HashAlgorithmDescriptorNet^>^>", "UWP HashMgmt does not yet route descriptor projection through the shared managed helper.");
+            AssertContains(hashMgmtUwpHeader, "property Platform::String^ AlgorithmId;", "UWP HashMgmt descriptor surface does not yet expose algorithm ids.");
+            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);", "UWP HashMgmt does not yet expose algorithm-id enablement.");
+            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);", "UWP HashMgmt does not yet expose algorithm-id queries.");
+            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "UWP HashMgmt does not yet route algorithm-id enablement through the shared managed helper.");
+            AssertContains(hashMgmtUwp, "return ::GetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", "UWP HashMgmt does not yet route algorithm-id queries through the shared managed helper.");
             AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);", "UWP HashMgmt does not yet route digest-type enablement through the shared managed helper.");
             AssertContains(hashMgmtUwp, "::GetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue);", "UWP HashMgmt does not yet route digest-type queries through the shared managed helper.");
             AssertContains(hashMgmtUwp, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP HashMgmt does not yet route managed file ingestion through the shared managed helper.");
@@ -3701,8 +3723,10 @@ internal static class Program
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
 
             AssertContains(resultNetProjection, "static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", "Phase 41 ResultNetProjection does not yet own the shared ResultStateNet conversion helper.");
-            AssertContains(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "Phase 41 ResultNetProjection does not yet own the shared digest-type dispatch helper.");
-            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "Phase 41 ResultNetProjection does not yet own the shared managed digest assignment helper.");
+            AssertContains(resultNetProjection, "DispatchResultDigestValueById(const HashAlgorithmId& algorithmId, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "Phase 41 ResultNetProjection does not yet own the shared descriptor-id dispatch helper.");
+            AssertContains(resultNetProjection, "static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)", "Phase 41 ResultNetProjection does not yet own the shared managed digest assignment helper.");
+            AssertDoesNotContain(resultNetProjection, "DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", "Phase 41 ResultNetProjection still exposes the removed digest-type dispatch helper.");
+            AssertDoesNotContain(resultNetProjection, "AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", "Phase 41 ResultNetProjection still exposes the removed digest-type digest-assignment helper.");
             AssertContains(resultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 ResultDataProjection does not yet depend on the neutral ResultNetProjection seam.");
             AssertContains(hashResultProjection, "#include \"Common/ResultNetProjection.h\"", "Phase 41 HashResultProjection does not yet depend on the neutral ResultNetProjection seam.");
             AssertDoesNotContain(hashResultProjection, "#include \"Common/ResultDataProjection.h\"", "Phase 41 HashResultProjection still depends on the legacy ResultDataProjection header.");
@@ -5495,8 +5519,8 @@ internal static class Program
                 ],
                 "Phase 84 ResultDigestStateAccess does not yet guard digest storage lookups.");
 
-            AssertContains(resultNetProjection, "TryGetHashAlgorithmDescriptor(digestType, &algorithmDescriptor)", "Phase 84 ResultNetProjection does not yet guard stable-name mapping with safe descriptor lookup.");
-            AssertDoesNotContain(resultNetProjection, "const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptor(digestType);", "Phase 84 ResultNetProjection still resolves digest stable names through unsafe descriptor fallback.");
+            AssertContains(resultNetProjection, "TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor)", "Phase 84 ResultNetProjection does not yet guard stable-name mapping with safe descriptor-id lookup.");
+            AssertDoesNotContain(resultNetProjection, "TryGetHashAlgorithmDescriptor(digestType, &algorithmDescriptor)", "Phase 84 ResultNetProjection still routes through the removed digest-type descriptor lookup.");
         }, failures);
 
         Run("Phase 85 aligns digest-operation registry coverage with algorithm metadata and request planning order", () =>

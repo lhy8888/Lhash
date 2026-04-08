@@ -90,7 +90,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("AssignHashResultDigestsToNet", projection, StringComparison.Ordinal);
         Assert.Contains("AssignResultDigestToNetById(resultDataNet, algorithmId", projection, StringComparison.Ordinal);
         Assert.Contains("ProjectHashResultToNet(const HashResult& result, TStringConverter convertString)", projection, StringComparison.Ordinal);
-        Assert.Contains("AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
+        Assert.Contains("AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", search, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
@@ -707,16 +708,24 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashResultProjection.h\"", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
         Assert.Contains("static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("SetManagedHashAlgorithmEnabledById(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
+        Assert.Contains("GetManagedHashAlgorithmEnabledById(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
 
         Assert.Contains("public enum class HashResultStateNet", clrHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("property System::String^ AlgorithmId;", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("bool GetHashAlgorithmEnabledById(System::String^ algorithmId);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("RestartHashWorkerThread(&workThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CloseHashWorkerThreadHandle(&workThread);", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("return ::GetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("FindResult(System::String^ sstrHashToFind)", clrMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"HashResultNet.h\"", clrDelegatesHeader, StringComparison.Ordinal);
@@ -728,11 +737,16 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("public enum class HashResultStateNet", uwpHashResultNet, StringComparison.Ordinal);
         Assert.Contains("public value struct HashResultNet", uwpHashResultNet, StringComparison.Ordinal);
+        Assert.Contains("property Platform::String^ AlgorithmId;", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, &m_threadData, &thredID);", uwpMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("_beginthreadex", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", uwpMgmt, StringComparison.Ordinal);
+        Assert.Contains("::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", uwpMgmt, StringComparison.Ordinal);
+        Assert.Contains("return ::GetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", uwpMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("FindResult(Platform::String^ pstrHashToFind)", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"HashResultNet.h\"", uwpDelegateHeader, StringComparison.Ordinal);
@@ -782,6 +796,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("ConvertHashResultToSwift(result);", hashBridgeMac, StringComparison.Ordinal);
 
         Assert.Contains("HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = [];", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("m_mainWindow.HashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", winUiPage, StringComparison.Ordinal);
+        Assert.Contains("m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;", winUiPage, StringComparison.Ordinal);
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
         Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUiPage, StringComparison.Ordinal);
         Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUiPage, StringComparison.Ordinal);
@@ -789,6 +807,10 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("CreateCompatibilityResultData(", winUiPage, StringComparison.Ordinal);
 
         Assert.Contains("HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = new Dictionary<string, CheckBox>();", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("m_hashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", winUwpPage, StringComparison.Ordinal);
+        Assert.Contains("m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;", winUwpPage, StringComparison.Ordinal);
         Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
         Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUwpPage, StringComparison.Ordinal);
         Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUwpPage, StringComparison.Ordinal);

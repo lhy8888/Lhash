@@ -62,7 +62,7 @@ namespace FilesHashWUI
 
         private bool m_uppercaseChecked = false;
         private HashAlgorithmDescriptorNet[] m_hashAlgorithms = Array.Empty<HashAlgorithmDescriptorNet>();
-        private Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes = [];
+        private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = [];
 
         private int m_inMainQueue = 0;
         private int m_outMainQueue = 0;
@@ -318,7 +318,12 @@ namespace FilesHashWUI
 
         private static string GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)
         {
-            return KeyHashAlgorithmPrefix + hashAlgorithm.StableName;
+            return KeyHashAlgorithmPrefix + GetHashAlgorithmId(hashAlgorithm);
+        }
+
+        private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)
+        {
+            return string.IsNullOrWhiteSpace(hashAlgorithm.AlgorithmId) ? hashAlgorithm.StableName : hashAlgorithm.AlgorithmId;
         }
 
         private void SetHashAlgorithmControlsEnabled(bool enabled)
@@ -347,7 +352,7 @@ namespace FilesHashWUI
             m_mainWindow.HashMgmt.ResetHashAlgorithms();
             foreach (HashAlgorithmDescriptorNet hashAlgorithm in m_hashAlgorithms)
             {
-                if (!m_hashAlgorithmCheckBoxes.TryGetValue(hashAlgorithm.DigestType, out CheckBox checkBox))
+                if (!m_hashAlgorithmCheckBoxes.TryGetValue(GetHashAlgorithmId(hashAlgorithm), out CheckBox checkBox))
                 {
                     continue;
                 }
@@ -358,7 +363,7 @@ namespace FilesHashWUI
                     WinUIHelper.SaveLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm), hashAlgorithmEnabled);
                 }
 
-                m_mainWindow.HashMgmt.SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);
+                m_mainWindow.HashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);
             }
         }
 
@@ -381,7 +386,7 @@ namespace FilesHashWUI
                 checkBox.Unchecked += CheckBoxHashAlgorithm_Unchecked;
 
                 StackPanelHashAlgorithms.Children.Add(checkBox);
-                m_hashAlgorithmCheckBoxes[hashAlgorithm.DigestType] = checkBox;
+                m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;
             }
         }
 

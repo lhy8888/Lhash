@@ -66,7 +66,7 @@ namespace FilesHashUwp
         private MainPageControlStat m_mainPageStat;
         private bool m_uppercaseChecked = false;
         private HashAlgorithmDescriptorNet[] m_hashAlgorithms = Array.Empty<HashAlgorithmDescriptorNet>();
-        private Dictionary<int, CheckBox> m_hashAlgorithmCheckBoxes = new Dictionary<int, CheckBox>();
+        private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = new Dictionary<string, CheckBox>();
         private long m_calcStartTime = 0;
         private long m_calcEndTime = 0;
 
@@ -390,7 +390,12 @@ namespace FilesHashUwp
 
         private static string GetHashAlgorithmSettingKey(HashAlgorithmDescriptorNet hashAlgorithm)
         {
-            return KeyHashAlgorithmPrefix + hashAlgorithm.StableName;
+            return KeyHashAlgorithmPrefix + GetHashAlgorithmId(hashAlgorithm);
+        }
+
+        private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)
+        {
+            return string.IsNullOrWhiteSpace(hashAlgorithm.AlgorithmId) ? hashAlgorithm.StableName : hashAlgorithm.AlgorithmId;
         }
 
         private void SetHashAlgorithmControlsEnabled(bool enabled)
@@ -420,7 +425,7 @@ namespace FilesHashUwp
             foreach (HashAlgorithmDescriptorNet hashAlgorithm in m_hashAlgorithms)
             {
                 CheckBox checkBox;
-                if (!m_hashAlgorithmCheckBoxes.TryGetValue(hashAlgorithm.DigestType, out checkBox))
+                if (!m_hashAlgorithmCheckBoxes.TryGetValue(GetHashAlgorithmId(hashAlgorithm), out checkBox))
                 {
                     continue;
                 }
@@ -431,7 +436,7 @@ namespace FilesHashUwp
                     UwpHelper.SaveLocalSettings(GetHashAlgorithmSettingKey(hashAlgorithm), hashAlgorithmEnabled);
                 }
 
-                m_hashMgmt.SetHashAlgorithmEnabledByDigestType(hashAlgorithm.DigestType, hashAlgorithmEnabled);
+                m_hashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);
             }
         }
 
@@ -454,7 +459,7 @@ namespace FilesHashUwp
                 checkBox.Unchecked += CheckBoxHashAlgorithm_Unchecked;
 
                 StackPanelHashAlgorithms.Children.Add(checkBox);
-                m_hashAlgorithmCheckBoxes[hashAlgorithm.DigestType] = checkBox;
+                m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;
             }
         }
 

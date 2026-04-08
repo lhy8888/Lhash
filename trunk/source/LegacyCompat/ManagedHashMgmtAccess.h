@@ -10,6 +10,21 @@
 #include "LegacyCompat/ThreadDataInputAccess.h"
 #include "LegacyCompat/ThreadDataResultAccess.h"
 
+static inline bool TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)
+{
+	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(managedAlgorithmId);
+	if (normalizedAlgorithmId.empty() || !IsRegisteredHashAlgorithmId(normalizedAlgorithmId))
+	{
+		return false;
+	}
+
+	if (algorithmId != NULL)
+	{
+		*algorithmId = normalizedAlgorithmId;
+	}
+	return true;
+}
+
 static inline bool TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
 {
 	return TryGetHashAlgorithmType(digestTypeValue, digestType);
@@ -22,11 +37,13 @@ static inline TDescriptorNet CreateManagedHashAlgorithmDescriptorNet(
 	TStringConverter convertText)
 {
 	TDescriptorNet descriptorNet = createDescriptor();
+	HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
 	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
-	TryGetHashAlgorithmTypeById(GetHashAlgorithmDescriptorId(algorithmDescriptor), &digestType);
+	TryGetHashAlgorithmTypeById(algorithmId, &digestType);
 	descriptorNet->DigestType = static_cast<int>(digestType);
 	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
 	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
+	descriptorNet->AlgorithmId = convertText(algorithmId.c_str());
 	descriptorNet->StableName = convertText(stableName.c_str());
 	descriptorNet->DisplayLabel = convertText(displayLabel.c_str());
 	return descriptorNet;
@@ -52,6 +69,35 @@ static inline TDescriptorArray CreateSupportedManagedHashAlgorithmDescriptors(
 }
 
 template<typename TThreadData, typename TEnabled>
+static inline void SetManagedHashAlgorithmEnabledById(
+	TThreadData& threadData,
+	const HashAlgorithmId& algorithmId,
+	TEnabled enabled)
+{
+	HashAlgorithmId normalizedAlgorithmId;
+	if (!TryConvertManagedHashAlgorithmId(algorithmId, &normalizedAlgorithmId))
+	{
+		return;
+	}
+
+	SetThreadDataHashAlgorithmEnabledById(threadData, normalizedAlgorithmId, (enabled ? true : false));
+}
+
+template<typename TThreadData>
+static inline bool GetManagedHashAlgorithmEnabledById(
+	const TThreadData& threadData,
+	const HashAlgorithmId& algorithmId)
+{
+	HashAlgorithmId normalizedAlgorithmId;
+	if (!TryConvertManagedHashAlgorithmId(algorithmId, &normalizedAlgorithmId))
+	{
+		return false;
+	}
+
+	return IsThreadDataHashAlgorithmEnabledById(threadData, normalizedAlgorithmId);
+}
+
+template<typename TThreadData, typename TEnabled>
 static inline void SetManagedHashAlgorithmEnabledByDigestType(
 	TThreadData& threadData,
 	int digestTypeValue,
@@ -63,7 +109,13 @@ static inline void SetManagedHashAlgorithmEnabledByDigestType(
 		return;
 	}
 
-	SetThreadDataHashAlgorithmEnabled(threadData, digestType, (enabled ? true : false));
+	HashAlgorithmId algorithmId;
+	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
+	{
+		return;
+	}
+
+	SetManagedHashAlgorithmEnabledById(threadData, algorithmId, enabled);
 }
 
 template<typename TThreadData>
@@ -77,7 +129,13 @@ static inline bool GetManagedHashAlgorithmEnabledByDigestType(
 		return false;
 	}
 
-	return IsThreadDataHashAlgorithmEnabled(threadData, digestType);
+	HashAlgorithmId algorithmId;
+	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
+	{
+		return false;
+	}
+
+	return GetManagedHashAlgorithmEnabledById(threadData, algorithmId);
 }
 
 template<typename TThreadData, typename TManagedArray, typename TStringConverter>
