@@ -37,6 +37,8 @@ public sealed class CommonSeamUnitTests
             @"trunk\source\Common\ThreadDataResultAccess.h",
             @"trunk\source\Common\HashRequestProjection.h",
             @"trunk\source\Common\HashThreadEntryProjection.h",
+            @"trunk\source\Common\HashThreadEntry.h",
+            @"trunk\source\Common\HashThreadEntry.cpp",
             @"trunk\source\Common\HashThreadLaunch.h",
             @"trunk\source\Common\ManagedHashMgmtAccess.h"
         ];

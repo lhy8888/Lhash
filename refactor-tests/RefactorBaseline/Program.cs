@@ -2293,7 +2293,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp"));
             string scheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
+            string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntry.cpp");
             string legacyHashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
             string legacyHashThreadEntryRuntime = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
@@ -2312,6 +2312,7 @@ internal static class Program
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/HashRequestProjection.h\"", "HashThreadEntry.cpp should not include HashRequestProjection directly after the thread-entry projection seam split.");
             AssertDoesNotContain(hashThreadEntry, "#include \"Common/ThreadDataExecutionAccess.h\"", "HashThreadEntry.cpp should not include ThreadData execution access directly after the thread-entry projection seam split.");
             AssertContains(hashThreadEntry, "return RunLegacyHashThread(param);", "HashThreadEntry.cpp should delegate thread execution to legacy runtime seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp", "Phase 10 Common HashThreadEntry.cpp should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyHashThreadEntryRuntime, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Legacy HashThreadEntry runtime does not yet project ThreadData into HashRequest.");
             AssertContains(legacyHashThreadEntryRuntime, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Legacy HashThreadEntry runtime does not yet inject HashExecutionContext through the projection seam.");
             AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h", "Phase 10 Common HashThreadEntryProjection shim should be removed after the LegacyCompat boundary cleanup.");
@@ -2343,7 +2344,7 @@ internal static class Program
             AssertContains(scheduler, "FileExecutionState executionState;", "HashScheduler.cpp does not yet preserve grouped file-execution state for the runner seam.");
 
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core project does not yet compile HashFileRunner.cpp.");
-            AssertContains(nativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "Desktop native core project does not yet compile HashThreadEntry.cpp.");
+            AssertContains(nativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "Desktop native core project does not yet compile HashThreadEntry.cpp from LegacyCompat.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core project does not yet compile HashEngineResult.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core project does not yet compile HashResultPublisher.cpp.");
@@ -2355,17 +2356,17 @@ internal static class Program
             AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
             AssertContains(nativeProject, @"$(MSBuildProjectName)$(FHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core filters do not yet expose HashFileRunner.cpp.");
-            AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "Desktop native core filters do not yet expose HashThreadEntry.cpp.");
+            AssertContains(nativeFilters, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "Desktop native core filters do not yet expose HashThreadEntry.cpp from LegacyCompat.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core filters do not yet expose HashResultPublisher.cpp.");
 
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "WinUI native project still compiles HashFileRunner.cpp instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "WinUI native project still compiles HashThreadEntry.cpp instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "WinUI native project still compiles HashThreadEntry.cpp instead of consuming fHashNativeCore.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming fHashNativeCore.");
             AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project still compiles HashEngineResult.cpp instead of consuming fHashNativeCore.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "UWP native project does not yet compile HashFileRunner.cpp.");
-            AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashThreadEntry.cpp", "UWP native project does not yet compile HashThreadEntry.cpp.");
+            AssertContains(uwpNativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "UWP native project does not yet compile HashThreadEntry.cpp from LegacyCompat.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "UWP native project does not yet compile HashEnginePreparation.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "UWP native project does not yet compile HashEngineResult.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "UWP native project does not yet compile HashResultPublisher.cpp.");
@@ -3427,7 +3428,7 @@ internal static class Program
         {
             string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
-            string hashThreadEntryHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.h");
+            string hashThreadEntryHeader = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntry.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
@@ -3437,6 +3438,7 @@ internal static class Program
             AssertContains(hashEngineHeader, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", "Phase 33 HashEngine header does not yet expose the execution-context request entry.");
             AssertDoesNotContain(hashEngineHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashEngine header should no longer expose the thread-entry declaration after the thread-entry header split.");
             AssertContains(hashThreadEntryHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashThreadEntry header does not yet expose the thread-entry declaration.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntry.h", "Phase 33 Common HashThreadEntry.h should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
             AssertContains(hashEngine, "#include \"LegacyCompat/HashThreadEntryProjection.h\"", "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
             AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");
@@ -5577,6 +5579,8 @@ internal static class Program
             AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h", "Phase 87 Common ThreadDataResultAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertFileMissing(repoRoot, @"trunk\source\Common\HashRequestProjection.h", "Phase 87 Common HashRequestProjection shim should be removed after the LegacyCompat boundary cleanup.");
             AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h", "Phase 87 Common HashThreadEntryProjection shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntry.h", "Phase 87 Common HashThreadEntry.h should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp", "Phase 87 Common HashThreadEntry.cpp should be removed after the LegacyCompat boundary cleanup.");
             AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadLaunch.h", "Phase 87 Common HashThreadLaunch shim should be removed after the LegacyCompat boundary cleanup.");
             AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 87 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
 
@@ -5696,7 +5700,7 @@ internal static class Program
         return string.Join(
             "\r\n",
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
-            ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntry.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h"),
             ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),

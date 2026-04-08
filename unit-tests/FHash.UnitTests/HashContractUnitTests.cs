@@ -162,13 +162,15 @@ public sealed class HashContractUnitTests
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
-        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.h");
+        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
-        string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashThreadEntry.cpp");
+        string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.cpp");
         string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
         string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
         string threadExecutionAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
         string threadEntryProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
+        string legacyCommonThreadEntryHeaderPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.h");
+        string legacyCommonThreadEntrySourcePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
         string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
@@ -263,6 +265,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", executionContext, StringComparison.Ordinal);
         Assert.False(File.Exists(threadExecutionAccessPath));
         Assert.False(File.Exists(threadEntryProjectionPath));
+        Assert.False(File.Exists(legacyCommonThreadEntryHeaderPath));
+        Assert.False(File.Exists(legacyCommonThreadEntrySourcePath));
         Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
@@ -282,6 +286,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("return RunLegacyHashThread(param);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/Global.h\"", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);

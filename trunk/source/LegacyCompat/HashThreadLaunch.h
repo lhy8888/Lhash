@@ -3,7 +3,7 @@
 
 #include <process.h>
 
-#include "Common/HashThreadEntry.h"
+#include "LegacyCompat/HashThreadEntry.h"
 #include "LegacyCompat/LegacyThreadData.h"
 
 #if defined (_WIN32)
