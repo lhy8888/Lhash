@@ -2169,20 +2169,24 @@ internal static class Program
             string mfcStringsZh = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp");
             string mfcDialogAndInitialization = mfcDialog + Environment.NewLine + mfcInitializationController;
 
-            AssertContains(hashMgmtClrHeader, "public enum class HashAlgorithmTypeNet", "CLR bridge does not yet expose the managed hash-algorithm enum.");
             AssertContains(hashMgmtClrHeader, "void ResetHashAlgorithms();", "CLR bridge does not yet expose the managed algorithm reset helper.");
-            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);", "CLR bridge does not yet expose the managed algorithm enable helper.");
-            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "CLR bridge does not yet expose the managed algorithm query helper.");
             AssertContains(hashMgmtClr, "ResetThreadDataHashAlgorithms(*m_pThreadData);", "CLR bridge does not yet reset native algorithm selections from the managed seam.");
-            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);", "CLR bridge does not yet forward algorithm enablement through the shared managed helper.");
+            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);", "CLR bridge does not yet expose the descriptor-id algorithm enable helper.");
+            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledById(System::String^ algorithmId);", "CLR bridge does not yet expose the descriptor-id algorithm query helper.");
+            AssertContains(hashMgmtClrHeader, "property System::String^ AlgorithmId;", "CLR bridge does not yet expose descriptor ids on managed algorithm descriptors.");
+            AssertDoesNotContain(hashMgmtClrHeader, "public enum class HashAlgorithmTypeNet", "CLR bridge still exposes the removed managed hash-algorithm enum.");
+            AssertDoesNotContain(hashMgmtClrHeader, "property int DigestType;", "CLR bridge still exposes removed digest-type descriptor payload.");
+            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "CLR bridge does not yet forward algorithm enablement through the shared managed id helper.");
             AssertContains(hashMgmtClr, "if (!HasEnabledThreadDataHashAlgorithms(*m_pThreadData))", "CLR bridge does not yet reject zero-algorithm hash starts.");
 
-            AssertContains(hashMgmtUwpHeader, "public enum class HashAlgorithmTypeNet", "UWP bridge does not yet expose the managed hash-algorithm enum.");
             AssertContains(hashMgmtUwpHeader, "void ResetHashAlgorithms();", "UWP bridge does not yet expose the managed algorithm reset helper.");
-            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);", "UWP bridge does not yet expose the managed algorithm enable helper.");
-            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", "UWP bridge does not yet expose the managed algorithm query helper.");
             AssertContains(hashMgmtUwp, "ResetThreadDataHashAlgorithms(m_threadData);", "UWP bridge does not yet reset native algorithm selections from the managed seam.");
-            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);", "UWP bridge does not yet forward algorithm enablement through the shared managed helper.");
+            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);", "UWP bridge does not yet expose the descriptor-id algorithm enable helper.");
+            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);", "UWP bridge does not yet expose the descriptor-id algorithm query helper.");
+            AssertContains(hashMgmtUwpHeader, "property Platform::String^ AlgorithmId;", "UWP bridge does not yet expose descriptor ids on managed algorithm descriptors.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "public enum class HashAlgorithmTypeNet", "UWP bridge still exposes the removed managed hash-algorithm enum.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "property int DigestType;", "UWP bridge still exposes removed digest-type descriptor payload.");
+            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "UWP bridge does not yet forward algorithm enablement through the shared managed id helper.");
             AssertContains(hashMgmtUwp, "if (!HasEnabledThreadDataHashAlgorithms(m_threadData))", "UWP bridge does not yet reject zero-algorithm hash starts.");
 
             AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic hash-algorithm container.");
@@ -2440,14 +2444,14 @@ internal static class Program
 
             AssertContains(hashMgmtClrHeader, "public ref class HashAlgorithmDescriptorNet sealed", "CLR bridge does not yet expose the managed algorithm descriptor.");
             AssertContains(hashMgmtClrHeader, "cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "CLR bridge does not yet expose the supported-algorithm list helper.");
-            AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", "CLR bridge does not yet expose the generic digest-type enable helper.");
-            AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledByDigestType(int digestType);", "CLR bridge does not yet expose the generic digest-type query helper.");
+            AssertDoesNotContain(hashMgmtClrHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", "CLR bridge still exposes the removed generic digest-type enable helper.");
+            AssertDoesNotContain(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledByDigestType(int digestType);", "CLR bridge still exposes the removed generic digest-type query helper.");
             AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedHashAlgorithmDescriptors()", "CLR bridge does not yet materialize a dynamic managed algorithm descriptor list.");
             AssertContains(hashMgmtUwpHeader, "public ref class HashAlgorithmDescriptorNet sealed", "UWP bridge does not yet expose the managed algorithm descriptor.");
             AssertContains(hashMgmtUwpHeader, "Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "UWP bridge does not yet expose the supported-algorithm list helper.");
-            AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", "UWP bridge does not yet expose the generic digest-type enable helper.");
-            AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);", "UWP bridge does not yet expose the generic digest-type query helper.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", "UWP bridge still exposes the removed generic digest-type enable helper.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);", "UWP bridge still exposes the removed generic digest-type query helper.");
             AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtUwp, "CreateSupportedHashAlgorithmDescriptors()", "UWP bridge does not yet materialize a dynamic managed algorithm descriptor list.");
 
@@ -2747,7 +2751,6 @@ internal static class Program
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 19 common managed access should forward to legacy managed compatibility seam.");
-            AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)", "Phase 19 is missing the shared managed digest-type conversion helper.");
             AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)", "Phase 19 is missing the shared managed algorithm-id conversion helper.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
             AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->AlgorithmId =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose algorithm ids.");
@@ -2755,8 +2758,9 @@ internal static class Program
             AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->DisplayLabel =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose display labels.");
             AssertContains(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledById(", "Phase 19 is missing the shared managed algorithm-id enable helper.");
             AssertContains(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledById(", "Phase 19 is missing the shared managed algorithm-id query helper.");
-            AssertContains(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type enable helper.");
-            AssertContains(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 is missing the shared managed digest-type query helper.");
+            AssertDoesNotContain(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmDigestType(", "Phase 19 legacy managed hash helper still exposes the removed digest-type conversion helper.");
+            AssertDoesNotContain(legacyManagedHashMgmtAccess, "SetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 legacy managed hash helper still exposes the removed digest-type enable helper.");
+            AssertDoesNotContain(legacyManagedHashMgmtAccess, "GetManagedHashAlgorithmEnabledByDigestType(", "Phase 19 legacy managed hash helper still exposes the removed digest-type query helper.");
             AssertContains(legacyManagedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateProjectedManagedDigestMatchingResults(", "Phase 19 is missing the shared managed digest-search projection helper.");
 
@@ -2767,8 +2771,10 @@ internal static class Program
             AssertContains(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledById(System::String^ algorithmId);", "CLR HashMgmt does not yet expose algorithm-id queries.");
             AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "CLR HashMgmt does not yet route algorithm-id enablement through the shared managed helper.");
             AssertContains(hashMgmtClr, "return ::GetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", "CLR HashMgmt does not yet route algorithm-id queries through the shared managed helper.");
-            AssertContains(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue, val);", "CLR HashMgmt does not yet route digest-type enablement through the shared managed helper.");
-            AssertContains(hashMgmtClr, "::GetManagedHashAlgorithmEnabledByDigestType(*m_pThreadData, digestTypeValue);", "CLR HashMgmt does not yet route digest-type queries through the shared managed helper.");
+            AssertDoesNotContain(hashMgmtClrHeader, "HashAlgorithmTypeNet", "CLR HashMgmt header still exposes the removed managed algorithm enum.");
+            AssertDoesNotContain(hashMgmtClrHeader, "property int DigestType;", "CLR HashMgmt header still exposes removed digest-type payload.");
+            AssertDoesNotContain(hashMgmtClr, "::SetManagedHashAlgorithmEnabledByDigestType(", "CLR HashMgmt still routes through the removed digest-type enable helper.");
+            AssertDoesNotContain(hashMgmtClr, "::GetManagedHashAlgorithmEnabledByDigestType(", "CLR HashMgmt still routes through the removed digest-type query helper.");
             AssertContains(hashMgmtClr, "ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);", "CLR HashMgmt does not yet route managed file ingestion through the shared managed helper.");
             AssertContains(hashMgmtClr, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", "CLR HashMgmt does not yet route digest-search projection through the shared managed helper.");
             AssertDoesNotContain(hashMgmtClr, "#include \"Common/ResultDataSearch.h\"", "CLR HashMgmt still depends directly on the digest-search header after phase 19.");
@@ -2782,8 +2788,10 @@ internal static class Program
             AssertContains(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);", "UWP HashMgmt does not yet expose algorithm-id queries.");
             AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", "UWP HashMgmt does not yet route algorithm-id enablement through the shared managed helper.");
             AssertContains(hashMgmtUwp, "return ::GetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", "UWP HashMgmt does not yet route algorithm-id queries through the shared managed helper.");
-            AssertContains(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);", "UWP HashMgmt does not yet route digest-type enablement through the shared managed helper.");
-            AssertContains(hashMgmtUwp, "::GetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue);", "UWP HashMgmt does not yet route digest-type queries through the shared managed helper.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "HashAlgorithmTypeNet", "UWP HashMgmt header still exposes the removed managed algorithm enum.");
+            AssertDoesNotContain(hashMgmtUwpHeader, "property int DigestType;", "UWP HashMgmt header still exposes removed digest-type payload.");
+            AssertDoesNotContain(hashMgmtUwp, "::SetManagedHashAlgorithmEnabledByDigestType(", "UWP HashMgmt still routes through the removed digest-type enable helper.");
+            AssertDoesNotContain(hashMgmtUwp, "::GetManagedHashAlgorithmEnabledByDigestType(", "UWP HashMgmt still routes through the removed digest-type query helper.");
             AssertContains(hashMgmtUwp, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP HashMgmt does not yet route managed file ingestion through the shared managed helper.");
             AssertContains(hashMgmtUwp, "CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", "UWP HashMgmt does not yet route digest-search projection through the shared managed helper.");
             AssertDoesNotContain(hashMgmtUwp, "#include \"Common/ResultDataSearch.h\"", "UWP HashMgmt still depends directly on the digest-search header after phase 19.");

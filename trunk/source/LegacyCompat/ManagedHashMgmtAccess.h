@@ -4,7 +4,6 @@
 #include "Common/HashAlgorithmRegistry.h"
 #include "Common/HashResultProjection.h"
 #include "Common/HashResultSearch.h"
-#include "LegacyCompat/HashAlgorithmTypeCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
 #include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "LegacyCompat/ThreadDataInputAccess.h"
@@ -25,11 +24,6 @@ static inline bool TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& ma
 	return true;
 }
 
-static inline bool TryConvertManagedHashAlgorithmDigestType(int digestTypeValue, ResultDigestType *digestType)
-{
-	return TryGetHashAlgorithmType(digestTypeValue, digestType);
-}
-
 template<typename TDescriptorNet, typename TDescriptorFactory, typename TStringConverter>
 static inline TDescriptorNet CreateManagedHashAlgorithmDescriptorNet(
 	const HashAlgorithmDescriptor& algorithmDescriptor,
@@ -38,9 +32,6 @@ static inline TDescriptorNet CreateManagedHashAlgorithmDescriptorNet(
 {
 	TDescriptorNet descriptorNet = createDescriptor();
 	HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
-	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
-	TryGetHashAlgorithmTypeById(algorithmId, &digestType);
-	descriptorNet->DigestType = static_cast<int>(digestType);
 	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
 	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
 	descriptorNet->AlgorithmId = convertText(algorithmId.c_str());
@@ -95,47 +86,6 @@ static inline bool GetManagedHashAlgorithmEnabledById(
 	}
 
 	return IsThreadDataHashAlgorithmEnabledById(threadData, normalizedAlgorithmId);
-}
-
-template<typename TThreadData, typename TEnabled>
-static inline void SetManagedHashAlgorithmEnabledByDigestType(
-	TThreadData& threadData,
-	int digestTypeValue,
-	TEnabled enabled)
-{
-	ResultDigestType digestType;
-	if (!TryConvertManagedHashAlgorithmDigestType(digestTypeValue, &digestType))
-	{
-		return;
-	}
-
-	HashAlgorithmId algorithmId;
-	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
-	{
-		return;
-	}
-
-	SetManagedHashAlgorithmEnabledById(threadData, algorithmId, enabled);
-}
-
-template<typename TThreadData>
-static inline bool GetManagedHashAlgorithmEnabledByDigestType(
-	const TThreadData& threadData,
-	int digestTypeValue)
-{
-	ResultDigestType digestType;
-	if (!TryConvertManagedHashAlgorithmDigestType(digestTypeValue, &digestType))
-	{
-		return false;
-	}
-
-	HashAlgorithmId algorithmId;
-	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
-	{
-		return false;
-	}
-
-	return GetManagedHashAlgorithmEnabledById(threadData, algorithmId);
 }
 
 template<typename TThreadData, typename TManagedArray, typename TStringConverter>

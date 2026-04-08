@@ -88,16 +88,6 @@ Array<HashAlgorithmDescriptorNet^>^ HashMgmt::GetSupportedHashAlgorithms()
 	return CreateSupportedHashAlgorithmDescriptors();
 }
 
-void HashMgmt::SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Boolean val)
-{
-	SetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm), val);
-}
-
-Boolean HashMgmt::GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm)
-{
-	return GetHashAlgorithmEnabledByDigestType(static_cast<int>(hashAlgorithm));
-}
-
 void HashMgmt::SetHashAlgorithmEnabledById(String^ algorithmId, Boolean val)
 {
 	::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);
@@ -106,16 +96,6 @@ void HashMgmt::SetHashAlgorithmEnabledById(String^ algorithmId, Boolean val)
 Boolean HashMgmt::GetHashAlgorithmEnabledById(String^ algorithmId)
 {
 	return ::GetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId));
-}
-
-void HashMgmt::SetHashAlgorithmEnabledByDigestType(int digestTypeValue, Boolean val)
-{
-	::SetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue, val);
-}
-
-Boolean HashMgmt::GetHashAlgorithmEnabledByDigestType(int digestTypeValue)
-{
-	return ::GetManagedHashAlgorithmEnabledByDigestType(m_threadData, digestTypeValue);
 }
 
 uint64 HashMgmt::GetTotalSize()

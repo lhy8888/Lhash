@@ -8,18 +8,9 @@ struct ThreadData;
 
 namespace FilesHashWUI
 {
-	public enum class HashAlgorithmTypeNet
-	{
-		MD5 = 0,
-		SHA1,
-		SHA256,
-		SHA512
-	};
-
 	public ref class HashAlgorithmDescriptorNet sealed
 	{
 public:
-		property int DigestType;
 		property System::String^ AlgorithmId;
 		property System::String^ StableName;
 		property System::String^ DisplayLabel;
@@ -51,12 +42,8 @@ public:
 		void SetUppercase(bool val);
 		void ResetHashAlgorithms();
 		cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();
-		void SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);
-		bool GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);
 		void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);
 		bool GetHashAlgorithmEnabledById(System::String^ algorithmId);
-		void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);
-		bool GetHashAlgorithmEnabledByDigestType(int digestType);
 		System::UInt64 GetTotalSize();
 
 		void AddFiles(cli::array<System::String^>^ filePaths);
