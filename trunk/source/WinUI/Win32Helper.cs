@@ -79,9 +79,9 @@ namespace SunJWBase
 
         public static Point GetPointerPoint()
         {
-            POINT pointCursor = new();
+            Point pointCursor = new();
             PInvoke.GetCursorPos(out pointCursor);
-            return new Point(pointCursor.X, pointCursor.Y);
+            return pointCursor;
         }
 
         public static bool SetForegroundWindow(IntPtr hWnd)

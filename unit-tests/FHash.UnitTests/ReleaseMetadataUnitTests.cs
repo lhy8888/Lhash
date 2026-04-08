@@ -53,7 +53,6 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("SetWindowSubclass", nativeMethods, StringComparison.Ordinal);
         Assert.Contains("DefSubclassProc", nativeMethods, StringComparison.Ordinal);
         Assert.Contains("WM_GETMINMAXINFO", nativeMethods, StringComparison.Ordinal);
-        Assert.Contains("POINT", nativeMethods, StringComparison.Ordinal);
         Assert.Contains("MINMAXINFO", nativeMethods, StringComparison.Ordinal);
     }
 
