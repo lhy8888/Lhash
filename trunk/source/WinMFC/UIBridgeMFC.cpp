@@ -46,6 +46,9 @@ void UIBridgeMFC::unlockBridgeData()
 
 void UIBridgeMFC::handleJobPreparingEvent()
 {
+	ResetProgressDispatchState(m_fileProgressDispatchState);
+	ResetProgressDispatchState(m_totalProgressDispatchState);
+
 	PostThreadInfoMessage(WP_WORKING);
 
 	UpdateMainHyperEdit([&](CHyperEditHash *hyperEdit)
@@ -89,6 +92,7 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	switch (eventType)
 	{
 	case PROGRESS_EVENT_FILE_STARTED:
+		ResetProgressDispatchState(m_fileProgressDispatchState);
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
 		break;
 	case PROGRESS_EVENT_FILE_META_READY:

@@ -117,4 +117,16 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("std::async(std::launch::async, runSingleRequest)", nativeRuntimeTests, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void MfcProgressDispatchState_ResetsWhenANewJobStarts()
+    {
+        string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
+        string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
+
+        Assert.Contains("static inline void ResetProgressDispatchState", uiBridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("ResetProgressDispatchState(m_fileProgressDispatchState);", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("ResetProgressDispatchState(m_totalProgressDispatchState);", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("case PROGRESS_EVENT_FILE_STARTED:", uiBridge, StringComparison.Ordinal);
+    }
 }

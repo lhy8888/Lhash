@@ -39,6 +39,12 @@ public:
 		ULONGLONG lastTick;
 	};
 
+	static inline void ResetProgressDispatchState(ProgressDispatchState& progressDispatchState)
+	{
+		progressDispatchState.lastValue = -1;
+		progressDispatchState.lastTick = 0;
+	}
+
 	UIBridgeMFC(HWND hWnd,
 				sunjwbase::OsMutex *mainMtx,
 				CHyperEditHash *hyperEdit);
