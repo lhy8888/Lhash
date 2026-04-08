@@ -1,8 +1,8 @@
 #ifndef _HASH_DIGEST_PIPELINE_H_
 #define _HASH_DIGEST_PIPELINE_H_
 
-#include "Common/HashExecutionContext.h"
-#include "Common/HashRequest.h"
+#include "Runtime/HashExecutionContext.h"
+#include "Domain/HashRequest.h"
 #include "Common/HashResult.h"
 
 class ThreadPool;

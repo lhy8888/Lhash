@@ -1,9 +1,9 @@
 #ifndef _HASH_PREPARATION_WORKFLOW_H_
 #define _HASH_PREPARATION_WORKFLOW_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "Common/HashPreparationPlan.h"
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 
 namespace HashEngineInternal
 {

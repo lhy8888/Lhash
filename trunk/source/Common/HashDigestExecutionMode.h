@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_EXECUTION_MODE_H_
 #define _HASH_DIGEST_EXECUTION_MODE_H_
 
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 
 namespace HashEngineInternal
 {

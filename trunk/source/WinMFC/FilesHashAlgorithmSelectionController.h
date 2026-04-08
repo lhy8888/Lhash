@@ -5,7 +5,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 #include "LegacyCompat/LegacyThreadData.h"
 
 class FilesHashAlgorithmSelectionController

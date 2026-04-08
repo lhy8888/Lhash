@@ -1,7 +1,7 @@
 #ifndef _RESULT_DIGEST_METADATA_ACCESS_H_
 #define _RESULT_DIGEST_METADATA_ACCESS_H_
 
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 
 typedef HashAlgorithmDescriptor ResultDigestMetadata;
 

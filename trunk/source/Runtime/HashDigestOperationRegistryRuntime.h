@@ -2,7 +2,7 @@
 #define _HASH_DIGEST_OPERATION_REGISTRY_RUNTIME_H_
 
 #include "Common/Global.h"
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 
 namespace HashEngineInternal
 {

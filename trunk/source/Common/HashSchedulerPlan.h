@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #include "Common/HashDigestExecutionMode.h"
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 
 namespace HashEngineInternal
 {

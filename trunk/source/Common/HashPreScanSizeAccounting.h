@@ -1,7 +1,7 @@
 #ifndef _HASH_PRE_SCAN_SIZE_ACCOUNTING_H_
 #define _HASH_PRE_SCAN_SIZE_ACCOUNTING_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 
 namespace HashEngineInternal
 {

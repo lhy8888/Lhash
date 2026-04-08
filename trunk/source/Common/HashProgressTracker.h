@@ -1,7 +1,7 @@
 #ifndef _HASH_PROGRESS_TRACKER_H_
 #define _HASH_PROGRESS_TRACKER_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 
 namespace HashEngineInternal
 {

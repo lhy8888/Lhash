@@ -1,7 +1,7 @@
 #ifndef _HASH_FILE_SIZE_ACCOUNTING_H_
 #define _HASH_FILE_SIZE_ACCOUNTING_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "Common/HashResult.h"
 
 namespace sunjwbase

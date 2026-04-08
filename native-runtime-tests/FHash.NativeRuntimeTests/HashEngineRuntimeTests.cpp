@@ -6,14 +6,14 @@
 
 #include "NativeTestHarness.h"
 
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 #include "Common/HashDigestOperationRegistry.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashEngine.h"
 #include "LegacyCompat/HashThreadEntry.h"
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "Runtime/HashProgressSink.h"
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 #include "Common/HashResultSearch.h"
 #include "Common/ResultDataAccess.h"
 #include "Common/ResultDigestValueAccess.h"

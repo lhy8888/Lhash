@@ -2,7 +2,7 @@
 #define _HASH_DIGEST_BUFFER_PLAN_H_
 
 #include "Common/HashDigestExecutionMode.h"
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 
 namespace HashEngineInternal
 {

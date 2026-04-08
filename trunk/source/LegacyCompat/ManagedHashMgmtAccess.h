@@ -1,7 +1,7 @@
 #ifndef _LEGACY_MANAGED_HASH_MGMT_ACCESS_H_
 #define _LEGACY_MANAGED_HASH_MGMT_ACCESS_H_
 
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 #include "Common/HashResultProjection.h"
 #include "Common/HashResultSearch.h"
 #include "LegacyCompat/ThreadDataAccess.h"

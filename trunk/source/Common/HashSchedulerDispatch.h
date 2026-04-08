@@ -1,8 +1,8 @@
 #ifndef _HASH_SCHEDULER_DISPATCH_H_
 #define _HASH_SCHEDULER_DISPATCH_H_
 
-#include "Common/HashExecutionContext.h"
-#include "Common/HashRequest.h"
+#include "Runtime/HashExecutionContext.h"
+#include "Domain/HashRequest.h"
 
 class ThreadPool;
 

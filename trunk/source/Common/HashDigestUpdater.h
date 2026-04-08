@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_UPDATER_H_
 #define _HASH_DIGEST_UPDATER_H_
 
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 #include "Common/HashDigestOperationRegistry.h"
 
 class ThreadPool;

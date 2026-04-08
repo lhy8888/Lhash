@@ -2,8 +2,8 @@
 #define _HASH_DIGEST_LIFECYCLE_H_
 
 #include "Common/Global.h"
-#include "Common/HashExecutionContext.h"
-#include "Common/HashRequest.h"
+#include "Runtime/HashExecutionContext.h"
+#include "Domain/HashRequest.h"
 #include "Common/HashResult.h"
 
 namespace HashEngineInternal

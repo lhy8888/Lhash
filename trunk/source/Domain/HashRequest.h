@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "Common/Global.h"
-#include "Common/HashAlgorithmRegistry.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
 
 enum HashRequestDigestExecutionPolicy
 {

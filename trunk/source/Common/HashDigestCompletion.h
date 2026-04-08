@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_COMPLETION_H_
 #define _HASH_DIGEST_COMPLETION_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 
 namespace HashEngineInternal
 {

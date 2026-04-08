@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_QUEUE_H_
 #define _HASH_DIGEST_QUEUE_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashDigestUpdater.h"
 

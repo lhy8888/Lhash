@@ -70,13 +70,13 @@ public sealed class CommonSeamUnitTests
     [Fact]
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
-        string registry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashAlgorithmRegistry.h");
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
         string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
+        string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
-        Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
+        Assert.False(File.Exists(legacyRegistryShimPath));
         RepositoryTestContext.AssertContainsInOrder(
             registryCore,
             "RegisterHashAlgorithmDescriptor({ \"md5\", \"MD5\", true });",

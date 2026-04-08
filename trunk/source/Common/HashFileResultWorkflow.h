@@ -1,7 +1,7 @@
 #ifndef _HASH_FILE_RESULT_WORKFLOW_H_
 #define _HASH_FILE_RESULT_WORKFLOW_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "Common/HashResult.h"
 
 namespace HashEngineInternal

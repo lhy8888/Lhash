@@ -1836,7 +1836,7 @@ internal static class Program
         Run("Phase 5 neutralizes the internal ResultDigestCompatibilityFields names behind the existing ResultDigestAccess seam", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+            string hashAlgorithmRegistry = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
 
             AssertDoesNotContain(global, "struct ResultDigestCompatibilityFields", "Core digest compatibility fields should no longer live in Global.h after the algorithm-domain cleanup.");
             AssertDoesNotContain(global, "sunjwbase::tstring md5;", "Core digest compatibility fields should no longer expose the fixed MD5 slot.");
@@ -2108,7 +2108,7 @@ internal static class Program
 
             AssertContainsAny(threadAccess,
                 [
-                    "#include \"Common/HashAlgorithmRegistry.h\"",
+                    "#include \"Domain/HashAlgorithmRegistryCore.h\"",
                     "#include \"LegacyCompat/HashAlgorithmTypeCompat.h\""
                 ],
                 "ThreadData access seams do not yet include the hash-algorithm registry seam needed for algorithm selection.");
@@ -2394,7 +2394,7 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true }", "HashAlgorithmRegistry does not yet register SHA256.");
             AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true }", "HashAlgorithmRegistry does not yet register SHA512.");
 
-            AssertContains(digestAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
+            AssertContains(digestAccess, "#include \"Domain/HashAlgorithmRegistryCore.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
             AssertContains(digestAccess, "return GetRegisteredHashAlgorithmCount();", "ResultDigestAccess does not yet route digest count through the registry seam.");
             AssertContains(digestAccess, "return GetHashAlgorithmDescriptorAt(index);", "ResultDigestAccess does not yet route metadata lookup through the registry seam.");
@@ -2404,7 +2404,7 @@ internal static class Program
 
             AssertContainsAny(threadAccess,
                 [
-                    "#include \"Common/HashAlgorithmRegistry.h\"",
+                    "#include \"Domain/HashAlgorithmRegistryCore.h\"",
                     "#include \"LegacyCompat/HashAlgorithmTypeCompat.h\""
                 ],
                 "ThreadData access seams do not yet consume the hash-algorithm registry seam.");
@@ -3332,7 +3332,6 @@ internal static class Program
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
         {
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
-            string hashRequestShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string legacyHashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestProjection.h");
             string legacyHashRequestTypeCompat = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
@@ -3345,7 +3344,7 @@ internal static class Program
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(hashRequestShim, "#include \"Domain/HashRequest.h\"", "Phase 89 Common HashRequest.h should now be a thin Domain shim.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashRequest.h", "Phase 90 Common HashRequest.h should be removed after direct Domain include adoption.");
             AssertContains(hashRequest, "struct HashRequest", "Phase 31 does not yet define a stable HashRequest contract.");
             AssertContains(hashRequest, "TStrVector files;", "Phase 31 HashRequest does not yet own file inputs.");
             AssertContains(hashRequest, "std::vector<HashAlgorithmId> algorithmIds;", "Phase 31 HashRequest does not yet own descriptor/id-based algorithm selection.");
@@ -3437,12 +3436,11 @@ internal static class Program
         Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
         {
             string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
-            string hashExecutionContextShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashThreadEntryHeader = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntry.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
-            AssertContains(hashExecutionContextShim, "#include \"Runtime/HashExecutionContext.h\"", "Phase 89 Common HashExecutionContext.h should now be a thin Runtime shim.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashExecutionContext.h", "Phase 90 Common HashExecutionContext.h should be removed after direct Runtime include adoption.");
             AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
             AssertContains(hashExecutionContext, "CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", "Phase 35 hash execution context does not yet expose explicit execution-context construction dependencies.");
             AssertDoesNotContain(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context still directly depends on ThreadData.");
@@ -3500,7 +3498,7 @@ internal static class Program
             AssertDoesNotContain(hashEngineHeader, "HashProgressSink *observer", "Phase 35 HashEngine header still routes the core entry through the older progress-sink argument.");
 
             AssertContains(hashEngineInternal, "#include \"Runtime/HashProgressSink.h\"", "Phase 90 HashEngineInternal should now consume the Runtime HashProgressSink seam.");
-            AssertContains(hashEngineInternal, "#include \"Common/HashExecutionContext.h\"", "Phase 35 HashEngineInternal does not yet consume HashExecutionContext.");
+            AssertContains(hashEngineInternal, "#include \"Runtime/HashExecutionContext.h\"", "Phase 90 HashEngineInternal should now consume HashExecutionContext through the Runtime seam directly.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/HashEngineObserver.h\"", "Phase 34 HashEngineInternal still directly depends on HashEngineObserver.");
             AssertContains(hashEngineInternal, "HashExecutionContext *executionContext", "Phase 35 HashEngineInternal does not yet route execution seams through HashExecutionContext.");
 
@@ -5479,7 +5477,7 @@ internal static class Program
             AssertDoesNotContain(hashAlgorithmRegistry, "return algorithmDescriptors[0];", "Phase 84 HashAlgorithmRegistry should no longer implicitly fall back to MD5 for invalid indices.");
             AssertContains(hashAlgorithmRegistry, "int algorithmIndex = -1;", "Phase 84 HashAlgorithmRegistry does not yet initialize unresolved algorithm index to -1.");
 
-            AssertContains(hashRequest, "#include \"Common/HashAlgorithmRegistry.h\"", "Phase 84 HashRequest does not yet consume the hash-algorithm registry seam for algorithm sanitization.");
+            AssertContains(hashRequest, "#include \"Domain/HashAlgorithmRegistryCore.h\"", "Phase 90 HashRequest should now consume the hash-algorithm registry seam directly from Domain.");
             AssertContains(hashRequest, "std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId)", "Phase 84 HashRequest algorithm traversal does not yet deduplicate descriptor/id algorithm selections.");
             AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
 
@@ -5738,7 +5736,6 @@ internal static class Program
     {
         return string.Join(
             "\r\n",
-            ReadRepoFile(repoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h"),
             ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h"));
     }

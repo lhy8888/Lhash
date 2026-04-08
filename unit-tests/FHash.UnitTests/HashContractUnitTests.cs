@@ -6,12 +6,12 @@ public sealed class HashContractUnitTests
     public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
-        string requestShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
         string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestProjection.h");
         string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
         string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
+        string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
 
-        Assert.Contains("#include \"Domain/HashRequest.h\"", requestShim, StringComparison.Ordinal);
+        Assert.False(File.Exists(requestShimPath));
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
         Assert.Contains("std::vector<HashAlgorithmId> algorithmIds;", request, StringComparison.Ordinal);
@@ -44,12 +44,12 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam()
     {
-        string registry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashAlgorithmRegistry.h");
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
+        string registryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
-        Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
+        Assert.False(File.Exists(registryShimPath));
         Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
         Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
@@ -172,7 +172,6 @@ public sealed class HashContractUnitTests
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
         string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\LegacyThreadData.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
-        string executionContextShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.h");
@@ -252,7 +251,8 @@ public sealed class HashContractUnitTests
         string resultEventWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.h");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
-        Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", executionContextShim, StringComparison.Ordinal);
+        string executionContextShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashExecutionContext.h");
+        Assert.False(File.Exists(executionContextShimPath));
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ThreadData;", global, StringComparison.Ordinal);
@@ -676,10 +676,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Common/HashResultEventWorkflow.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Runtime/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerDispatch.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", internalHeader, StringComparison.Ordinal);
         Assert.Contains("const HashRequest& request", internalHeader, StringComparison.Ordinal);

@@ -6,7 +6,7 @@
 #include "Common/HashDigestQueuePlan.h"
 #include "Common/HashPreparationPlan.h"
 #include "Common/HashDigestUpdater.h"
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 #include "Common/HashSchedulerPlan.h"
 
 namespace HashEngineInternal

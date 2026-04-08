@@ -1,7 +1,7 @@
 #ifndef _LEGACY_HASH_REQUEST_PROJECTION_H_
 #define _LEGACY_HASH_REQUEST_PROJECTION_H_
 
-#include "Common/HashRequest.h"
+#include "Domain/HashRequest.h"
 #include "LegacyCompat/HashRequestTypeCompat.h"
 #include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "LegacyCompat/ThreadDataInputAccess.h"
