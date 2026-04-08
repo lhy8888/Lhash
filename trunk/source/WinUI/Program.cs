@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
@@ -15,6 +15,7 @@ namespace FilesHashWUI
         [STAThread]
         static void Main(string[] args)
         {
+            Win32Helper.TryEnableSecureDllSearchDirectories();
             WinRT.ComWrappersSupport.InitializeComWrappers();
 
             bool isRedirect = DecideRedirection();

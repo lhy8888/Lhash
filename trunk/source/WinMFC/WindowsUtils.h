@@ -26,6 +26,7 @@ namespace WindowsUtils
 	BOOL IsWindows64();
 	BOOL IsLimitedProc();
 	BOOL ElevateProcess();
+	bool InitializeProcessDllSearchPolicy();
 
 	void CopyCString(const CString& cstrToCopy);
 

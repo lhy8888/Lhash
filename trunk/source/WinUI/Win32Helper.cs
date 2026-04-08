@@ -1,13 +1,20 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace SunJWBase
 {
-    public class Win32Helper
+    public static partial class Win32Helper
     {
+        private const uint LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x00001000;
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetDefaultDllDirectories(uint directoryFlags);
+
         public static unsafe bool IsAppPackaged()
         {
             uint bufferLength = 0;
@@ -18,6 +25,23 @@ namespace SunJWBase
                 isPackaged = false;
             }
             return isPackaged;
+        }
+
+        public static bool TryEnableSecureDllSearchDirectories()
+        {
+            if (IsAppPackaged())
+            {
+                return true;
+            }
+
+            try
+            {
+                return SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+            }
+            catch (EntryPointNotFoundException)
+            {
+                return false;
+            }
         }
 
         public static double GetScaleFactor(IntPtr hWnd)

@@ -210,6 +210,28 @@ internal static partial class Program
             AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);
+        Run("DLL search path hardening is present", () =>
+        {
+            string filesHashApp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHash.cpp");
+            string windowsUtilsHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.h");
+            string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
+            string winUiProgram = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Program.cs");
+            string winUiWin32Helper = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Win32Helper.cs");
+            string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+
+            AssertContains(windowsUtilsHeader, "bool InitializeProcessDllSearchPolicy();", "MFC startup is missing the explicit DLL search policy declaration.");
+            AssertContains(filesHashApp, "WindowsUtils::InitializeProcessDllSearchPolicy();", "MFC startup no longer enables secure DLL search directories.");
+            AssertContains(windowsUtils, "GetProcAddress(kernel32Module, \"SetDefaultDllDirectories\")", "WindowsUtils no longer resolves SetDefaultDllDirectories safely at runtime.");
+            AssertContains(windowsUtils, "setDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)", "WindowsUtils no longer tightens the default DLL search path.");
+            AssertContains(windowsUtils, "LoadLibraryEx(", "WindowsUtils explicit DLL loads no longer use LoadLibraryEx.");
+            AssertContains(windowsUtils, "LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS", "WindowsUtils explicit DLL loads no longer use secure DLL search flags.");
+            AssertDoesNotContain(windowsUtils, "LoadLibrary(pszShlDllPath);", "WindowsUtils still uses the legacy unsafe shell-extension LoadLibrary path.");
+            AssertContains(winUiProgram, "Win32Helper.TryEnableSecureDllSearchDirectories();", "WinUI startup no longer enables secure DLL search directories.");
+            AssertContains(winUiWin32Helper, "SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)", "WinUI helper no longer tightens the default DLL search path.");
+            AssertContains(winUiWin32Helper, "if (IsAppPackaged())", "WinUI helper no longer skips DLL search hardening for packaged activation.");
+            AssertContains(fileshashProject, "<RuntimeLibrary>MultiThreaded</RuntimeLibrary>", "Legacy MFC release build no longer uses the static CRT hardening baseline.");
+            AssertDoesNotContain(fileshashProject, "<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>", "Legacy MFC release build unexpectedly switched back to the dynamic CRT.");
+        }, failures);
         Run("WinMFC context-menu controller preserves elevation and context-menu safety flow", () =>
         {
             string dialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");

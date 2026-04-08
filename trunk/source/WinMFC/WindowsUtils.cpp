@@ -18,8 +18,43 @@ using namespace sunjwbase;
 typedef HRESULT(__stdcall *LPFN_DllRegisterServer)(void);
 typedef HRESULT(__stdcall *LPFN_DllUnregisterServer)(void);
 
+namespace
+{
+	typedef BOOL(WINAPI *LPFN_SetDefaultDllDirectories)(DWORD directoryFlags);
+	LPFN_SetDefaultDllDirectories ResolveSetDefaultDllDirectories()
+	{
+		HMODULE kernel32Module = GetModuleHandle(_T("kernel32.dll"));
+		if (kernel32Module == NULL)
+			return NULL;
+		return reinterpret_cast<LPFN_SetDefaultDllDirectories>(
+			GetProcAddress(kernel32Module, "SetDefaultDllDirectories"));
+	}
+	HMODULE LoadLibraryWithSecureSearchPath(const TCHAR *pszDllPath)
+	{
+		if (pszDllPath == NULL || pszDllPath[0] == _T('\0'))
+			return NULL;
+		if (ResolveSetDefaultDllDirectories() != NULL)
+		{
+			HMODULE hModule = LoadLibraryEx(
+				pszDllPath,
+				NULL,
+				LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+			if (hModule != NULL || GetLastError() != ERROR_INVALID_PARAMETER)
+				return hModule;
+		}
+		return LoadLibrary(pszDllPath);
+	}
+}
 namespace WindowsUtils
 {
+	bool InitializeProcessDllSearchPolicy()
+	{
+		LPFN_SetDefaultDllDirectories setDefaultDllDirectories = ResolveSetDefaultDllDirectories();
+		if (setDefaultDllDirectories != NULL)
+			return setDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) == TRUE;
+		return SetDllDirectory(_T("")) == TRUE;
+	}
+
 	BOOL IsWindows64()
 	{
 		CRegKey key;
@@ -183,7 +218,7 @@ namespace WindowsUtils
 
 	bool RegShellExt(TCHAR *pszShlDllPath)
 	{
-		HMODULE hModule = LoadLibrary(pszShlDllPath);
+		HMODULE hModule = LoadLibraryWithSecureSearchPath(pszShlDllPath);
 		if(hModule)
 		{
 			LPFN_DllRegisterServer fnDllRegSvr = NULL;
@@ -203,7 +238,7 @@ namespace WindowsUtils
 
 	bool UnregShellExt(TCHAR *pszShlDllPath)
 	{
-		HMODULE hModule = LoadLibrary(pszShlDllPath);
+		HMODULE hModule = LoadLibraryWithSecureSearchPath(pszShlDllPath);
 		if(hModule)
 		{
 			LPFN_DllUnregisterServer fnDllUnregSvr = NULL;
