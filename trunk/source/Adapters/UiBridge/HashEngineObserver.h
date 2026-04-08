@@ -3,15 +3,15 @@
 
 #include "Common/HashProgressSink.h"
 
-class HashEngineObserver: public HashProgressSink
+class HashProgressEventBridge: public HashProgressSink
 {
 public:
-	HashEngineObserver() {}
-	virtual ~HashEngineObserver() {}
+	HashProgressEventBridge() {}
+	virtual ~HashProgressEventBridge() {}
 
 	virtual int progressMax()
 	{
-		return queryProgressMax();
+		return getProgressValueMax();
 	}
 
 	virtual void onProgressEvent(const ProgressEvent& progressEvent)
@@ -19,34 +19,34 @@ public:
 		switch (progressEvent.type)
 		{
 		case PROGRESS_EVENT_JOB_PREPARING:
-			onJobPreparing();
+			handleJobPreparingEvent();
 			break;
 		case PROGRESS_EVENT_JOB_PREPARATION_FINISHED:
-			onJobPreparationFinished();
+			handleJobPreparationFinishedEvent();
 			break;
 		case PROGRESS_EVENT_JOB_CANCELLED:
-			onJobCancelled();
+			handleJobCancelledEvent();
 			break;
 		case PROGRESS_EVENT_JOB_COMPLETED:
-			onJobCompleted();
+			handleJobCompletedEvent();
 			break;
 		case PROGRESS_EVENT_FILE_STARTED:
 		case PROGRESS_EVENT_FILE_META_READY:
 		case PROGRESS_EVENT_FILE_HASH_READY:
 		case PROGRESS_EVENT_FILE_FAILED:
-			onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);
+			handleFileResultProgressEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);
 			break;
 		case PROGRESS_EVENT_FILE_PROGRESS:
-			onFileProgressValue(progressEvent.value);
+			handleFileProgressEvent(progressEvent.value);
 			break;
 		case PROGRESS_EVENT_TOTAL_PROGRESS:
-			onTotalProgressValue(progressEvent.value);
+			handleTotalProgressEvent(progressEvent.value);
 			break;
 		case PROGRESS_EVENT_FILE_CALCULATED:
-			onFileCalculated();
+			handleFileCalculatedEvent();
 			break;
 		case PROGRESS_EVENT_FILE_FINISHED:
-			onFileFinished();
+			handleFileFinishedEvent();
 			break;
 		case PROGRESS_EVENT_NONE:
 		default:
@@ -54,18 +54,20 @@ public:
 		}
 	}
 
-	virtual void onJobPreparing() = 0;
-	virtual void onJobPreparationFinished() = 0;
-	virtual void onJobCancelled() = 0;
-	virtual void onJobCompleted() = 0;
-	virtual void onFileResultEvent(const HashResult& result,
-									ProgressEventType eventType,
-									bool uppercaseDigest) = 0;
-	virtual int queryProgressMax() = 0;
-	virtual void onFileProgressValue(int value) = 0;
-	virtual void onTotalProgressValue(int value) = 0;
-	virtual void onFileCalculated() = 0;
-	virtual void onFileFinished() = 0;
+	virtual void handleJobPreparingEvent() = 0;
+	virtual void handleJobPreparationFinishedEvent() = 0;
+	virtual void handleJobCancelledEvent() = 0;
+	virtual void handleJobCompletedEvent() = 0;
+	virtual void handleFileResultProgressEvent(const HashResult& result,
+												ProgressEventType eventType,
+												bool uppercaseDigest) = 0;
+	virtual int getProgressValueMax() = 0;
+	virtual void handleFileProgressEvent(int value) = 0;
+	virtual void handleTotalProgressEvent(int value) = 0;
+	virtual void handleFileCalculatedEvent() = 0;
+	virtual void handleFileFinishedEvent() = 0;
 };
+
+typedef HashProgressEventBridge HashEngineObserver;
 
 #endif

@@ -29,17 +29,17 @@ UIBridgeMFC::~UIBridgeMFC()
 {
 }
 
-void UIBridgeMFC::lockData()
+void UIBridgeMFC::lockBridgeData()
 {
 	m_mainMtx->lock();
 }
 
-void UIBridgeMFC::unlockData()
+void UIBridgeMFC::unlockBridgeData()
 {
 	m_mainMtx->unlock();
 }
 
-void UIBridgeMFC::onJobPreparing()
+void UIBridgeMFC::handleJobPreparingEvent()
 {
 	PostThreadInfoMessage(WP_WORKING);
 
@@ -58,7 +58,7 @@ void UIBridgeMFC::onJobPreparing()
 	}, true);
 }
 
-void UIBridgeMFC::onJobPreparationFinished()
+void UIBridgeMFC::handleJobPreparationFinishedEvent()
 {
 	UpdateMainHyperEdit([&](CHyperEditHash *hyperEdit)
 	{
@@ -67,19 +67,19 @@ void UIBridgeMFC::onJobPreparationFinished()
 	});
 }
 
-void UIBridgeMFC::onJobCancelled()
+void UIBridgeMFC::handleJobCancelledEvent()
 {
 	PostThreadInfoMessage(WP_STOPPED);
 }
 
-void UIBridgeMFC::onJobCompleted()
+void UIBridgeMFC::handleJobCompletedEvent()
 {
 	PostThreadInfoMessage(WP_FINISHED);
 }
 
-void UIBridgeMFC::onFileResultEvent(const HashResult& result,
-										ProgressEventType eventType,
-										bool uppercaseDigest)
+void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
+													ProgressEventType eventType,
+													bool uppercaseDigest)
 {
 	switch (eventType)
 	{
@@ -100,26 +100,26 @@ void UIBridgeMFC::onFileResultEvent(const HashResult& result,
 	}
 }
 
-int UIBridgeMFC::queryProgressMax()
+int UIBridgeMFC::getProgressValueMax()
 {
 	return 100;
 }
 
-void UIBridgeMFC::onFileProgressValue(int value)
+void UIBridgeMFC::handleFileProgressEvent(int value)
 {
 	//::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG, value);
 }
 
-void UIBridgeMFC::onTotalProgressValue(int value)
+void UIBridgeMFC::handleTotalProgressEvent(int value)
 {
 	PostThreadInfoMessage(WP_PROG_WHOLE, value);
 }
 
-void UIBridgeMFC::onFileCalculated()
+void UIBridgeMFC::handleFileCalculatedEvent()
 {
 }
 
-void UIBridgeMFC::onFileFinished()
+void UIBridgeMFC::handleFileFinishedEvent()
 {
 }
 

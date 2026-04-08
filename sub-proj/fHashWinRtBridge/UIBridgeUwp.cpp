@@ -16,12 +16,12 @@ UIBridgeUwp::~UIBridgeUwp()
 {
 }
 
-void UIBridgeUwp::lockData()
+void UIBridgeUwp::lockBridgeData()
 {
 	// No need here.
 }
 
-void UIBridgeUwp::unlockData()
+void UIBridgeUwp::unlockBridgeData()
 {
 	// No need here.
 }
@@ -95,53 +95,53 @@ int UIBridgeUwp::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)
 	});
 }
 
-void UIBridgeUwp::onJobPreparing()
+void UIBridgeUwp::handleJobPreparingEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);
 }
 
-void UIBridgeUwp::onJobPreparationFinished()
+void UIBridgeUwp::handleJobPreparationFinishedEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);
 }
 
-void UIBridgeUwp::onJobCancelled()
+void UIBridgeUwp::handleJobCancelledEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);
 }
 
-void UIBridgeUwp::onJobCompleted()
+void UIBridgeUwp::handleJobCompletedEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
 }
 
-void UIBridgeUwp::onFileResultEvent(const HashResult& result,
-										ProgressEventType eventType,
-										bool uppercaseDigest)
+void UIBridgeUwp::handleFileResultProgressEvent(const HashResult& result,
+													ProgressEventType eventType,
+													bool uppercaseDigest)
 {
 	DispatchProjectedResultToDelegate(result,
 										GetManagedResultDispatchType(eventType),
 										uppercaseDigest);
 }
 
-int UIBridgeUwp::queryProgressMax()
+int UIBridgeUwp::getProgressValueMax()
 {
 	return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);
 }
 
-void UIBridgeUwp::onFileProgressValue(int value)
+void UIBridgeUwp::handleFileProgressEvent(int value)
 {
 }
 
-void UIBridgeUwp::onTotalProgressValue(int value)
+void UIBridgeUwp::handleTotalProgressEvent(int value)
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);
 }
 
-void UIBridgeUwp::onFileCalculated()
+void UIBridgeUwp::handleFileCalculatedEvent()
 {
 }
 
-void UIBridgeUwp::onFileFinished()
+void UIBridgeUwp::handleFileFinishedEvent()
 {
 }

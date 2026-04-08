@@ -3,14 +3,16 @@
 
 #include "Adapters/UiBridge/HashEngineObserver.h"
 
-class HashEngineBridge: public HashEngineObserver
+class HashUiBridgeAdapter: public HashProgressEventBridge
 {
 public:
-	HashEngineBridge() {}
-	virtual ~HashEngineBridge() {}
+	HashUiBridgeAdapter() {}
+	virtual ~HashUiBridgeAdapter() {}
 
-	virtual void lockData() = 0;
-	virtual void unlockData() = 0;
+	virtual void lockBridgeData() = 0;
+	virtual void unlockBridgeData() = 0;
 };
+
+typedef HashUiBridgeAdapter HashEngineBridge;
 
 #endif

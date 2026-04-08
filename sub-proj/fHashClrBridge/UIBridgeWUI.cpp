@@ -17,12 +17,12 @@ UIBridgeWUI::~UIBridgeWUI()
 {
 }
 
-void UIBridgeWUI::lockData()
+void UIBridgeWUI::lockBridgeData()
 {
 	// No need here.
 }
 
-void UIBridgeWUI::unlockData()
+void UIBridgeWUI::unlockBridgeData()
 {
 	// No need here.
 }
@@ -96,53 +96,53 @@ int UIBridgeWUI::DispatchDelegateQueryByType(ManagedDelegateQueryType queryType)
 	});
 }
 
-void UIBridgeWUI::onJobPreparing()
+void UIBridgeWUI::handleJobPreparingEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_PREPARING_CALC);
 }
 
-void UIBridgeWUI::onJobPreparationFinished()
+void UIBridgeWUI::handleJobPreparationFinishedEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_REMOVE_PREPARING_CALC);
 }
 
-void UIBridgeWUI::onJobCancelled()
+void UIBridgeWUI::handleJobCancelledEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_STOP);
 }
 
-void UIBridgeWUI::onJobCompleted()
+void UIBridgeWUI::handleJobCompletedEvent()
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_CALC_FINISH);
 }
 
-void UIBridgeWUI::onFileResultEvent(const HashResult& result,
-										ProgressEventType eventType,
-										bool uppercaseDigest)
+void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,
+													ProgressEventType eventType,
+													bool uppercaseDigest)
 {
 	DispatchProjectedResultToDelegate(result,
 										GetManagedResultDispatchType(eventType),
 										uppercaseDigest);
 }
 
-int UIBridgeWUI::queryProgressMax()
+int UIBridgeWUI::getProgressValueMax()
 {
 	return DispatchDelegateQueryByType(MANAGED_DELEGATE_QUERY_PROG_MAX);
 }
 
-void UIBridgeWUI::onFileProgressValue(int value)
+void UIBridgeWUI::handleFileProgressEvent(int value)
 {
 }
 
-void UIBridgeWUI::onTotalProgressValue(int value)
+void UIBridgeWUI::handleTotalProgressEvent(int value)
 {
 	DispatchDelegateActionByType(MANAGED_DELEGATE_ACTION_UPDATE_PROG_WHOLE, value);
 }
 
-void UIBridgeWUI::onFileCalculated()
+void UIBridgeWUI::handleFileCalculatedEvent()
 {
 }
 
-void UIBridgeWUI::onFileFinished()
+void UIBridgeWUI::handleFileFinishedEvent()
 {
 }

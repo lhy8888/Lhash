@@ -11,7 +11,7 @@
 #include "Common/HashResultRender.h"
 #include "HyperEditHash.h"
 
-class UIBridgeMFC: public HashEngineBridge
+class UIBridgeMFC: public HashUiBridgeAdapter
 {
 public:
 	struct ResultMetaLineDisplayInfo
@@ -32,24 +32,24 @@ public:
 				CHyperEditHash *hyperEdit);
 	virtual ~UIBridgeMFC();
 
-	virtual void lockData();
-	virtual void unlockData();
+	virtual void lockBridgeData();
+	virtual void unlockBridgeData();
 
-	virtual void onJobPreparing();
-	virtual void onJobPreparationFinished();
-	virtual void onJobCancelled();
-	virtual void onJobCompleted();
+	virtual void handleJobPreparingEvent();
+	virtual void handleJobPreparationFinishedEvent();
+	virtual void handleJobCancelledEvent();
+	virtual void handleJobCompletedEvent();
 
-	virtual void onFileResultEvent(const HashResult& result,
-									ProgressEventType eventType,
-									bool uppercaseDigest);
+	virtual void handleFileResultProgressEvent(const HashResult& result,
+												ProgressEventType eventType,
+												bool uppercaseDigest);
 
-	virtual int queryProgressMax();
-	virtual void onFileProgressValue(int value);
-	virtual void onTotalProgressValue(int value);
+	virtual int getProgressValueMax();
+	virtual void handleFileProgressEvent(int value);
+	virtual void handleTotalProgressEvent(int value);
 
-	virtual void onFileCalculated();
-	virtual void onFileFinished();
+	virtual void handleFileCalculatedEvent();
+	virtual void handleFileFinishedEvent();
 
 	static void AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit);
 	static void AppendTextLineToHyperEdit(const sunjwbase::tstring& text,
@@ -133,11 +133,11 @@ private:
 	template<typename TAppendAction>
 	void UpdateMainHyperEdit(TAppendAction appendAction, bool refreshAfterUpdate = false)
 	{
-		lockData();
+		lockBridgeData();
 		{
 			appendAction(m_mainHyperEdit);
 		}
-		unlockData();
+		unlockBridgeData();
 
 		if (refreshAfterUpdate)
 		{

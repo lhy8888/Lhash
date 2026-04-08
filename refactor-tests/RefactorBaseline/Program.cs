@@ -68,25 +68,27 @@ internal static class Program
             string legacyBridgePath = Path.Combine(repoRoot, @"trunk\source\Common\HashEngineBridge.h");
             string legacyUiBridgeBasePath = Path.Combine(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
-            AssertContains(observer, "class HashEngineObserver", "Phase-1 observer seam is missing.");
-            AssertContains(observer, "virtual void onJobPreparing() = 0;", "HashEngineObserver does not expose onJobPreparing.");
-            AssertContains(observer, "virtual void onJobPreparationFinished() = 0;", "HashEngineObserver does not expose onJobPreparationFinished.");
-            AssertContains(observer, "virtual void onJobCancelled() = 0;", "HashEngineObserver does not expose onJobCancelled.");
-            AssertContains(observer, "virtual void onJobCompleted() = 0;", "HashEngineObserver does not expose onJobCompleted.");
-            AssertContains(observer, "virtual void onFileResultEvent(const HashResult& result,", "HashEngineObserver does not yet expose a HashResult-based file-result event seam.");
-            AssertContains(observer, "virtual int queryProgressMax() = 0;", "HashEngineObserver does not expose queryProgressMax.");
-            AssertContains(observer, "virtual void onFileProgressValue(int value) = 0;", "HashEngineObserver does not expose onFileProgressValue.");
-            AssertContains(observer, "virtual void onTotalProgressValue(int value) = 0;", "HashEngineObserver does not expose onTotalProgressValue.");
-            AssertContains(observer, "virtual void onFileCalculated() = 0;", "HashEngineObserver does not expose onFileCalculated.");
-            AssertContains(observer, "virtual void onFileFinished() = 0;", "HashEngineObserver does not expose onFileFinished.");
-            AssertContains(observer, "onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet route file-result lifecycle through the event-oriented callback.");
+            AssertContains(observer, "class HashProgressEventBridge", "Phase-1 observer seam is missing.");
+            AssertContains(observer, "typedef HashProgressEventBridge HashEngineObserver;", "HashEngineObserver is not yet retained as a compatibility alias.");
+            AssertContains(observer, "virtual void handleJobPreparingEvent() = 0;", "HashProgressEventBridge does not expose handleJobPreparingEvent.");
+            AssertContains(observer, "virtual void handleJobPreparationFinishedEvent() = 0;", "HashProgressEventBridge does not expose handleJobPreparationFinishedEvent.");
+            AssertContains(observer, "virtual void handleJobCancelledEvent() = 0;", "HashProgressEventBridge does not expose handleJobCancelledEvent.");
+            AssertContains(observer, "virtual void handleJobCompletedEvent() = 0;", "HashProgressEventBridge does not expose handleJobCompletedEvent.");
+            AssertContains(observer, "virtual void handleFileResultProgressEvent(const HashResult& result,", "HashProgressEventBridge does not yet expose a HashResult-based file-result event seam.");
+            AssertContains(observer, "virtual int getProgressValueMax() = 0;", "HashProgressEventBridge does not expose getProgressValueMax.");
+            AssertContains(observer, "virtual void handleFileProgressEvent(int value) = 0;", "HashProgressEventBridge does not expose handleFileProgressEvent.");
+            AssertContains(observer, "virtual void handleTotalProgressEvent(int value) = 0;", "HashProgressEventBridge does not expose handleTotalProgressEvent.");
+            AssertContains(observer, "virtual void handleFileCalculatedEvent() = 0;", "HashProgressEventBridge does not expose handleFileCalculatedEvent.");
+            AssertContains(observer, "virtual void handleFileFinishedEvent() = 0;", "HashProgressEventBridge does not expose handleFileFinishedEvent.");
+            AssertContains(observer, "handleFileResultProgressEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "HashProgressEventBridge does not yet route file-result lifecycle through the event-oriented callback.");
             AssertDoesNotContain(observer, "virtual void showFileName(const HashResult& result) = 0;", "HashEngineObserver still keeps the UI-specific showFileName contract.");
             AssertDoesNotContain(observer, "virtual void updateProgWhole(int value) = 0;", "HashEngineObserver still keeps the UI-specific updateProgWhole contract.");
 
             AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashEngineBridge does not yet layer directly on top of the shared adapter observer seam.");
-            AssertContains(bridgeBase, "class HashEngineBridge: public HashEngineObserver", "HashEngineBridge is missing the neutral bridge seam on top of HashEngineObserver.");
-            AssertContains(bridgeBase, "virtual void lockData() = 0;", "HashEngineBridge does not keep lockData on top of HashEngineObserver.");
-            AssertContains(bridgeBase, "virtual void unlockData() = 0;", "HashEngineBridge does not keep unlockData on top of HashEngineObserver.");
+            AssertContains(bridgeBase, "class HashUiBridgeAdapter: public HashProgressEventBridge", "HashUiBridgeAdapter is missing the neutral bridge seam on top of HashProgressEventBridge.");
+            AssertContains(bridgeBase, "typedef HashUiBridgeAdapter HashEngineBridge;", "HashEngineBridge is not yet retained as a compatibility alias.");
+            AssertContains(bridgeBase, "virtual void lockBridgeData() = 0;", "HashUiBridgeAdapter does not keep lockBridgeData on top of HashProgressEventBridge.");
+            AssertContains(bridgeBase, "virtual void unlockBridgeData() = 0;", "HashUiBridgeAdapter does not keep unlockBridgeData on top of HashProgressEventBridge.");
             if (File.Exists(legacyObserverPath))
             {
                 failures.Add("HashEngineObserver still lives in Common instead of the shared adapter seam.");
@@ -1290,12 +1292,12 @@ internal static class Program
             AssertContains(bridgeMfc, "m_preparingSnapshot = CaptureHyperEditSnapshot(hyperEdit);", "UIBridgeMFC does not yet capture the preparing-state hyperedit snapshot through the dedicated helper.");
             AssertContains(bridgeMfc, "RestoreHyperEditSnapshot(m_preparingSnapshot, hyperEdit);", "UIBridgeMFC does not yet restore the preparing-state hyperedit snapshot through the dedicated helper.");
 
-            AssertDoesNotContain(bridgeMfc, "lockData();\r\n\t{\r\n\t\tAppendFileNameToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileName refresh flow instead of using the dedicated helper.");
-            AssertDoesNotContain(bridgeMfc, "lockData();\r\n\t{\r\n\t\tAppendFileMetaToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileMeta refresh flow instead of using the dedicated helper.");
-            AssertDoesNotContain(bridgeMfc, "lockData();\r\n\t{\r\n\t\tAppendFileHashToHyperEdit(result, uppercase, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileHash refresh flow instead of using the dedicated helper.");
-            AssertDoesNotContain(bridgeMfc, "lockData();\r\n\t{\r\n\t\tAppendFileErrToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileErr refresh flow instead of using the dedicated helper.");
+            AssertDoesNotContain(bridgeMfc, "lockBridgeData();\r\n\t{\r\n\t\tAppendFileNameToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileName refresh flow instead of using the dedicated helper.");
+            AssertDoesNotContain(bridgeMfc, "lockBridgeData();\r\n\t{\r\n\t\tAppendFileMetaToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileMeta refresh flow instead of using the dedicated helper.");
+            AssertDoesNotContain(bridgeMfc, "lockBridgeData();\r\n\t{\r\n\t\tAppendFileHashToHyperEdit(result, uppercase, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileHash refresh flow instead of using the dedicated helper.");
+            AssertDoesNotContain(bridgeMfc, "lockBridgeData();\r\n\t{\r\n\t\tAppendFileErrToHyperEdit(result, m_mainHyperEdit);", "UIBridgeMFC still inlines the showFileErr refresh flow instead of using the dedicated helper.");
             AssertDoesNotContain(bridgeMfc, "::PostMessage(m_hWnd, WM_THREAD_INFO, WP_REFRESH_TEXT, 0);", "UIBridgeMFC still posts refresh notifications inline instead of using the dedicated refresh-message helper.");
-            AssertDoesNotContain(bridgeMfc, "lockData();\r\n\t{\r\n\t\tm_tstrNoPreparing = m_mainHyperEdit->GetTextBuffer().GetBuffer();", "UIBridgeMFC still mutates the preparing buffer inline instead of using the generalized main-hyperedit update helper.");
+            AssertDoesNotContain(bridgeMfc, "lockBridgeData();\r\n\t{\r\n\t\tm_tstrNoPreparing = m_mainHyperEdit->GetTextBuffer().GetBuffer();", "UIBridgeMFC still mutates the preparing buffer inline instead of using the generalized main-hyperedit update helper.");
             AssertDoesNotContain(bridgeMfc, "hyperEdit->ClearTextBuffer();\r\n\t\thyperEdit->AppendTextToBuffer(m_tstrNoPreparing.c_str());", "UIBridgeMFC still restores the preparing-state snapshot inline instead of using the dedicated snapshot helper.");
         }, failures);
 
@@ -1352,7 +1354,7 @@ internal static class Program
             AssertContains(bridgeWuiHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "WinUI bridge does not yet expose the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "void UIBridgeWUI::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "WinUI bridge does not yet implement the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "WinUI bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
-            AssertContains(bridgeWui, "void UIBridgeWUI::onFileResultEvent(const HashResult& result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeWui, "void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "DispatchProjectedResultToDelegate(result,", "WinUI bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeWui, "GetManagedResultDispatchType(eventType)", "WinUI bridge does not yet derive managed dispatch from ProgressEventType.");
             AssertDoesNotContain(bridgeWui, "void UIBridgeWUI::showFileName(const HashResult& result)", "WinUI bridge still exposes the old showFileName bridge method.");
@@ -1363,7 +1365,7 @@ internal static class Program
             AssertContains(bridgeUwpHeader, "void DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase = false);", "UWP bridge does not yet expose the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "void UIBridgeUwp::DispatchProjectedResultToDelegate(const HashResult& result, ManagedResultDispatchType dispatchType, bool uppercase)", "UWP bridge does not yet implement the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase, [&](const TCHAR* resultText)", "UWP bridge managed result-dispatch helper does not yet route delegate forwarding through the common managed-bridge helper.");
-            AssertContains(bridgeUwp, "void UIBridgeUwp::onFileResultEvent(const HashResult& result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
+            AssertContains(bridgeUwp, "void UIBridgeUwp::handleFileResultProgressEvent(const HashResult& result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "DispatchProjectedResultToDelegate(result,", "UWP bridge does not yet route file-result events through the dedicated managed result-dispatch helper.");
             AssertContains(bridgeUwp, "GetManagedResultDispatchType(eventType)", "UWP bridge does not yet derive managed dispatch from ProgressEventType.");
             AssertDoesNotContain(bridgeUwp, "void UIBridgeUwp::showFileName(const HashResult& result)", "UWP bridge still exposes the old showFileName bridge method.");
@@ -2061,30 +2063,31 @@ internal static class Program
             string bridgeMacHeader = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.h");
             string compatibilityBridgePath = Path.Combine(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
-            AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashEngineBridge does not yet layer directly on top of the adapter observer seam.");
-            AssertContains(bridgeBase, "class HashEngineBridge: public HashEngineObserver", "HashEngineBridge is missing.");
+            AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashUiBridgeAdapter does not yet layer directly on top of the adapter observer seam.");
+            AssertContains(bridgeBase, "class HashUiBridgeAdapter: public HashProgressEventBridge", "HashUiBridgeAdapter is missing.");
+            AssertContains(bridgeBase, "typedef HashUiBridgeAdapter HashEngineBridge;", "HashEngineBridge compatibility alias is missing.");
             if (File.Exists(compatibilityBridgePath))
             {
                 failures.Add("UIBridgeBase still exists even though the shared adapter bridge seam should have replaced it.");
             }
 
-            AssertContains(bridgeMfcHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "MFC bridge header does not yet include the shared adapter HashEngineBridge seam.");
-            AssertContains(bridgeMfcHeader, "class UIBridgeMFC: public HashEngineBridge", "MFC bridge does not yet inherit HashEngineBridge directly.");
+            AssertContains(bridgeMfcHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "MFC bridge header does not yet include the shared adapter HashUiBridgeAdapter seam.");
+            AssertContains(bridgeMfcHeader, "class UIBridgeMFC: public HashUiBridgeAdapter", "MFC bridge does not yet inherit HashUiBridgeAdapter directly.");
             AssertDoesNotContain(bridgeMfcHeader, "#include \"Common/UIBridgeBase.h\"", "MFC bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeMfcHeader, "class UIBridgeMFC: public UIBridgeBase", "MFC bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeWuiHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "WinUI bridge header does not yet include the shared adapter HashEngineBridge seam.");
-            AssertContains(bridgeWuiHeader, "class UIBridgeWUI : public HashEngineBridge", "WinUI bridge does not yet inherit HashEngineBridge directly.");
+            AssertContains(bridgeWuiHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "WinUI bridge header does not yet include the shared adapter HashUiBridgeAdapter seam.");
+            AssertContains(bridgeWuiHeader, "class UIBridgeWUI : public HashUiBridgeAdapter", "WinUI bridge does not yet inherit HashUiBridgeAdapter directly.");
             AssertDoesNotContain(bridgeWuiHeader, "#include \"Common/UIBridgeBase.h\"", "WinUI bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeWuiHeader, "class UIBridgeWUI : public UIBridgeBase", "WinUI bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeUwpHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "UWP bridge header does not yet include the shared adapter HashEngineBridge seam.");
-            AssertContains(bridgeUwpHeader, "class UIBridgeUwp : public HashEngineBridge", "UWP bridge does not yet inherit HashEngineBridge directly.");
+            AssertContains(bridgeUwpHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "UWP bridge header does not yet include the shared adapter HashUiBridgeAdapter seam.");
+            AssertContains(bridgeUwpHeader, "class UIBridgeUwp : public HashUiBridgeAdapter", "UWP bridge does not yet inherit HashUiBridgeAdapter directly.");
             AssertDoesNotContain(bridgeUwpHeader, "#include \"Common/UIBridgeBase.h\"", "UWP bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeUwpHeader, "class UIBridgeUwp : public UIBridgeBase", "UWP bridge still inherits the compatibility shim instead of HashEngineBridge.");
 
-            AssertContains(bridgeMacHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "macOS bridge header does not yet include the shared adapter HashEngineBridge seam.");
-            AssertContains(bridgeMacHeader, "class UIBridgeMacSwift: public HashEngineBridge", "macOS bridge does not yet inherit HashEngineBridge directly.");
+            AssertContains(bridgeMacHeader, "#include \"Adapters/UiBridge/HashEngineBridge.h\"", "macOS bridge header does not yet include the shared adapter HashUiBridgeAdapter seam.");
+            AssertContains(bridgeMacHeader, "class UIBridgeMacSwift: public HashUiBridgeAdapter", "macOS bridge does not yet inherit HashUiBridgeAdapter directly.");
             AssertDoesNotContain(bridgeMacHeader, "#include \"Common/UIBridgeBase.h\"", "macOS bridge header still depends directly on the compatibility shim.");
             AssertDoesNotContain(bridgeMacHeader, "class UIBridgeMacSwift: public UIBridgeBase", "macOS bridge still inherits the compatibility shim instead of HashEngineBridge.");
         }, failures);
@@ -3412,10 +3415,11 @@ internal static class Program
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 31 does not yet define a neutral hash progress sink contract.");
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 31 hash progress sink does not yet own progress max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 31 hash progress sink does not yet own semantic progress-event dispatch.");
-            AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "HashEngineObserver does not yet layer on top of the phase 31 hash progress sink.");
+            AssertContains(hashEngineObserver, "class HashProgressEventBridge: public HashProgressSink", "HashProgressEventBridge does not yet layer on top of the phase 31 hash progress sink.");
+            AssertContains(hashEngineObserver, "typedef HashProgressEventBridge HashEngineObserver;", "HashEngineObserver compatibility alias is missing from the phase 31 adapter seam.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "HashEngineObserver does not yet expose the phase 31 progress-event compatibility entry point.");
-            AssertContains(hashEngineObserver, "onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "HashEngineObserver does not yet route result progress events through HashResult.");
-            AssertContains(hashEngineObserver, "onTotalProgressValue(progressEvent.value);", "HashEngineObserver does not yet bridge total-progress events through the neutral adapter callback.");
+            AssertContains(hashEngineObserver, "handleFileResultProgressEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "HashProgressEventBridge does not yet route result progress events through HashResult.");
+            AssertContains(hashEngineObserver, "handleTotalProgressEvent(progressEvent.value);", "HashProgressEventBridge does not yet bridge total-progress events through the neutral adapter callback.");
 
             AssertContains(hashEngine, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "HashThread entry does not yet start from the phase 31 HashRequest contract through the projection seam.");
             AssertContains(hashEngine, "VisitHashRequestFiles(request", "HashEngine does not yet iterate files through HashRequest.");
@@ -3508,10 +3512,11 @@ internal static class Program
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 34 hash progress sink does not yet own progress-max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 34 hash progress sink does not yet own semantic event dispatch.");
 
-            AssertContains(hashEngineObserver, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashEngineObserver does not yet layer on top of HashProgressSink.");
-            AssertContains(hashEngineObserver, "class HashEngineObserver: public HashProgressSink", "Phase 34 HashEngineObserver is not yet narrowed into a compatibility adapter on top of HashProgressSink.");
-            AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashEngineObserver no longer satisfies the progress-max sink contract.");
-            AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashEngineObserver no longer satisfies the semantic progress-event sink contract.");
+            AssertContains(hashEngineObserver, "#include \"Common/HashProgressSink.h\"", "Phase 34 HashProgressEventBridge does not yet layer on top of HashProgressSink.");
+            AssertContains(hashEngineObserver, "class HashProgressEventBridge: public HashProgressSink", "Phase 34 HashProgressEventBridge is not yet narrowed into a compatibility adapter on top of HashProgressSink.");
+            AssertContains(hashEngineObserver, "typedef HashProgressEventBridge HashEngineObserver;", "Phase 34 HashEngineObserver compatibility alias is missing.");
+            AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashProgressEventBridge no longer satisfies the progress-max sink contract.");
+            AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashProgressEventBridge no longer satisfies the semantic progress-event sink contract.");
             AssertContains(hashExecutionContext, "HashProgressSink *progressSink;", "Phase 35 hash execution context does not yet carry the neutral progress sink.");
             AssertContains(hashExecutionContext, "HashJobState& jobState;", "Phase 35 hash execution context does not yet carry the grouped job-state seam.");
             AssertContains(hashExecutionContext, "HashCancellationState& cancellationState;", "Phase 35 hash execution context does not yet carry the grouped cancellation seam.");
@@ -3561,8 +3566,8 @@ internal static class Program
             AssertContains(progressEvent, "CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", "Phase 35 does not yet expose file-hash events directly from HashResult.");
             AssertContains(progressEvent, "CreateFileFailedProgressEvent(const HashResult& result)", "Phase 35 does not yet expose file-failed events directly from HashResult.");
 
-            AssertContains(hashEngineObserver, "virtual void onFileResultEvent(const HashResult& result,", "Phase 35 HashEngineObserver does not yet expose a HashResult-based file-result event contract.");
-            AssertContains(hashEngineObserver, "onFileResultEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver does not yet dispatch file-result events through HashResult.");
+            AssertContains(hashEngineObserver, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 35 HashProgressEventBridge does not yet expose a HashResult-based file-result event contract.");
+            AssertContains(hashEngineObserver, "handleFileResultProgressEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", "Phase 35 HashProgressEventBridge does not yet dispatch file-result events through HashResult.");
             AssertDoesNotContain(hashEngineObserver, "showFileHash(*progressEvent.result.sourceResult, progressEvent.uppercaseDigest);", "Phase 35 HashEngineObserver still depends on progressEvent.result.sourceResult for hash-ready dispatch.");
             AssertDoesNotContain(hashEngineObserver, "CreateCompatibilityResultData(result);", "Phase 35 HashEngineObserver still rebuilds ResultData instead of staying as a thin HashResult wrapper.");
 
@@ -3584,8 +3589,8 @@ internal static class Program
             string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
             string bridgeUwpSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
-            AssertContains(observer, "virtual void onFileResultEvent(const HashResult& result,", "Phase 36 observer seam does not yet expose a HashResult-based file-result event contract.");
-            AssertContains(observer, "virtual int queryProgressMax() = 0;", "Phase 36 observer seam does not yet expose a neutral progress query contract.");
+            AssertContains(observer, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 observer seam does not yet expose a HashResult-based file-result event contract.");
+            AssertContains(observer, "virtual int getProgressValueMax() = 0;", "Phase 36 observer seam does not yet expose a neutral progress query contract.");
 
             AssertContains(hashResultProjection, "AssignHashResultCoreToNet", "Phase 36 does not yet project HashResult core fields directly to managed result DTOs.");
             AssertContains(hashResultProjection, "AssignHashResultDigestsToNet", "Phase 36 does not yet project HashResult digest fields directly to managed result DTOs.");
@@ -3595,14 +3600,14 @@ internal static class Program
             AssertContains(managedDispatch, "DispatchManagedBridgeResultByType(const HashResult& result", "Phase 36 managed bridge dispatch does not yet expose HashResult-based projection dispatch.");
             AssertContains(managedDispatch, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(result, convertString)", "Phase 36 managed bridge dispatch does not yet project HashResult directly.");
 
-            AssertContains(bridgeMfcHeader, "virtual void onFileResultEvent(const HashResult& result,", "Phase 36 MFC bridge header does not yet accept HashResult file-result consumption.");
+            AssertContains(bridgeMfcHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 MFC bridge header does not yet accept HashResult file-result consumption.");
 
-            AssertContains(bridgeWuiHeader, "virtual void onFileResultEvent(const HashResult& result,", "Phase 36 WinUI bridge header does not yet accept HashResult file-result consumption.");
+            AssertContains(bridgeWuiHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 WinUI bridge header does not yet accept HashResult file-result consumption.");
             AssertContains(bridgeWuiHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 WinUI bridge helper does not yet narrow to HashResult.");
             AssertContains(bridgeWuiSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 WinUI bridge does not yet project HashResult directly to managed delegates.");
             AssertContains(bridgeWuiSource, "GetManagedResultDispatchType(eventType)", "Phase 36 WinUI bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
 
-            AssertContains(bridgeUwpHeader, "virtual void onFileResultEvent(const HashResult& result,", "Phase 36 UWP bridge header does not yet accept HashResult file-result consumption.");
+            AssertContains(bridgeUwpHeader, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 UWP bridge header does not yet accept HashResult file-result consumption.");
             AssertContains(bridgeUwpHeader, "DispatchProjectedResultToDelegate(const HashResult& result", "Phase 36 UWP bridge helper does not yet narrow to HashResult.");
             AssertContains(bridgeUwpSource, "DispatchManagedBridgeResultByType<HashResultNet, HashResultStateNet>(result, dispatchType, uppercase", "Phase 36 UWP bridge does not yet project HashResult directly to managed delegates.");
             AssertContains(bridgeUwpSource, "GetManagedResultDispatchType(eventType)", "Phase 36 UWP bridge does not yet route ProgressEventType through a neutral managed dispatch selector.");
