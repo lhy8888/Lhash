@@ -392,19 +392,19 @@ jobs:
               $signatureThumbprint = $signature.SignerCertificate.Thumbprint
             }
             $readme = @"
-          LHash WinUI desktop x64 build
+          LHash WinUI desktop preview x64 build
 
           Commit:
           - $env:GITHUB_SHA
 
           Files:
-          - LHash.exe: official unpackaged WinUI desktop application
+          - LHash.exe: unpackaged WinUI desktop preview application
           - SHA256.txt: executable checksum
           - BUILD_INFO.txt: build metadata
 
           Usage:
           - Extract the zip and run LHash.exe.
-          - This package is the official WinUI desktop release line.
+          - This package is a preview build and is not the default public release line.
           - 'Publisher unknown' is removed only after the executable is Authenticode-signed with a trusted code-signing certificate.
           - Shell extension packaging is intentionally skipped in CI.
           "@
@@ -412,7 +412,7 @@ jobs:
             $buildInfo = @"
           commit=$env:GITHUB_SHA
           short_sha=$shortSha
-          frontend=winui-desktop
+          frontend=winui-preview
           source_project=trunk/source/WinUI/fHashWUI.csproj
           packaged_exe=LHash.exe
           sha256=$exeHash
@@ -426,9 +426,9 @@ jobs:
           }
           else {
             $readme = @"
-          LHash WinUI desktop x64 build
+          LHash WinUI desktop preview x64 build
 
-          The WinUI desktop executable was not produced in this CI run.
+          The WinUI desktop preview executable was not produced in this CI run.
           See publish-winui-x64.log in the artifact root for the full MSBuild output.
           "@
           }
@@ -436,20 +436,20 @@ jobs:
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
           if ($publishedExe) {
-            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-winui-x64-$shortSha.zip") -Force
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-winui-preview-x64-$shortSha.zip") -Force
           }
 
       - name: Upload WinUI desktop artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: LHash-winui-x64
+          name: LHash-winui-preview-x64
           path: |
             artifacts/build-native-core-x64.log
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
             artifacts/publish-winui-x64.log
-            artifacts/LHash-winui-x64-*.zip
+            artifacts/LHash-winui-preview-x64-*.zip
           if-no-files-found: warn
 
   build-uwp-bridge-x64:
@@ -575,6 +575,7 @@ jobs:
   publish-release:
     if: github.event_name != 'pull_request'
     needs:
+      - build-legacy-x64
       - build-winui-bridge-x64
       - build-uwp-bridge-x64
       - build-wui-shell-ext-x64
@@ -585,7 +586,7 @@ jobs:
       - name: Download packaged artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: LHash-*
+          pattern: LHash-legacy-*
           path: release-assets
           merge-multiple: true
 
@@ -598,8 +599,8 @@ jobs:
           staging_root="$PWD/release-staging"
           mkdir -p "$staging_root"
 
-          if ! compgen -G "$artifact_root/LHash-winui-x64-*.zip" > /dev/null; then
-            echo "Expected packaged WinUI desktop release zip was not downloaded into release-assets." >&2
+          if ! compgen -G "$artifact_root/LHash-legacy-x64-*.zip" > /dev/null; then
+            echo "Expected packaged lightweight native release zip was not downloaded into release-assets." >&2
             exit 1
           fi
 
@@ -614,12 +615,12 @@ jobs:
           ref=$GITHUB_REF
           commit=$GITHUB_SHA
           short_sha=$short_sha
-          frontend=winui-desktop
+          frontend=legacy-native
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-          desktop_bundle=$(basename $(ls "$artifact_root"/LHash-winui-x64-*.zip | head -n 1))
+          desktop_bundle=$(basename $(ls "$artifact_root"/LHash-legacy-x64-*.zip | head -n 1))
           EOF
 
-          cp "$artifact_root"/LHash-winui-x64-*.zip "$staging_root"/
+          cp "$artifact_root"/LHash-legacy-x64-*.zip "$staging_root"/
           find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
@@ -639,6 +640,6 @@ jobs:
           name: LHash ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            release-assets/LHash-winui-x64-*.zip
+            release-assets/LHash-legacy-x64-*.zip
             release-staging/RELEASE_MANIFEST.txt
 
