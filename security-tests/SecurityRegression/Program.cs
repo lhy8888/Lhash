@@ -229,6 +229,7 @@ internal static partial class Program
             string executionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
             string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
             string digestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string md5 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\MD5.cpp");
             string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
             string uiBridgeHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
@@ -254,6 +255,7 @@ internal static partial class Program
             AssertContains(progressTracker, "CalculateBoundedProgressValue", "Progress tracking no longer uses bounded progress calculations.");
             AssertContains(digestQueue, "SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1)", "Digest queue sizing no longer uses saturating chunk arithmetic.");
 
+            AssertContains(md5, "static const unsigned char PADDING[64]", "MD5 padding is no longer held as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "SHA1 still shares mutable static workspace across concurrent runs.");
             AssertContains(sha1, "unsigned char workspace[64];", "SHA1 no longer uses stack-local transform workspace.");
             AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");

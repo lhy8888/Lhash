@@ -97,11 +97,14 @@ public sealed class SecurityHardeningUnitTests
     [Fact]
     public void DigestExecution_RemainsThreadLocal_AndUiProgress_IsThrottled()
     {
+        string md5 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\MD5.cpp");
         string sha1 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\SHA1.cpp");
         string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string nativeRuntimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
+        Assert.Contains("static const unsigned char PADDING[64]", md5, StringComparison.Ordinal);
+        Assert.DoesNotContain("static unsigned char PADDING[64]", md5, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned char workspace[64];", sha1, StringComparison.Ordinal);
         Assert.Contains("unsigned char workspace[64];", sha1, StringComparison.Ordinal);
 
