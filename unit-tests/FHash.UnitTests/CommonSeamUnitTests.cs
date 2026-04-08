@@ -143,6 +143,7 @@ public sealed class CommonSeamUnitTests
         string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeStateCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
+        Assert.Contains("#include \"Common/Global.h\"", access, StringComparison.Ordinal);
         Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
