@@ -22,7 +22,9 @@ static inline TDescriptorNet CreateManagedHashAlgorithmDescriptorNet(
 	TStringConverter convertText)
 {
 	TDescriptorNet descriptorNet = createDescriptor();
-	descriptorNet->DigestType = static_cast<int>(GetHashAlgorithmDescriptorType(algorithmDescriptor));
+	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+	TryGetHashAlgorithmTypeById(GetHashAlgorithmDescriptorId(algorithmDescriptor), &digestType);
+	descriptorNet->DigestType = static_cast<int>(digestType);
 	sunjwbase::tstring stableName = GetHashAlgorithmDescriptorStableName(algorithmDescriptor);
 	sunjwbase::tstring displayLabel = GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor);
 	descriptorNet->StableName = convertText(stableName.c_str());

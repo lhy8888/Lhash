@@ -73,27 +73,30 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
         RepositoryTestContext.AssertContainsInOrder(
             registryCore,
-            "RESULT_DIGEST_MD5",
-            "RESULT_DIGEST_SHA1",
-            "RESULT_DIGEST_SHA256",
-            "RESULT_DIGEST_SHA512");
+            "RegisterHashAlgorithmDescriptor({ \"md5\", \"MD5\", true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha1\", \"SHA1\", true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha256\", \"SHA256\", true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha512\", \"SHA512\", true });");
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registryCore, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registryCore, StringComparison.Ordinal);
         Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registryCore, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("RESULT_DIGEST_UNKNOWN = -1", global, StringComparison.Ordinal);
         Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", registryTypeCompat, StringComparison.Ordinal);
         Assert.DoesNotContain("return algorithmDescriptors[0];", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("compatibilityValueField", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResultDigestType type;", registryCore, StringComparison.Ordinal);
     }
 
     [Fact]

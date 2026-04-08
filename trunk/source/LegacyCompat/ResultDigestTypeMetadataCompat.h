@@ -6,7 +6,9 @@
 
 static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
 {
-	return GetHashAlgorithmDescriptorType(digestMetadata);
+	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+	TryGetHashAlgorithmTypeById(GetResultDigestMetadataId(digestMetadata), &digestType);
+	return digestType;
 }
 
 static inline int GetResultDigestIndex(ResultDigestType digestType)
@@ -45,7 +47,13 @@ static inline bool VisitResultDigests(TResultDigestVisitor visitor)
 	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
 	{
 		(void)index;
-		return visitor(GetResultDigestMetadataType(digestMetadata));
+		ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);
+		if (digestType == RESULT_DIGEST_UNKNOWN)
+		{
+			return true;
+		}
+
+		return visitor(digestType);
 	});
 }
 

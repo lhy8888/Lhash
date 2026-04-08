@@ -25,7 +25,7 @@ namespace
 }
 
 FilesHashAlgorithmSelectionController::HashAlgorithmCheckBox::HashAlgorithmCheckBox()
-	: digestType(RESULT_DIGEST_MD5),
+	: algorithmId(),
 	controlId(0),
 	checkBox(NULL)
 {
@@ -54,7 +54,7 @@ void FilesHashAlgorithmSelectionController::ResetChecks()
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		UNREFERENCED_PARAMETER(index);
-		CButton* checkBox = GetCheckBox(GetHashAlgorithmDescriptorType(algorithmDescriptor));
+		CButton* checkBox = GetCheckBox(GetHashAlgorithmDescriptorId(algorithmDescriptor));
 		if (checkBox != NULL)
 		{
 			checkBox->SetCheck(BST_CHECKED);
@@ -74,11 +74,11 @@ void FilesHashAlgorithmSelectionController::SyncSelections()
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		UNREFERENCED_PARAMETER(index);
-		ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-		CButton* checkBox = GetCheckBox(digestType);
+		HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
+		CButton* checkBox = GetCheckBox(algorithmId);
 		if (checkBox != NULL)
 		{
-			SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));
+			SetThreadDataHashAlgorithmEnabledById(*m_threadData, algorithmId, (checkBox->GetCheck() != FALSE));
 		}
 
 		return true;
@@ -101,7 +101,7 @@ void FilesHashAlgorithmSelectionController::SetEnabled(BOOL enabled)
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		UNREFERENCED_PARAMETER(index);
-		CButton* checkBox = GetCheckBox(GetHashAlgorithmDescriptorType(algorithmDescriptor));
+		CButton* checkBox = GetCheckBox(GetHashAlgorithmDescriptorId(algorithmDescriptor));
 		if (checkBox != NULL)
 		{
 			checkBox->EnableWindow(enabled);
@@ -159,7 +159,7 @@ void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		HashAlgorithmCheckBox checkBoxEntry;
-		checkBoxEntry.digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
+		checkBoxEntry.algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
 		checkBoxEntry.controlId = HASH_ALGORITHM_CHECK_BOX_ID_BASE + index;
 		checkBoxEntry.checkBox = new CButton();
 
@@ -267,11 +267,11 @@ CRect FilesHashAlgorithmSelectionController::GetCheckBoxLayoutRect() const
 	return layoutRect;
 }
 
-CButton* FilesHashAlgorithmSelectionController::GetCheckBox(ResultDigestType digestType) const
+CButton* FilesHashAlgorithmSelectionController::GetCheckBox(const HashAlgorithmId& algorithmId) const
 {
 	for (size_t index = 0; index < m_checkBoxes.size(); ++index)
 	{
-		if (m_checkBoxes[index].digestType == digestType)
+		if (NormalizeHashAlgorithmId(m_checkBoxes[index].algorithmId) == NormalizeHashAlgorithmId(algorithmId))
 		{
 			return m_checkBoxes[index].checkBox;
 		}

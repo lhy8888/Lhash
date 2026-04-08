@@ -836,10 +836,10 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the centralized algorithm metadata struct introduced in phase 11.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
             AssertContains(digestAccess, "GetResultDigestMetadataAt(int index)", "ResultDigestAccess does not yet expose the centralized digest metadata lookup helper introduced in phase 3.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\" }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\" }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\" }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\" }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
             AssertContains(digestAccess, "GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata type accessor.");
             AssertContains(digestAccess, "GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata label accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
@@ -897,7 +897,8 @@ internal static class Program
             AssertContains(digestAccess, "template<typename TResultDigestVisitor>", "ResultDigestAccess does not yet expose the digest-visitor template introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigests(TResultDigestVisitor visitor)", "ResultDigestAccess does not yet expose the centralized digest visitor helper.");
             AssertContains(digestAccess, "VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess digest visitor helper does not yet route through the centralized metadata visitor helper.");
-            AssertContains(digestAccess, "return visitor(GetResultDigestMetadataType(digestMetadata));", "ResultDigestAccess digest visitor helper does not yet route through the metadata type accessor.");
+            AssertContains(digestAccess, "ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);", "ResultDigestAccess digest visitor helper does not yet route through the metadata type accessor.");
+            AssertContains(digestAccess, "if (digestType == RESULT_DIGEST_UNKNOWN)", "ResultDigestAccess digest visitor helper does not yet guard legacy enum visitors against descriptor-only algorithms.");
             AssertContainsAny(digestAccess,
                 [
                     "VisitResultDigests([&](ResultDigestType digestType)",
@@ -915,7 +916,7 @@ internal static class Program
             AssertContains(digestAccess, "VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", "ResultDigestAccess does not yet expose the centralized metadata visitor helper.");
             AssertContains(digestAccess, "visitor(index, GetResultDigestMetadataAt(index))", "ResultDigestAccess metadata visitor helper does not yet route through the centralized metadata lookup helper.");
             AssertContains(digestAccess, "VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet route metadata iteration through the centralized metadata visitor helper.");
-            AssertContains(digestAccess, "return visitor(GetResultDigestMetadataType(digestMetadata));", "ResultDigestAccess digest visitor does not yet route through the metadata visitor helper.");
+            AssertContains(digestAccess, "ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);", "ResultDigestAccess digest visitor does not yet route through the metadata visitor helper.");
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess digest-index helper does not yet route through the centralized registry seam.");
         }, failures);
 
@@ -1901,11 +1902,11 @@ internal static class Program
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
-            AssertContains(hashAlgorithmRegistry, "ResultDigestType type;", "HashAlgorithmRegistry does not yet expose the neutral digest type field name.");
-            AssertDoesNotContain(hashAlgorithmRegistry, "ResultDigestType digestType;", "HashAlgorithmRegistry still uses the legacy digestType field name internally.");
+            AssertContains(hashAlgorithmRegistry, "bool requiresDigestOperations;", "HashAlgorithmRegistry does not yet expose the descriptor-level digest-operation requirement flag.");
+            AssertDoesNotContain(hashAlgorithmRegistry, "ResultDigestType type;", "HashAlgorithmRegistry still keeps the legacy enum-backed descriptor identity in the core seam.");
             AssertDoesNotContain(hashAlgorithmRegistry, "compatibilityValueField", "HashAlgorithmRegistry still carries compatibility-field pointers in the core descriptor.");
 
-            AssertContains(digestAccess, "return visitor(GetResultDigestMetadataType(digestMetadata));", "ResultDigestAccess digest visitor does not yet route through the neutral ResultDigestMetadata type accessor.");
+            AssertContains(digestAccess, "ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);", "ResultDigestAccess digest visitor does not yet route through the neutral ResultDigestMetadata type accessor.");
             AssertContainsAny(digestAccess,
                 [
                     "return visitor(index, digestMetadata, GetResultDigest(result, GetResultDigestMetadataType(digestMetadata)));",
@@ -2388,15 +2389,15 @@ internal static class Program
             AssertContains(global, "std::vector<bool> enabled;", "Global.h does not yet route algorithm-selection state through a registry-sized vector.");
 
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the dedicated hash-algorithm descriptor.");
-            AssertContains(hashAlgorithmRegistry, "ResultDigestType type;", "HashAlgorithmRegistry does not yet expose the algorithm type field.");
+            AssertContains(hashAlgorithmRegistry, "bool requiresDigestOperations;", "HashAlgorithmRegistry does not yet expose the digest-operation requirement field.");
             AssertContains(hashAlgorithmRegistry, "const char *stableName;", "HashAlgorithmRegistry does not yet expose the stable algorithm name field.");
             AssertContains(hashAlgorithmRegistry, "const char *displayLabel;", "HashAlgorithmRegistry does not yet expose the display label field.");
             AssertContains(hashAlgorithmRegistry, "GetRegisteredHashAlgorithmCount()", "HashAlgorithmRegistry does not yet expose the registry-count helper.");
             AssertContains(hashAlgorithmRegistry, "VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)", "HashAlgorithmRegistry does not yet expose the algorithm visitor seam.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_MD5, \"md5\", \"MD5\" }", "HashAlgorithmRegistry does not yet register MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA1, \"sha1\", \"SHA1\" }", "HashAlgorithmRegistry does not yet register SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA256, \"sha256\", \"SHA256\" }", "HashAlgorithmRegistry does not yet register SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ RESULT_DIGEST_SHA512, \"sha512\", \"SHA512\" }", "HashAlgorithmRegistry does not yet register SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true }", "HashAlgorithmRegistry does not yet register MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true }", "HashAlgorithmRegistry does not yet register SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true }", "HashAlgorithmRegistry does not yet register SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true }", "HashAlgorithmRegistry does not yet register SHA512.");
 
             AssertContains(digestAccess, "#include \"Common/HashAlgorithmRegistry.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
@@ -2412,9 +2413,10 @@ internal static class Program
                     "#include \"LegacyCompat/HashAlgorithmTypeCompat.h\""
                 ],
                 "ThreadData access seams do not yet consume the hash-algorithm registry seam.");
-            AssertContains(threadAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
+            AssertContains(threadAccess, "TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadData access seams do not yet route enabled-algorithm iteration through the registry seam.");
-            AssertContains(threadAccess, "ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);", "ThreadData access seams do not yet resolve enabled algorithm types through the registry seam.");
+            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabledById(threadData, GetHashAlgorithmDescriptorId(algorithmDescriptor), true);", "ThreadData access seams do not yet reset algorithm selection through descriptor ids.");
+            AssertContains(threadAccess, "VisitEnabledThreadDataHashAlgorithmIds(const ThreadData& threadData, THashAlgorithmIdVisitor visitor)", "ThreadData access seams do not yet expose id-based enabled-algorithm traversal.");
         }, failures);
 
         Run("Phase 12 routes managed and XAML algorithm entry through dynamic registry-driven descriptors while keeping the legacy desktop checkbox surface intact", () =>
@@ -2486,7 +2488,7 @@ internal static class Program
                 new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
                 "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
             AssertContains(mfcController, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 13 controller does not yet route checkbox traversal through the registry seam.");
-            AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabled(*m_threadData, digestType, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
+            AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabledById(*m_threadData, algorithmId, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
             AssertContains(mfcController, "HasEnabledThreadDataHashAlgorithms(*m_threadData)", "Phase 13 controller does not yet validate zero-algorithm selection through ThreadDataAccess.");
             AssertContains(mfcController, "AfxMessageBox(noSelectionMessage, MB_OK | MB_ICONWARNING);", "Phase 13 controller does not yet keep the legacy desktop warning path.");
 
@@ -5478,7 +5480,7 @@ internal static class Program
             AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
 
             AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 84 compatibility ThreadData execution access does not yet layer on top of the legacy execution seam.");
-            AssertContains(legacyThreadExecutionAccess, "TryGetHashAlgorithmIndex(digestType, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
+            AssertContains(legacyThreadExecutionAccess, "TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
             AssertDoesNotContain(legacyThreadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
 
             AssertContains(digestMetadataAccess, "TryGetResultDigestIndex(ResultDigestType digestType, int *index)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-index lookup.");
@@ -5636,7 +5638,8 @@ internal static class Program
 
             AssertContains(hashAlgorithmRegistry, "GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index lookup.");
             AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index probe helpers.");
-            AssertContains(hashAlgorithmRegistry, "algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN", "Phase 88 HashAlgorithmRegistry.h does not yet avoid collapsing unknown digest identities by enum type.");
+            AssertContains(hashAlgorithmRegistry, "bool requiresDigestOperations;", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-level digest-operation requirements.");
+            AssertContains(hashAlgorithmRegistry, "DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 88 HashAlgorithmRegistry.h does not yet expose the descriptor-operation requirement seam.");
             AssertContains(hashRequest, "TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", "Phase 88 HashRequest selection state does not yet resolve registry indices by descriptor id.");
             AssertDoesNotContain(hashRequest, "TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor)", "Phase 88 HashRequest selection state still resolves registry indices by descriptor type fallback.");
 

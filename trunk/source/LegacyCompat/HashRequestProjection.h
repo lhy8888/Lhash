@@ -12,9 +12,9 @@ static inline HashRequest CreateHashRequest(const ThreadData& threadData)
 	request.files = GetThreadDataInputFiles(threadData);
 	request.uppercaseDigest = GetThreadDataUppercase(threadData);
 
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+	VisitEnabledThreadDataHashAlgorithmIds(threadData, [&](const HashAlgorithmId& algorithmId)
 	{
-		AppendHashRequestAlgorithm(request, digestType);
+		AppendHashRequestAlgorithmId(request, algorithmId);
 		return true;
 	});
 

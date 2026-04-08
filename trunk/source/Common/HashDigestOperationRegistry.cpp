@@ -319,7 +319,7 @@ namespace HashEngineInternal
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 		{
 			(void)index;
-			if (GetHashAlgorithmDescriptorType(algorithmDescriptor) == RESULT_DIGEST_UNKNOWN)
+			if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))
 			{
 				// Descriptor-only algorithms are allowed to exist before a native digest backend lands.
 				return true;

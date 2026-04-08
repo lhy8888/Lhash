@@ -1,21 +1,90 @@
 #ifndef _LEGACY_HASH_ALGORITHM_TYPE_COMPAT_H_
 #define _LEGACY_HASH_ALGORITHM_TYPE_COMPAT_H_
 
+#include <string>
+
+#include "Common/Global.h"
 #include "Common/HashAlgorithmRegistry.h"
+
+static inline bool TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgorithmId *algorithmId)
+{
+	HashAlgorithmId resolvedAlgorithmId;
+	switch (digestType)
+	{
+	case RESULT_DIGEST_MD5:
+		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("md5")));
+		break;
+	case RESULT_DIGEST_SHA1:
+		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha1")));
+		break;
+	case RESULT_DIGEST_SHA256:
+		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha256")));
+		break;
+	case RESULT_DIGEST_SHA512:
+		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha512")));
+		break;
+	case RESULT_DIGEST_UNKNOWN:
+	default:
+		return false;
+	}
+
+	if (algorithmId != NULL)
+	{
+		*algorithmId = resolvedAlgorithmId;
+	}
+	return true;
+}
+
+static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)
+{
+	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
+	if (normalizedAlgorithmId.empty())
+	{
+		return false;
+	}
+
+	struct LegacyHashAlgorithmTypeMapping
+	{
+		ResultDigestType digestType;
+		const char *stableName;
+	};
+
+	static const LegacyHashAlgorithmTypeMapping legacyMappings[] =
+	{
+		{ RESULT_DIGEST_MD5, "md5" },
+		{ RESULT_DIGEST_SHA1, "sha1" },
+		{ RESULT_DIGEST_SHA256, "sha256" },
+		{ RESULT_DIGEST_SHA512, "sha512" }
+	};
+
+	for (int mappingIndex = 0; mappingIndex < static_cast<int>(sizeof(legacyMappings) / sizeof(legacyMappings[0])); ++mappingIndex)
+	{
+		HashAlgorithmId mappedAlgorithmId =
+			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(legacyMappings[mappingIndex].stableName)));
+		if (mappedAlgorithmId != normalizedAlgorithmId)
+		{
+			continue;
+		}
+
+		if (digestType != NULL)
+		{
+			*digestType = legacyMappings[mappingIndex].digestType;
+		}
+		return true;
+	}
+
+	return false;
+}
 
 static inline int GetHashAlgorithmIndex(ResultDigestType digestType)
 {
-	int algorithmIndex = -1;
-	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+	HashAlgorithmId algorithmId;
+	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
 	{
-		if (GetHashAlgorithmDescriptorType(algorithmDescriptor) == digestType)
-		{
-			algorithmIndex = index;
-			return false;
-		}
-		return true;
-	});
-	return algorithmIndex;
+		return -1;
+	}
+
+	return GetHashAlgorithmIndexById(algorithmId);
 }
 
 static inline bool TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)
@@ -60,12 +129,24 @@ static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, co
 
 static inline HashAlgorithmId GetHashAlgorithmId(ResultDigestType digestType)
 {
-	return GetHashAlgorithmDescriptorId(GetHashAlgorithmDescriptor(digestType));
+	HashAlgorithmId algorithmId;
+	if (!TryGetHashAlgorithmId(digestType, &algorithmId))
+	{
+		return HashAlgorithmId();
+	}
+
+	return algorithmId;
 }
 
 static inline ResultDigestType GetHashAlgorithmTypeAt(int index)
 {
-	return GetHashAlgorithmDescriptorType(GetHashAlgorithmDescriptorAt(index));
+	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+	if (!TryGetHashAlgorithmTypeById(GetHashAlgorithmDescriptorId(GetHashAlgorithmDescriptorAt(index)), &digestType))
+	{
+		return RESULT_DIGEST_UNKNOWN;
+	}
+
+	return digestType;
 }
 
 static inline bool IsRegisteredHashAlgorithmType(ResultDigestType digestType)

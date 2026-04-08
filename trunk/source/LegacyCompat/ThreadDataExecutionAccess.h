@@ -110,10 +110,10 @@ static inline bool GetThreadDataUppercase(const ThreadData& threadData)
 	return GetThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest;
 }
 
-static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
+static inline void SetThreadDataHashAlgorithmEnabledById(ThreadData& threadData, const HashAlgorithmId& algorithmId, bool enabled)
 {
 	int algorithmIndex;
-	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	if (!TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex))
 	{
 		return;
 	}
@@ -121,10 +121,10 @@ static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, Res
 	GetMutableThreadDataHashAlgorithmSelectionState(threadData).enabled[static_cast<size_t>(algorithmIndex)] = enabled;
 }
 
-static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
+static inline bool IsThreadDataHashAlgorithmEnabledById(const ThreadData& threadData, const HashAlgorithmId& algorithmId)
 {
 	int algorithmIndex;
-	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
+	if (!TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex))
 	{
 		return false;
 	}
@@ -138,14 +138,51 @@ static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData
 	return hashAlgorithmSelectionState.enabled[digestIndex];
 }
 
-template<typename THashAlgorithmVisitor>
-static inline bool VisitEnabledThreadDataHashAlgorithms(const ThreadData& threadData, THashAlgorithmVisitor visitor)
+static inline void SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)
+{
+	HashAlgorithmId algorithmId = GetHashAlgorithmId(digestType);
+	if (algorithmId.empty())
+	{
+		return;
+	}
+
+	SetThreadDataHashAlgorithmEnabledById(threadData, algorithmId, enabled);
+}
+
+static inline bool IsThreadDataHashAlgorithmEnabled(const ThreadData& threadData, ResultDigestType digestType)
+{
+	HashAlgorithmId algorithmId = GetHashAlgorithmId(digestType);
+	if (algorithmId.empty())
+	{
+		return false;
+	}
+
+	return IsThreadDataHashAlgorithmEnabledById(threadData, algorithmId);
+}
+
+template<typename THashAlgorithmIdVisitor>
+static inline bool VisitEnabledThreadDataHashAlgorithmIds(const ThreadData& threadData, THashAlgorithmIdVisitor visitor)
 {
 	return VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		(void)index;
-		ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-		if (!IsThreadDataHashAlgorithmEnabled(threadData, digestType))
+		HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
+		if (!IsThreadDataHashAlgorithmEnabledById(threadData, algorithmId))
+		{
+			return true;
+		}
+
+		return visitor(algorithmId);
+	});
+}
+
+template<typename THashAlgorithmVisitor>
+static inline bool VisitEnabledThreadDataHashAlgorithms(const ThreadData& threadData, THashAlgorithmVisitor visitor)
+{
+	return VisitEnabledThreadDataHashAlgorithmIds(threadData, [&](const HashAlgorithmId& algorithmId)
+	{
+		ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+		if (!TryGetHashAlgorithmTypeById(algorithmId, &digestType))
 		{
 			return true;
 		}
@@ -158,9 +195,9 @@ static inline size_t GetEnabledThreadDataHashAlgorithmCount(const ThreadData& th
 {
 	size_t enabledCount = 0;
 
-	VisitEnabledThreadDataHashAlgorithms(threadData, [&](ResultDigestType digestType)
+	VisitEnabledThreadDataHashAlgorithmIds(threadData, [&](const HashAlgorithmId& algorithmId)
 	{
-		(void)digestType;
+		(void)algorithmId;
 		++enabledCount;
 		return true;
 	});
@@ -178,8 +215,7 @@ static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		(void)index;
-		ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
-		SetThreadDataHashAlgorithmEnabled(threadData, digestType, true);
+		SetThreadDataHashAlgorithmEnabledById(threadData, GetHashAlgorithmDescriptorId(algorithmDescriptor), true);
 		return true;
 	});
 }

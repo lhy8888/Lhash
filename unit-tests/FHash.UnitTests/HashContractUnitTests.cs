@@ -51,9 +51,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
-        Assert.Contains("algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", request, StringComparison.Ordinal);
         Assert.DoesNotContain("TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor)", request, StringComparison.Ordinal);
     }
@@ -383,7 +386,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptor({", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashDigestOperationDescriptorsRegistered()", digestOperationRegistry, StringComparison.Ordinal);
-        Assert.Contains("if (GetHashAlgorithmDescriptorType(algorithmDescriptor) == RESULT_DIGEST_UNKNOWN)", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContextById(hashContexts, algorithmId);", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);", digestLifecycle, StringComparison.Ordinal);

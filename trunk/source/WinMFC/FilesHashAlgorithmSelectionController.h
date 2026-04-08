@@ -26,7 +26,7 @@ private:
 	{
 		HashAlgorithmCheckBox();
 
-		ResultDigestType digestType;
+		HashAlgorithmId algorithmId;
 		UINT controlId;
 		CButton* checkBox;
 	};
@@ -34,7 +34,7 @@ private:
 	void CreateDynamicCheckBoxes();
 	void DestroyDynamicCheckBoxes();
 	CRect GetCheckBoxLayoutRect() const;
-	CButton* GetCheckBox(ResultDigestType digestType) const;
+	CButton* GetCheckBox(const HashAlgorithmId& algorithmId) const;
 
 	ThreadData* m_threadData;
 	CWnd* m_parentWnd;

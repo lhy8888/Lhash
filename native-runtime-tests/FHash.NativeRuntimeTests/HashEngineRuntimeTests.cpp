@@ -250,7 +250,7 @@ namespace
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& descriptor)
 		{
 			(void)index;
-			SetThreadDataHashAlgorithmEnabled(threadData, GetHashAlgorithmDescriptorType(descriptor), false);
+			SetThreadDataHashAlgorithmEnabledById(threadData, GetHashAlgorithmDescriptorId(descriptor), false);
 			return true;
 		});
 	}
@@ -489,9 +489,9 @@ namespace
 	{
 		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			RESULT_DIGEST_UNKNOWN,
 			"sha3-256",
-			"SHA3-256"
+			"SHA3-256",
+			false
 		}), "Descriptor/id-only algorithm registration should be allowed.");
 
 		ScopedTempDirectory tempDirectory;
@@ -539,12 +539,11 @@ namespace
 	{
 		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
 		int baselineCount = GetRegisteredHashAlgorithmCount();
-		ResultDigestType customDigestType = static_cast<ResultDigestType>(4096);
 
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			customDigestType,
 			"blake3",
-			"BLAKE3"
+			"BLAKE3",
+			false
 		}), "RegisterHashAlgorithmDescriptor should accept descriptor/id-based custom algorithm registration.");
 
 		NativeAssertEqual(baselineCount + 1, GetRegisteredHashAlgorithmCount(), "Descriptor/id-based custom algorithm registration should increase the registry count.");
@@ -553,7 +552,12 @@ namespace
 		const HashAlgorithmDescriptor *registeredDescriptor = NULL;
 		NativeAssertTrue(TryGetHashAlgorithmDescriptorById(sunjwbase::strtotstr(std::string("blake3")), &registeredDescriptor), "Descriptor/id-based lookup should resolve custom algorithms.");
 		NativeAssertTrue(registeredDescriptor != NULL, "Descriptor/id lookup should expose the registered descriptor.");
-		NativeAssertEqual(customDigestType, GetHashAlgorithmDescriptorType(*registeredDescriptor), "Descriptor/id lookup should preserve custom digest type identity.");
+		NativeAssertEqual(
+			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("blake3"))),
+			GetHashAlgorithmDescriptorId(*registeredDescriptor),
+			"Descriptor/id lookup should preserve custom algorithm identities.");
+		ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+		NativeAssertTrue(!TryGetHashAlgorithmTypeById(sunjwbase::strtotstr(std::string("blake3")), &digestType), "Descriptor/id-only custom algorithms should not require legacy digest-type mappings.");
 	}
 
 	static void HashRequest_AlgorithmIdsDriveSelectionAndDeduplication()
@@ -590,14 +594,14 @@ namespace
 		const int baselineCount = GetRegisteredHashAlgorithmCount();
 
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			RESULT_DIGEST_UNKNOWN,
 			"sha3-256",
-			"SHA3-256"
+			"SHA3-256",
+			false
 		}), "Descriptor/id registration should allow extending unknown digest identities.");
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			RESULT_DIGEST_UNKNOWN,
 			"blake3",
-			"BLAKE3"
+			"BLAKE3",
+			false
 		}), "Descriptor/id registration should allow multiple unknown digest identities.");
 		NativeAssertEqual(baselineCount + 2, GetRegisteredHashAlgorithmCount(), "Unknown digest registrations with different ids should not collapse into one slot.");
 
@@ -621,18 +625,17 @@ namespace
 	static void HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots()
 	{
 		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
-		ResultDigestType customDigestType = static_cast<ResultDigestType>(4097);
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			customDigestType,
 			"xxh3",
-			"XXH3"
+			"XXH3",
+			false
 		}), "Custom descriptor/id registration should allow result projection coverage for non-fixed digests.");
 
 		ResultData resultData;
 		ResetResultData(resultData);
 		SetResultState(resultData, RESULT_ALL);
 		SetResultPath(resultData, sunjwbase::strtotstr(std::string("custom-id.bin")));
-		SetResultDigest(resultData, customDigestType, sunjwbase::strtotstr(std::string("CAFEBABE")));
+		SetResultDigestById(resultData, NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("xxh3"))), sunjwbase::strtotstr(std::string("CAFEBABE")));
 
 		HashResult result = ProjectHashResult(resultData);
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "HashResult projection should emit descriptor/id-based digest results without fixed digest slots.");
@@ -651,8 +654,9 @@ namespace
 		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& descriptor)
 		{
 			(void)index;
-			ResultDigestType digestType = GetHashAlgorithmDescriptorType(descriptor);
-			NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupported(digestType), "Registered algorithms should resolve to supported digest operation descriptors.");
+			NativeAssertTrue(
+				HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(GetHashAlgorithmDescriptorId(descriptor)),
+				"Registered algorithms should resolve to supported digest operation descriptors.");
 			return true;
 		});
 	}
@@ -667,9 +671,8 @@ namespace
 		for (int descriptorIndex = 0; descriptorIndex < descriptorCount; ++descriptorIndex)
 		{
 			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(descriptorIndex);
-			ResultDigestType digestType = GetHashAlgorithmDescriptorType(algorithmDescriptor);
 			NativeAssertEqual(
-				GetHashAlgorithmId(digestType),
+				GetHashAlgorithmDescriptorId(algorithmDescriptor),
 				NormalizeHashAlgorithmId(operationDescriptors[descriptorIndex].algorithmId),
 				"Digest operation descriptors should preserve registry ordering.");
 			NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(operationDescriptors[descriptorIndex]), "Digest operation descriptors published from the registry should always be complete.");
@@ -722,9 +725,9 @@ namespace
 	{
 		ScopedHashAlgorithmRegistryReset scopedRegistryReset;
 		NativeAssertTrue(RegisterHashAlgorithmDescriptor({
-			RESULT_DIGEST_UNKNOWN,
 			"sha3-256",
-			"SHA3-256"
+			"SHA3-256",
+			false
 		}), "Descriptor/id-only algorithms should be registerable before digest operations are implemented.");
 
 		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationRegistryConsistent(), "Descriptor/id-only algorithm registrations should not invalidate digest operation consistency.");

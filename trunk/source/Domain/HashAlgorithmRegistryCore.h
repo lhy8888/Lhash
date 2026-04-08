@@ -1,15 +1,18 @@
 #ifndef _HASH_ALGORITHM_REGISTRY_CORE_H_
 #define _HASH_ALGORITHM_REGISTRY_CORE_H_
 
-#include "Common/Global.h"
+#include <string>
+#include <vector>
+
+#include "Common/strhelper.h"
 
 typedef sunjwbase::tstring HashAlgorithmId;
 
 struct HashAlgorithmDescriptor
 {
-	ResultDigestType type;
 	const char *stableName;
 	const char *displayLabel;
+	bool requiresDigestOperations;
 };
 
 struct HashAlgorithmDescriptorRegistry
@@ -79,10 +82,7 @@ static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor
 	for (size_t descriptorIndex = 0; descriptorIndex < descriptorStorage.size(); ++descriptorIndex)
 	{
 		const bool sameDescriptorId = IsHashAlgorithmDescriptorIdEqual(descriptorStorage[descriptorIndex], algorithmDescriptor);
-		const bool sameDigestType =
-			algorithmDescriptor.type != RESULT_DIGEST_UNKNOWN &&
-			descriptorStorage[descriptorIndex].type == algorithmDescriptor.type;
-		if (!sameDescriptorId && !sameDigestType)
+		if (!sameDescriptorId)
 		{
 			continue;
 		}
@@ -104,10 +104,10 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 		return;
 	}
 
-	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_MD5, "md5", "MD5" });
-	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA1, "sha1", "SHA1" });
-	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA256, "sha256", "SHA256" });
-	RegisterHashAlgorithmDescriptor({ RESULT_DIGEST_SHA512, "sha512", "SHA512" });
+	RegisterHashAlgorithmDescriptor({ "md5", "MD5", true });
+	RegisterHashAlgorithmDescriptor({ "sha1", "SHA1", true });
+	RegisterHashAlgorithmDescriptor({ "sha256", "SHA256", true });
+	RegisterHashAlgorithmDescriptor({ "sha512", "SHA512", true });
 	GetHashAlgorithmDefaultsInitializedFlag() = true;
 }
 
@@ -115,16 +115,16 @@ static inline const HashAlgorithmDescriptor& GetUnknownHashAlgorithmDescriptor()
 {
 	static const HashAlgorithmDescriptor unknownAlgorithmDescriptor =
 	{
-		RESULT_DIGEST_UNKNOWN,
 		"unknown",
-		"UNKNOWN"
+		"UNKNOWN",
+		false
 	};
 	return unknownAlgorithmDescriptor;
 }
 
-static inline ResultDigestType GetHashAlgorithmDescriptorType(const HashAlgorithmDescriptor& algorithmDescriptor)
+static inline bool DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)
 {
-	return algorithmDescriptor.type;
+	return algorithmDescriptor.requiresDigestOperations;
 }
 
 static inline sunjwbase::tstring GetHashAlgorithmDescriptorStableName(const HashAlgorithmDescriptor& algorithmDescriptor)
@@ -245,21 +245,6 @@ static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algo
 static inline bool IsRegisteredHashAlgorithmId(const HashAlgorithmId& algorithmId)
 {
 	return TryGetHashAlgorithmDescriptorById(algorithmId, NULL);
-}
-
-static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)
-{
-	const HashAlgorithmDescriptor *descriptor = NULL;
-	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &descriptor) || descriptor == NULL)
-	{
-		return false;
-	}
-
-	if (digestType != NULL)
-	{
-		*digestType = GetHashAlgorithmDescriptorType(*descriptor);
-	}
-	return true;
 }
 
 #endif
