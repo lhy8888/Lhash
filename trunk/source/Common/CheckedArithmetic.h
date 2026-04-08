@@ -11,7 +11,7 @@ static inline bool TryAddUInt64(uint64_t left, uint64_t right, uint64_t *result)
 		return false;
 	}
 
-	if (left > (std::numeric_limits<uint64_t>::max() - right))
+	if (left > ((std::numeric_limits<uint64_t>::max)() - right))
 	{
 		return false;
 	}
@@ -44,7 +44,7 @@ static inline bool TryMultiplyUInt64(uint64_t left, uint64_t right, uint64_t *re
 		return true;
 	}
 
-	if (left > (std::numeric_limits<uint64_t>::max() / right))
+	if (left > ((std::numeric_limits<uint64_t>::max)() / right))
 	{
 		return false;
 	}
@@ -58,7 +58,7 @@ static inline uint64_t SaturatingAddUInt64(uint64_t left, uint64_t right)
 	uint64_t result = 0;
 	if (!TryAddUInt64(left, right, &result))
 	{
-		return std::numeric_limits<uint64_t>::max();
+		return (std::numeric_limits<uint64_t>::max)();
 	}
 
 	return result;
