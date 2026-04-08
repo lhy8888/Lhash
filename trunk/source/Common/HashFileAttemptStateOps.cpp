@@ -25,8 +25,6 @@ namespace HashEngineInternal
 	void ResetFileProgressState(FileProgressState *progressState)
 	{
 		progressState->finishedSize = 0;
-		progressState->finishedSizeWhole = 0;
 		progressState->position = 0;
-		progressState->positionWhole = 0;
 	}
 }

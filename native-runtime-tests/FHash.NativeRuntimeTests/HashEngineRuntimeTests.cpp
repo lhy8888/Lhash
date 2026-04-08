@@ -744,6 +744,7 @@ namespace
 		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("meta-only.txt"), "abc");
 
 		CapturingProgressSink progressSink;
+		progressSink.EnableConsoleTrace("multi-file");
 		ThreadData threadData;
 		std::vector<ResultDigestType> algorithms;
 		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
