@@ -124,7 +124,7 @@
     <value>Verify</value>
   </data>
   <data name="ButtonOpenOpen" xml:space="preserve">
-    <value>Open...</value>
+    <value>Open File</value>
   </data>
   <data name="MainPageInitInfo" xml:space="preserve">
     <value>Drag files here or click open to start calculate.</value>
@@ -221,6 +221,93 @@
   </data>
   <data name="AboutTitle" xml:space="preserve">
     <value>About LHash</value>
+  </data>
+  <data name="ButtonOpenToolbar.Content" xml:space="preserve">
+    <value>Open File</value>
+  </data>
+  <data name="ButtonOpenFolder.Content" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="ButtonCopy.Content" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ButtonExport.Content" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ButtonSettings.Content" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ButtonAboutInSettings.Content" xml:space="preserve">
+    <value>About LHash</value>
+  </data>
+  <data name="SettingsPaneTitle.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsPaneSubtitle.Text" xml:space="preserve">
+    <value>Algorithms, display options, and product info are grouped here.</value>
+  </data>
+  <data name="SettingsDisplaySectionTitle.Text" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="SettingsAlgorithmsSectionTitle.Text" xml:space="preserve">
+    <value>Algorithms</value>
+  </data>
+  <data name="SettingsAboutSectionTitle.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="SettingsAboutDescription.Text" xml:space="preserve">
+    <value>View version, copyright, and the project homepage.</value>
+  </data>
+  <data name="DropSurfaceTitle.Text" xml:space="preserve">
+    <value>Drop files or folders here, or start a new integrity task</value>
+  </data>
+  <data name="DropSurfaceSubtitle.Text" xml:space="preserve">
+    <value>The primary result view stays here, with live calculation status and final digests.</value>
+  </data>
+  <data name="TaskQueueEmptyTitle.Text" xml:space="preserve">
+    <value>No active file tasks</value>
+  </data>
+  <data name="TaskQueueEmptySubtitle.Text" xml:space="preserve">
+    <value>When a job starts, each file will appear here with status and progress.</value>
+  </data>
+  <data name="StatusSummaryTotalFormat" xml:space="preserve">
+    <value>Total {0}</value>
+  </data>
+  <data name="StatusSummaryCompletedFormat" xml:space="preserve">
+    <value>Completed {0}</value>
+  </data>
+  <data name="StatusSummaryFailedFormat" xml:space="preserve">
+    <value>Failed {0}</value>
+  </data>
+  <data name="StatusSummaryActiveFormat" xml:space="preserve">
+    <value>Active {0}</value>
+  </data>
+  <data name="StatusSummaryElapsedFormat" xml:space="preserve">
+    <value>Elapsed {0}</value>
+  </data>
+  <data name="StatusSummarySpeedEmpty" xml:space="preserve">
+    <value>Speed --</value>
+  </data>
+  <data name="TaskStatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="TaskStatusRunning" xml:space="preserve">
+    <value>Preparing</value>
+  </data>
+  <data name="TaskStatusHashing" xml:space="preserve">
+    <value>Hashing</value>
+  </data>
+  <data name="TaskStatusCompleted" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="TaskStatusFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="TaskProgressWorking" xml:space="preserve">
+    <value>Working</value>
+  </data>
+  <data name="TaskAlgorithmNone" xml:space="preserve">
+    <value>None</value>
   </data>
 </root>
 

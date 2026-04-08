@@ -124,7 +124,7 @@
     <value>验证</value>
   </data>
   <data name="ButtonOpenOpen" xml:space="preserve">
-    <value>打开...</value>
+    <value>打开文件</value>
   </data>
   <data name="MainPageInitInfo" xml:space="preserve">
     <value>将文件拖入或点击打开，开始计算。</value>
@@ -209,6 +209,93 @@
   </data>
   <data name="AboutTitle" xml:space="preserve">
     <value>关于 LHash</value>
+  </data>
+  <data name="ButtonOpenToolbar.Content" xml:space="preserve">
+    <value>打开文件</value>
+  </data>
+  <data name="ButtonOpenFolder.Content" xml:space="preserve">
+    <value>打开文件夹</value>
+  </data>
+  <data name="ButtonCopy.Content" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="ButtonExport.Content" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="ButtonSettings.Content" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="ButtonAboutInSettings.Content" xml:space="preserve">
+    <value>关于 LHash</value>
+  </data>
+  <data name="SettingsPaneTitle.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsPaneSubtitle.Text" xml:space="preserve">
+    <value>算法、显示与产品信息统一收口到这里。</value>
+  </data>
+  <data name="SettingsDisplaySectionTitle.Text" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="SettingsAlgorithmsSectionTitle.Text" xml:space="preserve">
+    <value>算法</value>
+  </data>
+  <data name="SettingsAboutSectionTitle.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="SettingsAboutDescription.Text" xml:space="preserve">
+    <value>查看版本、版权信息与项目主页。</value>
+  </data>
+  <data name="DropSurfaceTitle.Text" xml:space="preserve">
+    <value>拖入文件、文件夹或直接开始新的校验任务</value>
+  </data>
+  <data name="DropSurfaceSubtitle.Text" xml:space="preserve">
+    <value>这里保留主结果视图，拖拽即可开始，计算过程与最终摘要都会持续显示。</value>
+  </data>
+  <data name="TaskQueueEmptyTitle.Text" xml:space="preserve">
+    <value>暂无进行中的文件任务</value>
+  </data>
+  <data name="TaskQueueEmptySubtitle.Text" xml:space="preserve">
+    <value>开始计算后，这里会动态显示每个文件的状态与进度。</value>
+  </data>
+  <data name="StatusSummaryTotalFormat" xml:space="preserve">
+    <value>总文件数 {0}</value>
+  </data>
+  <data name="StatusSummaryCompletedFormat" xml:space="preserve">
+    <value>完成 {0}</value>
+  </data>
+  <data name="StatusSummaryFailedFormat" xml:space="preserve">
+    <value>失败 {0}</value>
+  </data>
+  <data name="StatusSummaryActiveFormat" xml:space="preserve">
+    <value>进行中 {0}</value>
+  </data>
+  <data name="StatusSummaryElapsedFormat" xml:space="preserve">
+    <value>耗时 {0}</value>
+  </data>
+  <data name="StatusSummarySpeedEmpty" xml:space="preserve">
+    <value>速度 --</value>
+  </data>
+  <data name="TaskStatusPending" xml:space="preserve">
+    <value>等待中</value>
+  </data>
+  <data name="TaskStatusRunning" xml:space="preserve">
+    <value>准备中</value>
+  </data>
+  <data name="TaskStatusHashing" xml:space="preserve">
+    <value>计算中</value>
+  </data>
+  <data name="TaskStatusCompleted" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="TaskStatusFailed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="TaskProgressWorking" xml:space="preserve">
+    <value>计算中</value>
+  </data>
+  <data name="TaskAlgorithmNone" xml:space="preserve">
+    <value>未选择</value>
   </data>
 </root>
 

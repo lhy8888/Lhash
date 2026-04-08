@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -71,6 +75,17 @@ namespace FilesHashWUI
 
         private long m_calcStartTime = 0;
         private long m_calcEndTime = 0;
+        private int m_totalProgressValue = 0;
+        private ulong m_totalSizeSnapshot = 0;
+        private string m_selectedAlgorithmsSummary = string.Empty;
+        private DispatcherQueueTimer m_runtimeStatusTimer = null;
+        private ObservableCollection<FileTaskProgressItem> m_fileTaskItems = [];
+        private Dictionary<string, FileTaskProgressItem> m_fileTaskIndex = new(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly SolidColorBrush StatusBrushIdle = new(Color.FromArgb(0xFF, 0x6B, 0x72, 0x7C));
+        private static readonly SolidColorBrush StatusBrushActive = new(Color.FromArgb(0xFF, 0x1A, 0x6E, 0xC8));
+        private static readonly SolidColorBrush StatusBrushSuccess = new(Color.FromArgb(0xFF, 0x12, 0x78, 0x43));
+        private static readonly SolidColorBrush StatusBrushError = new(Color.FromArgb(0xFF, 0xB4, 0x23, 0x18));
 
         public MainPage()
         {
@@ -102,6 +117,28 @@ namespace FilesHashWUI
         {
             InitDialogFind();
             InitMenuFlyoutTextMain();
+            InitRuntimeStatusTimer();
+            ListViewFileTasks.ItemsSource = m_fileTaskItems;
+            RefreshTaskListVisibility();
+            UpdateStatusSummary();
+            UpdateCommandState();
+        }
+
+        private void InitRuntimeStatusTimer()
+        {
+            m_runtimeStatusTimer = DispatcherQueue.CreateTimer();
+            m_runtimeStatusTimer.Interval = TimeSpan.FromMilliseconds(250);
+            m_runtimeStatusTimer.IsRepeating = true;
+            m_runtimeStatusTimer.Tick += (_, _) =>
+            {
+                if (!IsCalculating())
+                {
+                    return;
+                }
+
+                UpdateRuntimeStatus();
+            };
+            m_runtimeStatusTimer.Start();
         }
 
         private void InitDialogFind()
@@ -136,6 +173,230 @@ namespace FilesHashWUI
             menuItemCopy.Click += MenuItemCopy_Click;
 
             m_menuFlyoutTextMain.Items.Add(menuItemCopy);
+        }
+
+        private void RefreshTaskListVisibility()
+        {
+            if (PanelTaskEmptyState != null)
+            {
+                PanelTaskEmptyState.Visibility = m_fileTaskItems.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void UpdateCommandState()
+        {
+            bool isCalculating = IsCalculating();
+            bool hasVisibleResult =
+                m_mainWindow.HashMgmt.GetResultCount() > 0 ||
+                m_mainPageStat == MainPageControlStat.MainPageVerify;
+
+            ButtonOpenFolder.IsEnabled = !isCalculating;
+            ButtonVerify.IsEnabled = !isCalculating && m_mainWindow.HashMgmt.GetResultCount() > 0;
+            ButtonCopy.IsEnabled = !isCalculating && hasVisibleResult;
+            ButtonExport.IsEnabled = !isCalculating && hasVisibleResult;
+            ButtonSettings.IsEnabled = true;
+        }
+
+        private void UpdateStatusSummary()
+        {
+            int totalFiles = m_fileTaskItems.Count;
+            int completedFiles = m_fileTaskItems.Count(item => item.IsCompleted);
+            int failedFiles = m_fileTaskItems.Count(item => item.IsFailed);
+            int activeFiles = m_fileTaskItems.Count(item => !item.IsCompleted && !item.IsFailed);
+
+            TextBlockStatusSummary.Text = string.Format(
+                m_resourceLoaderMain.GetString("StatusSummaryTotalFormat"),
+                totalFiles);
+            TextBlockStatusCompleted.Text = string.Format(
+                m_resourceLoaderMain.GetString("StatusSummaryCompletedFormat"),
+                completedFiles);
+            TextBlockStatusFailed.Text = string.Format(
+                m_resourceLoaderMain.GetString("StatusSummaryFailedFormat"),
+                failedFiles);
+            TextBlockStatusActive.Text = string.Format(
+                m_resourceLoaderMain.GetString("StatusSummaryActiveFormat"),
+                activeFiles);
+        }
+
+        private void UpdateRuntimeStatus()
+        {
+            long endTime = IsCalculating() ? WinUIHelper.GetCurrentMilliSec() : m_calcEndTime;
+            if (endTime < m_calcStartTime)
+            {
+                endTime = m_calcStartTime;
+            }
+
+            long elapsedMs = Math.Max(0, endTime - m_calcStartTime);
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(elapsedMs);
+            TextBlockStatusElapsed.Text = string.Format(
+                m_resourceLoaderMain.GetString("StatusSummaryElapsedFormat"),
+                elapsed.ToString(@"mm\:ss"));
+
+            string speedText = string.Empty;
+            if (elapsedMs > 10 && m_totalSizeSnapshot > 0 && m_totalProgressValue > 0)
+            {
+                double progressRatio = (double)m_totalProgressValue / m_mainWindow.HashUiEvents.GetProgressValueMax();
+                ulong processedBytes = (ulong)(m_totalSizeSnapshot * progressRatio);
+                double bytesPerSecond = processedBytes / (elapsedMs / 1000.0);
+                if (bytesPerSecond > 0)
+                {
+                    speedText = WinUIHelper.ConvertSizeToShortSizeStr((ulong)bytesPerSecond, true);
+                    if (!string.IsNullOrEmpty(speedText))
+                    {
+                        speedText += "/s";
+                    }
+                }
+            }
+
+            TextBlockSpeed.Text = string.IsNullOrWhiteSpace(speedText)
+                ? m_resourceLoaderMain.GetString("StatusSummarySpeedEmpty")
+                : speedText;
+        }
+
+        private void ResetTaskView()
+        {
+            m_fileTaskIndex.Clear();
+            m_fileTaskItems.Clear();
+            m_totalProgressValue = 0;
+            m_totalSizeSnapshot = 0;
+            RefreshTaskListVisibility();
+            UpdateStatusSummary();
+            UpdateRuntimeStatus();
+        }
+
+        private static string GetFileDisplayName(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return string.Empty;
+            }
+
+            string fileName = Path.GetFileName(path);
+            return string.IsNullOrWhiteSpace(fileName) ? path : fileName;
+        }
+
+        private string GetCurrentVisibleText()
+        {
+            if (m_paragraphMain == null)
+            {
+                return string.Empty;
+            }
+
+            StringBuilder builder = new();
+            foreach (Inline inline in m_paragraphMain.Inlines)
+            {
+                AppendInlineText(builder, inline);
+            }
+
+            return builder.ToString();
+        }
+
+        private bool HasVisibleResultContent()
+        {
+            return !string.IsNullOrWhiteSpace(GetCurrentVisibleText());
+        }
+
+        private static void AppendInlineText(StringBuilder builder, Inline inline)
+        {
+            switch (inline)
+            {
+                case Run run:
+                    builder.Append(run.Text);
+                    break;
+                case Hyperlink hyperlink:
+                    foreach (Inline innerInline in hyperlink.Inlines)
+                    {
+                        AppendInlineText(builder, innerInline);
+                    }
+                    break;
+                case Span span:
+                    foreach (Inline innerInline in span.Inlines)
+                    {
+                        AppendInlineText(builder, innerInline);
+                    }
+                    break;
+                case LineBreak:
+                    builder.AppendLine();
+                    break;
+            }
+        }
+
+        private FileTaskProgressItem GetOrCreateTaskItem(HashResultNet hashResult)
+        {
+            string key = hashResult.Path ?? string.Empty;
+            if (!m_fileTaskIndex.TryGetValue(key, out FileTaskProgressItem taskItem))
+            {
+                taskItem = new()
+                {
+                    FilePath = key,
+                    FileName = GetFileDisplayName(key),
+                    AlgorithmText = m_selectedAlgorithmsSummary,
+                    StatusText = m_resourceLoaderMain.GetString("TaskStatusPending"),
+                    StatusBrush = StatusBrushIdle,
+                    ProgressText = "0%",
+                    IsIndeterminate = true,
+                    ProgressValue = 0
+                };
+                m_fileTaskIndex[key] = taskItem;
+                m_fileTaskItems.Add(taskItem);
+                RefreshTaskListVisibility();
+                UpdateStatusSummary();
+            }
+
+            return taskItem;
+        }
+
+        private void UpdateTaskItemStatus(FileTaskProgressItem taskItem, string statusText, Brush statusBrush)
+        {
+            taskItem.StatusText = statusText;
+            taskItem.StatusBrush = statusBrush;
+        }
+
+        private void UpdateTaskProgressEstimate()
+        {
+            if (m_fileTaskItems.Count == 0 || m_totalSizeSnapshot == 0)
+            {
+                return;
+            }
+
+            int progressMax = Math.Max(1, m_mainWindow.HashUiEvents.GetProgressValueMax());
+            double ratio = Math.Clamp((double)m_totalProgressValue / progressMax, 0, 1);
+            ulong processedBytes = (ulong)(m_totalSizeSnapshot * ratio);
+            ulong completedBytes = 0;
+
+            foreach (FileTaskProgressItem taskItem in m_fileTaskItems)
+            {
+                if (taskItem.IsCompleted)
+                {
+                    completedBytes += taskItem.FileSize;
+                    taskItem.IsIndeterminate = false;
+                    taskItem.ProgressValue = 100;
+                    taskItem.ProgressText = "100%";
+                    continue;
+                }
+
+                if (taskItem.IsFailed)
+                {
+                    taskItem.IsIndeterminate = false;
+                    taskItem.ProgressValue = 0;
+                    taskItem.ProgressText = "ERR";
+                    continue;
+                }
+
+                if (taskItem.FileSize == 0)
+                {
+                    taskItem.IsIndeterminate = true;
+                    taskItem.ProgressText = m_resourceLoaderMain.GetString("TaskProgressWorking");
+                    break;
+                }
+
+                ulong bytesIntoCurrent = processedBytes > completedBytes ? processedBytes - completedBytes : 0;
+                double progress = Math.Clamp((double)bytesIntoCurrent / taskItem.FileSize, 0, 1);
+                taskItem.IsIndeterminate = false;
+                taskItem.ProgressValue = progress * 100.0;
+                taskItem.ProgressText = string.Format("{0:0}%", taskItem.ProgressValue);
+                break;
+            }
         }
 
         private void ShowAboutPage()
@@ -240,12 +501,15 @@ namespace FilesHashWUI
                     if (newStat == MainPageControlStat.MainPageNone)
                     {
                         m_hyperlinksMain.Clear();
+                        m_hyperlinksResult.Clear();
+                        m_hyperlinksFind.Clear();
                         m_mainWindow.HashMgmt.Clear();
-
-                        ProgressBarMain.Value = 0;
+                        m_calcStartTime = 0;
+                        m_calcEndTime = 0;
+                        m_totalProgressValue = 0;
+                        m_totalSizeSnapshot = 0;
                         m_mainWindow.SetTaskbarProgress(0);
-
-                        TextBlockSpeed.Text = "";
+                        ResetTaskView();
 
                         Span spanInit = new();
                         string strPageInit = m_resourceLoaderMain.GetString("MainPageInitInfo");
@@ -255,36 +519,38 @@ namespace FilesHashWUI
                         AppendInlineToTextMain(spanInit);
                     }
                     // Passthrough to MainPageControlStat.MainPageCalcFinish
-                    m_calcEndTime = WinUIHelper.GetCurrentMilliSec();
+                    if (newStat != MainPageControlStat.MainPageNone)
+                    {
+                        m_calcEndTime = WinUIHelper.GetCurrentMilliSec();
+                    }
 
                     ButtonOpen.Content = m_resourceLoaderMain.GetString("ButtonOpenOpen");
-                    ButtonClear.IsEnabled = true;
-                    ButtonVerify.IsEnabled = true;
                     CheckBoxUppercase.IsEnabled = true;
                     SetHashAlgorithmControlsEnabled(true);
                     break;
                 case MainPageControlStat.MainPageCalcIng:
                     CloseAboutPage();
+                    SplitViewMain.IsPaneOpen = false;
 
                     m_calcStartTime = WinUIHelper.GetCurrentMilliSec();
                     m_mainWindow.HashMgmt.SetStop(false);
-
-                    TextBlockSpeed.Text = "";
+                    m_calcEndTime = m_calcStartTime;
+                    m_totalProgressValue = 0;
+                    TextBlockSpeed.Text = m_resourceLoaderMain.GetString("StatusSummarySpeedEmpty");
                     ButtonOpen.Content = m_resourceLoaderMain.GetString("ButtonOpenStop");
-                    ButtonClear.IsEnabled = false;
-                    ButtonVerify.IsEnabled = false;
                     CheckBoxUppercase.IsEnabled = false;
                     SetHashAlgorithmControlsEnabled(false);
 
                     BringWindowToFront();
                     break;
                 case MainPageControlStat.MainPageVerify:
-                    ButtonVerify.IsEnabled = false;
                     break;
             }
 
             MainPageControlStat oldStat = m_mainPageStat;
             m_mainPageStat = newStat;
+            UpdateRuntimeStatus();
+            UpdateCommandState();
 
             if (oldStat == MainPageControlStat.MainPageWaitingExit &&
                 m_mainPageStat == MainPageControlStat.MainPageCalcFinish)
@@ -350,6 +616,7 @@ namespace FilesHashWUI
         private void UpdateHashAlgorithmStat(bool saveLocalSetting = true)
         {
             m_mainWindow.HashMgmt.ResetHashAlgorithms();
+            List<string> selectedLabels = [];
             foreach (HashAlgorithmDescriptorNet hashAlgorithm in m_hashAlgorithms)
             {
                 if (!m_hashAlgorithmCheckBoxes.TryGetValue(GetHashAlgorithmId(hashAlgorithm), out CheckBox checkBox))
@@ -364,6 +631,19 @@ namespace FilesHashWUI
                 }
 
                 m_mainWindow.HashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);
+                if (hashAlgorithmEnabled)
+                {
+                    selectedLabels.Add(hashAlgorithm.DisplayLabel);
+                }
+            }
+
+            m_selectedAlgorithmsSummary = selectedLabels.Count > 0
+                ? string.Join(" · ", selectedLabels)
+                : m_resourceLoaderMain.GetString("TaskAlgorithmNone");
+
+            foreach (FileTaskProgressItem taskItem in m_fileTaskItems.Where(item => !item.IsCompleted && !item.IsFailed))
+            {
+                taskItem.AlgorithmText = m_selectedAlgorithmsSummary;
             }
         }
 
@@ -460,15 +740,11 @@ namespace FilesHashWUI
                 return;
             }
 
-            // ClearFindResult first
-            if (m_mainPageStat == MainPageControlStat.MainPageVerify)
+            if (m_mainPageStat == MainPageControlStat.MainPageVerify ||
+                m_mainWindow.HashMgmt.GetResultCount() > 0 ||
+                m_fileTaskItems.Count > 0)
             {
-                ClearFindResult();
-            }
-            // Stat can be MainPageNone after ClearFindResult
-            if (m_mainPageStat == MainPageControlStat.MainPageNone)
-            {
-                ClearTextMain();
+                SetPageControlStat(MainPageControlStat.MainPageNone);
             }
 
             m_mainWindow.HashMgmt.AddFiles(filePaths.ToArray());
@@ -477,10 +753,12 @@ namespace FilesHashWUI
             UpdateHashAlgorithmStat();
             m_mainWindow.HashMgmt.SetUppercase(m_uppercaseChecked);
 
-            ProgressBarMain.Value = 0;
+            ResetTaskView();
+            m_totalSizeSnapshot = m_mainWindow.HashMgmt.GetTotalSize();
             m_mainWindow.SetTaskbarProgress(1);
 
             SetPageControlStat(MainPageControlStat.MainPageCalcIng);
+            ClearTextMain();
 
             // Ready to go
             m_inMainQueue = 0;
@@ -509,31 +787,10 @@ namespace FilesHashWUI
             SetPageControlStat(MainPageControlStat.MainPageCalcFinish);
 
             int progMax = m_mainWindow.HashUiEvents.GetProgressValueMax();
-            ProgressBarMain.Value = progMax;
+            m_totalProgressValue = progMax;
+            UpdateTaskProgressEstimate();
             m_mainWindow.SetTaskbarProgress((ulong)progMax);
-
-            long calcDurationTime = m_calcEndTime - m_calcStartTime;
-            if (calcDurationTime > 10)
-            {
-                // speed is Bytes/ms
-                double calcSpeed = ((double)m_mainWindow.HashMgmt.GetTotalSize()) / calcDurationTime;
-                calcSpeed = calcSpeed * 1000; // Bytes/s
-                ulong ulCalcSpeed = (ulong)calcSpeed;
-                string strSpeed = "";
-                if (ulCalcSpeed > 0)
-                {
-                    strSpeed = WinUIHelper.ConvertSizeToShortSizeStr(ulCalcSpeed, true);
-                    if (!string.IsNullOrEmpty(strSpeed))
-                    {
-                        strSpeed += "/s";
-                    }
-                }
-                TextBlockSpeed.Text = strSpeed;
-            }
-            else
-            {
-                TextBlockSpeed.Text = "";
-            }
+            UpdateRuntimeStatus();
         }
 
         private void CalculateStopped()
@@ -542,8 +799,9 @@ namespace FilesHashWUI
             AppendInlineToTextMain(WinUIHelper.GenRunFromString("\r\n"));
 
             SetPageControlStat(MainPageControlStat.MainPageCalcFinish);
-            ProgressBarMain.Value = 0;
+            m_totalProgressValue = 0;
             m_mainWindow.SetTaskbarProgress(0);
+            UpdateRuntimeStatus();
         }
 
         private void AppendFileNameToTextMain(HashResultNet hashResult)
@@ -910,7 +1168,7 @@ namespace FilesHashWUI
 
                 // Prepare controls
                 ButtonOpen.Content = m_resourceLoaderMain.GetString("ButtonOpenOpen");
-                TextBlockSpeed.Text = "";
+                TextBlockSpeed.Text = m_resourceLoaderMain.GetString("StatusSummarySpeedEmpty");
 
                 object objUppercase = WinUIHelper.LoadLocalSettings(KeyUppercase);
                 CheckBoxUppercase.IsChecked = (bool)(objUppercase ?? false);
@@ -921,6 +1179,7 @@ namespace FilesHashWUI
                 // Init stat
                 SetPageControlStat(MainPageControlStat.MainPageNone);
                 UpdateHashAlgorithmStat(false);
+                UpdateCommandState();
 
                 // Handle commandline args
                 DispatcherQueue.TryEnqueue(() =>
@@ -989,8 +1248,20 @@ namespace FilesHashWUI
             UpdateHashAlgorithmStat();
         }
 
-        private void ButtonAbout_Click(object sender, RoutedEventArgs e)
+        private void ButtonVerify_Click(object sender, RoutedEventArgs e)
         {
+            DispatcherQueue.TryEnqueue(ShowFindDialog);
+        }
+
+        private void ButtonSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SplitViewMain.IsPaneOpen = !SplitViewMain.IsPaneOpen;
+        }
+
+        private void ButtonAboutInSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SplitViewMain.IsPaneOpen = false;
+
             // Fix for color changed
             ScrollViewerMain.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
             ScrollViewerMain.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
@@ -998,17 +1269,37 @@ namespace FilesHashWUI
             ShowAboutPage();
         }
 
-        private void ButtonClear_Click(object sender, RoutedEventArgs e)
+        private void ButtonCopy_Click(object sender, RoutedEventArgs e)
         {
-            if (m_mainPageStat == MainPageControlStat.MainPageVerify)
-                ClearFindResult();
-            else
-                SetPageControlStat(MainPageControlStat.MainPageNone);
+            string text = GetCurrentVisibleText();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            WinUIHelper.CopyStringToClipboard(text);
+            WinUIHelper.FlushClipboard();
         }
 
-        private void ButtonVerify_Click(object sender, RoutedEventArgs e)
+        private async void ButtonExport_Click(object sender, RoutedEventArgs e)
         {
-            DispatcherQueue.TryEnqueue(ShowFindDialog);
+            string text = GetCurrentVisibleText();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            FileSavePicker picker = new();
+            InitializeWithWindow.Initialize(picker, m_mainWindow.HWNDHandle);
+            picker.FileTypeChoices.Add("Text", [".txt"]);
+            picker.SuggestedFileName = "LHash-Results";
+            StorageFile file = await picker.PickSaveFileAsync();
+            if (file == null)
+            {
+                return;
+            }
+
+            await FileIO.WriteTextAsync(file, text);
         }
 
         private async void ButtonOpen_Click(object sender, RoutedEventArgs e)
@@ -1048,6 +1339,26 @@ namespace FilesHashWUI
             }
         }
 
+        private async void ButtonOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (IsCalculating())
+            {
+                return;
+            }
+
+            FolderPicker picker = new();
+            InitializeWithWindow.Initialize(picker, m_mainWindow.HWNDHandle);
+            picker.FileTypeFilter.Add("*");
+
+            StorageFolder folder = await picker.PickSingleFolderAsync();
+            if (folder == null || string.IsNullOrWhiteSpace(folder.Path))
+            {
+                return;
+            }
+
+            DispatcherQueue.TryEnqueue(() => StartHashCalc([folder.Path]));
+        }
+
         private void HashUiEvents_JobPreparingHandler()
         {
             DispatcherQueue.TryEnqueue(() =>
@@ -1082,37 +1393,88 @@ namespace FilesHashWUI
         private void HashUiEvents_FileStartedHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
-            DispatcherQueue.TryEnqueue(() => AppendFileNameToTextMain(hashResult));
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                FileTaskProgressItem taskItem = GetOrCreateTaskItem(hashResult);
+                taskItem.FileName = GetFileDisplayName(hashResult.Path);
+                taskItem.AlgorithmText = m_selectedAlgorithmsSummary;
+                taskItem.IsIndeterminate = true;
+                taskItem.ProgressValue = 0;
+                taskItem.ProgressText = m_resourceLoaderMain.GetString("TaskProgressWorking");
+                UpdateTaskItemStatus(taskItem, m_resourceLoaderMain.GetString("TaskStatusRunning"), StatusBrushActive);
+                UpdateStatusSummary();
+                AppendFileNameToTextMain(hashResult);
+                UpdateCommandState();
+            });
         }
 
         private void HashUiEvents_FileMetadataHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
-            DispatcherQueue.TryEnqueue(() => AppendFileMetaToTextMain(hashResult));
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                FileTaskProgressItem taskItem = GetOrCreateTaskItem(hashResult);
+                taskItem.FileSize = hashResult.Size;
+                taskItem.IsIndeterminate = false;
+                if (taskItem.ProgressValue <= 0)
+                {
+                    taskItem.ProgressValue = 2;
+                    taskItem.ProgressText = "2%";
+                }
+
+                UpdateTaskItemStatus(taskItem, m_resourceLoaderMain.GetString("TaskStatusHashing"), StatusBrushActive);
+                AppendFileMetaToTextMain(hashResult);
+                UpdateTaskProgressEstimate();
+            });
         }
 
         private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)
         {
             m_inMainQueue += 1;
-            DispatcherQueue.TryEnqueue(() => AppendFileHashToTextMain(hashResult, uppercase));
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                FileTaskProgressItem taskItem = GetOrCreateTaskItem(hashResult);
+                taskItem.IsCompleted = true;
+                taskItem.IsFailed = false;
+                taskItem.IsIndeterminate = false;
+                taskItem.ProgressValue = 100;
+                taskItem.ProgressText = "100%";
+                taskItem.FileSize = taskItem.FileSize == 0 ? hashResult.Size : taskItem.FileSize;
+                UpdateTaskItemStatus(taskItem, m_resourceLoaderMain.GetString("TaskStatusCompleted"), StatusBrushSuccess);
+                AppendFileHashToTextMain(hashResult, uppercase);
+                UpdateStatusSummary();
+                UpdateCommandState();
+            });
         }
 
         private void HashUiEvents_FileErrorHandler(HashResultNet hashResult)
         {
             m_inMainQueue += 1;
-            DispatcherQueue.TryEnqueue(() => AppendFileErrToTextMain(hashResult));
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                FileTaskProgressItem taskItem = GetOrCreateTaskItem(hashResult);
+                taskItem.IsCompleted = false;
+                taskItem.IsFailed = true;
+                taskItem.IsIndeterminate = false;
+                taskItem.ProgressValue = 0;
+                taskItem.ProgressText = "ERR";
+                UpdateTaskItemStatus(taskItem, m_resourceLoaderMain.GetString("TaskStatusFailed"), StatusBrushError);
+                AppendFileErrToTextMain(hashResult);
+                UpdateStatusSummary();
+                UpdateCommandState();
+            });
         }
 
         private void HashUiEvents_TotalProgressHandler(int value)
         {
             DispatcherQueue.TryEnqueue(() =>
             {
-                double newValue = value;
-                double oldValue = ProgressBarMain.Value;
-                if (oldValue == newValue)
+                if (m_totalProgressValue == value)
                     return;
 
-                ProgressBarMain.Value = newValue;
+                m_totalProgressValue = value;
+                UpdateTaskProgressEstimate();
+                UpdateRuntimeStatus();
                 if (value == 0)
                     value = 1;
                 m_mainWindow.SetTaskbarProgress((ulong)value);

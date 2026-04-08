@@ -9,132 +9,356 @@
     NavigationCacheMode="Required"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <Style x:Key="TopCommandButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style x:Key="SectionCardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefault}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        </Style>
+    </Page.Resources>
+
     <Grid
         x:Name="GridMain"
         Loaded="GridMain_Loaded"
         Unloaded="GridMain_Unloaded">
 
-        <ScrollViewer
-            x:Name="ScrollViewerMain"
-            Margin="8,5,8,57"
-            HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Auto">
+        <SplitView
+            x:Name="SplitViewMain"
+            CompactPaneLength="0"
+            DisplayMode="Inline"
+            IsPaneOpen="False"
+            OpenPaneLength="320"
+            PanePlacement="Right">
 
-            <RichTextBlock
-                x:Name="RichTextMain"
-                Margin="4,0,4,0"
-                SelectionChanged="RichTextMain_SelectionChanged" />
+            <SplitView.Pane>
+                <Border
+                    Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,0,0,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Padding="24,24,24,28" Spacing="18">
+                            <StackPanel Spacing="6">
+                                <TextBlock
+                                    x:Uid="SettingsPaneTitle"
+                                    FontSize="20"
+                                    FontWeight="SemiBold"
+                                    Text="设置" />
+                                <TextBlock
+                                    x:Uid="SettingsPaneSubtitle"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="算法与显示选项统一放在这里管理。" />
+                            </StackPanel>
 
-        </ScrollViewer>
+                            <Border Style="{StaticResource SectionCardStyle}">
+                                <StackPanel Padding="16" Spacing="14">
+                                    <TextBlock
+                                        x:Uid="SettingsDisplaySectionTitle"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Text="显示" />
 
-        <Grid
-            x:Name="GridBottom"
-            Height="57"
-            Margin="0,0,0,0"
-            VerticalAlignment="Bottom"
-            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefault}">
+                                    <CheckBox
+                                        x:Name="CheckBoxUppercase"
+                                        x:Uid="CheckBoxUppercase"
+                                        Checked="CheckBoxUppercase_Checked"
+                                        Content="大写 Hash"
+                                        Unchecked="CheckBoxUppercase_Unchecked" />
+                                </StackPanel>
+                            </Border>
 
-            <ProgressBar
-                x:Name="ProgressBarMain"
-                Width="Auto"
-                Height="6"
-                Margin="0,-1,0,0"
-                VerticalAlignment="Top"
-                Value="0" />
+                            <Border Style="{StaticResource SectionCardStyle}">
+                                <StackPanel Padding="16" Spacing="14">
+                                    <TextBlock
+                                        x:Uid="SettingsAlgorithmsSectionTitle"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Text="算法" />
 
-            <Grid
-                x:Name="GridBottomColumn"
-                Height="50"
-                Margin="0,0,0,0"
-                VerticalAlignment="Bottom">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                                    <StackPanel
+                                        x:Name="StackPanelHashAlgorithms"
+                                        Orientation="Vertical"
+                                        Spacing="10" />
+                                </StackPanel>
+                            </Border>
 
-                <Button
-                    x:Name="ButtonAbout"
-                    x:Uid="ButtonAbout"
-                    Grid.Column="0"
-                    Margin="10,0,0,10"
-                    VerticalAlignment="Bottom"
-                    Click="ButtonAbout_Click"
-                    Content="[About]"
-                    TabIndex="2" />
+                            <Border Style="{StaticResource SectionCardStyle}">
+                                <StackPanel Padding="16" Spacing="12">
+                                    <TextBlock
+                                        x:Uid="SettingsAboutSectionTitle"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Text="关于" />
+                                    <TextBlock
+                                        x:Uid="SettingsAboutDescription"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="查看版本、版权与项目主页。" />
+                                    <Button
+                                        x:Name="ButtonAboutInSettings"
+                                        x:Uid="ButtonAboutInSettings"
+                                        HorizontalAlignment="Left"
+                                        Click="ButtonAboutInSettings_Click"
+                                        Content="关于 LHash" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </SplitView.Pane>
 
-                <CheckBox
-                    x:Name="CheckBoxUppercase"
-                    x:Uid="CheckBoxUppercase"
-                    Grid.Column="1"
-                    Margin="20,0,0,10"
-                    VerticalAlignment="Bottom"
-                    Checked="CheckBoxUppercase_Checked"
-                    Content="[Uppercase]"
-                    TabIndex="3"
-                    Unchecked="CheckBoxUppercase_Unchecked" />
+            <SplitView.Content>
+                <Grid Padding="20,16,20,18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <StackPanel
-                    x:Name="StackPanelHashAlgorithms"
-                    Grid.Column="2"
-                    Margin="20,0,0,10"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Bottom"
-                    Spacing="12" />
+                    <Border
+                        Grid.Row="0"
+                        Padding="14"
+                        Style="{StaticResource SectionCardStyle}">
+                        <ScrollViewer
+                            HorizontalScrollBarVisibility="Hidden"
+                            HorizontalScrollMode="Disabled"
+                            VerticalScrollBarVisibility="Disabled"
+                            VerticalScrollMode="Disabled"
+                            ZoomMode="Disabled">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button
+                                    x:Name="ButtonOpen"
+                                    x:Uid="ButtonOpenToolbar"
+                                    Click="ButtonOpen_Click"
+                                    Content="打开文件"
+                                    Style="{StaticResource AccentButtonStyle}" />
+                                <Button
+                                    x:Name="ButtonOpenFolder"
+                                    x:Uid="ButtonOpenFolder"
+                                    Click="ButtonOpenFolder_Click"
+                                    Content="打开文件夹"
+                                    Style="{StaticResource TopCommandButtonStyle}" />
+                                <Button
+                                    x:Name="ButtonVerify"
+                                    x:Uid="ButtonVerify"
+                                    Click="ButtonVerify_Click"
+                                    Content="验证"
+                                    Style="{StaticResource TopCommandButtonStyle}">
+                                    <Button.KeyboardAccelerators>
+                                        <KeyboardAccelerator Key="F" Modifiers="Control" />
+                                    </Button.KeyboardAccelerators>
+                                </Button>
+                                <Button
+                                    x:Name="ButtonCopy"
+                                    x:Uid="ButtonCopy"
+                                    Click="ButtonCopy_Click"
+                                    Content="复制"
+                                    Style="{StaticResource TopCommandButtonStyle}" />
+                                <Button
+                                    x:Name="ButtonExport"
+                                    x:Uid="ButtonExport"
+                                    Click="ButtonExport_Click"
+                                    Content="导出"
+                                    Style="{StaticResource TopCommandButtonStyle}" />
+                                <Button
+                                    x:Name="ButtonSettings"
+                                    x:Uid="ButtonSettings"
+                                    Click="ButtonSettings_Click"
+                                    Content="设置"
+                                    Style="{StaticResource TopCommandButtonStyle}" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
 
-                <TextBlock
-                    x:Name="TextBlockSpeed"
-                    Grid.Column="3"
-                    Margin="5,0,0,18"
-                    VerticalAlignment="Bottom"
-                    Text="[Speed]" />
+                    <Grid Grid.Row="1" Margin="0,16,0,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="2.4*" />
+                            <RowDefinition Height="1.35*" />
+                        </Grid.RowDefinitions>
 
-                <Button
-                    x:Name="ButtonClear"
-                    x:Uid="ButtonClear"
-                    Grid.Column="4"
-                    Margin="0,0,10,10"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Click="ButtonClear_Click"
-                    Content="[Clear]"
-                    TabIndex="8" />
+                        <Border
+                            Grid.Row="0"
+                            Padding="0"
+                            Style="{StaticResource SectionCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
 
-                <Button
-                    x:Name="ButtonVerify"
-                    x:Uid="ButtonVerify"
-                    Grid.Column="5"
-                    Margin="0,0,10,10"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Click="ButtonVerify_Click"
-                    Content="[Verify]"
-                    TabIndex="9">
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="F" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
+                                <StackPanel Margin="24,22,24,14" Spacing="6">
+                                    <TextBlock
+                                        x:Uid="DropSurfaceTitle"
+                                        FontSize="22"
+                                        FontWeight="SemiBold"
+                                        Text="拖入文件、文件夹或直接开始新的校验任务" />
+                                    <TextBlock
+                                        x:Uid="DropSurfaceSubtitle"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="这里保留主结果视图，拖拽即可开始，计算过程与最终摘要都会持续显示。" />
+                                </StackPanel>
 
-                </Button>
+                                <ScrollViewer
+                                    x:Name="ScrollViewerMain"
+                                    Grid.Row="1"
+                                    Margin="20,0,20,20"
+                                    HorizontalScrollBarVisibility="Auto"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <RichTextBlock
+                                        x:Name="RichTextMain"
+                                        Margin="8,0,8,0"
+                                        SelectionChanged="RichTextMain_SelectionChanged" />
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
 
-                <Button
-                    x:Name="ButtonOpen"
-                    x:Uid="ButtonOpen"
-                    Grid.Column="6"
-                    Width="70"
-                    Margin="0,0,10,10"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Click="ButtonOpen_Click"
-                    Content="[Open]"
-                    Style="{StaticResource AccentButtonStyle}"
-                    TabIndex="10" />
+                        <Border
+                            Grid.Row="1"
+                            Margin="0,16,0,0"
+                            Padding="14,12,14,12"
+                            Style="{StaticResource SectionCardStyle}">
+                            <Grid>
+                                <ListView
+                                    x:Name="ListViewFileTasks"
+                                    IsItemClickEnabled="False"
+                                    SelectionMode="None">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="local:FileTaskProgressItem">
+                                            <Grid Padding="4,8" ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="190" />
+                                                    <ColumnDefinition Width="92" />
+                                                    <ColumnDefinition Width="84" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="56" />
+                                                </Grid.ColumnDefinitions>
 
-            </Grid>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"
+                                                    Text="{x:Bind FileName}"
+                                                    TextTrimming="CharacterEllipsis" />
 
-        </Grid>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Text="{x:Bind AlgorithmText}"
+                                                    TextTrimming="CharacterEllipsis" />
+
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{x:Bind StatusBrush}"
+                                                    Text="{x:Bind StatusText}"
+                                                    TextTrimming="CharacterEllipsis" />
+
+                                                <ProgressBar
+                                                    Grid.Column="3"
+                                                    Height="8"
+                                                    VerticalAlignment="Center"
+                                                    IsIndeterminate="{x:Bind IsIndeterminate}"
+                                                    Maximum="100"
+                                                    Value="{x:Bind ProgressValue}" />
+
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Text="{x:Bind ProgressText}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+
+                                <StackPanel
+                                    x:Name="PanelTaskEmptyState"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="6">
+                                    <TextBlock
+                                        x:Uid="TaskQueueEmptyTitle"
+                                        HorizontalAlignment="Center"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Text="暂无进行中的文件任务" />
+                                    <TextBlock
+                                        x:Uid="TaskQueueEmptySubtitle"
+                                        HorizontalAlignment="Center"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="开始计算后，这里会动态显示每个文件的状态与进度。" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Border
+                        Grid.Row="2"
+                        Padding="16,12"
+                        Style="{StaticResource SectionCardStyle}">
+                        <Grid ColumnSpacing="18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                x:Name="TextBlockStatusSummary"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="总文件数 0" />
+
+                            <TextBlock
+                                x:Name="TextBlockStatusCompleted"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="完成 0" />
+
+                            <TextBlock
+                                x:Name="TextBlockStatusFailed"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="失败 0" />
+
+                            <TextBlock
+                                x:Name="TextBlockStatusActive"
+                                Grid.Column="3"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="进行中 0" />
+
+                            <TextBlock
+                                x:Name="TextBlockStatusElapsed"
+                                Grid.Column="4"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="耗时 00:00" />
+
+                            <TextBlock
+                                x:Name="TextBlockSpeed"
+                                Grid.Column="5"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </SplitView.Content>
+        </SplitView>
     </Grid>
 </Page>
