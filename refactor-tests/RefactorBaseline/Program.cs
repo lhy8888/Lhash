@@ -5733,7 +5733,9 @@ internal static class Program
 
             AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Phase 90 native security targets do not yet enable /GS.");
             AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Phase 90 native security targets do not yet enable /sdl.");
-            AssertContains(nativeSecurityTargets, "<ControlFlowGuard>Guard</ControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG.");
+            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard>true</FHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG by default.");
+            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard Condition=\"'$(CLRSupport)'!=''\">false</FHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet exempt managed CLR bridge projects from CFG.");
+            AssertContains(nativeSecurityTargets, "<ControlFlowGuard Condition=\"'$(FHashEnableControlFlowGuard)'=='true'\">Guard</ControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG for eligible native projects.");
             AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Phase 90 native security targets do not yet enable ASLR.");
             AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Phase 90 native security targets do not yet enable high-entropy VA for x64.");
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Phase 90 native security targets do not yet enable DEP.");
