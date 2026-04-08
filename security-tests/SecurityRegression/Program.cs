@@ -47,7 +47,7 @@ internal static partial class Program
             AssertContains(legacyPackScript, "EXE_FILE_NAME = 'LHash.exe'", "Legacy packaging script still packages the old executable name.");
             AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
             AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");
-            AssertContains(workflow, "LHash-legacy-x64", "CI artifact naming no longer uses the LHash bundle name.");
+            AssertContains(workflow, "LHash-winui-x64", "CI workflow does not yet package the official WinUI desktop artifact.");
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 
@@ -77,9 +77,11 @@ internal static partial class Program
             AssertContains(winUiEn, "https://github.com/lhy8888/Lhash", "WinUI English About link still points to the old GitHub repo.");
             AssertContains(winUiZh, "LHash</value>", "WinUI Chinese About title still shows the old app name.");
             AssertContains(winUiZh, "LHash: ", "WinUI Chinese About text still shows the old product name.");
-            AssertContains(winUiAssembly, "AssemblyTitle(\"LHashWUI\")", "WinUI assembly title still shows the old product name.");
+            AssertContains(winUiAssembly, "AssemblyTitle(\"LHash\")", "WinUI assembly title still shows the old product name.");
             AssertContains(winUiAssembly, "AssemblyCompany(\"LHY\")", "WinUI assembly company still shows the old publisher.");
             AssertContains(winUiAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "WinUI assembly copyright still shows the old owner.");
+            AssertContains(winUiWap, "Alias=\"LHash.exe\"", "WinUI package execution alias still points at the old executable name.");
+            AssertContains(winUiWapDev, "Alias=\"LHashDev.exe\"", "WinUI dev package execution alias still points at the old executable name.");
             AssertContains(winUiWap, "<DisplayName>LHash</DisplayName>", "WinUI package display name still shows the old app name.");
             AssertContains(winUiWap, "Description=\"LHash\"", "WinUI package description still shows the old app name.");
             AssertContains(winUiWap, "<PublisherDisplayName>LHY</PublisherDisplayName>", "WinUI package publisher display name still shows the old owner.");

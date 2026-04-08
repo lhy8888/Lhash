@@ -285,6 +285,9 @@ jobs:
       - unit-tests
       - native-runtime-tests
     runs-on: windows-2022
+    env:
+      LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
+      LHASH_SIGN_PFX_PASSWORD: ${{ secrets.LHASH_SIGN_PFX_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -298,7 +301,7 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build WinUI native and CLR bridge
+      - name: Build and publish WinUI desktop app
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
@@ -306,6 +309,9 @@ jobs:
           $coreLogPath = Join-Path $artifactRoot 'build-native-core-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
+          $publishLogPath = Join-Path $artifactRoot 'publish-winui-x64.log'
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
 
           & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true 2>&1 |
             Tee-Object -FilePath $coreLogPath
@@ -328,15 +334,123 @@ jobs:
             throw "MSBuild failed while building fHashClrBridge. See artifacts/build-winui-bridge-x64.log for details."
           }
 
-      - name: Upload WinUI bridge artifacts
+          & msbuild trunk/source/WinUI/fHashWUI.csproj /restore /m /t:Publish /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:RuntimeIdentifier=win-x64 /p:PublishProfile=win10-x64 "/p:PublishDir=$publishRoot\\" 2>&1 |
+            Tee-Object -FilePath $publishLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while publishing the WinUI desktop app. See artifacts/publish-winui-x64.log for details."
+          }
+
+          $publishedExe = Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if (-not $publishedExe) {
+            throw 'WinUI publish completed, but LHash.exe was not found in the publish output.'
+          }
+
+      - name: Sign WinUI desktop app (optional)
+        if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $pfxPath = Join-Path $artifactRoot 'winui-signing-cert.pfx'
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $exePath = (Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction Stop | Select-Object -First 1).FullName
+
+          [System.IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:LHASH_SIGN_PFX_BASE64))
+          try {
+            & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
+            if ($LASTEXITCODE -ne 0) {
+              throw "WinUI signing script failed with exit code $LASTEXITCODE."
+            }
+          }
+          finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
+      - name: Package WinUI desktop x64 build
+        if: always()
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $bundleRoot = Join-Path $artifactRoot ("winui-x64-$shortSha")
+          New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
+
+          $publishedExe = Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($publishedExe) {
+            Copy-Item (Join-Path $publishRoot '*') -Destination $bundleRoot -Recurse -Force -ErrorAction Stop
+
+            $packagedExe = Join-Path $bundleRoot 'LHash.exe'
+            $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
+            $signature = Get-AuthenticodeSignature $packagedExe
+            $signatureSubject = ''
+            $signatureThumbprint = ''
+            if ($signature.SignerCertificate) {
+              $signatureSubject = $signature.SignerCertificate.Subject
+              $signatureThumbprint = $signature.SignerCertificate.Thumbprint
+            }
+            $readme = @"
+          LHash WinUI desktop x64 build
+
+          Commit:
+          - $env:GITHUB_SHA
+
+          Files:
+          - LHash.exe: official unpackaged WinUI desktop application
+          - SHA256.txt: executable checksum
+          - BUILD_INFO.txt: build metadata
+
+          Usage:
+          - Extract the zip and run LHash.exe.
+          - This package is the official WinUI desktop release line.
+          - 'Publisher unknown' is removed only after the executable is Authenticode-signed with a trusted code-signing certificate.
+          - Shell extension packaging is intentionally skipped in CI.
+          "@
+
+            $buildInfo = @"
+          commit=$env:GITHUB_SHA
+          short_sha=$shortSha
+          frontend=winui-desktop
+          source_project=trunk/source/WinUI/fHashWUI.csproj
+          packaged_exe=LHash.exe
+          sha256=$exeHash
+          signature_status=$($signature.Status)
+          signature_subject=$signatureSubject
+          signature_thumbprint=$signatureThumbprint
+          "@
+
+            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
+            Set-Content -Path (Join-Path $bundleRoot 'BUILD_INFO.txt') -Value $buildInfo -Encoding ASCII
+          }
+          else {
+            $readme = @"
+          LHash WinUI desktop x64 build
+
+          The WinUI desktop executable was not produced in this CI run.
+          See publish-winui-x64.log in the artifact root for the full MSBuild output.
+          "@
+          }
+
+          Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
+
+          if ($publishedExe) {
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-winui-x64-$shortSha.zip") -Force
+          }
+
+      - name: Upload WinUI desktop artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: LHash-WinUI-bridge-x64
+          name: LHash-winui-x64
           path: |
             artifacts/build-native-core-x64.log
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
+            artifacts/publish-winui-x64.log
+            artifacts/winui-x64-*
+            artifacts/LHash-winui-x64-*.zip
           if-no-files-found: warn
 
   build-uwp-bridge-x64:
@@ -462,7 +576,6 @@ jobs:
   publish-release:
     if: github.event_name != 'pull_request'
     needs:
-      - build-legacy-x64
       - build-winui-bridge-x64
       - build-uwp-bridge-x64
       - build-wui-shell-ext-x64
@@ -486,8 +599,8 @@ jobs:
           staging_root="$PWD/release-staging"
           mkdir -p "$staging_root"
 
-          if ! compgen -G "$artifact_root/LHash-legacy-x64-*.zip" > /dev/null; then
-            echo "Expected packaged legacy release zip was not downloaded into release-assets." >&2
+          if ! compgen -G "$artifact_root/LHash-winui-x64-*.zip" > /dev/null; then
+            echo "Expected packaged WinUI desktop release zip was not downloaded into release-assets." >&2
             exit 1
           fi
 
@@ -502,11 +615,12 @@ jobs:
           ref=$GITHUB_REF
           commit=$GITHUB_SHA
           short_sha=$short_sha
+          frontend=winui-desktop
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-          legacy_bundle=$(basename $(ls "$artifact_root"/LHash-legacy-x64-*.zip | head -n 1))
+          desktop_bundle=$(basename $(ls "$artifact_root"/LHash-winui-x64-*.zip | head -n 1))
           EOF
 
-          cp "$artifact_root"/LHash-legacy-x64-*.zip "$staging_root"/
+          cp "$artifact_root"/LHash-winui-x64-*.zip "$staging_root"/
           find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
@@ -526,6 +640,6 @@ jobs:
           name: LHash ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            release-assets/LHash-legacy-x64-*.zip
+            release-assets/LHash-winui-x64-*.zip
             release-staging/RELEASE_MANIFEST.txt
 

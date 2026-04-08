@@ -61,7 +61,7 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("LHASH_SIGN_PFX_BASE64", workflow, StringComparison.Ordinal);
         Assert.Contains("LHASH_SIGN_PFX_PASSWORD", workflow, StringComparison.Ordinal);
-        Assert.Contains("Sign legacy Windows app (optional)", workflow, StringComparison.Ordinal);
+        Assert.Contains("Sign WinUI desktop app (optional)", workflow, StringComparison.Ordinal);
         Assert.Contains("trunk/sign_legacy_exe.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("Get-AuthenticodeSignature", workflow, StringComparison.Ordinal);
 
@@ -88,7 +88,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("tar -czf \"$PWD/LHash-release-rehearsal-$short_sha.tar.gz\"", workflow, StringComparison.Ordinal);
         Assert.Contains("if: startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
         Assert.Contains("softprops/action-gh-release@v2", workflow, StringComparison.Ordinal);
-        Assert.Contains("release-assets/LHash-legacy-x64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-assets/LHash-winui-x64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
     }
 }

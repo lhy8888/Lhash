@@ -3897,7 +3897,7 @@ internal static class Program
             AssertContains(workflow, "release_mode=\"tagged-release\"", "Phase 48 publish-release tag mode is not yet recorded.");
             AssertContains(workflow, "if: startsWith(github.ref, 'refs/tags/v')", "Phase 48 publish-release does not yet reserve GitHub release publishing for version tags.");
             AssertContains(workflow, "softprops/action-gh-release@v2", "Phase 48 publish-release does not yet invoke the GitHub release publisher.");
-            AssertContains(workflow, "release-assets/LHash-legacy-x64-*.zip", "Phase 48 publish-release does not yet publish the packaged legacy zip.");
+            AssertContains(workflow, "release-assets/LHash-winui-x64-*.zip", "Phase 48 publish-release does not yet publish the packaged WinUI desktop zip.");
             AssertContains(workflow, "release-staging/RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet attach the release manifest.");
         }, failures);
 

@@ -5,11 +5,11 @@ using System.Runtime.Versioning;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("LHashWUI")]
+[assembly: AssemblyTitle("LHash")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("LHY")]
-[assembly: AssemblyProduct("LHashWUI")]
+[assembly: AssemblyProduct("LHash")]
 [assembly: AssemblyCopyright("Copyright (C) 2026- LHY.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

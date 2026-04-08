@@ -56,7 +56,7 @@
 
         <uap5:Extension Category="windows.appExecutionAlias">
           <uap5:AppExecutionAlias>
-            <uap5:ExecutionAlias Alias="fHashWUIDev.exe"/>
+            <uap5:ExecutionAlias Alias="LHashDev.exe"/>
           </uap5:AppExecutionAlias>
         </uap5:Extension>
 

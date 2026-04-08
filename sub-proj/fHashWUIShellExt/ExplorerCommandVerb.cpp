@@ -25,13 +25,13 @@
 
 static WCHAR const c_szVerbDisplayNameBack[] = L"Hash with LHash";
 static WCHAR const c_szProgID[] = L"*";
-static WCHAR const c_szExecName[] = L"fHashWUI.exe";
+static WCHAR const c_szExecName[] = L"LHash.exe";
 #if defined (_DEBUG)
 static WCHAR const c_szVerbName[] = L"fHashWUIShellExtDev";
-static WCHAR const c_szAliasExecName[] = L"fHashWUIDev.exe";
+static WCHAR const c_szAliasExecName[] = L"LHashDev.exe";
 #else
 static WCHAR const c_szVerbName[] = L"fHashWUIShellExt";
-static WCHAR const c_szAliasExecName[] = L"fHashWUI.exe";
+static WCHAR const c_szAliasExecName[] = L"LHash.exe";
 #endif
 
 extern HINSTANCE g_hInst;
