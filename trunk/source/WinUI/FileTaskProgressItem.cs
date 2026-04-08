@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 
 namespace FilesHashWUI
 {

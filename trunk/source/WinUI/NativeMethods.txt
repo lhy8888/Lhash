@@ -7,3 +7,5 @@ SetForegroundWindow
 SetWindowSubclass
 DefSubclassProc
 WM_GETMINMAXINFO
+POINT
+MINMAXINFO
