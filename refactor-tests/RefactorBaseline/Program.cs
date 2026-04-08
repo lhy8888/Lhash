@@ -3331,16 +3331,20 @@ internal static class Program
 
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
         {
-            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
+            string hashRequestShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
             string legacyHashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestProjection.h");
             string legacyHashRequestTypeCompat = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
-            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashResult.h");
+            string hashResultShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
+            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Domain\ProgressEvent.h");
+            string progressEventShim = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
+            AssertContains(hashRequestShim, "#include \"Domain/HashRequest.h\"", "Phase 89 Common HashRequest.h should now be a thin Domain shim.");
             AssertContains(hashRequest, "struct HashRequest", "Phase 31 does not yet define a stable HashRequest contract.");
             AssertContains(hashRequest, "TStrVector files;", "Phase 31 HashRequest does not yet own file inputs.");
             AssertContains(hashRequest, "std::vector<HashAlgorithmId> algorithmIds;", "Phase 31 HashRequest does not yet own descriptor/id-based algorithm selection.");
@@ -3360,11 +3364,13 @@ internal static class Program
             AssertContains(hashRequest, "VisitHashRequestFiles(const HashRequest& request", "Phase 31 HashRequest does not yet own file iteration.");
             AssertContains(legacyHashRequestTypeCompat, "VisitHashRequestAlgorithms(const HashRequest& request", "Phase 31 digest-type compatibility algorithm iteration seam should live in legacy compatibility layer.");
 
+            AssertContains(hashResultShim, "#include \"Domain/HashResult.h\"", "Phase 89 Common HashResult.h should now be a thin Domain shim.");
             AssertContains(global, "struct HashResult", "Phase 31 does not yet define a stable HashResult contract.");
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy compatibility link back to ResultData.");
             AssertContains(global, "std::vector<HashDigestResult> digests;", "Phase 31 HashResult does not yet own a digest collection.");
             AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 31 does not yet project ResultData into HashResult.");
 
+            AssertContains(progressEventShim, "#include \"Domain/ProgressEvent.h\"", "Phase 89 Common ProgressEvent.h should now be a thin Domain shim.");
             AssertContains(progressEvent, "enum ProgressEventType", "Phase 31 does not yet define a stable ProgressEventType surface.");
             AssertContains(progressEvent, "struct ProgressEvent", "Phase 31 does not yet define a stable ProgressEvent contract.");
             AssertDoesNotContain(progressEvent, "CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", "Phase 42 still keeps the legacy ResultData-based hash-ready progress event overload.");
@@ -3428,11 +3434,13 @@ internal static class Program
 
         Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
         {
-            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
+            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
+            string hashExecutionContextShim = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashThreadEntryHeader = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntry.h");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
+            AssertContains(hashExecutionContextShim, "#include \"Runtime/HashExecutionContext.h\"", "Phase 89 Common HashExecutionContext.h should now be a thin Runtime shim.");
             AssertContains(hashExecutionContext, "struct HashExecutionContext", "Phase 35 hash execution context header is missing the execution-context contract.");
             AssertContains(hashExecutionContext, "CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", "Phase 35 hash execution context does not yet expose explicit execution-context construction dependencies.");
             AssertDoesNotContain(hashExecutionContext, "CreateHashExecutionContext(ThreadData& threadData)", "Phase 35 hash execution context still directly depends on ThreadData.");
@@ -3453,7 +3461,7 @@ internal static class Program
         {
             string hashProgressSink = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressSink.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
-            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Common\HashExecutionContext.h");
+            string hashExecutionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
             string hashEngineHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
@@ -3465,6 +3473,7 @@ internal static class Program
                 ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp"));
             string hashEngine = ReadHashEngineImplementation(repoRoot);
 
+            AssertContains(hashProgressSink, "#include \"Domain/ProgressEvent.h\"", "Phase 89 HashProgressSink should now consume ProgressEvent through the Domain contract.");
             AssertContains(hashProgressSink, "class HashProgressSink", "Phase 34 hash progress sink header is missing the neutral sink seam.");
             AssertContains(hashProgressSink, "virtual int progressMax() = 0;", "Phase 34 hash progress sink does not yet own progress-max queries.");
             AssertContains(hashProgressSink, "virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", "Phase 34 hash progress sink does not yet own semantic event dispatch.");
@@ -3507,7 +3516,7 @@ internal static class Program
 
         Run("Phase 35 routes semantic result events through HashResult while narrowing adapter compatibility to event-oriented callbacks", () =>
         {
-            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Domain\ProgressEvent.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
             string hashEnginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
@@ -3704,8 +3713,8 @@ internal static class Program
 
         Run("Phase 42 removes ResultData-based progress and observer compatibility overloads so HashResult stays a pure event contract", () =>
         {
-            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResult.h");
-            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Common\ProgressEvent.h");
+            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashResult.h");
+            string progressEvent = ReadRepoFile(repoRoot, @"trunk\source\Domain\ProgressEvent.h");
             string hashEngineObserver = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
 
             AssertDoesNotContain(hashResult, "const ResultData *sourceResult;", "Phase 42 HashResult still keeps the legacy ResultData back-pointer.");
@@ -5449,7 +5458,7 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string legacyDigestType = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
-            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
             string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string digestMetadataAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestStateAccess = ReadResultDigestAccessSeams(repoRoot);
@@ -5620,7 +5629,7 @@ internal static class Program
         Run("Phase 88 promotes descriptor-id index lookup to the primary request-selection seam", () =>
         {
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
-            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");

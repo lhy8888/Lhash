@@ -1,7 +1,7 @@
 #ifndef _HASH_PROGRESS_SINK_H_
 #define _HASH_PROGRESS_SINK_H_
 
-#include "Common/ProgressEvent.h"
+#include "Domain/ProgressEvent.h"
 
 class HashProgressSink
 {

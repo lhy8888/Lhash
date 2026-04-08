@@ -3,7 +3,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 #include "HyperEditHash.h"
 struct ThreadData;
 

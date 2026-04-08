@@ -1,7 +1,7 @@
 #ifndef _LEGACY_HASH_THREAD_ENTRY_PROJECTION_H_
 #define _LEGACY_HASH_THREAD_ENTRY_PROJECTION_H_
 
-#include "Common/HashExecutionContext.h"
+#include "Runtime/HashExecutionContext.h"
 #include "LegacyCompat/HashRequestProjection.h"
 #include "LegacyCompat/ThreadDataExecutionAccess.h"
 

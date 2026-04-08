@@ -11,7 +11,7 @@
 
 #include "OsUtils/OsThread.h"
 #include "Adapters/UiBridge/HashEngineBridge.h"
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 
 #import "MacUtils.h"
 

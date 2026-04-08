@@ -371,11 +371,11 @@ public sealed class CommonSeamUnitTests
         string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\LegacyCompatibility.h");
 
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", domainContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashResult.h\"", domainContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/ProgressEvent.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashResult.h\"", domainContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/ProgressEvent.h\"", domainContracts, StringComparison.Ordinal);
 
-        Assert.Contains("#include \"Common/HashExecutionContext.h\"", runtimeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashEngine.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);

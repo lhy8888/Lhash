@@ -5,11 +5,13 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
     {
-        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
+        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
+        string requestShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
         string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestProjection.h");
         string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
         string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
 
+        Assert.Contains("#include \"Domain/HashRequest.h\"", requestShim, StringComparison.Ordinal);
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
         Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
         Assert.Contains("std::vector<HashAlgorithmId> algorithmIds;", request, StringComparison.Ordinal);
@@ -45,7 +47,7 @@ public sealed class HashContractUnitTests
         string registry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashAlgorithmRegistry.h");
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
-        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashRequest.h");
+        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
 
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", registry, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
@@ -65,12 +67,14 @@ public sealed class HashContractUnitTests
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
         string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
-        string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
+        string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashResult.h");
+        string resultShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
         string resultNetProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultNetProjection.h");
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
+        Assert.Contains("#include \"Domain/HashResult.h\"", resultShim, StringComparison.Ordinal);
         Assert.DoesNotContain("enum ResultDigestType", global, StringComparison.Ordinal);
         Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
@@ -114,13 +118,15 @@ public sealed class HashContractUnitTests
     [Fact]
     public void ProgressEvent_DefinesSemanticLifecycleSurface_AndObserverCompatibilityDispatch()
     {
-        string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ProgressEvent.h");
+        string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\ProgressEvent.h");
+        string progressEventShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ProgressEvent.h");
         string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressSink.h");
         string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
         string legacyObserverPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineObserver.h");
         string legacyBridgePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineBridge.h");
         string legacyUiBridgeBasePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
+        Assert.Contains("#include \"Domain/ProgressEvent.h\"", progressEventShim, StringComparison.Ordinal);
         Assert.Contains("enum ProgressEventType", progressEvent, StringComparison.Ordinal);
         Assert.Contains("PROGRESS_EVENT_JOB_PREPARING", progressEvent, StringComparison.Ordinal);
         Assert.Contains("PROGRESS_EVENT_FILE_HASH_READY", progressEvent, StringComparison.Ordinal);
@@ -161,7 +167,8 @@ public sealed class HashContractUnitTests
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
         string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\LegacyThreadData.h");
-        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
+        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+        string executionContextShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashExecutionContext.h");
         string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.h");
@@ -241,6 +248,7 @@ public sealed class HashContractUnitTests
         string resultEventWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.h");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
+        Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", executionContextShim, StringComparison.Ordinal);
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ThreadData;", global, StringComparison.Ordinal);

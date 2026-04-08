@@ -3,8 +3,8 @@
 
 #include "Common/Global.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "Common/HashRequest.h"
-#include "Common/HashResult.h"
-#include "Common/ProgressEvent.h"
+#include "Domain/HashRequest.h"
+#include "Domain/HashResult.h"
+#include "Domain/ProgressEvent.h"
 
 #endif
