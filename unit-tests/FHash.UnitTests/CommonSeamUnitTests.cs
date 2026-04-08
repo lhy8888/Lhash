@@ -3,23 +3,9 @@ namespace FHash.UnitTests;
 public sealed class CommonSeamUnitTests
 {
     [Fact]
-    public void CoreCommonSurface_ContainsThreadDataOnlyInLegacyProjectionAndAccessShims()
+    public void CoreCommonSurface_ContainsNoThreadDataLeakage()
     {
         string commonRoot = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common");
-        HashSet<string> allowedRelativePaths = new(StringComparer.OrdinalIgnoreCase)
-        {
-            @"trunk\source\Common\Global.h",
-            @"trunk\source\Common\ThreadDataAccess.h",
-            @"trunk\source\Common\ThreadDataExecutionAccess.h",
-            @"trunk\source\Common\ThreadDataInputAccess.h",
-            @"trunk\source\Common\ThreadDataResultAccess.h",
-            @"trunk\source\Common\HashRequestProjection.h",
-            @"trunk\source\Common\HashThreadEntryProjection.h",
-            @"trunk\source\Common\HashThreadEntry.h",
-            @"trunk\source\Common\HashThreadEntry.cpp",
-            @"trunk\source\Common\HashThreadLaunch.h",
-            @"trunk\source\Common\ManagedHashMgmtAccess.h"
-        };
 
         List<string> threadDataLeakFiles = [];
         string[] candidates = Directory.GetFiles(commonRoot, "*.*", SearchOption.AllDirectories)
@@ -34,15 +20,32 @@ public sealed class CommonSeamUnitTests
             }
 
             string relativePath = Path.GetRelativePath(RepositoryTestContext.RepoRoot, candidate).Replace('/', '\\');
-            if (allowedRelativePaths.Contains(relativePath))
-            {
-                continue;
-            }
-
             threadDataLeakFiles.Add(relativePath);
         }
 
         Assert.Empty(threadDataLeakFiles);
+    }
+
+    [Fact]
+    public void LegacyCompatibilityForwardingShims_AreRemovedFromCommonBoundary()
+    {
+        string[] removedShimPaths =
+        [
+            @"trunk\source\Common\ThreadDataAccess.h",
+            @"trunk\source\Common\ThreadDataExecutionAccess.h",
+            @"trunk\source\Common\ThreadDataInputAccess.h",
+            @"trunk\source\Common\ThreadDataResultAccess.h",
+            @"trunk\source\Common\HashRequestProjection.h",
+            @"trunk\source\Common\HashThreadEntryProjection.h",
+            @"trunk\source\Common\HashThreadLaunch.h",
+            @"trunk\source\Common\ManagedHashMgmtAccess.h"
+        ];
+
+        foreach (string relativePath in removedShimPaths)
+        {
+            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
+            Assert.False(File.Exists(fullPath), $"{relativePath} should be removed from Common after the LegacyCompat boundary cleanup.");
+        }
     }
 
     [Fact]
@@ -100,13 +103,18 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void ThreadDataAccess_UmbrellaShimDependsOnDedicatedSeams()
+    public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
-        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ThreadDataAccess.h");
+        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");
+        string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataAccess.h");
 
-        Assert.Contains("#include \"LegacyCompat/ThreadDataAccess.h\"", access, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetThreadDataObserver(const ThreadData& threadData)", access, StringComparison.Ordinal);
-        Assert.DoesNotContain("VisitThreadDataResults(const ThreadData& threadData", access, StringComparison.Ordinal);
+        Assert.False(File.Exists(legacyCommonShimPath));
+        Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"LegacyCompat/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("ResetThreadDataForNewSession(ThreadData& threadData)", access, StringComparison.Ordinal);
+        Assert.Contains("ResetThreadDataInputFiles(threadData);", access, StringComparison.Ordinal);
+        Assert.Contains("ClearThreadDataResults(threadData);", access, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -203,8 +211,8 @@ public sealed class CommonSeamUnitTests
     public void HashResultSearch_OwnsSharedTraversalAndMatchingPrimitives()
     {
         string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
-        string threadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ThreadDataResultAccess.h");
         string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
+        string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
 
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", hashResultSearch, StringComparison.Ordinal);
@@ -215,7 +223,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("CountMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("VisitDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", hashResultSearch, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataResultAccess.h\"", threadResultAccess, StringComparison.Ordinal);
+        Assert.False(File.Exists(legacyCommonShimPath));
         Assert.Contains("VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", legacyThreadResultAccess, StringComparison.Ordinal);
         Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", legacyThreadResultAccess, StringComparison.Ordinal);
     }

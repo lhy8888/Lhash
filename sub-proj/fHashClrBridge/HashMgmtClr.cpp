@@ -2,7 +2,7 @@
 
 #include "HashMgmtClr.h"
 #include "ClrHelper.h"
-#include "Common/ManagedHashMgmtAccess.h"
+#include "LegacyCompat/ManagedHashMgmtAccess.h"
 #include "LegacyCompat/HashThreadLaunch.h"
 using namespace std;
 using namespace System;

@@ -446,21 +446,22 @@ internal static class Program
 
         Run("Phase 5 routes managed ThreadData lifecycle through dedicated ThreadDataAccess helpers", () =>
         {
-            string threadDataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
-            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
-            string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
-            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
             string legacyThreadDataAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h");
             string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string legacyThreadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h");
             string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
-            string threadAccess = string.Join("\r\n", threadDataAccess, threadExecutionAccess, threadInputAccess, threadResultAccess, legacyThreadDataAccess, legacyThreadExecutionAccess, legacyThreadInputAccess, legacyThreadResultAccess);
+            string threadAccess = ReadLegacyThreadDataAccessSeams(repoRoot);
             string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string mfcInitializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
             string mfcResultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
             string mfcResultLifecycle = string.Join("\r\n", mfcDialog, mfcResultViewController);
+
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataAccess.h", "Phase 5 Common ThreadDataAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h", "Phase 5 Common ThreadDataExecutionAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h", "Phase 5 Common ThreadDataInputAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h", "Phase 5 Common ThreadDataResultAccess shim should be removed after the LegacyCompat boundary cleanup.");
 
             AssertContains(threadAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "ThreadData access seams do not yet expose the progress-sink assignment helper.");
             AssertContains(threadAccess, "GetThreadDataObserver(const ThreadData& threadData)", "ThreadData access seams do not yet expose the observer getter helper.");
@@ -532,7 +533,7 @@ internal static class Program
             AssertContains(threadAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadData access seams grouped path getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return GetThreadDataHashJobState(threadData).results;", "ThreadData access seams grouped result-list getter does not yet route through the grouped job-state seam.");
 
-            AssertContains(clrBridge, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet consume the current shared managed thread-data seam.");
+            AssertContains(clrBridge, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet consume the LegacyCompat managed thread-data seam directly.");
             AssertContains(clrBridge, "SetThreadDataObserver(*m_pThreadData, m_pUiBridgeWUI);", "CLR bridge does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(clrBridge, "ResetThreadDataForNewSession(*m_pThreadData);", "CLR bridge does not yet route Clear() through ThreadDataAccess.");
             AssertContains(clrBridge, "SetThreadDataStop(*m_pThreadData, val);", "CLR bridge does not yet route SetStop() through ThreadDataAccess.");
@@ -541,7 +542,7 @@ internal static class Program
             AssertContains(clrBridge, "GetThreadDataResultCount(*m_pThreadData);", "CLR bridge does not yet route GetResultCount() through ThreadDataAccess.");
             AssertContains(clrBridge, "ReplaceThreadDataInputFilesFromManagedArray(*m_pThreadData, filePaths, ConvertManagedFilePathToTstr);", "CLR bridge does not yet route AddFiles() through the current compile-safe managed input-file helper.");
 
-            AssertContains(uwpBridge, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet consume the current shared managed thread-data seam.");
+            AssertContains(uwpBridge, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet consume the LegacyCompat managed thread-data seam directly.");
             AssertContains(uwpBridge, "SetThreadDataObserver(m_threadData, m_spUiBridgeUwp.get());", "UWP bridge does not yet route observer assignment through ThreadDataAccess.");
             AssertContains(uwpBridge, "ResetThreadDataForNewSession(m_threadData);", "UWP bridge does not yet route Clear() through ThreadDataAccess.");
             AssertContains(uwpBridge, "SetThreadDataStop(m_threadData, val);", "UWP bridge does not yet route SetStop() through ThreadDataAccess.");
@@ -549,9 +550,7 @@ internal static class Program
             AssertContains(uwpBridge, "GetThreadDataTotalSize(m_threadData);", "UWP bridge does not yet route GetTotalSize() through ThreadDataAccess.");
             AssertContains(uwpBridge, "ReplaceThreadDataInputFilesFromManagedArray(m_threadData, filePaths, ConvertManagedFilePathToTstr);", "UWP bridge does not yet route AddFiles() through the grouped managed input-file helper.");
 
-            AssertContainsAny(mfcDialog,
-                new[] { "#include \"Common/ThreadDataAccess.h\"", "#include \"LegacyCompat/ThreadDataAccess.h\"" },
-                "MFC dialog does not yet consume the ThreadDataAccess seam.");
+            AssertContains(mfcDialog, "#include \"LegacyCompat/ThreadDataAccess.h\"", "MFC dialog does not yet consume the ThreadDataAccess seam from LegacyCompat.");
             string mfcInputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
             string mfcMessageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
@@ -2096,16 +2095,7 @@ internal static class Program
         Run("Phase 8 introduces thread-scoped hash algorithm selection while keeping the current four algorithms enabled by default", () =>
         {
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string threadAccess = string.Join(
-                "\r\n",
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h"));
+            string threadAccess = ReadLegacyThreadDataAccessSeams(repoRoot);
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestRender = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestRender.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
@@ -2282,8 +2272,8 @@ internal static class Program
             AssertContains(bridgeMfc, "#include \"Common/ResultDigestRender.h\"", "Legacy MFC bridge implementation does not yet consume the split digest render seam.");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             AssertContains(filesHashSearchController, "#include \"Common/HashResultSearch.h\"", "Legacy MFC search flow does not yet consume the shared HashResult search seam.");
-            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
-            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
+            AssertContains(hashMgmtClr, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "CLR search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
+            AssertContains(hashMgmtUwp, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "UWP search bridge does not yet consume the shared managed hash-management seam after the phase 9 projection/search split.");
         }, failures);
 
         Run("Phase 10 splits HashEngine preparation, result-finalization, and result-publication helpers into dedicated implementation files", () =>
@@ -2304,7 +2294,6 @@ internal static class Program
             string scheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string engineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string hashThreadEntry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
-            string hashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
             string legacyHashThreadEntryProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
             string legacyHashThreadEntryRuntime = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
@@ -2325,7 +2314,7 @@ internal static class Program
             AssertContains(hashThreadEntry, "return RunLegacyHashThread(param);", "HashThreadEntry.cpp should delegate thread execution to legacy runtime seam.");
             AssertContains(legacyHashThreadEntryRuntime, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Legacy HashThreadEntry runtime does not yet project ThreadData into HashRequest.");
             AssertContains(legacyHashThreadEntryRuntime, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Legacy HashThreadEntry runtime does not yet inject HashExecutionContext through the projection seam.");
-            AssertContains(hashThreadEntryProjection, "#include \"LegacyCompat/HashThreadEntryProjection.h\"", "HashThreadEntryProjection compatibility shim does not yet layer on top of the legacy projection seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h", "Phase 10 Common HashThreadEntryProjection shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of HashRequestProjection.");
             AssertContains(legacyHashThreadEntryProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Legacy HashThreadEntryProjection does not yet layer on top of ThreadDataExecutionAccess.");
             AssertContains(legacyHashThreadEntryProjection, "CreateThreadDataHashExecutionContext(ThreadData& threadData)", "Legacy HashThreadEntryProjection does not yet expose the ThreadData-to-HashExecutionContext projection seam.");
@@ -2387,16 +2376,7 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
-            string threadAccess = string.Join(
-                "\r\n",
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h"),
-                ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h"));
+            string threadAccess = ReadLegacyThreadDataAccessSeams(repoRoot);
 
             AssertContains(global, "std::vector<bool> enabled;", "Global.h does not yet route algorithm-selection state through a registry-sized vector.");
 
@@ -2450,13 +2430,13 @@ internal static class Program
             AssertContains(hashMgmtClrHeader, "cli::array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "CLR bridge does not yet expose the supported-algorithm list helper.");
             AssertDoesNotContain(hashMgmtClrHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", "CLR bridge still exposes the removed generic digest-type enable helper.");
             AssertDoesNotContain(hashMgmtClrHeader, "bool GetHashAlgorithmEnabledByDigestType(int digestType);", "CLR bridge still exposes the removed generic digest-type query helper.");
-            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet include the shared managed hash-management seam.");
+            AssertContains(hashMgmtClr, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "CLR bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedHashAlgorithmDescriptors()", "CLR bridge does not yet materialize a dynamic managed algorithm descriptor list.");
             AssertContains(hashMgmtUwpHeader, "public ref class HashAlgorithmDescriptorNet sealed", "UWP bridge does not yet expose the managed algorithm descriptor.");
             AssertContains(hashMgmtUwpHeader, "Platform::Array<HashAlgorithmDescriptorNet^>^ GetSupportedHashAlgorithms();", "UWP bridge does not yet expose the supported-algorithm list helper.");
             AssertDoesNotContain(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", "UWP bridge still exposes the removed generic digest-type enable helper.");
             AssertDoesNotContain(hashMgmtUwpHeader, "Platform::Boolean GetHashAlgorithmEnabledByDigestType(int digestType);", "UWP bridge still exposes the removed generic digest-type query helper.");
-            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet include the shared managed hash-management seam.");
+            AssertContains(hashMgmtUwp, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "UWP bridge does not yet include the shared managed hash-management seam.");
             AssertContains(hashMgmtUwp, "CreateSupportedHashAlgorithmDescriptors()", "UWP bridge does not yet materialize a dynamic managed algorithm descriptor list.");
 
             AssertContains(winUiXaml, "StackPanelHashAlgorithms", "WinUI page does not yet expose the dynamic algorithm container.");
@@ -2498,9 +2478,7 @@ internal static class Program
             AssertContains(mfcControllerHeader, "void SyncSelections();", "Phase 13 controller does not yet expose the selection-sync helper.");
             AssertContains(mfcControllerHeader, "BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;", "Phase 13 controller does not yet expose the zero-selection validation helper.");
             AssertContains(mfcControllerHeader, "void SetEnabled(BOOL enabled);", "Phase 13 controller does not yet expose the checkbox enable/disable helper.");
-            AssertContainsAny(mfcController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
+            AssertContains(mfcController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 13 controller does not yet layer on top of the thread-data execution seam.");
             AssertContains(mfcController, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 13 controller does not yet route checkbox traversal through the registry seam.");
             AssertContains(mfcController, "SetThreadDataHashAlgorithmEnabledById(*m_threadData, algorithmId, (checkBox->GetCheck() != FALSE));", "Phase 13 controller does not yet route checkbox state into ThreadDataAccess.");
             AssertContains(mfcController, "HasEnabledThreadDataHashAlgorithms(*m_threadData)", "Phase 13 controller does not yet validate zero-algorithm selection through ThreadDataAccess.");
@@ -2692,10 +2670,6 @@ internal static class Program
 
         Run("Phase 18 splits ThreadData access into dedicated execution, input, and result seams", () =>
         {
-            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataAccess.h");
-            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
-            string threadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h");
-            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
             string legacyThreadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h");
             string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string legacyThreadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h");
@@ -2704,24 +2678,22 @@ internal static class Program
             string mfcSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string mfcAlgorithmController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
 
-            AssertContains(threadAccess, "#include \"LegacyCompat/ThreadDataAccess.h\"", "Phase 18 compatibility ThreadDataAccess shim does not yet layer on top of the legacy seam.");
-            AssertDoesNotContain(threadAccess, "AppendThreadDataInputFile(ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns input-file helpers after the seam split.");
-            AssertDoesNotContain(threadAccess, "VisitThreadDataResults(const ThreadData& threadData", "Phase 18 compatibility ThreadDataAccess shim still owns result traversal after the seam split.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataAccess.h", "Phase 18 Common ThreadDataAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h", "Phase 18 Common ThreadDataExecutionAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h", "Phase 18 Common ThreadDataInputAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h", "Phase 18 Common ThreadDataResultAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyThreadAccess, "ResetThreadDataForNewSession(ThreadData& threadData)", "Phase 18 legacy ThreadDataAccess seam does not yet keep the grouped session-reset helper.");
 
-            AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 18 compatibility execution seam does not yet layer on top of the legacy execution seam.");
             AssertContains(legacyThreadExecutionAccess, "SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", "Phase 18 execution seam does not yet own progress-sink wiring.");
             AssertContains(legacyThreadExecutionAccess, "SetThreadDataWorking(ThreadData& threadData, bool working)", "Phase 18 execution seam does not yet own working-state writes.");
             AssertContains(legacyThreadExecutionAccess, "SetThreadDataHashAlgorithmEnabled(ThreadData& threadData, ResultDigestType digestType, bool enabled)", "Phase 18 execution seam does not yet own algorithm enablement.");
             AssertContains(legacyThreadExecutionAccess, "GetThreadDataTotalSize(const ThreadData& threadData)", "Phase 18 execution seam does not yet own counted-size reads.");
 
-            AssertContains(threadInputAccess, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 18 compatibility input seam does not yet layer on top of the legacy input seam.");
             AssertContains(legacyThreadInputAccess, "GetThreadDataInputFiles(const ThreadData& threadData)", "Phase 18 input seam does not yet own input-file reads.");
             AssertContains(legacyThreadInputAccess, "AppendThreadDataInputFile(ThreadData& threadData, const sunjwbase::tstring& fullPath)", "Phase 18 input seam does not yet own input-file appends.");
             AssertContains(legacyThreadInputAccess, "ReplaceTrimmedThreadDataInputFiles(ThreadData& threadData, const TStrVector& fullPaths)", "Phase 18 input seam does not yet own trimmed input-file replacement.");
             AssertContains(legacyThreadInputAccess, "VisitThreadDataInputFiles(const ThreadData& threadData, TInputFileVisitor visitor)", "Phase 18 input seam does not yet own input-file traversal.");
 
-            AssertContains(threadResultAccess, "#include \"LegacyCompat/ThreadDataResultAccess.h\"", "Phase 18 compatibility result seam does not yet layer on top of the legacy result seam.");
             AssertContains(legacyThreadResultAccess, "GetThreadDataResults(const ThreadData& threadData)", "Phase 18 result seam does not yet own result-list reads.");
             AssertContains(legacyThreadResultAccess, "AppendThreadDataResult(ThreadData& threadData)", "Phase 18 result seam does not yet own result-list appends.");
             AssertContains(legacyThreadResultAccess, "VisitThreadDataResults(const ThreadData& threadData, TResultVisitor visitor)", "Phase 18 result seam does not yet own result traversal.");
@@ -2731,30 +2703,23 @@ internal static class Program
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataResultAccess.h\"", "HashEngineInternal.h should no longer consume the phase 18 result seam after thread-entry decoupling.");
             AssertDoesNotContain(hashEngineInternal, "#include \"Common/ThreadDataAccess.h\"", "HashEngineInternal.h still consumes the umbrella ThreadDataAccess header after the phase 18 seam split.");
 
-            AssertContainsAny(mfcSearchController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "MFC search controller does not yet consume the phase 18 execution seam.");
-            AssertContainsAny(mfcSearchController,
-                new[] { "#include \"Common/ThreadDataResultAccess.h\"", "#include \"LegacyCompat/ThreadDataResultAccess.h\"" },
-                "MFC search controller does not yet consume the phase 18 result seam.");
+            AssertContains(mfcSearchController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "MFC search controller does not yet consume the phase 18 execution seam.");
+            AssertContains(mfcSearchController, "#include \"LegacyCompat/ThreadDataResultAccess.h\"", "MFC search controller does not yet consume the phase 18 result seam.");
             AssertDoesNotContain(mfcSearchController, "#include \"Common/ThreadDataAccess.h\"", "MFC search controller still depends on the umbrella ThreadDataAccess header after phase 18.");
 
-            AssertContainsAny(mfcAlgorithmController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "MFC algorithm controller does not yet consume the phase 18 execution seam.");
+            AssertContains(mfcAlgorithmController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "MFC algorithm controller does not yet consume the phase 18 execution seam.");
             AssertDoesNotContain(mfcAlgorithmController, "#include \"Common/ThreadDataAccess.h\"", "MFC algorithm controller still depends on the umbrella ThreadDataAccess header after phase 18.");
         }, failures);
 
         Run("Phase 19 extracts shared managed hash-management helpers for CLR and UWP bridges", () =>
         {
-            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
             string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
-            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 19 common managed access should forward to legacy managed compatibility seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 19 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)", "Phase 19 is missing the shared managed algorithm-id conversion helper.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateSupportedManagedHashAlgorithmDescriptors(", "Phase 19 is missing the shared managed algorithm-descriptor projection helper.");
             AssertContains(legacyManagedHashMgmtAccess, "descriptorNet->AlgorithmId =", "Phase 19 shared managed algorithm-descriptor helper does not yet expose algorithm ids.");
@@ -2768,7 +2733,7 @@ internal static class Program
             AssertContains(legacyManagedHashMgmtAccess, "ReplaceThreadDataInputFilesFromManagedArray(", "Phase 19 is missing the shared managed input-file replacement helper.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateProjectedManagedDigestMatchingResults(", "Phase 19 is missing the shared managed digest-search projection helper.");
 
-            AssertContains(hashMgmtClr, "#include \"Common/ManagedHashMgmtAccess.h\"", "CLR HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
+            AssertContains(hashMgmtClr, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "CLR HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
             AssertContains(hashMgmtClr, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, cli::array<HashAlgorithmDescriptorNet^>^>", "CLR HashMgmt does not yet route descriptor projection through the shared managed helper.");
             AssertContains(hashMgmtClrHeader, "property System::String^ AlgorithmId;", "CLR HashMgmt descriptor surface does not yet expose algorithm ids.");
             AssertContains(hashMgmtClrHeader, "void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);", "CLR HashMgmt does not yet expose algorithm-id enablement.");
@@ -2785,7 +2750,7 @@ internal static class Program
             AssertDoesNotContain(hashMgmtClr, "#include \"Common/ResultDataProjection.h\"", "CLR HashMgmt still depends directly on the result-projection header after phase 19.");
             AssertDoesNotContain(hashMgmtClr, "#include \"Common/ThreadDataAccess.h\"", "CLR HashMgmt still depends directly on the umbrella ThreadDataAccess header after phase 19.");
 
-            AssertContains(hashMgmtUwp, "#include \"Common/ManagedHashMgmtAccess.h\"", "UWP HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
+            AssertContains(hashMgmtUwp, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "UWP HashMgmt implementation does not yet consume the phase 19 managed hash-management seam.");
             AssertContains(hashMgmtUwp, "CreateSupportedManagedHashAlgorithmDescriptors<HashAlgorithmDescriptorNet^, Array<HashAlgorithmDescriptorNet^>^>", "UWP HashMgmt does not yet route descriptor projection through the shared managed helper.");
             AssertContains(hashMgmtUwpHeader, "property Platform::String^ AlgorithmId;", "UWP HashMgmt descriptor surface does not yet expose algorithm ids.");
             AssertContains(hashMgmtUwpHeader, "void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);", "UWP HashMgmt does not yet expose algorithm-id enablement.");
@@ -2825,9 +2790,7 @@ internal static class Program
             AssertContains(inputControllerHeader, "static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line parser seam.");
             AssertContains(inputControllerHeader, "void ClearFilePaths();", "Phase 20 input controller is missing the grouped input-reset helper.");
 
-            AssertContainsAny(inputController,
-                new[] { "#include \"Common/ThreadDataInputAccess.h\"", "#include \"LegacyCompat/ThreadDataInputAccess.h\"" },
-                "Phase 20 input controller does not yet consume the dedicated ThreadData input seam.");
+            AssertContains(inputController, "#include \"LegacyCompat/ThreadDataInputAccess.h\"", "Phase 20 input controller does not yet consume the dedicated ThreadData input seam.");
             AssertContains(inputController, "CommandLineToArgvW", "Phase 20 input controller does not yet own the hardened command-line parser.");
             AssertContains(inputController, "CopyDraggedPath", "Phase 20 input controller does not yet own long-path-safe drag/drop extraction.");
             AssertContains(inputController, "IsValidCopyDataString", "Phase 20 input controller does not yet own WM_COPYDATA validation.");
@@ -2870,19 +2833,17 @@ internal static class Program
             string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
             string dlgCppAndCommandAndLifecycle = string.Join(Environment.NewLine, dlgCpp, commandController, lifecycleController);
 
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadLaunch.h", "Phase 21 Common HashThreadLaunch shim should be removed after the LegacyCompat boundary cleanup.");
+
             AssertContains(sessionControllerHeader, "BOOL PrepareHashStart(LPCTSTR noSelectionMessage);", "Phase 21 session controller is missing the pre-start validation seam.");
             AssertContains(sessionControllerHeader, "void StartHashThread();", "Phase 21 session controller is missing the thread-start seam.");
             AssertContains(sessionControllerHeader, "void StopWorkingThread();", "Phase 21 session controller is missing the stop-request seam.");
             AssertContains(sessionControllerHeader, "void SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 21 session controller is missing the grouped working-state UI seam.");
             AssertContains(sessionControllerHeader, "void PrepareDropTarget(CWnd* pWnd, BOOL bAccept);", "Phase 21 session controller is missing the grouped drop-target helper.");
 
-            AssertContainsAny(sessionController,
-                new[] { "#include \"Common/HashThreadLaunch.h\"", "#include \"LegacyCompat/HashThreadLaunch.h\"" },
-                "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
+            AssertContains(sessionController, "#include \"LegacyCompat/HashThreadLaunch.h\"", "Phase 21 session controller does not yet consume the shared hash-thread launch seam.");
             AssertDoesNotContain(sessionController, "#include \"Common/HashThreadEntry.h\"", "Phase 21 session controller should consume HashThreadLaunch.h instead of directly including HashThreadEntry.h.");
-            AssertContainsAny(sessionController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "Phase 21 session controller does not yet consume the ThreadData execution seam.");
+            AssertContains(sessionController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 21 session controller does not yet consume the ThreadData execution seam.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->SyncSelections();", "Phase 21 session controller does not yet own hash-algorithm selection sync.");
             AssertContains(sessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "Phase 21 session controller does not yet own hash-algorithm validation.");
             AssertContains(sessionController, "RestartHashWorkerThread(&m_hWorkThread, m_threadData, &thredID);", "Phase 21 session controller does not yet own work-thread restart through the shared launch seam.");
@@ -3132,9 +3093,7 @@ internal static class Program
             AssertContains(lifecycleControllerHeader, "LRESULT HandleThreadMessage(WPARAM wParam, LPARAM lParam, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);", "Phase 26 lifecycle controller is missing the grouped thread-message seam.");
             AssertContains(lifecycleControllerHeader, "BOOL HandleClose();", "Phase 26 lifecycle controller is missing the close-handling seam.");
 
-            AssertContainsAny(lifecycleController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "Phase 26 lifecycle controller does not yet consume the ThreadData execution seam.");
+            AssertContains(lifecycleController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 26 lifecycle controller does not yet consume the ThreadData execution seam.");
             AssertContains(lifecycleController, "m_hashSearchController->ClearSearch(clearButtonText);", "Phase 26 lifecycle controller does not yet own search-reset before hashing.");
             AssertContains(lifecycleController, "m_hashProgressController->PrepareAdvTaskbar();", "Phase 26 lifecycle controller does not yet own taskbar preparation.");
             AssertContains(lifecycleController, "m_hashSessionController->PrepareHashStart(noSelectionMessage)", "Phase 26 lifecycle controller does not yet own hash-start validation.");
@@ -3185,9 +3144,7 @@ internal static class Program
 
             AssertContains(commandController, "#include \"AboutDlg.h\"", "Phase 27 command controller does not yet own the About dialog include.");
             AssertContains(commandController, "#include \"FindDlg.h\"", "Phase 27 command controller does not yet own the Find dialog include.");
-            AssertContainsAny(commandController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "Phase 27 command controller does not yet consume the execution seam.");
+            AssertContains(commandController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 27 command controller does not yet consume the execution seam.");
             AssertContains(commandController, "m_hashInputController->LoadOpenFileDialogSelection(fileFilter)", "Phase 27 command controller does not yet own open-dialog file loading.");
             AssertContains(commandController, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "Phase 27 command controller does not yet own open-button hash starts.");
             AssertContains(commandController, "m_hashSessionController->StopWorkingThread();", "Phase 27 command controller does not yet own open-button stop behavior.");
@@ -3240,9 +3197,7 @@ internal static class Program
             AssertContains(messageControllerHeader, "void HandleCopyHash() const;", "Phase 28 message controller is missing the copy-hash seam.");
             AssertContains(messageControllerHeader, "void UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const;", "Phase 28 message controller is missing the copy-menu-text seam.");
 
-            AssertContainsAny(messageController,
-                new[] { "#include \"Common/ThreadDataExecutionAccess.h\"", "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"" },
-                "Phase 28 message controller does not yet consume the execution seam.");
+            AssertContains(messageController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 28 message controller does not yet consume the execution seam.");
             AssertContains(messageController, "m_parentWnd->IsIconic()", "Phase 28 message controller does not yet own iconic-paint gating.");
             AssertContains(messageController, "dc.DrawIcon(x, y, icon);", "Phase 28 message controller does not yet own icon rendering.");
             AssertContains(messageController, "m_parentWnd->DragAcceptFiles(FALSE);", "Phase 28 message controller does not yet own drop-target suspension during drag ingestion.");
@@ -3374,7 +3329,6 @@ internal static class Program
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
         {
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
-            string hashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequestProjection.h");
             string legacyHashRequestProjection = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestProjection.h");
             string legacyHashRequestTypeCompat = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
@@ -3391,7 +3345,7 @@ internal static class Program
             AssertContains(hashRequest, "bool uppercaseDigest;", "Phase 31 HashRequest does not yet own uppercase output preference.");
             AssertContains(hashRequest, "HashRequestDigestExecutionPolicy digestExecutionPolicy;", "Phase 31 HashRequest does not yet expose runtime digest execution policy.");
             AssertDoesNotContain(hashRequest, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 HashRequest contract still depends directly on ThreadData projection.");
-            AssertContains(hashRequestProjection, "#include \"LegacyCompat/HashRequestProjection.h\"", "Phase 31 compatibility HashRequest projection does not yet layer on top of the legacy projection seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashRequestProjection.h", "Phase 31 Common HashRequestProjection shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyHashRequestProjection, "CreateHashRequest(const ThreadData& threadData)", "Phase 31 does not yet project ThreadData into HashRequest through the legacy projection seam.");
             AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/HashRequestTypeCompat.h\"", "Phase 31 legacy HashRequest projection does not consume digest-type compatibility helpers.");
             AssertContains(legacyHashRequestProjection, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 31 legacy HashRequest projection does not yet consume thread-data execution access.");
@@ -3484,9 +3438,7 @@ internal static class Program
             AssertDoesNotContain(hashEngineHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashEngine header should no longer expose the thread-entry declaration after the thread-entry header split.");
             AssertContains(hashThreadEntryHeader, "int WINAPI HashThreadFunc(void *param);", "Phase 33 HashThreadEntry header does not yet expose the thread-entry declaration.");
             AssertContains(hashEngine, "int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", "Phase 33 HashEngine implementation does not yet define the execution-context request entry.");
-            AssertContainsAny(hashEngine,
-                new[] { "#include \"Common/HashThreadEntryProjection.h\"", "#include \"LegacyCompat/HashThreadEntryProjection.h\"" },
-                "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
+            AssertContains(hashEngine, "#include \"LegacyCompat/HashThreadEntryProjection.h\"", "Phase 33 HashThread entry does not yet consume the ThreadData projection seam.");
             AssertDoesNotContain(hashEngine, "#include \"Common/ThreadDataAccess.h\"", "Phase 33 HashEngine still consumes the broad ThreadDataAccess shim directly.");
             AssertContains(hashEngine, "HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", "Phase 35 HashThreadFunc does not yet construct HashExecutionContext through the thread-entry projection seam.");
             AssertContains(hashEngine, "HashRequest request = CreateThreadDataHashRequest(*thrdData);", "Phase 33 HashThreadFunc no longer projects ThreadData into HashRequest through the thread-entry projection seam.");
@@ -3618,7 +3570,6 @@ internal static class Program
         {
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
-            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
             string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
@@ -3635,7 +3586,7 @@ internal static class Program
             AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResult projection seam does not yet reuse shared HashResult whole-list traversal.");
             AssertContains(hashResultProjection, "ProjectHashResultToNet<TResultDataNet, TResultStateNet>(hashResult, convertString)", "Phase 37 HashResult projection seam does not yet route materialized net projection through ProjectHashResultToNet.");
 
-            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 37 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 37 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "#include \"Common/HashResultProjection.h\"", "Phase 37 managed hash-management seam does not yet consume HashResultProjection.");
             AssertContains(legacyManagedHashMgmtAccess, "CreateProjectedDigestMatchingHashResults<THashResultNet, THashResultStateNet, TResultArray>(", "Phase 37 managed hash-management seam does not yet route digest-search projection through HashResultProjection.");
             AssertDoesNotContain(legacyManagedHashMgmtAccess, "#include \"Common/ResultDataProjection.h\"", "Phase 37 managed hash-management seam still depends directly on ResultDataProjection.");
@@ -3643,7 +3594,6 @@ internal static class Program
 
         Run("Phase 38 promotes managed query results onto HashResultNet as the primary managed query contract", () =>
         {
-            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string clrHashResultNet = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashResultNet.h");
             string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
@@ -3654,7 +3604,7 @@ internal static class Program
             string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
             string winUwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
 
-            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 38 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 38 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", "Phase 38 managed hash-management seam does not yet expose HashResultNet-based digest search projection.");
 
             AssertContains(clrHashResultNet, "public enum class HashResultStateNet", "Phase 38 CLR bridge does not yet define HashResultStateNet.");
@@ -3821,9 +3771,7 @@ internal static class Program
         {
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
-            string threadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
             string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
-            string managedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
             string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
@@ -3837,11 +3785,11 @@ internal static class Program
             AssertContains(hashResultProjection, "VisitHashResults(resultList, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult traversal.");
             AssertContains(hashResultProjection, "VisitMatchingHashResults(resultList, predicate, [&](const HashResult& hashResult)", "Phase 45 HashResultProjection does not yet reuse shared HashResult matching traversal.");
 
-            AssertContains(threadResultAccess, "#include \"LegacyCompat/ThreadDataResultAccess.h\"", "Phase 45 compatibility ThreadData result access does not yet layer on top of the legacy result seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h", "Phase 45 Common ThreadDataResultAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyThreadResultAccess, "VisitThreadDataHashResults(const ThreadData& threadData, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult traversal.");
             AssertContains(legacyThreadResultAccess, "VisitThreadDataPathAndDigestMatchingHashResults(const ThreadData& threadData, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", "Phase 45 ThreadData result access does not yet expose HashResult path+digest traversal.");
 
-            AssertContains(managedHashMgmtAccess, "#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", "Phase 45 common managed seam should delegate to legacy managed compatibility seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 45 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "NormalizeHashResultDigestSearchText(hashToFind)", "Phase 45 managed hash management does not yet normalize digest queries through HashResultSearch.");
             AssertContains(filesHashSearchController, "VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route history traversal through ThreadData HashResult visitors.");
             AssertContains(filesHashSearchController, "VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", "Phase 45 MFC search controller does not yet route search traversal through ThreadData HashResult visitors.");
@@ -5497,7 +5445,6 @@ internal static class Program
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Common\HashRequest.h");
-            string threadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
             string legacyThreadExecutionAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string digestMetadataAccess = ReadResultDigestAccessSeams(repoRoot);
             string digestStateAccess = ReadResultDigestAccessSeams(repoRoot);
@@ -5517,7 +5464,7 @@ internal static class Program
             AssertContains(hashRequest, "std::find(normalizedAlgorithmIds.begin(), normalizedAlgorithmIds.end(), normalizedAlgorithmId)", "Phase 84 HashRequest algorithm traversal does not yet deduplicate descriptor/id algorithm selections.");
             AssertContains(hashRequest, "if (!IsRegisteredHashAlgorithmId(normalizedAlgorithmId))", "Phase 84 HashRequest algorithm traversal does not yet ignore unregistered algorithms.");
 
-            AssertContains(threadExecutionAccess, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 84 compatibility ThreadData execution access does not yet layer on top of the legacy execution seam.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h", "Phase 84 Common ThreadDataExecutionAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyThreadExecutionAccess, "TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex)", "Phase 84 ThreadData execution access does not yet route selection lookup through the safe index seam.");
             AssertDoesNotContain(legacyThreadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
 
@@ -5624,20 +5571,16 @@ internal static class Program
                 }
             }
 
-            HashSet<string> allowedThreadDataFiles =
-            [
-                @"trunk\source\Common\Global.h",
-                @"trunk\source\Common\ThreadDataAccess.h",
-                @"trunk\source\Common\ThreadDataExecutionAccess.h",
-                @"trunk\source\Common\ThreadDataInputAccess.h",
-                @"trunk\source\Common\ThreadDataResultAccess.h",
-                @"trunk\source\Common\HashRequestProjection.h",
-                @"trunk\source\Common\HashThreadEntryProjection.h",
-                @"trunk\source\Common\HashThreadEntry.h",
-                @"trunk\source\Common\HashThreadEntry.cpp",
-                @"trunk\source\Common\HashThreadLaunch.h",
-                @"trunk\source\Common\ManagedHashMgmtAccess.h"
-            ];
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataAccess.h", "Phase 87 Common ThreadDataAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h", "Phase 87 Common ThreadDataExecutionAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataInputAccess.h", "Phase 87 Common ThreadDataInputAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ThreadDataResultAccess.h", "Phase 87 Common ThreadDataResultAccess shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashRequestProjection.h", "Phase 87 Common HashRequestProjection shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h", "Phase 87 Common HashThreadEntryProjection shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\HashThreadLaunch.h", "Phase 87 Common HashThreadLaunch shim should be removed after the LegacyCompat boundary cleanup.");
+            AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 87 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
+
+            HashSet<string> allowedThreadDataFiles = [];
 
             string commonRoot = Path.Combine(repoRoot, @"trunk\source\Common");
             string[] commonFiles = Directory.GetFiles(commonRoot, "*.*", SearchOption.AllDirectories);
@@ -5720,6 +5663,16 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ResultDigestTypeValueCompat.h"));
     }
 
+    private static string ReadLegacyThreadDataAccessSeams(string repoRoot)
+    {
+        return string.Join(
+            "\r\n",
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h"));
+    }
+
     private static string ReadHashAlgorithmRegistrySeams(string repoRoot)
     {
         return string.Join(
@@ -5745,7 +5698,7 @@ internal static class Program
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngine.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntry.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryRuntime.h"),
-            ReadRepoFile(repoRoot, @"trunk\source\Common\HashThreadEntryProjection.h"),
+            ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\HashThreadEntryProjection.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileRunner.cpp"),
             ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp"),
@@ -5846,6 +5799,14 @@ internal static class Program
     private static void AssertDoesNotContain(string content, string expected, string failureMessage)
     {
         if (content.Contains(expected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(failureMessage);
+        }
+    }
+
+    private static void AssertFileMissing(string repoRoot, string relativePath, string failureMessage)
+    {
+        if (File.Exists(Path.Combine(repoRoot, relativePath)))
         {
             throw new InvalidOperationException(failureMessage);
         }

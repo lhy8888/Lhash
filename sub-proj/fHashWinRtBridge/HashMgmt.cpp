@@ -2,7 +2,7 @@
 
 #include "HashMgmt.h"
 #include "CxHelper.h"
-#include "Common/ManagedHashMgmtAccess.h"
+#include "LegacyCompat/ManagedHashMgmtAccess.h"
 #include "LegacyCompat/HashThreadLaunch.h"
 using namespace std;
 using namespace Platform;
