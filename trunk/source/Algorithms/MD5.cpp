@@ -193,7 +193,7 @@ void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)
   mdContext->buf[3] = (UINT4)0x10325476 + pseudoRandomNumber * 97;
 }
 
-void MD5Update (MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen)
+void MD5Update (MD5_CTX *mdContext, const unsigned char *inBuf, unsigned int inLen)
 {
   UINT4 in[16];
   int mdi = 0;

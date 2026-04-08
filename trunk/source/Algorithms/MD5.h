@@ -69,7 +69,7 @@ typedef struct {
 static void Transform (UINT4 *buf, UINT4 *in);
 
 void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber = 0);
-void MD5Update (MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen);
+void MD5Update (MD5_CTX *mdContext, const unsigned char *inBuf, unsigned int inLen);
 void MD5Final (MD5_CTX *mdContext);
 
 #endif /* ___MD5_H___ included */
