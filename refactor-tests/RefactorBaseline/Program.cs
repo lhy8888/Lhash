@@ -5650,6 +5650,46 @@ internal static class Program
             AssertContains(hashContractUnitTests, "HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam", "Phase 88 contract tests do not yet gate descriptor-id selection seams.");
         }, failures);
 
+        Run("Phase 89 keeps new algorithm extensibility on descriptor-id seams instead of fixed digest slots", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
+            string hashResult = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashResult.h");
+            string digestMetadataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h");
+            string digestValueAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h");
+            string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+
+            AssertContains(registryCore, "RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 89 HashAlgorithmRegistryCore.h does not yet expose descriptor registration for new algorithms.");
+            AssertContains(registryCore, "ClearHashAlgorithmDescriptorsForTesting()", "Phase 89 HashAlgorithmRegistryCore.h does not yet expose registry reset for extension tests.");
+            AssertContains(registryCore, "ResetHashAlgorithmDescriptorsToDefaultsForTesting()", "Phase 89 HashAlgorithmRegistryCore.h does not yet expose default-registry reset for extension tests.");
+            AssertContains(hashRequest, "std::vector<HashAlgorithmId> algorithmIds;", "Phase 89 HashRequest does not yet keep algorithm ids as the core extensibility surface.");
+            AssertContains(hashRequest, "GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)", "Phase 89 HashRequest does not yet normalize descriptor/id selections.");
+            AssertContains(hashRequest, "TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", "Phase 89 HashRequest does not yet resolve selection state by descriptor id.");
+            AssertContains(digestMetadataAccess, "GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)", "Phase 89 ResultDigestMetadataAccess does not yet expose descriptor/id metadata lookup.");
+            AssertContains(digestValueAccess, "SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)", "Phase 89 ResultDigestValueAccess does not yet expose descriptor/id digest writes.");
+            AssertContains(hashResult, "ProjectHashResult(const ResultData& result)", "Phase 89 HashResult projection does not yet remain the runtime projection seam.");
+            AssertContains(hashResult, "digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);", "Phase 89 HashResult projection does not yet preserve descriptor/id identity.");
+            AssertContains(global, "std::vector<HashDigestResult> digests;", "Phase 89 Global.h does not yet expose digest collections for extensible results.");
+            AssertDoesNotContain(global, "sunjwbase::tstring md5;", "Phase 89 Global.h should not reintroduce a fixed MD5 field.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha1;", "Phase 89 Global.h should not reintroduce a fixed SHA1 field.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha256;", "Phase 89 Global.h should not reintroduce a fixed SHA256 field.");
+            AssertDoesNotContain(global, "sunjwbase::tstring sha512;", "Phase 89 Global.h should not reintroduce a fixed SHA512 field.");
+
+            AssertContains(nativeRuntimeSource, "HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", "Phase 89 native runtime tests do not yet cover descriptor registration for new algorithms.");
+            AssertContains(nativeRuntimeSource, "HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", "Phase 89 native runtime tests do not yet cover selection state extension by descriptor id.");
+            AssertContains(nativeRuntimeSource, "HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots", "Phase 89 native runtime tests do not yet cover result projection for registry-extended digests.");
+            AssertContains(nativeRuntimeSource, "\"blake3\"", "Phase 89 native runtime tests do not yet cover a descriptor/id-only BLAKE3 registration path.");
+            AssertContains(nativeRuntimeSource, "\"sha3-256\"", "Phase 89 native runtime tests do not yet cover a descriptor/id-only SHA3-256 selection path.");
+            AssertContains(nativeRuntimeSource, "\"xxh3\"", "Phase 89 native runtime tests do not yet cover a descriptor/id-only XXH3 result-projection path.");
+            AssertContains(nativeRuntimeSource, "SetResultDigestById(resultData, NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(\"xxh3\"))), sunjwbase::strtotstr(std::string(\"CAFEBABE\")))", "Phase 89 native runtime tests do not yet write custom digest values through descriptor ids.");
+            AssertContains(nativeRuntimeSource, "HashResult result = ProjectHashResult(resultData);", "Phase 89 native runtime tests do not yet project custom digest results through HashResult.");
+
+            AssertContains(extensibilityUnitTests, "NativeRuntimeTests_CoverDescriptorRegistrationRequestSelectionAndResultProjectionForNewAlgorithms", "Phase 89 unit-test coverage does not yet gate the native extensibility scenarios.");
+            AssertContains(extensibilityUnitTests, "CoreDescriptorIdSeams_AllowNewAlgorithmsWithoutAddingFixedDigestFields", "Phase 89 unit-test coverage does not yet gate the core extensibility seams.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
