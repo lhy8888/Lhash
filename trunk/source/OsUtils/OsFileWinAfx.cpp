@@ -45,6 +45,12 @@ OsFile::~OsFile()
 	}
 }
 
+bool OsFile::isHashTargetAllowed(void *exception)
+{
+	(void)exception;
+	return true;
+}
+
 bool OsFile::open(void *flag, void *exception)
 {
 	BOOL ret = FALSE;

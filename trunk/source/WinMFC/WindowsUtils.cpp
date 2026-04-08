@@ -9,6 +9,7 @@
 
 #include "Common/strhelper.h"
 #include "Common/Utils.h"
+#include "WinCommon/WinHandleGuard.h"
 #include "WinCommon/WindowsStrings.h"
 #include "ShellExtComm.h"
 
@@ -94,6 +95,8 @@ namespace WindowsUtils
 			return TRUE;
 		}
 
+		WinHandleGuard::UniqueWinHandle tokenHandle(hToken);
+
 		DWORD dwReturnLength = 0;
 
 		if (GetTokenInformation(
@@ -108,7 +111,6 @@ namespace WindowsUtils
 				hResult = S_OK;
 		}
 
-		CloseHandle(hToken);
 
 		if(hResult != S_OK)
 			return TRUE;
@@ -198,9 +200,9 @@ namespace WindowsUtils
 		tstrShlExtDll.append(_T(".dll"));
 
 		WIN32_FIND_DATA ffData;
-		HANDLE hFind = FindFirstFile(tstrShlExtDll.c_str(), &ffData);
+		WinHandleGuard::UniqueFindHandle hFind(FindFirstFile(tstrShlExtDll.c_str(), &ffData));
 
-		bool bRet = (hFind != INVALID_HANDLE_VALUE);
+		bool bRet = hFind.isValid();
 
 		if(bRet)
 		{
@@ -210,7 +212,6 @@ namespace WindowsUtils
 				strcpy_s(pszShlDllPath, MAX_PATH, tstrShlExtDll.c_str());
 #endif
 
-			FindClose(hFind);
 		}
 
 		return bRet;
@@ -218,19 +219,17 @@ namespace WindowsUtils
 
 	bool RegShellExt(TCHAR *pszShlDllPath)
 	{
-		HMODULE hModule = LoadLibraryWithSecureSearchPath(pszShlDllPath);
-		if(hModule)
+		WinHandleGuard::UniqueModuleHandle hModule(LoadLibraryWithSecureSearchPath(pszShlDllPath));
+		if(hModule.isValid())
 		{
 			LPFN_DllRegisterServer fnDllRegSvr = NULL;
-			fnDllRegSvr = (LPFN_DllRegisterServer) GetProcAddress(hModule, "DllRegisterServer");
+			fnDllRegSvr = (LPFN_DllRegisterServer) GetProcAddress(hModule.get(), "DllRegisterServer");
 			if(fnDllRegSvr != NULL)
 			{
 				bool bRet = (fnDllRegSvr() == S_OK);
-				FreeLibrary(hModule);
 				return bRet;
 			}
 
-			FreeLibrary(hModule);
 		}
 
 		return false;
@@ -238,19 +237,17 @@ namespace WindowsUtils
 
 	bool UnregShellExt(TCHAR *pszShlDllPath)
 	{
-		HMODULE hModule = LoadLibraryWithSecureSearchPath(pszShlDllPath);
-		if(hModule)
+		WinHandleGuard::UniqueModuleHandle hModule(LoadLibraryWithSecureSearchPath(pszShlDllPath));
+		if(hModule.isValid())
 		{
 			LPFN_DllUnregisterServer fnDllUnregSvr = NULL;
-			fnDllUnregSvr = (LPFN_DllUnregisterServer) GetProcAddress(hModule, "DllUnregisterServer");
+			fnDllUnregSvr = (LPFN_DllUnregisterServer) GetProcAddress(hModule.get(), "DllUnregisterServer");
 			if(fnDllUnregSvr != NULL)
 			{
 				bool bRet = (fnDllUnregSvr() == S_OK);
-				FreeLibrary(hModule);
 				return bRet;
 			}
 
-			FreeLibrary(hModule);
 		}
 
 		return false;

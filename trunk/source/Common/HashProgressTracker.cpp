@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
+#include "Common/CheckedArithmetic.h"
 
 namespace HashEngineInternal
 {
@@ -8,19 +9,11 @@ namespace HashEngineInternal
 		FileProgressState *progressState)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		progressState->finishedSize += dataLen;
+		progressState->finishedSize = SaturatingAddUInt64(progressState->finishedSize, dataLen);
 
 		int progressMax = observer->progressMax();
 
-		int positionNew;
-		if (fileSize == 0)
-		{
-			positionNew = progressMax;
-		}
-		else
-		{
-			positionNew = (int)(progressMax * progressState->finishedSize / fileSize);
-		}
+		int positionNew = CalculateBoundedProgressValue(progressState->finishedSize, fileSize, progressMax);
 
 		if (positionNew > progressState->position)
 		{
@@ -28,17 +21,9 @@ namespace HashEngineInternal
 			progressState->position = positionNew;
 		}
 
-		progressState->finishedSizeWhole += dataLen;
-		int positionWholeNew;
+		progressState->finishedSizeWhole = SaturatingAddUInt64(progressState->finishedSizeWhole, dataLen);
 		uint64_t totalSize = GetHashExecutionTotalSize(*executionContext);
-		if (totalSize == 0)
-		{
-			positionWholeNew = progressMax;
-		}
-		else
-		{
-			positionWholeNew = (int)(progressMax * progressState->finishedSizeWhole / totalSize);
-		}
+		int positionWholeNew = CalculateBoundedProgressValue(progressState->finishedSizeWhole, totalSize, progressMax);
 
 		if (isSizeCaled && positionWholeNew > progressState->positionWhole)
 		{

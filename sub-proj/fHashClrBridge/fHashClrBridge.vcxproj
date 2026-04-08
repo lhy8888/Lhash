@@ -242,6 +242,7 @@
   <ItemGroup>
     <ResourceCompile Include="fHashClrBridge.rc" />
   </ItemGroup>
+  <Import Project="..\..\NativeSecurity.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

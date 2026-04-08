@@ -11,6 +11,7 @@
 
 #include "Common/strhelper.h"
 #include "WinMFC/ShellExtComm.h"
+#include "WinCommon/WinHandleGuard.h"
 #include "WinCommon/WindowsStrings.h"
 #include "fHashShlExtStringsBase.h"
 #include "fHashShlExtStringsZHCN.h"
@@ -258,8 +259,8 @@ HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
-	CloseHandle(pInfo.hThread);
-	CloseHandle(pInfo.hProcess);
+	WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);
+	WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);
 
 	return S_OK;
 }
@@ -273,19 +274,17 @@ HWND CfHashShellExt::FindfHashWindow()
 
 	DWORD dwPidfHash = 0;
 	GetWindowThreadProcessId(hWndfHash, &dwPidfHash);
-	HANDLE hProcfHash = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidfHash);
-	if (hProcfHash == NULL)
+	WinHandleGuard::UniqueWinHandle hProcfHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidfHash));
+	if (!hProcfHash.isValid())
 		return NULL;
 
 	std::vector<TCHAR> exePath(32768, 0);
 	DWORD cchExecutable = (DWORD)exePath.size();
-	if (!QueryFullProcessImageName(hProcfHash, 0, exePath.data(), &cchExecutable))
+	if (!QueryFullProcessImageName(hProcfHash.get(), 0, exePath.data(), &cchExecutable))
 	{
-		CloseHandle(hProcfHash);
 		return NULL;
 	}
 
-	CloseHandle(hProcfHash);
 
 	tstring tstrProcfHashPath(exePath.data());
 	if (tstrProcfHashPath == m_fHashPath)

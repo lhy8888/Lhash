@@ -12,6 +12,8 @@
 #include <Windows.h>
 #include <strsafe.h>
 
+#include "WinCommon/WinHandleGuard.h"
+
 using namespace sunjwbase;
 
 #define WINBOOL_2_CBOOL(winbool_var) bool((winbool_var) == TRUE)
@@ -48,6 +50,32 @@ struct CreateFileFlag
 	DWORD dwFlagsAndAttributes;
 };
 
+static void CopyOpenErrorText(TCHAR *errorBuffer, const tstring& errorText)
+{
+	if (errorBuffer == NULL)
+	{
+		return;
+	}
+
+#if defined(UNICODE) || defined(_UNICODE)
+	wcscpy_s(errorBuffer, OsFile::ERR_MSG_BUFFER_LEN, errorText.c_str());
+#else
+	strcpy_s(errorBuffer, OsFile::ERR_MSG_BUFFER_LEN, errorText.c_str());
+#endif
+}
+
+static bool TryRejectReparsePointPath(const tstring& filePath, TCHAR *errorBuffer)
+{
+	DWORD attributes = GetFileAttributes(filePath.c_str());
+	if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0)
+	{
+		return false;
+	}
+
+	CopyOpenErrorText(errorBuffer, TEXT("Refusing to hash a symbolic link, junction, mount point, or other reparse point."));
+	return true;
+}
+
 OsFile::OsFile(tstring filePath):
 	_filePath(LongPathFix(filePath)),
 	_osfileData(NULL),
@@ -67,10 +95,20 @@ OsFile::~OsFile()
 	}
 }
 
+bool OsFile::isHashTargetAllowed(void *exception)
+{
+	return !TryRejectReparsePointPath(_filePath, (TCHAR *)exception);
+}
+
 bool OsFile::open(void *flag, void *exception)
 {
 	CreateFileFlag* fileFlag = (CreateFileFlag*)flag;
 	TCHAR *pFileExc = (TCHAR *)exception;
+	if (!isHashTargetAllowed(exception))
+	{
+		_osfileData = INVALID_HANDLE_VALUE;
+		return false;
+	}
 
 #if defined (FHASH_UWP_LIB)
 	_osfileData = CreateFileFromAppW(_filePath.c_str(), // file to open
@@ -332,7 +370,7 @@ void OsFile::close()
 {
 	if (_fileStatus != CLOSED)
 	{
-		CloseHandle(_osfileData);
+		WinHandleGuard::UniqueWinHandle fileHandle(reinterpret_cast<HANDLE>(_osfileData));
 		_osfileData = NULL;
 		_fileStatus = CLOSED;
 	}

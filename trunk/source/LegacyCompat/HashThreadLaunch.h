@@ -2,45 +2,46 @@
 #define _LEGACY_HASH_THREAD_LAUNCH_H_
 
 #include <process.h>
+#include <utility>
 
 #include "LegacyCompat/HashThreadEntry.h"
 #include "LegacyCompat/LegacyThreadData.h"
+#include "WinCommon/WinHandleGuard.h"
 
 #if defined (_WIN32)
 #include <WinBase.h>
 #endif
 
-static inline HANDLE StartHashWorkerThread(ThreadData *threadData, unsigned int *threadId)
+static inline WinHandleGuard::UniqueWinHandle StartHashWorkerThread(ThreadData *threadData, unsigned int *threadId)
 {
-	return reinterpret_cast<HANDLE>(_beginthreadex(
+	return WinHandleGuard::UniqueWinHandle(reinterpret_cast<HANDLE>(_beginthreadex(
 		NULL,
 		0,
 		reinterpret_cast<unsigned int (WINAPI*)(void*)>(HashThreadFunc),
 		threadData,
 		0,
-		threadId));
+		threadId)));
 }
 
-static inline void CloseHashWorkerThreadHandle(HANDLE *threadHandle)
+static inline void CloseHashWorkerThreadHandle(WinHandleGuard::UniqueWinHandle *threadHandle)
 {
-	if (threadHandle == NULL || *threadHandle == NULL)
+	if (threadHandle == NULL)
 	{
 		return;
 	}
 
-	CloseHandle(*threadHandle);
-	*threadHandle = NULL;
+	threadHandle->reset();
 }
 
-static inline HANDLE RestartHashWorkerThread(HANDLE *existingThreadHandle, ThreadData *threadData, unsigned int *threadId)
+static inline HANDLE RestartHashWorkerThread(WinHandleGuard::UniqueWinHandle *existingThreadHandle, ThreadData *threadData, unsigned int *threadId)
 {
 	CloseHashWorkerThreadHandle(existingThreadHandle);
-	HANDLE workThreadHandle = StartHashWorkerThread(threadData, threadId);
+	WinHandleGuard::UniqueWinHandle workThreadHandle = StartHashWorkerThread(threadData, threadId);
 	if (existingThreadHandle != NULL)
 	{
-		*existingThreadHandle = workThreadHandle;
+		*existingThreadHandle = std::move(workThreadHandle);
 	}
-	return workThreadHandle;
+	return (existingThreadHandle != NULL) ? existingThreadHandle->get() : NULL;
 }
 
 #endif

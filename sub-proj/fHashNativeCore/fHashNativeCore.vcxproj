@@ -276,6 +276,7 @@
     <ClInclude Include="..\..\trunk\source\targetver.h" />
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h" />
   </ItemGroup>
+  <Import Project="..\..\NativeSecurity.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

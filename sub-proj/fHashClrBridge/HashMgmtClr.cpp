@@ -53,7 +53,7 @@ static cli::array<HashAlgorithmDescriptorNet^>^ CreateSupportedHashAlgorithmDesc
 }
 
 HashMgmtClr::HashMgmtClr(UIBridgeDelegates^ uiBridgeDelegates)
-	:m_pUiBridgeWUI(NULL), m_pThreadData(NULL), m_hWorkThread(NULL)
+	:m_pUiBridgeWUI(NULL), m_pThreadData(NULL), m_hWorkThread()
 {
 	m_pUiBridgeWUI = new UIBridgeWUI(uiBridgeDelegates);
 	m_pThreadData = new ThreadData();
@@ -66,9 +66,7 @@ HashMgmtClr::!HashMgmtClr()
 		delete m_pUiBridgeWUI;
 	if (m_pThreadData)
 		delete m_pThreadData;
-	HANDLE workThread = m_hWorkThread;
-	CloseHashWorkerThreadHandle(&workThread);
-	m_hWorkThread = workThread;
+	CloseHashWorkerThreadHandle(&m_hWorkThread);
 }
 
 void HashMgmtClr::Init()
@@ -128,9 +126,7 @@ void HashMgmtClr::StartHashThread()
 	}
 
 	unsigned int thredID = 0;
-	HANDLE workThread = m_hWorkThread;
-	RestartHashWorkerThread(&workThread, m_pThreadData, &thredID);
-	m_hWorkThread = workThread;
+	RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);
 }
 
 cli::array<HashResultNet>^ HashMgmtClr::FindHashResults(String^ sstrHashToFind)

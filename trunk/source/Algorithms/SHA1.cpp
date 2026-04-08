@@ -52,7 +52,7 @@ void CSHA1::Transform(uint32_t state[5], unsigned char buffer[64])
 	uint32_t a = 0, b = 0, c = 0, d = 0, e = 0;
 
 	SHA1_WORKSPACE_BLOCK* block;
-	static unsigned char workspace[64];
+	unsigned char workspace[64];
 	block = (SHA1_WORKSPACE_BLOCK*)workspace;
 	memcpy(block, buffer, 64);
 

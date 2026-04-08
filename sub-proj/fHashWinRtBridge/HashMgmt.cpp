@@ -53,7 +53,7 @@ static void SetProjectedHashResultNet(Array<HashResultNet>^ projectedResults, si
 }
 
 HashMgmt::HashMgmt(UIBridgeDelegate^ uiBridgeDelegate)
-	:m_hWorkThread(NULL)
+	:m_hWorkThread()
 {
 	m_spUiBridgeUwp = make_shared<UIBridgeUwp>(uiBridgeDelegate);
 }

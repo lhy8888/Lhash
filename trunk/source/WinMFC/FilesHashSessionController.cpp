@@ -18,7 +18,7 @@ FilesHashSessionController::FilesHashSessionController()
 	m_btnContext(NULL),
 	m_chkUppercase(NULL),
 	m_hashAlgorithmSelectionController(NULL),
-	m_hWorkThread(NULL)
+	m_hWorkThread()
 {
 }
 

@@ -39,6 +39,7 @@ namespace sunjwbase
 		bool openReadWrite(void *exception = NULL);
 
 		// Attributes
+		bool isHashTargetAllowed(void *exception = NULL);
 		int64_t getLength();
 		bool getModifiedTime(void *modifiedTime);
 		sunjwbase::tstring getModifiedTimeFormat();

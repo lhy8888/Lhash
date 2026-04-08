@@ -3,6 +3,7 @@
 #include "afxwin.h"
 
 #include "Common/Global.h"
+#include "WinCommon/WinHandleGuard.h"
 struct ThreadData;
 
 class CHyperEditHash;
@@ -55,5 +56,5 @@ private:
 	CButton* m_btnContext;
 	CButton* m_chkUppercase;
 	FilesHashAlgorithmSelectionController* m_hashAlgorithmSelectionController;
-	HANDLE m_hWorkThread;
+	WinHandleGuard::UniqueWinHandle m_hWorkThread;
 };

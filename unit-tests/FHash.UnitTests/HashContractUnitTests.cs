@@ -565,9 +565,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", fileSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("fSizes[fileIndex] = fsize;", fileSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("return TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, osFile.getLength());", fileSizeAccounting, StringComparison.Ordinal);
-        Assert.Contains("TryResolveWindowsPathFileMeta(path, &resolvedMeta)", result, StringComparison.Ordinal);
-        Assert.Contains("fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", result, StringComparison.Ordinal);
+        Assert.Contains("result.meta.modifiedDate = osFile.getModifiedTimeFormat();", result, StringComparison.Ordinal);
         Assert.Contains("fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryResolveWindowsPathFileMeta(path, &resolvedMeta)", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", result, StringComparison.Ordinal);
         Assert.DoesNotContain("uint64_t fsize = osFile.getLength();", result, StringComparison.Ordinal);
         Assert.DoesNotContain("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
         Assert.DoesNotContain("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
@@ -746,11 +747,13 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", clrMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("GetHashAlgorithmEnabledByDigestType(int digestType);", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", clrMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", clrMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(&workThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(&workThread);", clrMgmt, StringComparison.Ordinal);
+        Assert.DoesNotContain("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
+        Assert.Contains("CloseHashWorkerThreadHandle(&m_hWorkThread);", clrMgmt, StringComparison.Ordinal);
         Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
         Assert.Contains("::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", clrMgmt, StringComparison.Ordinal);
@@ -778,6 +781,8 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("GetHashAlgorithmEnabledByDigestType(int digestType);", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", uwpMgmtHeader, StringComparison.Ordinal);
+        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", uwpMgmtHeader, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", uwpMgmt, StringComparison.Ordinal);
         Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, &m_threadData, &thredID);", uwpMgmt, StringComparison.Ordinal);

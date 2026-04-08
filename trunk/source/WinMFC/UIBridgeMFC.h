@@ -27,6 +27,18 @@ public:
 		OFFSETS linkOffsets;
 	};
 
+	struct ProgressDispatchState
+	{
+		ProgressDispatchState()
+			: lastValue(-1),
+			lastTick(0)
+		{
+		}
+
+		int lastValue;
+		ULONGLONG lastTick;
+	};
+
 	UIBridgeMFC(HWND hWnd,
 				sunjwbase::OsMutex *mainMtx,
 				CHyperEditHash *hyperEdit);
@@ -130,6 +142,8 @@ private:
 		PostThreadInfoMessage(WP_REFRESH_TEXT);
 	}
 
+	bool ShouldPostProgressValue(ProgressDispatchState& progressDispatchState, int value);
+
 	template<typename TAppendAction>
 	void UpdateMainHyperEdit(TAppendAction appendAction, bool refreshAfterUpdate = false)
 	{
@@ -176,6 +190,8 @@ private:
 	CHyperEditHash *m_mainHyperEdit;
 
 	MainHyperEditSnapshot m_preparingSnapshot;
+	ProgressDispatchState m_fileProgressDispatchState;
+	ProgressDispatchState m_totalProgressDispatchState;
 };
 
 #endif

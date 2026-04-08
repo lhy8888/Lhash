@@ -1,6 +1,7 @@
 #ifndef _RUNTIME_HASH_EXECUTION_CONTEXT_H_
 #define _RUNTIME_HASH_EXECUTION_CONTEXT_H_
 
+#include "Common/CheckedArithmetic.h"
 #include "Common/Global.h"
 #include "Runtime/HashProgressSink.h"
 
@@ -54,12 +55,12 @@ static inline void ResetHashExecutionTotalSize(HashExecutionContext& executionCo
 
 static inline void AddHashExecutionTotalSize(HashExecutionContext& executionContext, uint64_t sizeDelta)
 {
-	executionContext.jobState.countedSize += sizeDelta;
+	executionContext.jobState.countedSize = SaturatingAddUInt64(executionContext.jobState.countedSize, sizeDelta);
 }
 
 static inline void ReplaceHashExecutionCountedFileSize(HashExecutionContext& executionContext, uint64_t previousSize, uint64_t currentSize)
 {
-	executionContext.jobState.countedSize = GetHashExecutionTotalSize(executionContext) + currentSize - previousSize;
+	executionContext.jobState.countedSize = ReplaceSizedValueUInt64(GetHashExecutionTotalSize(executionContext), previousSize, currentSize);
 }
 
 static inline HashResult& AppendHashExecutionResult(HashExecutionContext& executionContext)

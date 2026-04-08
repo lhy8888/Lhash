@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Global.h"
+#include "WinCommon/WinHandleGuard.h"
 #include "HashResultNet.h"
 #include "UIBridgeDelegates.h"
 #include "UIBridgeWUI.h"
@@ -55,6 +56,6 @@ public:
 	private:
 		UIBridgeWUI *m_pUiBridgeWUI;
 		ThreadData *m_pThreadData;
-		HANDLE m_hWorkThread;
+		WinHandleGuard::UniqueWinHandle m_hWorkThread;
 	};
 }

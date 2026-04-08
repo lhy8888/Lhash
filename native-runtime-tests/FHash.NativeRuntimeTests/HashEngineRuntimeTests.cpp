@@ -1,5 +1,6 @@
 #include "..\..\trunk\source\stdafx.h"
 
+#include <future>
 #include <iostream>
 #include <mutex>
 #include <vector>
@@ -23,6 +24,7 @@
 #include "LegacyCompat/HashRequestTypeCompat.h"
 #include "LegacyCompat/ResultDigestTypeValueCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
+#include "WinCommon/WinHandleGuard.h"
 
 namespace
 {
@@ -221,12 +223,11 @@ namespace
 		sunjwbase::tstring WriteTextFile(const sunjwbase::tstring& fileName, const std::string& contents)
 		{
 			sunjwbase::tstring filePath = path_ + _T("\\") + fileName;
-			HANDLE fileHandle = ::CreateFile(filePath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-			NativeAssertTrue(fileHandle != INVALID_HANDLE_VALUE, "Unable to create the native runtime test input file.");
+			WinHandleGuard::UniqueWinHandle fileHandle(::CreateFile(filePath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
+			NativeAssertTrue(fileHandle.isValid(), "Unable to create the native runtime test input file.");
 
 			DWORD bytesWritten = 0;
-			BOOL writeSucceeded = ::WriteFile(fileHandle, contents.data(), static_cast<DWORD>(contents.size()), &bytesWritten, NULL);
-			::CloseHandle(fileHandle);
+			BOOL writeSucceeded = ::WriteFile(fileHandle.get(), contents.data(), static_cast<DWORD>(contents.size()), &bytesWritten, NULL);
 
 			NativeAssertTrue(writeSucceeded == TRUE, "Unable to write the native runtime test input file.");
 			NativeAssertEqual(static_cast<DWORD>(contents.size()), bytesWritten, "The native runtime test input file was only partially written.");
@@ -450,6 +451,50 @@ namespace
 			ResolveDigestResultAlgorithmId(result.digests[0]),
 			"The only emitted digest should be SHA256.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
+	}
+
+	static void HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("concurrency.txt"), std::string((kHashEngineBufferSize * 2) + 321, 'A'));
+
+		std::vector<ResultDigestType> algorithms;
+		algorithms.push_back(RESULT_DIGEST_MD5);
+		algorithms.push_back(RESULT_DIGEST_SHA1);
+		algorithms.push_back(RESULT_DIGEST_SHA256);
+
+		auto runSingleRequest = [&]() -> HashResult
+		{
+			CapturingProgressSink progressSink;
+			ThreadData threadData;
+			ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+
+			int exitCode = RunHashThreadData(threadData);
+			NativeAssertEqual(0, exitCode, "Concurrent runtime hashing should succeed for each isolated task.");
+			NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "Each concurrent runtime hashing task should still produce one result.");
+			return GetThreadDataResults(threadData).front();
+		};
+
+		HashResult baselineResult = runSingleRequest();
+		sunjwbase::tstring expectedMd5 = FindDigestValue(baselineResult, RESULT_DIGEST_MD5);
+		sunjwbase::tstring expectedSha1 = FindDigestValue(baselineResult, RESULT_DIGEST_SHA1);
+		sunjwbase::tstring expectedSha256 = FindDigestValue(baselineResult, RESULT_DIGEST_SHA256);
+
+		const size_t concurrentRunCount = 8;
+		std::vector<std::future<HashResult>> pendingRuns;
+		pendingRuns.reserve(concurrentRunCount);
+		for (size_t runIndex = 0; runIndex < concurrentRunCount; ++runIndex)
+		{
+			pendingRuns.push_back(std::async(std::launch::async, runSingleRequest));
+		}
+
+		for (size_t runIndex = 0; runIndex < pendingRuns.size(); ++runIndex)
+		{
+			HashResult concurrentResult = pendingRuns[runIndex].get();
+			NativeAssertEqual(expectedMd5, FindDigestValue(concurrentResult, RESULT_DIGEST_MD5), "Concurrent runtime hashing produced an inconsistent MD5 digest.");
+			NativeAssertEqual(expectedSha1, FindDigestValue(concurrentResult, RESULT_DIGEST_SHA1), "Concurrent runtime hashing produced an inconsistent SHA1 digest.");
+			NativeAssertEqual(expectedSha256, FindDigestValue(concurrentResult, RESULT_DIGEST_SHA256), "Concurrent runtime hashing produced an inconsistent SHA256 digest.");
+		}
 	}
 
 	static void RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest()
@@ -995,6 +1040,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
+	tests.push_back({ "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", &HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", &RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests });
 	tests.push_back({ "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", &ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection });

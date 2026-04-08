@@ -18,6 +18,11 @@
 using namespace std;
 using namespace sunjwbase;
 
+namespace
+{
+	static const ULONGLONG kUiProgressDispatchIntervalMs = 80;
+}
+
 UIBridgeMFC::UIBridgeMFC(HWND hWnd,
 						 OsMutex *mainMtx,
 						 CHyperEditHash *hyperEdit)
@@ -105,14 +110,41 @@ int UIBridgeMFC::getProgressValueMax()
 	return 100;
 }
 
+bool UIBridgeMFC::ShouldPostProgressValue(ProgressDispatchState& progressDispatchState, int value)
+{
+	if (value < 0)
+	{
+		return false;
+	}
+
+	ULONGLONG tickNow = GetTickCount64();
+	int progressMax = getProgressValueMax();
+	if (progressDispatchState.lastValue < 0 ||
+		value >= progressMax ||
+		(value > progressDispatchState.lastValue && tickNow >= progressDispatchState.lastTick + kUiProgressDispatchIntervalMs))
+	{
+		progressDispatchState.lastValue = value;
+		progressDispatchState.lastTick = tickNow;
+		return true;
+	}
+
+	return false;
+}
+
 void UIBridgeMFC::handleFileProgressEvent(int value)
 {
-	//::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG, value);
+	if (ShouldPostProgressValue(m_fileProgressDispatchState, value))
+	{
+		//::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG, value);
+	}
 }
 
 void UIBridgeMFC::handleTotalProgressEvent(int value)
 {
-	PostThreadInfoMessage(WP_PROG_WHOLE, value);
+	if (ShouldPostProgressValue(m_totalProgressDispatchState, value))
+	{
+		PostThreadInfoMessage(WP_PROG_WHOLE, value);
+	}
 }
 
 void UIBridgeMFC::handleFileCalculatedEvent()

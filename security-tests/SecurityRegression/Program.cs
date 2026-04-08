@@ -193,13 +193,19 @@ internal static partial class Program
             string mfcDialogAndInput = mfcDialog + Environment.NewLine + mfcInputController;
 
             AssertContains(legacyShell, "PROCESS_QUERY_LIMITED_INFORMATION", "Legacy shell extension still asks for excessive process rights.");
-            AssertContains(legacyShell, "CloseHandle(pInfo.hThread);", "Legacy shell extension does not close thread handles after CreateProcess.");
-            AssertContains(legacyShell, "CloseHandle(pInfo.hProcess);", "Legacy shell extension does not close process handles after CreateProcess.");
+            AssertContains(legacyShell, "#include \"WinCommon/WinHandleGuard.h\"", "Legacy shell extension does not include the shared HANDLE RAII wrappers.");
+            AssertContains(legacyShell, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Legacy shell extension does not wrap thread handles after CreateProcess.");
+            AssertContains(legacyShell, "WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", "Legacy shell extension does not wrap process handles after CreateProcess.");
+            AssertDoesNotContain(legacyShell, "CloseHandle(pInfo.hThread);", "Legacy shell extension still closes the CreateProcess thread handle manually.");
+            AssertDoesNotContain(legacyShell, "CloseHandle(pInfo.hProcess);", "Legacy shell extension still closes the CreateProcess process handle manually.");
             AssertContains(legacyShell, "CopyDraggedPath", "Legacy shell extension still relies on fixed-size drag/drop buffers.");
             AssertContains(legacyShell, "DragQueryFile(hDrop, index, NULL, 0)", "Legacy shell extension no longer queries drag/drop path lengths before copying.");
             AssertContains(shellCore, "BOOL bCreated = CreateProcess", "Shared shell-command core launch hardening is missing.");
-            AssertContains(shellCore, "CloseHandle(pInfo.hThread);", "Shared shell-command core does not close thread handles.");
-            AssertContains(shellCore, "CloseHandle(pInfo.hProcess);", "Shared shell-command core does not close process handles.");
+            AssertContains(shellCore, "#include \"WinCommon/WinHandleGuard.h\"", "Shared shell-command core does not include the shared HANDLE RAII wrappers.");
+            AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Shared shell-command core does not wrap thread handles after CreateProcess.");
+            AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", "Shared shell-command core does not wrap process handles after CreateProcess.");
+            AssertDoesNotContain(shellCore, "CloseHandle(pInfo.hThread);", "Shared shell-command core still closes thread handles manually.");
+            AssertDoesNotContain(shellCore, "CloseHandle(pInfo.hProcess);", "Shared shell-command core still closes process handles manually.");
             AssertContains(shellCore, "if (pszExecName == NULL || pszPath == NULL || cchPath == 0)", "Shared shell-command core does not validate executable-path inputs.");
             AssertContains(shellCore, "if (psia == NULL || ptstrExecCmd == NULL || tstrExecPath.empty())", "Shared shell-command core does not validate command-line inputs.");
             AssertContains(wuiShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "WinUI shell extension does not consume the shared hardened shell-command core.");
@@ -207,8 +213,54 @@ internal static partial class Program
             AssertContains(uwpShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "UWP shell extension does not consume the shared hardened shell-command core.");
             AssertContains(uwpShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "UWP shell extension no longer routes detached process launch through the hardened shared helper.");
             AssertContains(mfcDialogAndInput, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
-            AssertContains(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still leak module handles.");
+            AssertContains(windowsUtils, "WinHandleGuard::UniqueFindHandle hFind", "WindowsUtils shell-extension registration helpers do not yet wrap FindFirstFile handles in RAII.");
+            AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "WindowsUtils shell-extension registration helpers do not yet wrap module handles in RAII.");
+            AssertDoesNotContain(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still release modules manually.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
+        }, failures);
+        Run("Filesystem and runtime hardening is present", () =>
+        {
+            string osFileHeader = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFile.h");
+            string osFileWinApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
+            string osFileWinUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
+            string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
+            string checkedArithmetic = ReadRepoFile(repoRoot, @"trunk\source\Common\CheckedArithmetic.h");
+            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+            string executionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
+            string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
+            string digestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
+            string uiBridgeHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
+            string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+
+            AssertContains(osFileHeader, "bool isHashTargetAllowed(void *exception = NULL);", "OsFile no longer exposes the hash-target policy hook.");
+            AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Win32 file hashing no longer checks for reparse points.");
+            AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Win32 file hashing no longer rejects reparse points with an explicit message.");
+            AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Win32 file hashing no longer gates file open on the target policy.");
+            AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");
+            AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine metadata flow no longer relies on the opened file handle.");
+            AssertDoesNotContain(hashEngineResult, "GetFileAttributesEx", "HashEngine metadata flow still uses path-based attribute lookup.");
+
+            AssertContains(checkedArithmetic, "TryAddUInt64", "Checked arithmetic helpers no longer expose checked uint64 addition.");
+            AssertContains(checkedArithmetic, "TrySubtractUInt64", "Checked arithmetic helpers no longer expose checked uint64 subtraction.");
+            AssertContains(checkedArithmetic, "TryMultiplyUInt64", "Checked arithmetic helpers no longer expose checked uint64 multiplication.");
+            AssertContains(checkedArithmetic, "SaturatingAddUInt64", "Checked arithmetic helpers no longer expose saturating addition.");
+            AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Checked arithmetic helpers no longer expose bounded replace arithmetic.");
+            AssertContains(executionContext, "SaturatingAddUInt64", "HashExecutionContext no longer uses saturating size accounting.");
+            AssertContains(executionContext, "ReplaceSizedValueUInt64", "HashExecutionContext no longer uses checked replace arithmetic.");
+            AssertContains(threadAccess, "SaturatingAddUInt64", "Legacy ThreadData size accounting no longer uses saturating arithmetic.");
+            AssertContains(threadAccess, "ReplaceSizedValueUInt64", "Legacy ThreadData replacement accounting no longer uses checked arithmetic.");
+            AssertContains(progressTracker, "CalculateBoundedProgressValue", "Progress tracking no longer uses bounded progress calculations.");
+            AssertContains(digestQueue, "SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1)", "Digest queue sizing no longer uses saturating chunk arithmetic.");
+
+            AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "SHA1 still shares mutable static workspace across concurrent runs.");
+            AssertContains(sha1, "unsigned char workspace[64];", "SHA1 no longer uses stack-local transform workspace.");
+            AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");
+            AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "MFC UI bridge no longer throttles progress dispatch.");
+            AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "MFC UI bridge no longer gates total-progress posts through the throttling helper.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Native runtime tests no longer cover concurrent digest consistency.");
+            AssertContains(nativeRuntimeSource, "std::async(std::launch::async, runSingleRequest)", "Native runtime tests no longer exercise concurrent hashing via async tasks.");
         }, failures);
         Run("DLL search path hardening is present", () =>
         {
@@ -231,6 +283,25 @@ internal static partial class Program
             AssertContains(winUiWin32Helper, "if (IsAppPackaged())", "WinUI helper no longer skips DLL search hardening for packaged activation.");
             AssertContains(fileshashProject, "<RuntimeLibrary>MultiThreaded</RuntimeLibrary>", "Legacy MFC release build no longer uses the static CRT hardening baseline.");
             AssertDoesNotContain(fileshashProject, "<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>", "Legacy MFC release build unexpectedly switched back to the dynamic CRT.");
+        }, failures);
+        Run("Native compiler and linker mitigations are imported consistently", () =>
+        {
+            string nativeSecurityTargets = ReadRepoFile(repoRoot, @"NativeSecurity.targets");
+            string[] vcxProjects = Directory.GetFiles(repoRoot, "*.vcxproj", SearchOption.AllDirectories);
+
+            AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Shared native security targets do not enable /GS.");
+            AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Shared native security targets do not enable /sdl.");
+            AssertContains(nativeSecurityTargets, "<ControlFlowGuard>Guard</ControlFlowGuard>", "Shared native security targets do not enable CFG.");
+            AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Shared native security targets do not enable ASLR.");
+            AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Shared native security targets do not enable high-entropy VA.");
+            AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
+
+            foreach (string projectPath in vcxProjects)
+            {
+                string relativePath = Path.GetRelativePath(repoRoot, projectPath).Replace('/', '\\');
+                string projectContents = ReadRepoFile(repoRoot, relativePath);
+                AssertContains(projectContents, "NativeSecurity.targets", $"{relativePath} does not import the shared native security targets.");
+            }
         }, failures);
         Run("WinMFC context-menu controller preserves elevation and context-menu safety flow", () =>
         {

@@ -252,7 +252,10 @@ internal static class Program
                 [
                     "uint64_t CalculateFileChunkIterations(",
                     "unsigned int bufferLength = NormalizeDigestDataBufferPreferredLength(preferredLength);",
-                    "return fileSize / bufferLength + 1;"
+                    "if (fileSize == 0)",
+                    "return 1;",
+                    "uint64_t adjustedFileSize = SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1);",
+                    "return adjustedFileSize / bufferLength;"
                 ],
                 "HashEngine chunk-iteration helper no longer preserves the expected calculation.");
             AssertInOrder(engineImpl,
@@ -528,7 +531,8 @@ internal static class Program
             AssertContains(threadAccess, "return GetThreadDataHashCancellationState(threadData).stopRequested.load();", "ThreadData access seams stop getter does not yet route through the grouped cancellation seam.");
             AssertContains(threadAccess, "GetMutableThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest = uppercase;", "ThreadData access seams uppercase setter does not yet route through the grouped preference seam.");
             AssertContains(threadAccess, "return GetThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest;", "ThreadData access seams uppercase getter does not yet route through the grouped preference seam.");
-            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize += sizeDelta;", "ThreadData access seams total-size increment helper does not yet route through the grouped job-state seam.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize = SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta);", "ThreadData access seams total-size increment helper does not yet use bounded uint64 accounting.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize = ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize);", "ThreadData access seams replacement-size helper does not yet use checked uint64 accounting.");
             AssertContains(threadAccess, "return GetThreadDataInputState(threadData).fileCount;", "ThreadData access seams file-count getter does not yet route through the grouped input-state seam.");
             AssertContains(threadAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadData access seams grouped path getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return GetThreadDataHashJobState(threadData).results;", "ThreadData access seams grouped result-list getter does not yet route through the grouped job-state seam.");
@@ -4936,9 +4940,10 @@ internal static class Program
             AssertContains(hashFileSizeAccounting, "ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size replacement.");
             AssertContains(hashFileSizeAccounting, "fSizes[fileIndex] = fsize;", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve counted-size cache updates.");
             AssertContains(hashFileSizeAccounting, "return TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, osFile.getLength());", "Phase 71 HashFileSizeAccounting.cpp does not yet preserve OsFile length retrieval through the tracked-size seam.");
-            AssertContains(hashEngineResult, "TryResolveWindowsPathFileMeta(path, &resolvedMeta)", "Phase 71 HashEngineResult.cpp does not yet support path-based metadata projection for the safer native runtime path.");
-            AssertContains(hashEngineResult, "fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", "Phase 71 HashEngineResult.cpp does not yet reuse tracked-size accounting for path-based metadata.");
+            AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "Phase 71 HashEngineResult.cpp does not yet project file metadata from the opened handle.");
             AssertContains(hashEngineResult, "fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", "Phase 71 HashEngineResult.cpp does not yet delegate fallback file-size accounting.");
+            AssertDoesNotContain(hashEngineResult, "TryResolveWindowsPathFileMeta(path, &resolvedMeta)", "Phase 71 HashEngineResult.cpp should no longer use path-based metadata projection.");
+            AssertDoesNotContain(hashEngineResult, "fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", "Phase 71 HashEngineResult.cpp should no longer reuse tracked-size accounting through path-based metadata.");
             AssertDoesNotContain(hashEngineResult, "uint64_t fsize = osFile.getLength();", "Phase 71 HashEngineResult.cpp should no longer inline file-size retrieval.");
             AssertContains(hashEngineInternal, "#include \"Common/HashFileSizeAccounting.h\"", "Phase 71 HashEngineInternal.h does not yet consume HashFileSizeAccounting.");
 
@@ -5686,6 +5691,59 @@ internal static class Program
 
             AssertContains(extensibilityUnitTests, "NativeRuntimeTests_CoverDescriptorRegistrationRequestSelectionAndResultProjectionForNewAlgorithms", "Phase 89 unit-test coverage does not yet gate the native extensibility scenarios.");
             AssertContains(extensibilityUnitTests, "CoreDescriptorIdSeams_AllowNewAlgorithmsWithoutAddingFixedDigestFields", "Phase 89 unit-test coverage does not yet gate the core extensibility seams.");
+        }, failures);
+
+        Run("Phase 90 keeps defensive security hardening on reparse rejection, checked arithmetic, RAII handles, throttled UI, and native mitigations", () =>
+        {
+            string osFileWinApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
+            string osFileWinUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
+            string checkedArithmetic = ReadRepoFile(repoRoot, @"trunk\source\Common\CheckedArithmetic.h");
+            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+            string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
+            string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
+            string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+            string handleGuard = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\WinHandleGuard.h");
+            string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
+            string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
+            string runtimeTests = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeSecurityTargets = ReadRepoFile(repoRoot, @"NativeSecurity.targets");
+            string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+
+            AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
+            AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");
+            AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Phase 90 Win32 file handling does not gate CreateFile on the reparse-point policy.");
+            AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");
+
+            AssertContains(checkedArithmetic, "SaturatingAddUInt64", "Phase 90 checked arithmetic helpers do not yet expose saturating adds.");
+            AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Phase 90 checked arithmetic helpers do not yet expose bounded replacement math.");
+            AssertContains(progressTracker, "CalculateBoundedProgressValue", "Phase 90 progress tracking does not yet use bounded progress math.");
+            AssertContains(threadAccess, "SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta)", "Phase 90 thread-data accounting does not yet use saturating adds.");
+            AssertContains(threadAccess, "ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize)", "Phase 90 thread-data accounting does not yet use bounded replacement math.");
+
+            AssertContains(handleGuard, "typedef UniqueHandleBase<HANDLE, HandleCloseTraits> UniqueWinHandle;", "Phase 90 WinHandleGuard does not yet expose UniqueWinHandle.");
+            AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Phase 90 shell-core launch path does not yet wrap the thread handle in RAII.");
+            AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "Phase 90 WindowsUtils does not yet wrap loaded modules in RAII.");
+
+            AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "Phase 90 SHA1 transform still shares mutable static workspace across threads.");
+            AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "Phase 90 UI progress dispatch does not yet throttle total-progress updates.");
+            AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "Phase 90 UI progress dispatch does not yet enforce the refresh interval.");
+            AssertContains(runtimeTests, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Phase 90 native runtime tests do not yet cover concurrent digest consistency.");
+
+            AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Phase 90 native security targets do not yet enable /GS.");
+            AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Phase 90 native security targets do not yet enable /sdl.");
+            AssertContains(nativeSecurityTargets, "<ControlFlowGuard>Guard</ControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG.");
+            AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Phase 90 native security targets do not yet enable ASLR.");
+            AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Phase 90 native security targets do not yet enable high-entropy VA for x64.");
+            AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Phase 90 native security targets do not yet enable DEP.");
+            AssertContains(legacyProject, "NativeSecurity.targets", "Phase 90 legacy native project does not yet import the shared security targets.");
+            AssertContains(nativeCoreProject, "NativeSecurity.targets", "Phase 90 native core project does not yet import the shared security targets.");
+
+            AssertContains(securityUnitTests, "FileOpenPaths_RejectReparsePoints_AndReuseOpenedHandleMetadata", "Phase 90 unit tests do not yet gate reparse-point rejection.");
+            AssertContains(securityUnitTests, "HandleOwnership_UsesRaiiAcrossWorkerAndShellPaths", "Phase 90 unit tests do not yet gate HANDLE RAII adoption.");
+            AssertContains(securityUnitTests, "RuntimeUses_CheckedArithmetic_ForSizesAndProgress", "Phase 90 unit tests do not yet gate checked arithmetic usage.");
+            AssertContains(securityUnitTests, "DigestExecution_RemainsThreadLocal_AndUiProgress_IsThrottled", "Phase 90 unit tests do not yet gate thread-local digest execution and throttled UI progress.");
         }, failures);
 
         if (failures.Count > 0)

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngineInternal.h"
+#include "Common/CheckedArithmetic.h"
 
 namespace HashEngineInternal
 {
@@ -16,7 +17,10 @@ namespace HashEngineInternal
 			else
 			{
 				int progressMax = observer->progressMax();
-				observer->onProgressEvent(CreateTotalProgressEvent((fileIndex + 1) * progressMax / static_cast<int>(GetHashRequestFileCount(request))));
+				observer->onProgressEvent(CreateTotalProgressEvent(CalculateIndexedProgressValue(
+					static_cast<uint64_t>(fileIndex) + 1,
+					GetHashRequestFileCount(request),
+					progressMax)));
 			}
 		}
 	}

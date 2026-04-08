@@ -46,6 +46,12 @@ OsFile::~OsFile()
     }
 }
 
+bool OsFile::isHashTargetAllowed(void *exception)
+{
+    (void)exception;
+    return true;
+}
+
 bool OsFile::open(void *flag, void *exception)
 {
     string strFilePath = tstrtostr(_filePath);

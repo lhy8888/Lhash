@@ -7,6 +7,7 @@
 #include <strsafe.h>
 
 #include "Common/strhelper.h"
+#include "WinCommon/WinHandleGuard.h"
 
 static inline HRESULT ResolveWindowsAppExePath(PCWSTR pszExecName, LPWSTR pszPath, size_t cchPath)
 {
@@ -96,8 +97,8 @@ static inline bool LaunchShellCommandLine(const sunjwbase::tstring& tstrExecPath
 
     if (bCreated)
     {
-        CloseHandle(pInfo.hThread);
-        CloseHandle(pInfo.hProcess);
+        WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);
+        WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);
     }
 
     return bCreated != FALSE;

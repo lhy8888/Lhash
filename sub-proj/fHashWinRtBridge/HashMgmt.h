@@ -3,6 +3,7 @@
 #include <memory>
 #include "Common/Global.h"
 #include "LegacyCompat/LegacyThreadData.h"
+#include "WinCommon/WinHandleGuard.h"
 #include "HashResultNet.h"
 #include "UIBridgeDelegate.h"
 #include "UIBridgeUwp.h"
@@ -41,6 +42,6 @@ public:
 	private:
 		std::shared_ptr<UIBridgeUwp> m_spUiBridgeUwp;
 		ThreadData m_threadData;
-		HANDLE m_hWorkThread;
+		WinHandleGuard::UniqueWinHandle m_hWorkThread;
 	};
 }

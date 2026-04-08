@@ -1,6 +1,7 @@
 #ifndef _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
 #define _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
 
+#include "Common/CheckedArithmetic.h"
 #include "LegacyCompat/LegacyThreadData.h"
 #include "LegacyCompat/HashAlgorithmTypeCompat.h"
 
@@ -232,12 +233,12 @@ static inline void ResetThreadDataTotalSize(ThreadData& threadData)
 
 static inline void AddThreadDataTotalSize(ThreadData& threadData, uint64_t sizeDelta)
 {
-	GetMutableThreadDataHashJobState(threadData).countedSize += sizeDelta;
+	GetMutableThreadDataHashJobState(threadData).countedSize = SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta);
 }
 
 static inline void ReplaceThreadDataCountedFileSize(ThreadData& threadData, uint64_t previousSize, uint64_t currentSize)
 {
-	GetMutableThreadDataHashJobState(threadData).countedSize = GetThreadDataTotalSize(threadData) + currentSize - previousSize;
+	GetMutableThreadDataHashJobState(threadData).countedSize = ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize);
 }
 
 #endif
