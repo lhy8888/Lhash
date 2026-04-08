@@ -107,5 +107,6 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("softprops/action-gh-release@v2", workflow, StringComparison.Ordinal);
         Assert.Contains("release-assets/LHash-winui-x64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("artifacts/winui-x64-*", workflow, StringComparison.Ordinal);
     }
 }

@@ -449,7 +449,6 @@ jobs:
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
             artifacts/publish-winui-x64.log
-            artifacts/winui-x64-*
             artifacts/LHash-winui-x64-*.zip
           if-no-files-found: warn
 

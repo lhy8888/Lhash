@@ -3899,6 +3899,7 @@ internal static class Program
             AssertContains(workflow, "softprops/action-gh-release@v2", "Phase 48 publish-release does not yet invoke the GitHub release publisher.");
             AssertContains(workflow, "release-assets/LHash-winui-x64-*.zip", "Phase 48 publish-release does not yet publish the packaged WinUI desktop zip.");
             AssertContains(workflow, "release-staging/RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet attach the release manifest.");
+            AssertDoesNotContain(workflow, "artifacts/winui-x64-*", "Phase 48 WinUI artifact upload still includes the duplicated uncompressed publish directory.");
         }, failures);
 
         Run("Phase 49 promotes single-file hashing into a dedicated runner seam so HashEngine.cpp stays orchestration-focused", () =>
