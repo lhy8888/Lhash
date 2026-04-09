@@ -4,60 +4,49 @@ LHash can only remove the Windows `Publisher unknown` experience by using a **pu
 
 Self-signed certificates, local test certificates, or private enterprise trust chains are useful for internal validation, but they do **not** solve the public Windows trust problem for normal users.
 
-## Supported release signing paths
+## Preferred public-trust path: SignPath Foundation
 
-### 1. Azure Artifact Signing Public Trust
+For this project, the preferred no-cost public code-signing path is **SignPath Foundation** for open source software.
 
-This is the preferred managed path for the maintained release line.
+Official project pages:
 
-GitHub Actions support is wired into [windows-build.yml](.github/workflows/windows-build.yml) through `azure/trusted-signing-action`.
+- [SignPath Foundation home](https://signpath.org/)
+- [Apply for a free SignPath.io subscription](https://signpath.org/apply.html)
+- [Terms](https://signpath.org/terms.html)
 
-Configure these GitHub repository secrets:
+Why this is the preferred route:
 
-- `LHASH_TRUSTED_SIGNING_TENANT_ID`
-- `LHASH_TRUSTED_SIGNING_CLIENT_ID`
-- `LHASH_TRUSTED_SIGNING_CLIENT_SECRET`
-- `LHASH_TRUSTED_SIGNING_ENDPOINT`
-- `LHASH_TRUSTED_SIGNING_ACCOUNT_NAME`
-- `LHASH_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME`
+- it is intended for qualifying open source projects
+- it can provide publicly trusted Windows code signing without a monthly Azure subscription
+- it fits LHash better than a paid enterprise signing service
 
-The release workflow signs the shipped native `LHash.exe` when all six values are present.
+## What SignPath requires
 
-Recommended Microsoft setup path:
+Before applying, the project should clearly publish a code-signing policy and keep release ownership easy to understand.
 
-1. Create an Azure Artifact Signing account.
-2. Complete identity validation.
-3. Create a **Public Trust** certificate profile.
-4. Grant the signing identity the `Artifact Signing Certificate Profile Signer` role.
-5. Store the GitHub secrets above.
-6. Publish a tag such as `v1.10.1`.
+LHash publishes that policy here:
 
-### 2. Traditional PFX certificate
+- [Code signing policy](CODE_SIGNING_POLICY.md)
 
-The legacy fallback path remains available.
+## Current CI behavior
 
-Configure these GitHub repository secrets:
+The current GitHub workflow keeps only a simple optional PFX signing fallback for internal or temporary use.
 
-- `LHASH_SIGN_PFX_BASE64`
-- `LHASH_SIGN_PFX_PASSWORD`
+- If `LHASH_SIGN_PFX_BASE64` and `LHASH_SIGN_PFX_PASSWORD` are configured, CI can still Authenticode-sign builds with that certificate.
+- If they are not configured, the build still completes, but Windows will continue to show `Publisher unknown`.
 
-This path uses [sign_legacy_exe.ps1](trunk/sign_legacy_exe.ps1) and `signtool.exe`.
+This fallback is **not** the preferred public release plan.
 
-## Behavior in CI
+## Important note about SmartScreen
 
-- If Artifact Signing secrets are present, the release workflow uses Artifact Signing first.
-- If Artifact Signing is not configured but PFX secrets are present, the release workflow falls back to the PFX path.
-- If neither signing path is configured, the build still completes, but Windows will continue to show `Publisher unknown`.
+Even after moving to a publicly trusted signing path, Microsoft Defender SmartScreen can still depend on reputation over time.
 
-## Important notes
+Public trust signing fixes the publisher trust chain. It does not guarantee instant SmartScreen reputation for a newly signed app.
 
-- Timestamping is required for long-term signature validity. The workflow uses `http://timestamp.acs.microsoft.com` for Artifact Signing and keeps timestamping enabled in the PFX path as well.
-- Public trust signing improves Windows trust, but SmartScreen reputation can still depend on publisher and file reputation over time.
-- The shipped default release line is the lightweight native desktop package, so that is the executable currently wired for formal signing.
+## What remains to do
 
-## Official references
-
-- [Artifact Signing overview](https://learn.microsoft.com/en-us/azure/trusted-signing/overview)
-- [Artifact Signing quickstart](https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart)
-- [Set up signing integrations to use Artifact Signing](https://learn.microsoft.com/en-us/azure/artifact-signing/how-to-signing-integrations)
-- [Artifact Signing trust models](https://learn.microsoft.com/en-us/azure/artifact-signing/concept-trust-models)
+1. Apply to SignPath Foundation.
+2. Wait for approval.
+3. Add the approved SignPath project details and secrets to GitHub.
+4. Wire the GitHub release workflow to the approved SignPath project.
+5. Publish the next release as the first publicly trusted signed LHash build.

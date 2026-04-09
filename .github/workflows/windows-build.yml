@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -178,25 +177,8 @@ jobs:
             throw 'MSBuild succeeded, but no executable was found in trunk\\x64\\Release.'
           }
 
-      - name: Sign legacy Windows app with Artifact Signing (optional)
-        if: ${{ env.LHASH_TRUSTED_SIGNING_TENANT_ID != '' && env.LHASH_TRUSTED_SIGNING_CLIENT_ID != '' && env.LHASH_TRUSTED_SIGNING_CLIENT_SECRET != '' && env.LHASH_TRUSTED_SIGNING_ENDPOINT != '' && env.LHASH_TRUSTED_SIGNING_ACCOUNT_NAME != '' && env.LHASH_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME != '' }}
-        uses: azure/trusted-signing-action@v0.5.11
-        with:
-          azure-tenant-id: ${{ env.LHASH_TRUSTED_SIGNING_TENANT_ID }}
-          azure-client-id: ${{ env.LHASH_TRUSTED_SIGNING_CLIENT_ID }}
-          azure-client-secret: ${{ env.LHASH_TRUSTED_SIGNING_CLIENT_SECRET }}
-          endpoint: ${{ env.LHASH_TRUSTED_SIGNING_ENDPOINT }}
-          trusted-signing-account-name: ${{ env.LHASH_TRUSTED_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ env.LHASH_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files: ${{ github.workspace }}\trunk\x64\Release\LHash.exe
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          description: LHash
-          description-url: https://github.com/lhy8888/Lhash
-
       - name: Sign legacy Windows app with PFX certificate (optional)
-        if: ${{ !(env.LHASH_TRUSTED_SIGNING_TENANT_ID != '' && env.LHASH_TRUSTED_SIGNING_CLIENT_ID != '' && env.LHASH_TRUSTED_SIGNING_CLIENT_SECRET != '' && env.LHASH_TRUSTED_SIGNING_ENDPOINT != '' && env.LHASH_TRUSTED_SIGNING_ACCOUNT_NAME != '' && env.LHASH_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME != '') && env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
+        if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'

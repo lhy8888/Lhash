@@ -16,6 +16,7 @@ The current maintained release line starts at `v1.10.0`.
 - Main branch: `future-winui-was2`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
+- Code signing policy: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)
 
 ## LHash
 
