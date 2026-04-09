@@ -1,4 +1,4 @@
-// MD5SUM03Dlg.cpp : 实现文件
+﻿// MD5SUM03Dlg.cpp : dialog implementation
 //
 #include "stdafx.h"
 
@@ -35,7 +35,7 @@ const UINT SETTINGS_COMMAND_ALGORITHM_BASE = 61100;
 #define new DEBUG_NEW
 #endif
 
-// CFilesHashDlg 对话框
+// CFilesHashDlg message handlers
 CFilesHashDlg::CFilesHashDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CFilesHashDlg::IDD, pParent),
 	m_uiBridgeMFC(NULL)
@@ -91,7 +91,7 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CFilesHashDlg 消息处理程序
+// CFilesHashDlg message handlers
 
 BOOL CFilesHashDlg::OnInitDialog()
 {
@@ -173,7 +173,7 @@ void CFilesHashDlg::OnPaint()
 	CDialog::OnPaint();
 }
 
-//?????????????????????????
+// Return the drag cursor while the app is minimized.
 HCURSOR CFilesHashDlg::OnQueryDragIcon()
 {
 	return m_hashMessageController.GetDragCursor(m_hIcon);
@@ -288,9 +288,9 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	// TODO:  在此更改 DC 的任何属性
+	// TODO: change any DC attributes here if needed.
 
-	// TODO:  如果默认的不是所需画笔，则返回另一个画笔
+	// TODO: return a different brush here if the default one is not suitable.
 	return hbr;
 }
 
@@ -398,12 +398,14 @@ void CFilesHashDlg::HandleSettingsCommand(UINT commandId)
 	if (commandId >= SETTINGS_COMMAND_ALGORITHM_BASE)
 	{
 		int algorithmIndex = static_cast<int>(commandId - SETTINGS_COMMAND_ALGORITHM_BASE);
-		const HashAlgorithmDescriptor* algorithmDescriptor = GetRegisteredHashAlgorithmDescriptor(algorithmIndex);
-		if (algorithmDescriptor != NULL)
+		if (algorithmIndex >= 0 && algorithmIndex < GetRegisteredHashAlgorithmCount())
 		{
-			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(*algorithmDescriptor);
+			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(algorithmIndex);
+			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
 			BOOL enabled = m_hashAlgorithmSelectionController.IsAlgorithmEnabled(algorithmId);
 			m_hashAlgorithmSelectionController.SetAlgorithmEnabled(algorithmId, !enabled);
 		}
 	}
 }
+
+

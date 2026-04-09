@@ -24,17 +24,13 @@ static sunjwbase::tstring BuildEnabledAlgorithmSummary(const ThreadData& threadD
 			return true;
 		}
 
-		const HashAlgorithmDescriptor* descriptor = GetRegisteredHashAlgorithmDescriptor(algorithmIndex);
-		if (descriptor == NULL)
-		{
-			return true;
-		}
+		const HashAlgorithmDescriptor& descriptor = GetHashAlgorithmDescriptorAt(algorithmIndex);
 
 		if (!algorithmSummary.empty())
 		{
 			algorithmSummary += _T(", ");
 		}
-		algorithmSummary += GetHashAlgorithmDescriptorDisplayLabel(*descriptor);
+		algorithmSummary += GetHashAlgorithmDescriptorDisplayLabel(descriptor);
 		return true;
 	});
 	return algorithmSummary;
