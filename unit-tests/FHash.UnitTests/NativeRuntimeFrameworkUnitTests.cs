@@ -42,9 +42,13 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_RespectsSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_FindsMatchingRuntimeDigests", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_MatchesPathAndDigestForRuntimeResults", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);
@@ -69,7 +73,14 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("RunHashThreadData(threadData)", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest(&executionContext, request)", testSource, StringComparison.Ordinal);
         Assert.Contains("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F", testSource, StringComparison.Ordinal);
+        Assert.Contains("CreateOfficialXXH3SanityInput", testSource, StringComparison.Ordinal);
+        Assert.Contains("CreateAscendingByteInput", testSource, StringComparison.Ordinal);
+        Assert.Contains("54247382A8D6B94D", testSource, StringComparison.Ordinal);
+        Assert.Contains("20EFC49FF02422EA54247382A8D6B94D", testSource, StringComparison.Ordinal);
+        Assert.Contains("46DD794E", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"blake3-1024\")", testSource, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"xxh3\")", testSource, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults", testSource, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> *stopRequestedFlag_", testSource, StringComparison.Ordinal);

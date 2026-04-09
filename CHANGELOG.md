@@ -13,6 +13,7 @@ Introduced the first maintained release with built-in BLAKE3 variants and deeper
 
 - added fixed-version official BLAKE3 C integration
 - added `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` descriptor variants
+- added fixed-version official `XXH3-64`, `XXH3-128`, and `CRC32C` integrations
 - benchmark-backed BLAKE3 SIMD decisions now keep:
   - `x64`: `SSE2`, `SSE4.1`, `AVX2`, `AVX512`
   - `Win32`: `SSE2`, `SSE4.1`, `AVX2`
@@ -22,11 +23,13 @@ Introduced the first maintained release with built-in BLAKE3 variants and deeper
 
 - strengthened `HashExecutionContext` so the progress sink is modeled as a non-owning observer seam with a null fallback
 - expanded native runtime coverage for BLAKE3 uppercase behavior, unknown-id handling, ordering, and concurrent stability
+- added native runtime coverage for official `XXH3` and `CRC32C` vectors, unknown-id handling, ordering, and concurrent stability
 - kept the maintained native desktop release line lightweight and portable
 
 ### Validation
 
 - extended unit, refactor-baseline, and security-regression gates for BLAKE3 behavior and runtime-seam expectations
+- extended unit, refactor-baseline, and security-regression gates for fixed-version `XXH3` and `CRC32C` provider coverage
 - added dedicated native benchmark coverage for `x64`, `Win32`, and `ARM64`
 - current benchmark evidence shows large-file `BLAKE3-256` uplift of roughly:
   - `x64`: `481 MiB/s -> 1641 MiB/s`

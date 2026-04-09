@@ -5925,6 +5925,66 @@ internal static class Program
             AssertContains(benchmarkDoc, "Do not use one platform's benchmark to justify another platform's SIMD changes", "Phase 94 documentation does not yet keep per-platform SIMD decisions behind dedicated measurements.");
         }, failures);
 
+        Run("Phase 95 vendors xxHash3 and google CRC32C through runtime providers and fixed-version regression gates", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string xxh3ProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.h");
+            string xxh3ProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
+            string crc32cProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
+            string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
+            string xxhashNote = ReadRepoFile(repoRoot, @"third_party\xxhash\0.8.3\README.LHash.md");
+            string crc32cNote = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\README.LHash.md");
+            string crc32cArm64Check = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
+
+            AssertContains(registryCore, "{ \"xxh3-64\", \"XXH3-64\", true, false }", "Phase 95 registry does not yet expose the XXH3-64 descriptor.");
+            AssertContains(registryCore, "{ \"xxh3-128\", \"XXH3-128\", true, false }", "Phase 95 registry does not yet expose the XXH3-128 descriptor.");
+            AssertContains(registryCore, "{ \"crc32c\", \"CRC32C\", true, false }", "Phase 95 registry does not yet expose the CRC32C descriptor.");
+            AssertContains(hashEngineInternal, "XXH3_state_t xxh3_64;", "Phase 95 hash-engine context bundle does not yet carry the XXH3-64 state.");
+            AssertContains(hashEngineInternal, "XXH3_state_t xxh3_128;", "Phase 95 hash-engine context bundle does not yet carry the XXH3-128 state.");
+            AssertContains(hashEngineInternal, "uint32_t crc32c;", "Phase 95 hash-engine context bundle does not yet carry the CRC32C state.");
+            AssertContains(digestRegistry, "GetXXH3_64AlgorithmId()", "Phase 95 digest operation registry does not yet define the XXH3-64 algorithm id seam.");
+            AssertContains(digestRegistry, "GetXXH3_128AlgorithmId()", "Phase 95 digest operation registry does not yet define the XXH3-128 algorithm id seam.");
+            AssertContains(digestRegistry, "GetCRC32CAlgorithmId()", "Phase 95 digest operation registry does not yet define the CRC32C algorithm id seam.");
+            AssertContains(digestRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 95 digest operation registry no longer registers runtime digest descriptors.");
+
+            AssertContains(xxh3ProviderHeader, "XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", "Phase 95 XXH3 provider header does not yet expose the 64-bit profile.");
+            AssertContains(xxh3ProviderImplementation, "XXH3_64bits_reset", "Phase 95 XXH3 provider does not yet initialize through the official xxHash API.");
+            AssertContains(xxh3ProviderImplementation, "XXH128_canonicalFromHash", "Phase 95 XXH3 provider does not yet canonicalize the 128-bit output.");
+            AssertContains(crc32cProviderHeader, "CRC32C_OUTPUT_BYTES = sizeof(uint32_t)", "Phase 95 CRC32C provider header does not yet expose the 32-bit profile.");
+            AssertContains(crc32cProviderImplementation, "crc32c_extend", "Phase 95 CRC32C provider does not yet update through the official google/crc32c API.");
+
+            AssertContains(nativeCoreProject, @"third_party\xxhash\0.8.3\xxhash.c", "Phase 95 desktop native core does not yet compile the vendored xxHash source snapshot.");
+            AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c.cc", "Phase 95 desktop native core does not yet compile the vendored CRC32C source snapshot.");
+            AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", "Phase 95 desktop native core does not yet compile the ARM64 CRC32C path.");
+            AssertContains(uwpNativeProject, @"third_party\xxhash\0.8.3\xxhash.c", "Phase 95 UWP native core does not yet compile the vendored xxHash source snapshot.");
+            AssertContains(uwpNativeProject, @"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", "Phase 95 UWP native core does not yet compile the ARM64 CRC32C path.");
+
+            AssertContains(xxhashNote, "Upstream tag: v0.8.3", "Phase 95 xxHash vendor note does not yet pin the official upstream tag.");
+            AssertContains(xxhashNote, "e626a72bc2321cd320e953a0ccf1584cad60f363", "Phase 95 xxHash vendor note does not yet pin the official upstream commit.");
+            AssertContains(crc32cNote, "Upstream tag: 1.1.2", "Phase 95 CRC32C vendor note does not yet pin the official upstream tag.");
+            AssertContains(crc32cNote, "02e65f4fd3065d27b2e29324800ca6d04df16126", "Phase 95 CRC32C vendor note does not yet pin the official upstream commit.");
+            AssertContains(crc32cArm64Check, "PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE", "Phase 95 vendored CRC32C ARM64 runtime check does not yet probe Windows CRC32 instructions.");
+
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", "Phase 95 native runtime coverage does not yet include the official XXH3 vector.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", "Phase 95 native runtime coverage does not yet include the official CRC32C vector.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Phase 95 native runtime coverage does not yet include XXH3/CRC32C request normalization behavior.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", "Phase 95 native runtime coverage does not yet include concurrent XXH3/CRC32C stability.");
+            AssertContains(extensibilityUnitTests, "XXH3AndCRC32CIntegration_VendorsOfficialFixedVersions_AndAddsRuntimeCoverage", "Phase 95 unit tests do not yet gate the xxHash3/CRC32C extensibility seam.");
+            AssertContains(securityUnitTests, "XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversOrderingAndConcurrency", "Phase 95 unit tests do not yet gate the xxHash3/CRC32C hardening seam.");
+            AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", "Phase 95 native-runtime framework tests do not yet require the official XXH3 vector coverage.");
+            AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", "Phase 95 native-runtime framework tests do not yet require the official CRC32C vector coverage.");
+            AssertContains(securityRegression, "XXH3 and CRC32C providers stay covered by hardening gates", "Phase 95 security regression does not yet gate the xxHash3/CRC32C coverage.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

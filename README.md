@@ -117,15 +117,22 @@ Modern mitigations are enabled where the toolchain supports them:
 - Real-time progress tracking
 - Explicit error reporting for permissions and I/O failures
 - Extensible algorithm framework
-- Built-in BLAKE3 variants for modern high-speed hashing
+- Built-in `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` variants for modern high-speed hashing
+- Built-in `XXH3-64`, `XXH3-128`, and `CRC32C` variants vendored from fixed upstream snapshots
 
-## BLAKE3 SIMD status
+## SIMD-backed algorithm status
 
-The current native-core configuration keeps BLAKE3 SIMD enabled on the platforms where benchmark evidence now exists:
+The current native-core configuration keeps the benchmark-backed SIMD paths enabled on the platforms where evidence now exists:
 
-- `x64`: `SSE2`, `SSE4.1`, `AVX2`, `AVX512`
-- `Win32`: `SSE2`, `SSE4.1`, `AVX2`
-- `ARM64`: `NEON`
+- `BLAKE3`
+  - `x64`: `SSE2`, `SSE4.1`, `AVX2`, `AVX512`
+  - `Win32`: `SSE2`, `SSE4.1`, `AVX2`
+  - `ARM64`: `NEON`
+- `CRC32C`
+  - `x64`: upstream `SSE4.2`
+  - `ARM64`: upstream ARM64 backend with Windows processor-feature probing
+- `XXH3`
+  - fixed-version official code integrated through the same provider/descriptor seam as BLAKE3
 
 The benchmark workflow now measures `portable` vs `current` on all three platforms and keeps the decision local to each platform instead of guessing from x64 alone.
 
@@ -135,7 +142,7 @@ Observed headline results on the current GitHub-hosted runners:
 - `Win32`: `BLAKE3-256` on `large-single-128m` improves from about `390 MiB/s` to about `1369 MiB/s`
 - `ARM64`: `BLAKE3-256` on `large-single-128m` improves from about `532 MiB/s` to about `901 MiB/s`
 
-These measurements justify keeping the current SIMD-backed BLAKE3 paths enabled.
+These measurements justify keeping the current SIMD-backed BLAKE3 paths enabled while the additional `XXH3` and `CRC32C` variants stay vendored behind the same fixed-version provider pattern.
 
 ## Design principles
 
@@ -170,6 +177,7 @@ LHash therefore keeps the default release smaller, faster, and more predictable 
 - Major security hardening completed
 - Native desktop UX continuously refined on the maintained release line
 - Benchmark-backed BLAKE3 SIMD policy established for `x64`, `Win32`, and `ARM64`
+- Fixed-version `XXH3-64`, `XXH3-128`, and `CRC32C` integrated into the native runtime
 
 Roadmap:
 

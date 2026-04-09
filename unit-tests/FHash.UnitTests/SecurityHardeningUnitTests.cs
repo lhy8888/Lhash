@@ -184,6 +184,47 @@ public sealed class SecurityHardeningUnitTests
     }
 
     [Fact]
+    public void XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversOrderingAndConcurrency()
+    {
+        string xxh3ProviderHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\XXHash3HashProvider.h");
+        string xxh3ProviderImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
+        string crc32cProviderHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
+        string crc32cProviderImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
+        string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string crc32cArm64Check = RepositoryTestContext.ReadTextFile(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
+
+        Assert.Contains("XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("XXH3_128_OUTPUT_BYTES = sizeof(XXH128_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("XXH3_64bits_reset", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("XXH3_64bits_update", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("XXH64_canonicalFromHash", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("XXH3_128bits_digest", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static XXH3_state_t", xxh3ProviderImplementation, StringComparison.Ordinal);
+
+        Assert.Contains("CRC32C_OUTPUT_BYTES = sizeof(uint32_t)", crc32cProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("crc32c_extend", crc32cProviderImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static uint32_t", crc32cProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE", crc32cArm64Check, StringComparison.Ordinal);
+        Assert.Contains("PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE", crc32cArm64Check, StringComparison.Ordinal);
+
+        Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("std::async(std::launch::async, runSingleRequest)", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"xxh3\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", runtimeTests, StringComparison.Ordinal);
+
+        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", uwpNativeProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashExecutionContext_UsesANonOwningSinkReferenceWithNullFallback()
     {
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");

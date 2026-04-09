@@ -112,6 +112,9 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 	RegisterHashAlgorithmDescriptor({ "blake3-256", "BLAKE3-256", true, false });
 	RegisterHashAlgorithmDescriptor({ "blake3-512", "BLAKE3-512", true, false });
 	RegisterHashAlgorithmDescriptor({ "blake3-xof", "BLAKE3 XOF", true, false });
+	RegisterHashAlgorithmDescriptor({ "xxh3-64", "XXH3-64", true, false });
+	RegisterHashAlgorithmDescriptor({ "xxh3-128", "XXH3-128", true, false });
+	RegisterHashAlgorithmDescriptor({ "crc32c", "CRC32C", true, false });
 	GetHashAlgorithmDefaultsInitializedFlag() = true;
 }
 

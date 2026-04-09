@@ -54,6 +54,24 @@ namespace HashEngineInternal
 		return algorithmId;
 	}
 
+	static const HashAlgorithmId& GetXXH3_64AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("xxh3-64");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetXXH3_128AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("xxh3-128");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetCRC32CAlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("crc32c");
+		return algorithmId;
+	}
+
 	static void InitializeMD5DigestContext(FileHashContexts *hashContexts)
 	{
 		MD5Init(&hashContexts->mdContext, 0);
@@ -89,6 +107,21 @@ namespace HashEngineInternal
 		HashRuntime::InitializeBlake3Hasher(&hashContexts->blake3Xof);
 	}
 
+	static void InitializeXXH3_64DigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeXXH3_64Hasher(&hashContexts->xxh3_64);
+	}
+
+	static void InitializeXXH3_128DigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeXXH3_128Hasher(&hashContexts->xxh3_128);
+	}
+
+	static void InitializeCRC32CDigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeCRC32CHasher(&hashContexts->crc32c);
+	}
+
 	static void UpdateMD5DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		MD5Update(&hashContexts.mdContext, data, dataLen);
@@ -122,6 +155,21 @@ namespace HashEngineInternal
 	static void UpdateBLAKE3XofDigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		HashRuntime::UpdateBlake3Hasher(hashContexts.blake3Xof, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateXXH3_64DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateXXH3_64Hasher(hashContexts.xxh3_64, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateXXH3_128DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateXXH3_128Hasher(hashContexts.xxh3_128, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateCRC32CDigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateCRC32CHasher(hashContexts.crc32c, data, static_cast<size_t>(dataLen));
 	}
 
 	static void FinalizeMD5DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -228,6 +276,30 @@ namespace HashEngineInternal
 			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3Xof, HashRuntime::BLAKE3_XOF_OUTPUT_BYTES));
 	}
 
+	static void FinalizeXXH3_64DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetXXH3_64AlgorithmId(),
+			HashRuntime::FinalizeXXH3_64HasherHex(hashContexts.xxh3_64));
+	}
+
+	static void FinalizeXXH3_128DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetXXH3_128AlgorithmId(),
+			HashRuntime::FinalizeXXH3_128HasherHex(hashContexts.xxh3_128));
+	}
+
+	static void FinalizeCRC32CDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetCRC32CAlgorithmId(),
+			HashRuntime::FinalizeCRC32CHasherHex(hashContexts.crc32c));
+	}
+
 	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()
 	{
 		static std::vector<HashDigestOperationDescriptor> operationDescriptorStorage;
@@ -326,6 +398,24 @@ namespace HashEngineInternal
 			InitializeBLAKE3XofDigestContext,
 			UpdateBLAKE3XofDigestContext,
 			FinalizeBLAKE3XofDigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetXXH3_64AlgorithmId(),
+			InitializeXXH3_64DigestContext,
+			UpdateXXH3_64DigestContext,
+			FinalizeXXH3_64DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetXXH3_128AlgorithmId(),
+			InitializeXXH3_128DigestContext,
+			UpdateXXH3_128DigestContext,
+			FinalizeXXH3_128DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetCRC32CAlgorithmId(),
+			InitializeCRC32CDigestContext,
+			UpdateCRC32CDigestContext,
+			FinalizeCRC32CDigestContext
 		});
 		defaultsInitialized = true;
 	}

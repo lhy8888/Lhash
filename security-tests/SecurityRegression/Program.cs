@@ -335,6 +335,59 @@ internal static partial class Program
             AssertContains(securityHarness, "CreateDirectoryJunction", "Security regression no longer builds the runtime junction attack harness.");
             AssertContains(securityHarness, "ERROR_SHARING_VIOLATION = 32", "Security regression no longer validates sharing-violation attack semantics.");
         }, failures);
+        Run("XXH3 and CRC32C providers stay covered by hardening gates", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string xxh3ProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.h");
+            string xxh3ProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
+            string crc32cProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
+            string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string xxhashNote = ReadRepoFile(repoRoot, @"third_party\xxhash\0.8.3\README.LHash.md");
+            string crc32cNote = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\README.LHash.md");
+            string crc32cArm64Check = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
+
+            AssertContains(registryCore, "{ \"xxh3-64\", \"XXH3-64\", true, false }", "The algorithm registry no longer carries the XXH3-64 descriptor variant.");
+            AssertContains(registryCore, "{ \"xxh3-128\", \"XXH3-128\", true, false }", "The algorithm registry no longer carries the XXH3-128 descriptor variant.");
+            AssertContains(registryCore, "{ \"crc32c\", \"CRC32C\", true, false }", "The algorithm registry no longer carries the CRC32C descriptor variant.");
+
+            AssertContains(xxh3ProviderHeader, "XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", "The XXH3 provider no longer exposes the 64-bit output profile.");
+            AssertContains(xxh3ProviderHeader, "XXH3_128_OUTPUT_BYTES = sizeof(XXH128_hash_t)", "The XXH3 provider no longer exposes the 128-bit output profile.");
+            AssertContains(xxh3ProviderImplementation, "XXH3_64bits_reset", "The XXH3 provider no longer initializes through the official xxHash C API.");
+            AssertContains(xxh3ProviderImplementation, "XXH3_64bits_update", "The XXH3 provider no longer updates through the official xxHash C API.");
+            AssertContains(xxh3ProviderImplementation, "XXH64_canonicalFromHash", "The XXH3 provider no longer canonicalizes the 64-bit xxHash output.");
+            AssertContains(xxh3ProviderImplementation, "XXH128_canonicalFromHash", "The XXH3 provider no longer canonicalizes the 128-bit xxHash output.");
+            AssertDoesNotContain(xxh3ProviderImplementation, "static XXH3_state_t", "The XXH3 provider reintroduced shared mutable hasher state.");
+
+            AssertContains(crc32cProviderHeader, "CRC32C_OUTPUT_BYTES = sizeof(uint32_t)", "The CRC32C provider no longer exposes the 32-bit output profile.");
+            AssertContains(crc32cProviderImplementation, "crc32c_extend", "The CRC32C provider no longer updates through the official google/crc32c C API.");
+            AssertDoesNotContain(crc32cProviderImplementation, "static uint32_t", "The CRC32C provider reintroduced shared mutable checksum state.");
+            AssertContains(crc32cArm64Check, "PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE", "The vendored CRC32C ARM64 runtime check no longer probes Windows CRC32 instructions.");
+            AssertContains(crc32cArm64Check, "PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE", "The vendored CRC32C ARM64 runtime check no longer probes Windows crypto instructions.");
+
+            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", "Native runtime coverage no longer includes the official XXH3 vector.");
+            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", "Native runtime coverage no longer includes the official CRC32C vector.");
+            AssertContains(runtimeSource, "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Native runtime coverage no longer includes XXH3/CRC32C request normalization behavior.");
+            AssertContains(runtimeSource, "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", "Native runtime coverage no longer includes concurrent XXH3/CRC32C stability.");
+            AssertContains(runtimeSource, "54247382A8D6B94D", "Native runtime coverage no longer preserves the official XXH3-64 vector.");
+            AssertContains(runtimeSource, "20EFC49FF02422EA54247382A8D6B94D", "Native runtime coverage no longer preserves the official XXH3-128 vector.");
+            AssertContains(runtimeSource, "46DD794E", "Native runtime coverage no longer preserves the official CRC32C vector.");
+
+            AssertContains(nativeCoreProject, @"third_party\xxhash\0.8.3\xxhash.c", "Desktop native core no longer compiles the vendored xxHash source snapshot.");
+            AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c.cc", "Desktop native core no longer compiles the vendored CRC32C source snapshot.");
+            AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c_sse42.cc", "Desktop native core no longer compiles the x64 CRC32C SSE4.2 path.");
+            AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", "Desktop native core no longer compiles the ARM64 CRC32C path.");
+            AssertContains(uwpNativeProject, @"third_party\xxhash\0.8.3\xxhash.c", "UWP native core no longer compiles the vendored xxHash source snapshot.");
+            AssertContains(uwpNativeProject, @"third_party\crc32c\1.1.2\src\crc32c.cc", "UWP native core no longer compiles the vendored CRC32C source snapshot.");
+            AssertContains(uwpNativeProject, @"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", "UWP native core no longer compiles the ARM64 CRC32C path.");
+
+            AssertContains(xxhashNote, "Upstream tag: v0.8.3", "The vendored xxHash note no longer pins the official upstream tag.");
+            AssertContains(xxhashNote, "e626a72bc2321cd320e953a0ccf1584cad60f363", "The vendored xxHash note no longer pins the official upstream commit.");
+            AssertContains(crc32cNote, "Upstream tag: 1.1.2", "The vendored CRC32C note no longer pins the official upstream tag.");
+            AssertContains(crc32cNote, "02e65f4fd3065d27b2e29324800ca6d04df16126", "The vendored CRC32C note no longer pins the official upstream commit.");
+        }, failures);
         Run("DLL search path hardening is present", () =>
         {
             string filesHashApp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHash.cpp");

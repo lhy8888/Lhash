@@ -118,4 +118,60 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("\"blake3-512\"", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("\"blake3-xof\"", nativeRuntimeSource, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void XXH3AndCRC32CIntegration_VendorsOfficialFixedVersions_AndAddsRuntimeCoverage()
+    {
+        string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string xxh3ProviderHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\XXHash3HashProvider.h");
+        string xxh3ProviderImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
+        string crc32cProviderHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
+        string crc32cProviderImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string xxhashNote = RepositoryTestContext.ReadUtf8File(@"third_party\xxhash\0.8.3\README.LHash.md");
+        string crc32cNote = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\README.LHash.md");
+        string crc32cArm64Check = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
+        string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+
+        Assert.Contains("{ \"xxh3-64\", \"XXH3-64\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"xxh3-128\", \"XXH3-128\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"crc32c\", \"CRC32C\", true, false }", registryCore, StringComparison.Ordinal);
+
+        Assert.Contains("XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("XXH3_128_OUTPUT_BYTES = sizeof(XXH128_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("XXH3_64bits_reset", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("XXH3_128bits_update", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.Contains("XXH128_canonicalFromHash", xxh3ProviderImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static XXH3_state_t", xxh3ProviderImplementation, StringComparison.Ordinal);
+
+        Assert.Contains("CRC32C_OUTPUT_BYTES = sizeof(uint32_t)", crc32cProviderHeader, StringComparison.Ordinal);
+        Assert.Contains("crc32c_extend", crc32cProviderImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static uint32_t", crc32cProviderImplementation, StringComparison.Ordinal);
+
+        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_sse42.cc", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\XXHash3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\CRC32CHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", uwpNativeProject, StringComparison.Ordinal);
+
+        Assert.Contains("Upstream tag: v0.8.3", xxhashNote, StringComparison.Ordinal);
+        Assert.Contains("e626a72bc2321cd320e953a0ccf1584cad60f363", xxhashNote, StringComparison.Ordinal);
+        Assert.Contains("Upstream tag: 1.1.2", crc32cNote, StringComparison.Ordinal);
+        Assert.Contains("02e65f4fd3065d27b2e29324800ca6d04df16126", crc32cNote, StringComparison.Ordinal);
+        Assert.Contains("PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE", crc32cArm64Check, StringComparison.Ordinal);
+        Assert.Contains("PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE", crc32cArm64Check, StringComparison.Ordinal);
+
+        Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("54247382A8D6B94D", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("20EFC49FF02422EA54247382A8D6B94D", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("46DD794E", nativeRuntimeSource, StringComparison.Ordinal);
+    }
 }

@@ -270,6 +270,19 @@ namespace
 		return algorithmIds;
 	}
 
+	static std::vector<HashAlgorithmId> CreateXXH3VariantAlgorithmIds()
+	{
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("xxh3-64"));
+		algorithmIds.push_back(CreateAlgorithmId("xxh3-128"));
+		return algorithmIds;
+	}
+
+	static HashAlgorithmId GetCRC32CAlgorithmId()
+	{
+		return CreateAlgorithmId("crc32c");
+	}
+
 	static sunjwbase::tstring GetOfficialBlake3_256Vector()
 	{
 		return sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F"));
@@ -283,6 +296,48 @@ namespace
 	static sunjwbase::tstring GetOfficialBlake3Xof128Vector()
 	{
 		return sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE9454B7E9996DE4900C8E723512883F93F4345F8A58BFE64EE38D3AD71AB027765D25CDD0E448328A8E7A683B9A6AF8B0AF94FA09010D9186890B096A08471E42"));
+	}
+
+	static std::string CreateOfficialXXH3SanityInput(size_t inputLength)
+	{
+		static const uint32_t kPrime32 = 2654435761U;
+		static const uint64_t kPrime64 = 11400714785074694797ULL;
+
+		std::string input(inputLength, '\0');
+		uint64_t byteGenerator = static_cast<uint64_t>(kPrime32);
+		for (size_t index = 0; index < input.size(); ++index)
+		{
+			input[index] = static_cast<char>(byteGenerator >> 56);
+			byteGenerator *= kPrime64;
+		}
+
+		return input;
+	}
+
+	static std::string CreateAscendingByteInput(size_t inputLength)
+	{
+		std::string input(inputLength, '\0');
+		for (size_t index = 0; index < input.size(); ++index)
+		{
+			input[index] = static_cast<char>(index & 0xFF);
+		}
+
+		return input;
+	}
+
+	static sunjwbase::tstring GetOfficialXXH3_64Vector()
+	{
+		return sunjwbase::strtotstr(std::string("54247382A8D6B94D"));
+	}
+
+	static sunjwbase::tstring GetOfficialXXH3_128Vector()
+	{
+		return sunjwbase::strtotstr(std::string("20EFC49FF02422EA54247382A8D6B94D"));
+	}
+
+	static sunjwbase::tstring GetOfficialCRC32CVector()
+	{
+		return sunjwbase::strtotstr(std::string("46DD794E"));
 	}
 
 	static void ConfigureThreadDataFiles(ThreadData& threadData, CapturingProgressSink& progressSink, const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
@@ -559,6 +614,63 @@ namespace
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "BLAKE3 hashing should emit a hash-ready event.");
 	}
 
+	static void HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("xxh3-vector.bin"), CreateOfficialXXH3SanityInput(3));
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<HashAlgorithmId> algorithmIds = CreateXXH3VariantAlgorithmIds();
+		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, algorithmIds);
+
+		int exitCode = RunHashThreadData(threadData);
+		NativeAssertEqual(0, exitCode, "XXH3 hashing should succeed for the official sanity-vector input.");
+		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "XXH3 hashing should still emit one result for one input file.");
+
+		const HashResult& result = GetThreadDataResults(threadData).front();
+		NativeAssertEqual(RESULT_ALL, result.state, "Successful XXH3 hashing should end in RESULT_ALL.");
+		NativeAssertEqual(static_cast<size_t>(2), result.digests.size(), "Only the requested XXH3 variants should be emitted.");
+		NativeAssertEqual(
+			GetOfficialXXH3_64Vector(),
+			FindDigestValueByAlgorithmId(result, algorithmIds[0]),
+			"XXH3-64 did not match the official xxHash vector for input length 3.");
+		NativeAssertEqual(
+			GetOfficialXXH3_128Vector(),
+			FindDigestValueByAlgorithmId(result, algorithmIds[1]),
+			"XXH3-128 did not match the official xxHash vector for input length 3.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "XXH3 hashing should emit a hash-ready event.");
+	}
+
+	static void HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("crc32c-vector.bin"), CreateAscendingByteInput(32));
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(GetCRC32CAlgorithmId());
+		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, algorithmIds);
+
+		int exitCode = RunHashThreadData(threadData);
+		NativeAssertEqual(0, exitCode, "CRC32C hashing should succeed for the official capi vector input.");
+		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "CRC32C hashing should still emit one result for one input file.");
+
+		const HashResult& result = GetThreadDataResults(threadData).front();
+		NativeAssertEqual(RESULT_ALL, result.state, "Successful CRC32C hashing should end in RESULT_ALL.");
+		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Only the requested CRC32C digest should be emitted.");
+		NativeAssertEqual(
+			GetOfficialCRC32CVector(),
+			FindDigestValueByAlgorithmId(result, algorithmIds[0]),
+			"CRC32C did not match the official google/crc32c vector for the ascending 32-byte input.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "CRC32C hashing should emit a hash-ready event.");
+	}
+
 	static void RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -678,6 +790,110 @@ namespace
 			NativeAssertEqual(expectedBlake3_256, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[0]), "Concurrent runtime hashing produced an inconsistent BLAKE3-256 digest.");
 			NativeAssertEqual(expectedBlake3_512, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[1]), "Concurrent runtime hashing produced an inconsistent BLAKE3-512 digest.");
 			NativeAssertEqual(expectedBlake3Xof, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[2]), "Concurrent runtime hashing produced an inconsistent BLAKE3 XOF digest.");
+		}
+	}
+
+	static void RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("xxh3-crc32c-order.bin"), CreateAscendingByteInput(32));
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+
+		std::vector<HashAlgorithmId> expectedAlgorithmIds;
+		expectedAlgorithmIds.push_back(CreateAlgorithmId("xxh3-128"));
+		expectedAlgorithmIds.push_back(GetCRC32CAlgorithmId());
+		expectedAlgorithmIds.push_back(CreateAlgorithmId("xxh3-64"));
+
+		CapturingProgressSink baselineProgressSink;
+		HashJobState baselineJobState;
+		HashCancellationState baselineCancellationState;
+		HashExecutionContext baselineExecutionContext = CreateExecutionContext(baselineProgressSink, baselineJobState, baselineCancellationState);
+		HashRequest baselineRequest = CreateRequestByAlgorithmIds(filePaths, expectedAlgorithmIds);
+
+		int baselineExitCode = RunHashRequest(&baselineExecutionContext, baselineRequest);
+		NativeAssertEqual(0, baselineExitCode, "Baseline XXH3/CRC32C hashing should succeed.");
+		NativeAssertEqual(static_cast<size_t>(1), baselineJobState.results.size(), "Baseline XXH3/CRC32C hashing should emit exactly one file result.");
+		const HashResult& baselineResult = baselineJobState.results.front();
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+
+		HashRequest request;
+		request.files.push_back(filePath);
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("xxh3"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("xxh3-128"));
+		AppendHashRequestAlgorithmId(request, GetCRC32CAlgorithmId());
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("xxh3-64"));
+		AppendHashRequestAlgorithmId(request, GetCRC32CAlgorithmId());
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("crc32c-64"));
+
+		std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);
+		NativeAssertEqual(static_cast<size_t>(3), normalizedAlgorithmIds.size(), "Unknown or duplicate XXH3/CRC32C ids should be removed during request normalization.");
+		NativeAssertEqual(expectedAlgorithmIds[0], normalizedAlgorithmIds[0], "Known XXH3/CRC32C variants should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(expectedAlgorithmIds[1], normalizedAlgorithmIds[1], "Known XXH3/CRC32C variants should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(expectedAlgorithmIds[2], normalizedAlgorithmIds[2], "Known XXH3/CRC32C variants should preserve explicit request order after unknown ids are removed.");
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "XXH3/CRC32C hashing should ignore unknown ids and still succeed.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Ignoring unknown XXH3/CRC32C ids should still produce one file result.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(static_cast<size_t>(3), result.digests.size(), "Only known XXH3/CRC32C variants should be emitted.");
+		NativeAssertEqual(expectedAlgorithmIds[0], ResolveDigestResultAlgorithmId(result.digests[0]), "XXH3/CRC32C result order should follow the normalized request order.");
+		NativeAssertEqual(expectedAlgorithmIds[1], ResolveDigestResultAlgorithmId(result.digests[1]), "XXH3/CRC32C result order should follow the normalized request order.");
+		NativeAssertEqual(expectedAlgorithmIds[2], ResolveDigestResultAlgorithmId(result.digests[2]), "XXH3/CRC32C result order should follow the normalized request order.");
+		NativeAssertEqual(baselineResult.digests[0].value, result.digests[0].value, "XXH3-128 digest value should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(GetOfficialCRC32CVector(), result.digests[1].value, "CRC32C digest value should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(baselineResult.digests[2].value, result.digests[2].value, "XXH3-64 digest value should stay deterministic after unknown id filtering.");
+	}
+
+	static void HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("xxh3-crc32c-concurrency.bin"), std::string((kHashEngineBufferSize * 2) + 193, 'X'));
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("xxh3-64"));
+		algorithmIds.push_back(CreateAlgorithmId("xxh3-128"));
+		algorithmIds.push_back(GetCRC32CAlgorithmId());
+
+		auto runSingleRequest = [&]() -> HashResult
+		{
+			CapturingProgressSink progressSink;
+			HashJobState jobState;
+			HashCancellationState cancellationState;
+			HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+			HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
+
+			int exitCode = RunHashRequest(&executionContext, request);
+			NativeAssertEqual(0, exitCode, "Concurrent XXH3/CRC32C hashing should succeed.");
+			NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Concurrent XXH3/CRC32C hashing should still produce exactly one file result per request.");
+			return jobState.results.front();
+		};
+
+		HashResult baselineResult = runSingleRequest();
+		sunjwbase::tstring expectedXXH3_64 = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[0]);
+		sunjwbase::tstring expectedXXH3_128 = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[1]);
+		sunjwbase::tstring expectedCRC32C = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[2]);
+
+		const size_t concurrentRunCount = 6;
+		std::vector<std::future<HashResult>> tasks;
+		tasks.reserve(concurrentRunCount);
+		for (size_t runIndex = 0; runIndex < concurrentRunCount; ++runIndex)
+		{
+			tasks.push_back(std::async(std::launch::async, runSingleRequest));
+		}
+
+		for (size_t taskIndex = 0; taskIndex < tasks.size(); ++taskIndex)
+		{
+			HashResult concurrentResult = tasks[taskIndex].get();
+			NativeAssertEqual(expectedXXH3_64, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[0]), "Concurrent runtime hashing produced an inconsistent XXH3-64 digest.");
+			NativeAssertEqual(expectedXXH3_128, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[1]), "Concurrent runtime hashing produced an inconsistent XXH3-128 digest.");
+			NativeAssertEqual(expectedCRC32C, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[2]), "Concurrent runtime hashing produced an inconsistent CRC32C digest.");
 		}
 	}
 
@@ -1269,9 +1485,13 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector });
+	tests.push_back({ "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector });
+	tests.push_back({ "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", &HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector });
 	tests.push_back({ "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", &RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants });
 	tests.push_back({ "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered });
 	tests.push_back({ "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", &HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns });
+	tests.push_back({ "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered });
+	tests.push_back({ "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", &HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns });
 	tests.push_back({ "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", &HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", &RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests });

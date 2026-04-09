@@ -13,6 +13,7 @@
 
 - 以固定版本方式接入官方 BLAKE3 C 实现
 - 新增 `BLAKE3-256`、`BLAKE3-512`、`BLAKE3 XOF` 三个算法描述符
+- 以固定版本方式接入官方 `XXH3-64`、`XXH3-128` 和 `CRC32C`
 - 基于 benchmark 结果，当前保留的 BLAKE3 SIMD 路径为：
   - `x64`：`SSE2`、`SSE4.1`、`AVX2`、`AVX512`
   - `Win32`：`SSE2`、`SSE4.1`、`AVX2`
@@ -22,11 +23,13 @@
 
 - 将 `HashExecutionContext` 中的进度接收口收成 non-owning observer seam，并提供空对象回退
 - 原生运行时测试新增 BLAKE3 的大小写行为、未知算法 id、结果顺序与并发稳定性覆盖
+- 原生运行时测试新增官方 `XXH3` / `CRC32C` 向量、未知算法 id、结果顺序与并发稳定性覆盖
 - 继续保持正式原生发行线轻量、可携带的交付方式
 
 ### 验证体系
 
 - 扩展 unit-tests、refactor baseline、security regression 对 BLAKE3 和运行时契约的约束
+- 扩展 unit-tests、refactor baseline、security regression 对固定版本 `XXH3` / `CRC32C` provider 的约束
 - 新增 `x64 / Win32 / ARM64` 三平台原生 benchmark 流水线
 - 当前 benchmark 结果显示，`BLAKE3-256` 在大文件场景大致提升为：
   - `x64`：`481 MiB/s -> 1641 MiB/s`
