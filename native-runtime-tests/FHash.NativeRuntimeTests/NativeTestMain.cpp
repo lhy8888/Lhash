@@ -6,6 +6,7 @@
 #include "NativeTestHarness.h"
 
 void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests);
+void RegisterHashEngineSecurityRuntimeTests(std::vector<NativeTestCase>& tests);
 
 int main()
 {
@@ -13,6 +14,7 @@ int main()
 
 	std::vector<NativeTestCase> tests;
 	RegisterHashEngineRuntimeTests(tests);
+	RegisterHashEngineSecurityRuntimeTests(tests);
 	std::cout << "Native runtime tests discovered: " << tests.size() << std::endl;
 
 	size_t passedCount = 0;

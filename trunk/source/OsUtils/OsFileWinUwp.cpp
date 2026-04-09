@@ -159,11 +159,104 @@ static void CopyOpenErrorText(TCHAR *errorBuffer, const tstring& errorText)
 #endif
 }
 
-static bool TryRejectReparsePointPath(const tstring& filePath, TCHAR *errorBuffer)
+static bool IsPathSeparator(TCHAR character)
+{
+	return character == TEXT('\\') || character == TEXT('/');
+}
+
+static size_t GetPathRootLength(const tstring& filePath)
+{
+	if (filePath.length() >= 8 &&
+		filePath[0] == TEXT('\\') &&
+		filePath[1] == TEXT('\\') &&
+		filePath[2] == TEXT('?') &&
+		filePath[3] == TEXT('\\') &&
+		(filePath[4] == TEXT('U') || filePath[4] == TEXT('u')) &&
+		(filePath[5] == TEXT('N') || filePath[5] == TEXT('n')) &&
+		(filePath[6] == TEXT('C') || filePath[6] == TEXT('c')) &&
+		filePath[7] == TEXT('\\'))
+	{
+		size_t serverSeparator = filePath.find_first_of(TEXT("\\/"), 8);
+		if (serverSeparator == tstring::npos)
+		{
+			return filePath.length();
+		}
+
+		size_t shareSeparator = filePath.find_first_of(TEXT("\\/"), serverSeparator + 1);
+		return shareSeparator == tstring::npos ? filePath.length() : shareSeparator;
+	}
+
+	if (filePath.length() >= 7 &&
+		filePath[0] == TEXT('\\') &&
+		filePath[1] == TEXT('\\') &&
+		filePath[2] == TEXT('?') &&
+		filePath[3] == TEXT('\\') &&
+		filePath[5] == TEXT(':') &&
+		IsPathSeparator(filePath[6]))
+	{
+		return 7;
+	}
+
+	if (filePath.length() >= 3 &&
+		filePath[1] == TEXT(':') &&
+		IsPathSeparator(filePath[2]))
+	{
+		return 3;
+	}
+
+	if (filePath.length() >= 2 &&
+		filePath[0] == TEXT('\\') &&
+		filePath[1] == TEXT('\\'))
+	{
+		size_t serverSeparator = filePath.find_first_of(TEXT("\\/"), 2);
+		if (serverSeparator == tstring::npos)
+		{
+			return filePath.length();
+		}
+
+		size_t shareSeparator = filePath.find_first_of(TEXT("\\/"), serverSeparator + 1);
+		return shareSeparator == tstring::npos ? filePath.length() : shareSeparator;
+	}
+
+	return 0;
+}
+
+static bool PathSegmentHasReparsePoint(const tstring& pathSegment)
 {
 	WIN32_FILE_ATTRIBUTE_DATA attributeData = { 0 };
-	if (!GetFileAttributesExFromAppW(filePath.c_str(), GetFileExInfoStandard, &attributeData) ||
-		(attributeData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0)
+	return GetFileAttributesExFromAppW(pathSegment.c_str(), GetFileExInfoStandard, &attributeData) &&
+		(attributeData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+}
+
+static bool HasReparsePointInPathHierarchy(const tstring& filePath)
+{
+	size_t rootLength = GetPathRootLength(filePath);
+	size_t segmentStart = rootLength;
+
+	while (segmentStart < filePath.length())
+	{
+		size_t segmentEnd = filePath.find_first_of(TEXT("\\/"), segmentStart);
+		tstring candidatePath = segmentEnd == tstring::npos ? filePath : filePath.substr(0, segmentEnd);
+		if (candidatePath.length() > rootLength &&
+			PathSegmentHasReparsePoint(candidatePath))
+		{
+			return true;
+		}
+
+		if (segmentEnd == tstring::npos)
+		{
+			break;
+		}
+
+		segmentStart = segmentEnd + 1;
+	}
+
+	return false;
+}
+
+static bool TryRejectReparsePointPath(const tstring& filePath, TCHAR *errorBuffer)
+{
+	if (!HasReparsePointInPathHierarchy(filePath))
 	{
 		return false;
 	}

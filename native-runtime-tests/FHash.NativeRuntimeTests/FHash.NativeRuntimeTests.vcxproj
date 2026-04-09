@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HashEngineRuntimeTests.cpp" />
+    <ClCompile Include="HashEngineSecurityRuntimeTests.cpp" />
     <ClCompile Include="NativeTestMain.cpp" />
   </ItemGroup>
   <ItemGroup>

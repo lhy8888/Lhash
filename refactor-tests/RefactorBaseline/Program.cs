@@ -5719,8 +5719,10 @@ internal static class Program
 
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");
+            AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Phase 90 Win32 file handling does not yet walk ancestor path segments for reparse-point checks.");
             AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Phase 90 Win32 file handling does not gate CreateFile on the reparse-point policy.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");
+            AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "Phase 90 UWP file handling does not yet walk ancestor path segments for reparse-point checks.");
 
             AssertContains(checkedArithmetic, "SaturatingAddUInt64", "Phase 90 checked arithmetic helpers do not yet expose saturating adds.");
             AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Phase 90 checked arithmetic helpers do not yet expose bounded replacement math.");
@@ -5789,7 +5791,6 @@ internal static class Program
 
             AssertContains(nativeCoreProject, @"third_party\blake3\1.8.4\c", "Phase 91 native core project does not yet include the fixed-version BLAKE3 vendor path.");
             AssertContains(nativeCoreProject, @"Runtime\Hash\BLAKE3HashProvider.cpp", "Phase 91 native core project does not yet compile the BLAKE3 provider.");
-            AssertContains(nativeCoreProject, "BLAKE3_NO_SSE2", "Phase 91 native core project does not yet lock the current portable BLAKE3 build flags.");
             AssertContains(uwpNativeProject, @"third_party\blake3\1.8.4\c", "Phase 91 UWP native project does not yet include the fixed-version BLAKE3 vendor path.");
 
             AssertContains(upstreamNote, "Upstream tag: 1.8.4", "Phase 91 third-party note does not yet pin the imported BLAKE3 tag.");
@@ -5827,15 +5828,21 @@ internal static class Program
             AssertContains(nativeCoreProject, @"blake3_sse2.c", "Phase 92 desktop native core does not yet compile the BLAKE3 SSE2 translation unit.");
             AssertContains(nativeCoreProject, @"blake3_sse41.c", "Phase 92 desktop native core does not yet compile the BLAKE3 SSE4.1 translation unit.");
             AssertContains(nativeCoreProject, @"blake3_avx2.c", "Phase 92 desktop native core does not yet compile the BLAKE3 AVX2 translation unit.");
+            AssertContains(nativeCoreProject, @"blake3_avx512.c", "Phase 92 desktop native core does not yet compile the BLAKE3 AVX512 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 desktop native core does not yet enable the Win32 SSE2 BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Phase 92 desktop native core does not yet enable the Win32 SSE4.1-compatible BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Phase 92 desktop native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
-            AssertContains(nativeCoreProject, "<ExcludedFromBuild Condition=\"'$(Platform)'!='x64'\">true</ExcludedFromBuild>", "Phase 92 desktop native core does not yet exclude x64-only BLAKE3 SIMD files from non-x64 builds.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet keep non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(nativeCoreProject, "/arch:AVX512", "Phase 92 desktop native core does not yet enable AVX512 for the dedicated BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet keep Win32 BLAKE3 builds on the widened x86 SIMD path.");
             AssertContains(uwpNativeProject, @"blake3_sse2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 SSE2 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_sse41.c", "Phase 92 UWP native core does not yet compile the BLAKE3 SSE4.1 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_avx2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 AVX2 translation unit.");
+            AssertContains(uwpNativeProject, @"blake3_avx512.c", "Phase 92 UWP native core does not yet compile the BLAKE3 AVX512 translation unit.");
+            AssertContains(uwpNativeProject, @"blake3_neon.c", "Phase 92 UWP native core does not yet compile the BLAKE3 ARM64 NEON translation unit.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 UWP native core does not yet enable the Win32 SSE2 BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "/arch:AVX2", "Phase 92 UWP native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
-            AssertContains(uwpNativeProject, "<ExcludedFromBuild Condition=\"'$(Platform)'!='x64'\">true</ExcludedFromBuild>", "Phase 92 UWP native core does not yet exclude x64-only BLAKE3 SIMD files from non-x64 builds.");
-            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 UWP native core does not yet keep non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(uwpNativeProject, "/arch:AVX512", "Phase 92 UWP native core does not yet enable AVX512 for the dedicated BLAKE3 translation unit.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 UWP native core does not yet enable the ARM64 NEON BLAKE3 path.");
 
             AssertContains(securityUnitTests, "Blake3Integration_UsesOfficialProviderProfiles_AndCoversUppercaseOrderingAndConcurrency", "Phase 92 unit tests do not yet gate the deeper BLAKE3 behavior coverage.");
             AssertContains(securityUnitTests, "HashExecutionContext_UsesANonOwningSinkReferenceWithNullFallback", "Phase 92 unit tests do not yet gate the execution-context sink lifetime seam.");
@@ -5843,6 +5850,33 @@ internal static class Program
             AssertContains(nativeRuntimeUnitTests, "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", "Phase 92 native-runtime framework tests do not yet require uppercase BLAKE3 coverage.");
             AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", "Phase 92 native-runtime framework tests do not yet require concurrent BLAKE3 coverage.");
             AssertContains(securityRegression, "BLAKE3 provider and descriptor variants stay covered by hardening gates", "Phase 92 security regression does not yet gate BLAKE3 coverage.");
+        }, failures);
+
+        Run("Phase 93 adds runnable filesystem attack harnesses for nested junctions and sharing violations", () =>
+        {
+            string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
+            string securityHarness = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
+            string nativeSecurityRuntime = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
+            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+
+            AssertContains(securityRegression, "Windows junction attack harness reproduces ancestor reparse-point traversal", "Phase 93 security regression does not yet run the junction attack harness.");
+            AssertContains(securityRegression, "Windows hash-style open harness reproduces sharing violations for locked files", "Phase 93 security regression does not yet run the sharing-violation harness.");
+            AssertContains(securityHarness, "CreateDirectoryJunction", "Phase 93 security harness does not yet create directory junctions.");
+            AssertContains(securityHarness, "leafAttributes.HasFlag(FileAttributes.ReparsePoint)", "Phase 93 security harness does not yet demonstrate the leaf-vs-ancestor reparse-point distinction.");
+            AssertContains(securityHarness, "OpenFileForHashStyleRead", "Phase 93 security harness does not yet reproduce the hash-style file-open path.");
+            AssertContains(securityHarness, "ERROR_SHARING_VIOLATION = 32", "Phase 93 security harness does not yet validate sharing-violation behavior.");
+
+            AssertContains(nativeSecurityRuntime, "OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions", "Phase 93 native runtime tests do not yet cover nested junction paths.");
+            AssertContains(nativeSecurityRuntime, "OsFile_ReportsSharingViolationsForLockedFiles", "Phase 93 native runtime tests do not yet cover locked-file sharing violations.");
+            AssertContains(nativeSecurityRuntime, "mklink /J", "Phase 93 native runtime tests do not yet create directory junctions.");
+            AssertContains(nativeSecurityRuntime, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 93 native runtime tests do not yet assert reparse-point attributes.");
+            AssertContains(nativeRuntimeProject, "HashEngineSecurityRuntimeTests.cpp", "Phase 93 native runtime project does not yet compile the dedicated security runtime tests.");
+
+            AssertContains(nativeRuntimeUnitTests, "HashEngineSecurityRuntimeTests.cpp", "Phase 93 unit tests do not yet gate the dedicated native security runtime source file.");
+            AssertContains(securityUnitTests, "TestJunctionAncestorAttackSurface", "Phase 93 unit tests do not yet gate the managed junction attack harness.");
+            AssertContains(securityUnitTests, "TestHashStyleOpenSharingViolation", "Phase 93 unit tests do not yet gate the managed sharing-violation harness.");
         }, failures);
 
         if (failures.Count > 0)

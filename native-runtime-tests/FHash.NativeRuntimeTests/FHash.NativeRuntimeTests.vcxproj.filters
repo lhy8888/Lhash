@@ -14,6 +14,9 @@
     <ClCompile Include="HashEngineRuntimeTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HashEngineSecurityRuntimeTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="NativeTestMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

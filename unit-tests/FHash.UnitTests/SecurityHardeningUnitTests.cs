@@ -14,10 +14,14 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winApi, StringComparison.Ordinal);
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winApi, StringComparison.Ordinal);
+        Assert.Contains("HasReparsePointInPathHierarchy", winApi, StringComparison.Ordinal);
+        Assert.Contains("PathSegmentHasReparsePoint", winApi, StringComparison.Ordinal);
         Assert.Contains("if (!isHashTargetAllowed(exception))", winApi, StringComparison.Ordinal);
 
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winUwp, StringComparison.Ordinal);
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winUwp, StringComparison.Ordinal);
+        Assert.Contains("HasReparsePointInPathHierarchy", winUwp, StringComparison.Ordinal);
+        Assert.Contains("PathSegmentHasReparsePoint", winUwp, StringComparison.Ordinal);
         Assert.Contains("if (!isHashTargetAllowed(exception))", winUwp, StringComparison.Ordinal);
 
         Assert.Contains("result.meta.modifiedDate = osFile.getModifiedTimeFormat();", engineResult, StringComparison.Ordinal);
@@ -137,6 +141,9 @@ public sealed class SecurityHardeningUnitTests
         string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string securityProgram = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\Program.cs");
+        string securityHarness = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
         Assert.Contains("BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", providerHeader, StringComparison.Ordinal);
         Assert.Contains("BLAKE3_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
@@ -155,8 +162,22 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains(@"blake3_sse2.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("BLAKE3_NO_AVX512", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("/arch:AVX512", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("/arch:AVX512", uwpNativeProject, StringComparison.Ordinal);
+
+        Assert.Contains("Windows junction attack harness reproduces ancestor reparse-point traversal", securityProgram, StringComparison.Ordinal);
+        Assert.Contains("Windows hash-style open harness reproduces sharing violations for locked files", securityProgram, StringComparison.Ordinal);
+        Assert.Contains("TestJunctionAncestorAttackSurface", securityHarness, StringComparison.Ordinal);
+        Assert.Contains("TestHashStyleOpenSharingViolation", securityHarness, StringComparison.Ordinal);
+        Assert.Contains("CreateDirectoryJunction", securityHarness, StringComparison.Ordinal);
+        Assert.Contains("ERROR_SHARING_VIOLATION = 32", securityHarness, StringComparison.Ordinal);
     }
 
     [Fact]

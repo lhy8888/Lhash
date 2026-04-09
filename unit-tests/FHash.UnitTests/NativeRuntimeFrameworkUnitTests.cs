@@ -18,6 +18,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("<LinkLibraryDependencies>true</LinkLibraryDependencies>", project, StringComparison.Ordinal);
         Assert.Contains("Version.lib;%(AdditionalDependencies)", project, StringComparison.Ordinal);
         Assert.Contains("HashEngineRuntimeTests.cpp", project, StringComparison.Ordinal);
+        Assert.Contains("HashEngineSecurityRuntimeTests.cpp", project, StringComparison.Ordinal);
         Assert.Contains("NativeTestMain.cpp", project, StringComparison.Ordinal);
         Assert.Contains("NativeTestHarness.h", project, StringComparison.Ordinal);
 
@@ -32,6 +33,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
     public void NativeRuntimeTests_ExerciseRealHashEngineExecutionSearchAndCancellation()
     {
         string testSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+        string securityTestSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
         string mainSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestMain.cpp");
         string harness = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestHarness.h");
 
@@ -77,10 +79,16 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", testSource, StringComparison.Ordinal);
         Assert.Contains("D41D8CD98F00B204E9800998ECF8427E", testSource, StringComparison.Ordinal);
         Assert.Contains("5D41402ABC4B2A76B9719D911017C592", testSource, StringComparison.Ordinal);
+        Assert.Contains("OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions", securityTestSource, StringComparison.Ordinal);
+        Assert.Contains("OsFile_ReportsSharingViolationsForLockedFiles", securityTestSource, StringComparison.Ordinal);
+        Assert.Contains("mklink /J", securityTestSource, StringComparison.Ordinal);
+        Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", securityTestSource, StringComparison.Ordinal);
+        Assert.Contains("openReadScan(openError)", securityTestSource, StringComparison.Ordinal);
 
         Assert.Contains("struct NativeTestCase", harness, StringComparison.Ordinal);
         Assert.Contains("RunNativeTestCase(const NativeTestCase& testCase)", harness, StringComparison.Ordinal);
         Assert.Contains("RegisterHashEngineRuntimeTests(tests);", mainSource, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashEngineSecurityRuntimeTests(tests);", mainSource, StringComparison.Ordinal);
         Assert.Contains("All native runtime tests passed", mainSource, StringComparison.Ordinal);
     }
 }

@@ -12,6 +12,8 @@ internal static partial class Program
 
         Run("CommandLine parser handles quoted file lists safely", TestCommandLineParsing, failures);
         Run("CommandLine parser covers empty, invalid, boundary, and compatibility cases", TestCommandLineEdgeCases, failures);
+        Run("Windows junction attack harness reproduces ancestor reparse-point traversal", TestJunctionAncestorAttackSurface, failures);
+        Run("Windows hash-style open harness reproduces sharing violations for locked files", TestHashStyleOpenSharingViolation, failures);
         Run("LHash branding, package metadata, and logo assets are consistent", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
@@ -246,8 +248,10 @@ internal static partial class Program
             AssertContains(osFileHeader, "bool isHashTargetAllowed(void *exception = NULL);", "OsFile no longer exposes the hash-target policy hook.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Win32 file hashing no longer checks for reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Win32 file hashing no longer rejects reparse points with an explicit message.");
+            AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Win32 file hashing no longer walks ancestor path segments when checking for reparse points.");
             AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Win32 file hashing no longer gates file open on the target policy.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");
+            AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "UWP file hashing no longer walks ancestor path segments when checking for reparse points.");
             AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine metadata flow no longer relies on the opened file handle.");
             AssertDoesNotContain(hashEngineResult, "GetFileAttributesEx", "HashEngine metadata flow still uses path-based attribute lookup.");
 
@@ -282,8 +286,10 @@ internal static partial class Program
             string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
             string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string securityHarness = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
             AssertContains(registryCore, "{ \"blake3-256\", \"BLAKE3-256\", true, false }", "The algorithm registry no longer carries the BLAKE3-256 descriptor variant.");
             AssertContains(registryCore, "{ \"blake3-512\", \"BLAKE3-512\", true, false }", "The algorithm registry no longer carries the BLAKE3-512 descriptor variant.");
@@ -301,17 +307,31 @@ internal static partial class Program
             AssertContains(runtimeSource, "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Native runtime coverage no longer includes BLAKE3 id normalization behavior.");
             AssertContains(runtimeSource, "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", "Native runtime coverage no longer includes concurrent BLAKE3 stability.");
             AssertContains(runtimeSource, "CreateAlgorithmId(\"blake3-1024\")", "Native runtime coverage no longer probes unsupported BLAKE3 ids.");
+            AssertContains(securityRuntimeSource, "OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions", "Native runtime coverage no longer exercises nested junction attack paths.");
+            AssertContains(securityRuntimeSource, "OsFile_ReportsSharingViolationsForLockedFiles", "Native runtime coverage no longer exercises locked-file sharing violations.");
 
             AssertContains(nativeCoreProject, @"blake3_sse2.c", "Desktop native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
             AssertContains(nativeCoreProject, @"blake3_sse41.c", "Desktop native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
             AssertContains(nativeCoreProject, @"blake3_avx2.c", "Desktop native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
+            AssertContains(nativeCoreProject, @"blake3_avx512.c", "Desktop native core no longer compiles the BLAKE3 AVX512 implementation for x64.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Desktop native core no longer enables the Win32 SSE2 BLAKE3 path.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Desktop native core no longer enables the Win32 SSE4.1-compatible BLAKE3 path.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Desktop native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer keeps non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(nativeCoreProject, "/arch:AVX512", "Desktop native core no longer enables AVX512 for the dedicated BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer keeps Win32 BLAKE3 on the x86 SIMD plus AVX-512-disabled path.");
             AssertContains(uwpNativeProject, @"blake3_sse2.c", "UWP native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_sse41.c", "UWP native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_avx2.c", "UWP native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
+            AssertContains(uwpNativeProject, @"blake3_avx512.c", "UWP native core no longer compiles the BLAKE3 AVX512 implementation for x64.");
+            AssertContains(uwpNativeProject, @"blake3_neon.c", "UWP native core no longer compiles the BLAKE3 NEON implementation for ARM64.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "UWP native core no longer enables the Win32 SSE2 BLAKE3 path.");
             AssertContains(uwpNativeProject, "/arch:AVX2", "UWP native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
-            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "UWP native core no longer keeps non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(uwpNativeProject, "/arch:AVX512", "UWP native core no longer enables AVX512 for the dedicated BLAKE3 translation unit.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "UWP native core no longer enables the ARM64 NEON BLAKE3 path.");
+            AssertContains(securityHarness, "TestJunctionAncestorAttackSurface", "Security regression no longer runs the junction ancestor attack harness.");
+            AssertContains(securityHarness, "TestHashStyleOpenSharingViolation", "Security regression no longer runs the sharing-violation harness.");
+            AssertContains(securityHarness, "CreateDirectoryJunction", "Security regression no longer builds the runtime junction attack harness.");
+            AssertContains(securityHarness, "ERROR_SHARING_VIOLATION = 32", "Security regression no longer validates sharing-violation attack semantics.");
         }, failures);
         Run("DLL search path hardening is present", () =>
         {

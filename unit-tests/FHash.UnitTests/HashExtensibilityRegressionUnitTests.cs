@@ -98,9 +98,15 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains(@"third_party\blake3\1.8.4\c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3.c", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("BLAKE3_NO_SSE2", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_sse2.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", uwpNativeProject, StringComparison.Ordinal);
 
         Assert.Contains("Upstream tag: 1.8.4", upstreamNote, StringComparison.Ordinal);
         Assert.Contains("b97a24f8754819755ef78d8016c0391c65c943c5", upstreamNote, StringComparison.Ordinal);
