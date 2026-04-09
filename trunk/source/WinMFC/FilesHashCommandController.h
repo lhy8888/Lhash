@@ -29,9 +29,12 @@ public:
 		FilesHashResultViewController* hashResultViewController);
 
 	void HandleOpenButtonClick(LPCTSTR fileFilter, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);
+	void HandleOpenFolderButtonClick(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);
 	void HandleExitButtonClick() const;
 	void HandleAboutButtonClick() const;
 	void HandleCleanButtonClick(LPCTSTR clearButtonText, LPCTSTR clearVerifyButtonText);
+	void HandleCopyButtonClick() const;
+	void HandleExportButtonClick(LPCTSTR exportFilter, LPCTSTR defaultFileName) const;
 	void HandleFindButtonClick(LPCTSTR clearVerifyButtonText) const;
 
 private:

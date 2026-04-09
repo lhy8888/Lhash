@@ -9,6 +9,7 @@
 #include "OsUtils/OsThread.h"
 #include "Common/Global.h"
 #include "Common/HashResultRender.h"
+#include "FilesHashTaskUpdate.h"
 #include "HyperEditHash.h"
 
 class UIBridgeMFC: public HashUiBridgeAdapter
@@ -148,6 +149,9 @@ private:
 		PostThreadInfoMessage(WP_REFRESH_TEXT);
 	}
 
+	void PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
+	static sunjwbase::tstring BuildAlgorithmSummary(const HashResult& result);
+
 	bool ShouldPostProgressValue(ProgressDispatchState& progressDispatchState, int value);
 
 	template<typename TAppendAction>
@@ -198,6 +202,7 @@ private:
 	MainHyperEditSnapshot m_preparingSnapshot;
 	ProgressDispatchState m_fileProgressDispatchState;
 	ProgressDispatchState m_totalProgressDispatchState;
+	sunjwbase::tstring m_currentTaskPath;
 };
 
 #endif

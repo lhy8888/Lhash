@@ -2947,8 +2947,8 @@ internal static class Program
             AssertContains(progressController, "m_parentWnd->SetTimer(1, 100, NULL);", "Phase 23 progress controller does not yet own timer startup.");
             AssertContains(progressController, "m_parentWnd->KillTimer(m_timerId);", "Phase 23 progress controller does not yet own timer shutdown.");
             AssertContains(progressController, "m_taskbarList->SetProgressValue(", "Phase 23 progress controller does not yet own taskbar progress updates.");
-            AssertContains(progressController, "SetSpeedText(", "Phase 23 progress controller does not yet centralize speed-label updates.");
-            AssertContains(progressController, "SetTimeText(", "Phase 23 progress controller does not yet centralize time-label updates.");
+            AssertContains(progressController, "UpdateSummaryText();", "Phase 23 progress controller does not yet centralize status-summary refreshes.");
+            AssertContains(progressController, "m_statusOverviewCtrl->SetWindowText(summary);", "Phase 23 progress controller does not yet centralize status summary rendering.");
 
             AssertContains(dlgHeader, "#include \"FilesHashProgressController.h\"", "FilesHashDlg.h does not yet consume the phase 23 progress controller.");
             AssertContains(dlgHeader, "FilesHashProgressController m_hashProgressController;", "FilesHashDlg.h does not yet keep the phase 23 progress controller.");

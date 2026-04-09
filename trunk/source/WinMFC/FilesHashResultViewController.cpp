@@ -209,6 +209,26 @@ void FilesHashResultViewController::CopyLastHyperlink() const
 	WindowsUtils::CopyCString(m_mainEdit->GetLastHyperlink());
 }
 
+void FilesHashResultViewController::CopyAllResults() const
+{
+	if (m_mainEdit == NULL)
+	{
+		return;
+	}
+
+	WindowsUtils::CopyCString(m_mainEdit->GetTextBuffer());
+}
+
+CString FilesHashResultViewController::GetCurrentText() const
+{
+	if (m_mainEdit == NULL)
+	{
+		return CString();
+	}
+
+	return m_mainEdit->GetTextBuffer();
+}
+
 void FilesHashResultViewController::UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const
 {
 	if (pCmdUI != NULL)

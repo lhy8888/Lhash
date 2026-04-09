@@ -13,6 +13,7 @@
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
 #include "FindDlg.h"
+#include <afxdlgs.h>
 
 FilesHashCommandController::FilesHashCommandController()
 	: m_threadData(NULL),
@@ -25,6 +26,20 @@ FilesHashCommandController::FilesHashCommandController()
 	m_hashProgressController(NULL),
 	m_hashResultViewController(NULL)
 {
+}
+
+void FilesHashCommandController::HandleOpenFolderButtonClick(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage)
+{
+	if (m_threadData == NULL || m_hashLifecycleController == NULL || IsThreadDataWorking(*m_threadData))
+	{
+		return;
+	}
+
+	if (m_hashInputController != NULL &&
+		m_hashInputController->LoadFolderDialogSelection(folderDialogTitle, emptyFolderMessage))
+	{
+		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+	}
 }
 
 void FilesHashCommandController::Initialize(
@@ -101,6 +116,7 @@ void FilesHashCommandController::HandleCleanButtonClick(LPCTSTR clearButtonText,
 		m_hashResultViewController->ClearResults(*m_threadData);
 		ClearProgressLabels();
 		m_hashProgressController->SetWholeProgress(0);
+		m_hashProgressController->ResetTaskSession();
 	}
 	else if (buttonText.Compare(clearVerifyButtonText) == 0 &&
 		m_hashSearchController != NULL)
@@ -108,6 +124,37 @@ void FilesHashCommandController::HandleCleanButtonClick(LPCTSTR clearButtonText,
 		m_hashSearchController->ClearSearch(clearButtonText);
 		m_hashResultViewController->RefreshMainText();
 	}
+}
+
+void FilesHashCommandController::HandleCopyButtonClick() const
+{
+	if (m_hashResultViewController != NULL)
+	{
+		m_hashResultViewController->CopyAllResults();
+	}
+}
+
+void FilesHashCommandController::HandleExportButtonClick(LPCTSTR exportFilter, LPCTSTR defaultFileName) const
+{
+	if (m_parentWnd == NULL || m_hashResultViewController == NULL)
+	{
+		return;
+	}
+
+	CFileDialog saveDialog(FALSE, _T("txt"), defaultFileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, exportFilter, m_parentWnd, 0);
+	if (IDOK != saveDialog.DoModal())
+	{
+		return;
+	}
+
+	CStdioFile outputFile;
+	if (!outputFile.Open(saveDialog.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+	{
+		return;
+	}
+
+	outputFile.WriteString(m_hashResultViewController->GetCurrentText());
+	outputFile.Close();
 }
 
 void FilesHashCommandController::HandleFindButtonClick(LPCTSTR clearVerifyButtonText) const

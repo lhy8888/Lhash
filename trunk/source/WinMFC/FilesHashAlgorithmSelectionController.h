@@ -20,6 +20,8 @@ public:
 	void SyncSelections();
 	BOOL ValidateSelection(LPCTSTR noSelectionMessage) const;
 	void SetEnabled(BOOL enabled);
+	BOOL IsAlgorithmEnabled(const HashAlgorithmId& algorithmId) const;
+	void SetAlgorithmEnabled(const HashAlgorithmId& algorithmId, BOOL enabled);
 
 private:
 	struct HashAlgorithmCheckBox

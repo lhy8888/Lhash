@@ -17,6 +17,8 @@ FilesHashSessionController::FilesHashSessionController()
 	m_btnFind(NULL),
 	m_btnContext(NULL),
 	m_chkUppercase(NULL),
+	m_btnOpenFolder(NULL),
+	m_btnSettings(NULL),
 	m_hashAlgorithmSelectionController(NULL),
 	m_hWorkThread()
 {
@@ -46,6 +48,12 @@ void FilesHashSessionController::Initialize(ThreadData* threadData,
 	m_btnContext = btnContext;
 	m_chkUppercase = chkUppercase;
 	m_hashAlgorithmSelectionController = hashAlgorithmSelectionController;
+}
+
+void FilesHashSessionController::AttachSupplementalControls(CButton* btnOpenFolder, CButton* btnSettings)
+{
+	m_btnOpenFolder = btnOpenFolder;
+	m_btnSettings = btnSettings;
 }
 
 BOOL FilesHashSessionController::PrepareHashStart(LPCTSTR noSelectionMessage)
@@ -109,6 +117,14 @@ void FilesHashSessionController::SetControls(BOOL working, BOOL limited, LPCTSTR
 		{
 			m_btnContext->EnableWindow(FALSE);
 		}
+		if (m_btnOpenFolder != NULL)
+		{
+			m_btnOpenFolder->EnableWindow(FALSE);
+		}
+		if (m_btnSettings != NULL)
+		{
+			m_btnSettings->EnableWindow(FALSE);
+		}
 		if (m_chkUppercase != NULL)
 		{
 			m_chkUppercase->EnableWindow(FALSE);
@@ -137,6 +153,14 @@ void FilesHashSessionController::SetControls(BOOL working, BOOL limited, LPCTSTR
 		{
 			Button_SetElevationRequiredState(m_btnContext->GetSafeHwnd(), limited ? TRUE : FALSE);
 			m_btnContext->EnableWindow(TRUE);
+		}
+		if (m_btnOpenFolder != NULL)
+		{
+			m_btnOpenFolder->EnableWindow(TRUE);
+		}
+		if (m_btnSettings != NULL)
+		{
+			m_btnSettings->EnableWindow(TRUE);
 		}
 		if (m_chkUppercase != NULL)
 		{

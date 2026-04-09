@@ -111,7 +111,6 @@ void FilesHashInitializationController::InitializeDialog(
 
 	btnOpen->SetWindowText(openButtonText);
 	btnFind->SetWindowText(verifyButtonText);
-	btnFind->ShowWindow(SW_HIDE);
 	btnExit->SetWindowText(exitButtonText);
 	SetDialogItemText(parentWnd, IDC_ABOUT, aboutButtonText);
 

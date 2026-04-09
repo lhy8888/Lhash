@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <vector>
+#include <shlobj.h>
 
 #include "FilesHashInputController.h"
 
@@ -56,6 +57,45 @@ BOOL FilesHashInputController::LoadOpenFileDialogSelection(LPCTSTR fileFilter)
 	}
 
 	return HasThreadDataInputFiles(*m_threadData) ? TRUE : FALSE;
+}
+
+BOOL FilesHashInputController::LoadFolderDialogSelection(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage)
+{
+	if (m_threadData == NULL || m_parentWnd == NULL)
+	{
+		return FALSE;
+	}
+
+	BROWSEINFO browseInfo = {};
+	browseInfo.hwndOwner = m_parentWnd->GetSafeHwnd();
+	browseInfo.lpszTitle = folderDialogTitle;
+	browseInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE | BIF_USENEWUI;
+
+	LPITEMIDLIST itemIdList = SHBrowseForFolder(&browseInfo);
+	if (itemIdList == NULL)
+	{
+		return FALSE;
+	}
+
+	TCHAR selectedPath[MAX_PATH] = { 0 };
+	BOOL hasPath = SHGetPathFromIDList(itemIdList, selectedPath);
+	CoTaskMemFree(itemIdList);
+	if (!hasPath)
+	{
+		return FALSE;
+	}
+
+	TStrVector files;
+	AppendFolderFilesRecursive(selectedPath, files);
+	if (files.empty())
+	{
+		AfxMessageBox(emptyFolderMessage, MB_OK | MB_ICONINFORMATION);
+		return FALSE;
+	}
+
+	ClearFilePaths();
+	ReplaceThreadDataInputFiles(*m_threadData, files);
+	return TRUE;
 }
 
 BOOL FilesHashInputController::LoadDroppedFiles(HDROP hDropInfo)
@@ -184,6 +224,66 @@ TStrVector FilesHashInputController::ParseFilesCmdLine(LPTSTR filesCmdLine)
 #endif
 
 	return parameters;
+}
+
+void FilesHashInputController::AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath, TStrVector& files)
+{
+	if (folderPath.empty() || files.size() >= MAX_FILES_NUM)
+	{
+		return;
+	}
+
+	sunjwbase::tstring searchPath = folderPath;
+	if (searchPath[searchPath.length() - 1] != _T('\\') &&
+		searchPath[searchPath.length() - 1] != _T('/'))
+	{
+		searchPath += _T("\\");
+	}
+	searchPath += _T("*");
+
+	WIN32_FIND_DATA findData = {};
+	HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
+	if (hFind == INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+
+	do
+	{
+		if (_tcscmp(findData.cFileName, _T(".")) == 0 ||
+			_tcscmp(findData.cFileName, _T("..")) == 0)
+		{
+			continue;
+		}
+
+		sunjwbase::tstring fullPath = folderPath;
+		if (fullPath[fullPath.length() - 1] != _T('\\') &&
+			fullPath[fullPath.length() - 1] != _T('/'))
+		{
+			fullPath += _T("\\");
+		}
+		fullPath += findData.cFileName;
+
+		if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+		{
+			continue;
+		}
+
+		if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+		{
+			AppendFolderFilesRecursive(fullPath, files);
+		}
+		else
+		{
+			files.push_back(fullPath);
+			if (files.size() >= MAX_FILES_NUM)
+			{
+				break;
+			}
+		}
+	} while (FindNextFile(hFind, &findData) != FALSE);
+
+	FindClose(hFind);
 }
 
 void FilesHashInputController::ClearFilePaths()

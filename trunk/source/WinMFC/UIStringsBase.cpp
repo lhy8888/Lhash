@@ -42,10 +42,34 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_STOP")] = _T("&Stop");
 	m_stringsMap[_T("MAINDLG_COPY")] = _T("&Copy");
 	m_stringsMap[_T("MAINDLG_VERIFY")] = _T("&Verify");
+	m_stringsMap[_T("MAINDLG_OPEN_FOLDER")] = _T("Open &Folder");
+	m_stringsMap[_T("MAINDLG_EXPORT")] = _T("&Export");
+	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("&Settings");
+	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("Clear Results");
+	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithms");
+	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("Select a folder to hash");
+	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("No regular files were found in the selected folder.");
+	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("Text Files (*.txt)|*.txt|All Files (*.*)|*.*||");
+	m_stringsMap[_T("MAINDLG_EXPORT_DEFAULT_NAME")] = _T("LHash-results.txt");
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("&About");
 	m_stringsMap[_T("MAINDLG_EXIT")] = _T("E&xit");
 	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("Copy hash value");
 	m_stringsMap[_T("MAINDLG_SELECT_HASH_ALGORITHM")] = _T("Enable at least one hash algorithm before starting.");
+	m_stringsMap[_T("MAINDLG_TASK_FILE")] = _T("File");
+	m_stringsMap[_T("MAINDLG_TASK_ALGORITHM")] = _T("Algorithm");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS")] = _T("Status");
+	m_stringsMap[_T("MAINDLG_TASK_PROGRESS")] = _T("Progress");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_PENDING")] = _T("Pending");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_META")] = _T("Inspecting");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_RUNNING")] = _T("Running");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_COMPLETED")] = _T("Done");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_FAILED")] = _T("Failed");
+	m_stringsMap[_T("MAINDLG_STATUS_TOTAL")] = _T("Files");
+	m_stringsMap[_T("MAINDLG_STATUS_DONE")] = _T("Done");
+	m_stringsMap[_T("MAINDLG_STATUS_FAILED")] = _T("Failed");
+	m_stringsMap[_T("MAINDLG_STATUS_RUNNING")] = _T("Running");
+	m_stringsMap[_T("MAINDLG_STATUS_TIME")] = _T("Time");
+	m_stringsMap[_T("MAINDLG_STATUS_SPEED")] = _T("Speed");
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("Verify");

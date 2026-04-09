@@ -8,6 +8,38 @@
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
 #include "UIBridgeMFC.h"
+#include "Domain/HashAlgorithmRegistryCore.h"
+#include "LegacyCompat/ThreadDataInputAccess.h"
+
+namespace
+{
+static sunjwbase::tstring BuildEnabledAlgorithmSummary(const ThreadData& threadData)
+{
+	sunjwbase::tstring algorithmSummary;
+	VisitEnabledThreadDataHashAlgorithmIds(threadData, [&](const HashAlgorithmId& algorithmId)
+	{
+		int algorithmIndex = -1;
+		if (!TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex))
+		{
+			return true;
+		}
+
+		const HashAlgorithmDescriptor* descriptor = GetRegisteredHashAlgorithmDescriptor(algorithmIndex);
+		if (descriptor == NULL)
+		{
+			return true;
+		}
+
+		if (!algorithmSummary.empty())
+		{
+			algorithmSummary += _T(", ");
+		}
+		algorithmSummary += GetHashAlgorithmDescriptorDisplayLabel(*descriptor);
+		return true;
+	});
+	return algorithmSummary;
+}
+}
 
 FilesHashLifecycleController::FilesHashLifecycleController()
 	: m_threadData(NULL),
@@ -70,6 +102,7 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 		return;
 	}
 
+	m_hashProgressController->BeginTaskSession(GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
 	m_hashProgressController->StartTiming(secondText);
 	m_hashSessionController->StartHashThread();
 }

@@ -26,6 +26,8 @@ public:
 	void ShowHyperEditMenu(CWnd* ownerWnd);
 	void UpdatePopupMenu(CWnd* ownerWnd, CMenu* pPopupMenu);
 	void CopyLastHyperlink() const;
+	void CopyAllResults() const;
+	CString GetCurrentText() const;
 	void UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const;
 
 private:

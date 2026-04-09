@@ -48,6 +48,7 @@ void UIBridgeMFC::handleJobPreparingEvent()
 {
 	ResetProgressDispatchState(m_fileProgressDispatchState);
 	ResetProgressDispatchState(m_totalProgressDispatchState);
+	m_currentTaskPath.clear();
 
 	PostThreadInfoMessage(WP_WORKING);
 
@@ -93,15 +94,49 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	{
 	case PROGRESS_EVENT_FILE_STARTED:
 		ResetProgressDispatchState(m_fileProgressDispatchState);
+		m_currentTaskPath = result.path;
+		{
+			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.path = result.path;
+			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_RUNNING);
+			taskUpdate.state = FILES_HASH_TASK_RUNNING;
+			taskUpdate.progress = 0;
+			PostTaskUpdate(taskUpdate);
+		}
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_FILE_NAME, false);
 		break;
 	case PROGRESS_EVENT_FILE_META_READY:
+		{
+			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.path = result.path;
+			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_META);
+			taskUpdate.state = FILES_HASH_TASK_RUNNING;
+			taskUpdate.progress = max(5, m_fileProgressDispatchState.lastValue);
+			PostTaskUpdate(taskUpdate);
+		}
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
 		break;
 	case PROGRESS_EVENT_FILE_HASH_READY:
+		{
+			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.path = result.path;
+			taskUpdate.algorithms = BuildAlgorithmSummary(result);
+			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_COMPLETED);
+			taskUpdate.state = FILES_HASH_TASK_COMPLETED;
+			taskUpdate.progress = 100;
+			PostTaskUpdate(taskUpdate);
+		}
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercaseDigest);
 		break;
 	case PROGRESS_EVENT_FILE_FAILED:
+		{
+			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.path = result.path;
+			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_FAILED);
+			taskUpdate.state = FILES_HASH_TASK_FAILED;
+			taskUpdate.progress = max(0, m_fileProgressDispatchState.lastValue);
+			PostTaskUpdate(taskUpdate);
+		}
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);
 		break;
 	default:
@@ -139,7 +174,15 @@ void UIBridgeMFC::handleFileProgressEvent(int value)
 {
 	if (ShouldPostProgressValue(m_fileProgressDispatchState, value))
 	{
-		//::PostMessage(m_hWnd, WM_THREAD_INFO, WP_PROG, value);
+		if (!m_currentTaskPath.empty())
+		{
+			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.path = m_currentTaskPath;
+			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_RUNNING);
+			taskUpdate.state = FILES_HASH_TASK_RUNNING;
+			taskUpdate.progress = value;
+			PostTaskUpdate(taskUpdate);
+		}
 	}
 }
 
@@ -157,6 +200,29 @@ void UIBridgeMFC::handleFileCalculatedEvent()
 
 void UIBridgeMFC::handleFileFinishedEvent()
 {
+}
+
+void UIBridgeMFC::PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate)
+{
+	FilesHashTaskUpdate* taskUpdateCopy = new FilesHashTaskUpdate(taskUpdate);
+	PostThreadInfoMessage(WP_TASK_UPDATE, reinterpret_cast<LPARAM>(taskUpdateCopy));
+}
+
+sunjwbase::tstring UIBridgeMFC::BuildAlgorithmSummary(const HashResult& result)
+{
+	sunjwbase::tstring algorithmSummary;
+	VisitHashResultDigestDisplayValues(result, false, [&](int index, const HashDigestResult& digestResult, const ResultDigestDisplayInfo& digestDisplayInfo)
+	{
+		(void)index;
+		(void)digestResult;
+		if (!algorithmSummary.empty())
+		{
+			algorithmSummary += _T(", ");
+		}
+		algorithmSummary += digestDisplayInfo.label;
+		return true;
+	});
+	return algorithmSummary;
 }
 
 void UIBridgeMFC::AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit)

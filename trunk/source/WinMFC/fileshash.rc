@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+Ôªø// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ÷–Œƒ(ºÚÃÂ£¨÷–π˙) resources
+// ‰∏≠Êñá(ÁÆÄ‰ΩìÔºå‰∏≠ÂõΩ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -46,8 +46,8 @@ BEGIN
     "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
     "LANGUAGE 4, 2\r\n"
     "#pragma code_page(936)\r\n"
-    "#include ""res\\fileshash.rc2""  // ∑« Microsoft Visual C++ ±‡º≠◊ ‘¥\r\n"
-    "#include ""afxres.rc""         // ±Í◊º◊Èº˛\r\n"
+    "#include ""res\\fileshash.rc2""  // Èùû Microsoft Visual C++ ÁºñËæëËµÑÊ∫ê\r\n"
+    "#include ""afxres.rc""         // Ê†áÂáÜÁªÑ‰ª∂\r\n"
     "#endif\r\n"
     "\0"
 END
@@ -74,35 +74,41 @@ IDD_MAIN_DIALOG DIALOGEX 0, 0, 624, 399
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_ACCEPTFILES | WS_EX_APPWINDOW
 CAPTION "LHash"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
+FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "BUTTON_OPEN",IDC_OPEN,511,295,106,18
-    PUSHBUTTON      "BUTTON_CLEAN",IDC_CLEAN,511,333,106,18
-    CONTROL         "",IDC_CHECKUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,80,314,11,10
-    PUSHBUTTON      "BUTTON_ABOUT'",IDC_ABOUT,7,372,70,18
-    PUSHBUTTON      "BUTTON_EXIT",IDC_EXIT,511,372,106,18
-    EDITTEXT        IDE_TXTMAIN,7,8,610,283,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
-    CONTROL         "",IDC_PROG_WHOLE,"msctls_progress32",WS_BORDER,8,301,503,12
-    LTEXT           "XXXXXs",IDC_STATIC_TIME,141,315,32,8
-    LTEXT           "TIME_TITLE",IDC_STATIC_TIMETITLE,95,315,43,8
-    LTEXT           "XXXX.XX MB/s",IDC_STATIC_SPEED,177,315,60,8
-    CONTROL         "MD5",IDC_CHECK_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,252,314,35,10
-    CONTROL         "SHA1",IDC_CHECK_SHA1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,292,314,40,10
-    CONTROL         "SHA256",IDC_CHECK_SHA256,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,337,314,49,10
-    CONTROL         "SHA512",IDC_CHECK_SHA512,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,391,314,49,10
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,363,610,1
-    LTEXT           "UPPER_HASH",IDC_STATIC_UPPER,8,315,70,8,SS_NOTIFY
-    PUSHBUTTON      "BUTTON_FIND",IDC_FIND,0,0,0,0
-    PUSHBUTTON      "BUTTON_CONTEXT",IDC_CONTEXT,89,372,130,18
-    LTEXT           "æ≤Ã¨",IDC_STATIC_ADDRESULT,229,375,270,11,WS_DISABLED
+    DEFPUSHBUTTON   "BUTTON_OPEN",IDC_OPEN,8,8,78,22
+    PUSHBUTTON      "BUTTON_OPEN_FOLDER",IDC_OPEN_FOLDER,92,8,84,22
+    PUSHBUTTON      "BUTTON_FIND",IDC_FIND,182,8,66,22
+    PUSHBUTTON      "BUTTON_COPY",IDC_COPY,254,8,66,22
+    PUSHBUTTON      "BUTTON_EXPORT",IDC_EXPORT,326,8,66,22
+    PUSHBUTTON      "BUTTON_SETTINGS",IDC_SETTINGS,398,8,66,22
+    EDITTEXT        IDE_TXTMAIN,8,40,608,212,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+    CONTROL         "",IDC_TASK_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,258,608,86
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,8,352,608,1
+    LTEXT           "STATUS_OVERVIEW",IDC_STATIC_STATUS_OVERVIEW,10,360,604,14,SS_NOPREFIX
+    CONTROL         "",IDC_PROG_WHOLE,"msctls_progress32",WS_BORDER,0,0,0,0
+    PUSHBUTTON      "BUTTON_CLEAN",IDC_CLEAN,0,0,0,0
+    CONTROL         "",IDC_CHECKUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,0,0,0
+    PUSHBUTTON      "BUTTON_ABOUT",IDC_ABOUT,0,0,0,0
+    PUSHBUTTON      "BUTTON_EXIT",IDC_EXIT,0,0,0,0
+    LTEXT           "",IDC_STATIC_TIME,0,0,0,0
+    LTEXT           "",IDC_STATIC_TIMETITLE,0,0,0,0
+    LTEXT           "",IDC_STATIC_SPEED,0,0,0,0
+    CONTROL         "MD5",IDC_CHECK_MD5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,0,0,0
+    CONTROL         "SHA1",IDC_CHECK_SHA1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,0,0,0
+    CONTROL         "SHA256",IDC_CHECK_SHA256,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,0,0,0
+    CONTROL         "SHA512",IDC_CHECK_SHA512,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,0,0,0
+    LTEXT           "UPPER_HASH",IDC_STATIC_UPPER,0,0,0,0,SS_NOTIFY
+    PUSHBUTTON      "BUTTON_CONTEXT",IDC_CONTEXT,0,0,0,0
+    LTEXT           "",IDC_STATIC_ADDRESULT,0,0,0,0,WS_DISABLED
 END
 
 IDD_ABOUT DIALOGEX 0, 0, 252, 166
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ABOUT_TITLE"
-FONT 9, "ÀŒÃÂ", 0, 0, 0x0
+FONT 9, "ÂÆã‰Ωì", 0, 0, 0x0
 BEGIN
-    LTEXT           "æ≤Ã¨",IDC_MAIN,74,10,168,121
+    LTEXT           "ÈùôÊÄÅ",IDC_MAIN,74,10,168,121
     PUSHBUTTON      "BUTTON_OK",IDOK,192,142,50,14
     ICON            IDI_ICON1,IDC_ICON2,10,10,20,20
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,135,231,1
@@ -180,7 +186,7 @@ BEGIN
     0
 END
 
-#endif    // ÷–Œƒ(ºÚÃÂ£¨÷–π˙) resources
+#endif    // ‰∏≠Êñá(ÁÆÄ‰ΩìÔºå‰∏≠ÂõΩ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -198,8 +204,8 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE 4, 2
 #pragma code_page(936)
-#include "res\fileshash.rc2"  // ∑« Microsoft Visual C++ ±‡º≠◊ ‘¥
-#include "afxres.rc"         // ±Í◊º◊Èº˛
+#include "res\fileshash.rc2"  // Èùû Microsoft Visual C++ ÁºñËæëËµÑÊ∫ê
+#include "afxres.rc"         // Ê†áÂáÜÁªÑ‰ª∂
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

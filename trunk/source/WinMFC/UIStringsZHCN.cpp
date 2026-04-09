@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "UIStringsZHCN.h"
 
@@ -7,58 +7,82 @@
 UIStringsZHCN::UIStringsZHCN()
 {
 	// Global Strings
-	m_stringsMap[_T("FILE_STRING")] = _T("ÎÄ¼ş");
-	m_stringsMap[_T("BYTE_STRING")] = _T("×Ö½Ú");
-	m_stringsMap[_T("HASHVALUE_STRING")] = _T("Hash Öµ:");
-	m_stringsMap[_T("FILENAME_STRING")] = _T("ÎÄ¼şÃû:");
-	m_stringsMap[_T("FILESIZE_STRING")] = _T("ÎÄ¼ş´óĞ¡:");
-	m_stringsMap[_T("MODIFYTIME_STRING")] = _T("ĞŞ¸ÄÈÕÆÚ:");
-	m_stringsMap[_T("VERSION_STRING")] = _T("°æ±¾:");
-	m_stringsMap[_T("SECOND_STRING")] = _T("Ãë");
-	m_stringsMap[_T("BUTTON_OK")] = _T("È·¶¨");
-	m_stringsMap[_T("BUTTON_CANCEL")] = _T("È¡Ïû");
+	m_stringsMap[_T("FILE_STRING")] = _T("æ–‡ä»¶");
+	m_stringsMap[_T("BYTE_STRING")] = _T("å­—èŠ‚");
+	m_stringsMap[_T("HASHVALUE_STRING")] = _T("Hash å€¼:");
+	m_stringsMap[_T("FILENAME_STRING")] = _T("æ–‡ä»¶å:");
+	m_stringsMap[_T("FILESIZE_STRING")] = _T("æ–‡ä»¶å¤§å°:");
+	m_stringsMap[_T("MODIFYTIME_STRING")] = _T("ä¿®æ”¹æ—¥æœŸ:");
+	m_stringsMap[_T("VERSION_STRING")] = _T("ç‰ˆæœ¬:");
+	m_stringsMap[_T("SECOND_STRING")] = _T("ç§’");
+	m_stringsMap[_T("BUTTON_OK")] = _T("ç¡®å®š");
+	m_stringsMap[_T("BUTTON_CANCEL")] = _T("å–æ¶ˆ");
 
 	// Main Dialog Strings
-	m_stringsMap[_T("MAINDLG_INITINFO")] = _T("½«ÎÄ¼şÍÏÈë»òµã»÷´ò¿ª£¬¿ªÊ¼¼ÆËã¡£");
-	m_stringsMap[_T("MAINDLG_WAITING_START")] = _T("×¼±¸¿ªÊ¼¼ÆËã¡£");
-	m_stringsMap[_T("MAINDLG_CONTEXT_INIT")] = _T("ĞèÒª¹ÜÀíÔ±È¨ÏŞ");
-	m_stringsMap[_T("MAINDLG_ADD_SUCCEEDED")] = _T("Ìí¼Ó³É¹¦");
-	m_stringsMap[_T("MAINDLG_ADD_FAILED")] = _T("Ìí¼ÓÊ§°Ü");
-	m_stringsMap[_T("MAINDLG_REMOVE_SUCCEEDED")] = _T("ÒÆ³ı³É¹¦");
-	m_stringsMap[_T("MAINDLG_REMOVE_FAILED")] = _T("ÒÆ³ıÊ§°Ü");
-	m_stringsMap[_T("MAINDLG_REMOVE_CONTEXT_MENU")] = _T("ÒÆ³ıÓÒ¼ü²Ëµ¥");
-	m_stringsMap[_T("MAINDLG_ADD_CONTEXT_MENU")] = _T("Ìí¼ÓÓÒ¼ü²Ëµ¥");
-	m_stringsMap[_T("MAINDLG_CLEAR")] = _T("Çå³ı(&R)");
-	m_stringsMap[_T("MAINDLG_CLEAR_VERIFY")] = _T("Çå³ıÑéÖ¤(&R)");
-	m_stringsMap[_T("MAINDLG_CALCU_TERMINAL")] = _T("¼ÆËãÖÕÖ¹");
-	m_stringsMap[_T("MAINDLG_FIND_IN_RESULT")] = _T("ÔÚ½á¹ûÖĞËÑË÷");
-	m_stringsMap[_T("MAINDLG_RESULT")] = _T("Æ¥ÅäµÄ½á¹û:");
-	m_stringsMap[_T("MAINDLG_NORESULT")] = _T("ÎŞÆ¥Åä½á¹û");
-	m_stringsMap[_T("MAINDLG_FILE_PROGRESS")] = _T("ÎÄ¼ş½ø¶È");
-	m_stringsMap[_T("MAINDLG_TOTAL_PROGRESS")] = _T("×ÜÌå½ø¶È");
-	m_stringsMap[_T("MAINDLG_UPPER_HASH")] = _T("´óĞ´ Hash");
-	m_stringsMap[_T("MAINDLG_TIME_TITLE")] = _T("¼ÆËãÊ±¼ä:");
-	m_stringsMap[_T("MAINDLG_OPEN")] = _T("´ò¿ª(&O)...");
-	m_stringsMap[_T("MAINDLG_STOP")] = _T("Í£Ö¹(&S)");
-	m_stringsMap[_T("MAINDLG_COPY")] = _T("È«²¿¸´ÖÆ(&C)");
-	m_stringsMap[_T("MAINDLG_VERIFY")] = _T("ÑéÖ¤(&V)");
-	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("¹ØÓÚ(&A)");
-	m_stringsMap[_T("MAINDLG_EXIT")] = _T("ÍË³ö(&X)");
-	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("¸´ÖÆ¹şÏ£Öµ");
-	m_stringsMap[_T("MAINDLG_SELECT_HASH_ALGORITHM")] = _T("¿ªÊ¼¼ÆËãÇ°£¬ÖÁÉÙĞèÒªÆôÓÃÒ»ÖÖ Hash Ëã·¨¡£");
+	m_stringsMap[_T("MAINDLG_INITINFO")] = _T("å°†æ–‡ä»¶æ‹–å…¥æˆ–ç‚¹å‡»æ‰“å¼€ï¼Œå¼€å§‹è®¡ç®—ã€‚");
+	m_stringsMap[_T("MAINDLG_WAITING_START")] = _T("å‡†å¤‡å¼€å§‹è®¡ç®—ã€‚");
+	m_stringsMap[_T("MAINDLG_CONTEXT_INIT")] = _T("éœ€è¦ç®¡ç†å‘˜æƒé™");
+	m_stringsMap[_T("MAINDLG_ADD_SUCCEEDED")] = _T("æ·»åŠ æˆåŠŸ");
+	m_stringsMap[_T("MAINDLG_ADD_FAILED")] = _T("æ·»åŠ å¤±è´¥");
+	m_stringsMap[_T("MAINDLG_REMOVE_SUCCEEDED")] = _T("ç§»é™¤æˆåŠŸ");
+	m_stringsMap[_T("MAINDLG_REMOVE_FAILED")] = _T("ç§»é™¤å¤±è´¥");
+	m_stringsMap[_T("MAINDLG_REMOVE_CONTEXT_MENU")] = _T("ç§»é™¤å³é”®èœå•");
+	m_stringsMap[_T("MAINDLG_ADD_CONTEXT_MENU")] = _T("æ·»åŠ å³é”®èœå•");
+	m_stringsMap[_T("MAINDLG_CLEAR")] = _T("æ¸…é™¤(&R)");
+	m_stringsMap[_T("MAINDLG_CLEAR_VERIFY")] = _T("æ¸…é™¤éªŒè¯(&R)");
+	m_stringsMap[_T("MAINDLG_CALCU_TERMINAL")] = _T("è®¡ç®—ç»ˆæ­¢");
+	m_stringsMap[_T("MAINDLG_FIND_IN_RESULT")] = _T("åœ¨ç»“æœä¸­æœç´¢");
+	m_stringsMap[_T("MAINDLG_RESULT")] = _T("åŒ¹é…çš„ç»“æœ:");
+	m_stringsMap[_T("MAINDLG_NORESULT")] = _T("æ— åŒ¹é…ç»“æœ");
+	m_stringsMap[_T("MAINDLG_FILE_PROGRESS")] = _T("æ–‡ä»¶è¿›åº¦");
+	m_stringsMap[_T("MAINDLG_TOTAL_PROGRESS")] = _T("æ€»ä½“è¿›åº¦");
+	m_stringsMap[_T("MAINDLG_UPPER_HASH")] = _T("å¤§å†™ Hash");
+	m_stringsMap[_T("MAINDLG_TIME_TITLE")] = _T("è®¡ç®—æ—¶é—´:");
+	m_stringsMap[_T("MAINDLG_OPEN")] = _T("æ‰“å¼€(&O)...");
+	m_stringsMap[_T("MAINDLG_STOP")] = _T("åœæ­¢(&S)");
+	m_stringsMap[_T("MAINDLG_COPY")] = _T("å…¨éƒ¨å¤åˆ¶(&C)");
+	m_stringsMap[_T("MAINDLG_VERIFY")] = _T("éªŒè¯(&V)");
+	m_stringsMap[_T("MAINDLG_OPEN_FOLDER")] = _T("æ‰“å¼€æ–‡ä»¶å¤¹(&F)");
+	m_stringsMap[_T("MAINDLG_EXPORT")] = _T("å¯¼å‡º(&E)");
+	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("è®¾ç½®(&S)");
+	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("æ¸…ç©ºç»“æœ");
+	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("ç®—æ³•");
+	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("é€‰æ‹©éœ€è¦è®¡ç®—çš„æ–‡ä»¶å¤¹");
+	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("æ‰€é€‰æ–‡ä»¶å¤¹ä¸­æ²¡æœ‰å¯è®¡ç®—çš„æ™®é€šæ–‡ä»¶ã€‚");
+	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("æ–‡æœ¬æ–‡ä»¶ (*.txt)|*.txt|æ‰€æœ‰æ–‡ä»¶ (*.*)|*.*||");
+	m_stringsMap[_T("MAINDLG_EXPORT_DEFAULT_NAME")] = _T("LHash-ç»“æœ.txt");
+	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("å…³äº(&A)");
+	m_stringsMap[_T("MAINDLG_EXIT")] = _T("é€€å‡º(&X)");
+	m_stringsMap[_T("MAINDLG_HYPEREDIT_MENU_COPY")] = _T("å¤åˆ¶å“ˆå¸Œå€¼");
+	m_stringsMap[_T("MAINDLG_SELECT_HASH_ALGORITHM")] = _T("å¼€å§‹è®¡ç®—å‰ï¼Œè‡³å°‘éœ€è¦å¯ç”¨ä¸€ç§ Hash ç®—æ³•ã€‚");
+	m_stringsMap[_T("MAINDLG_TASK_FILE")] = _T("æ–‡ä»¶");
+	m_stringsMap[_T("MAINDLG_TASK_ALGORITHM")] = _T("ç®—æ³•");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS")] = _T("çŠ¶æ€");
+	m_stringsMap[_T("MAINDLG_TASK_PROGRESS")] = _T("è¿›åº¦");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_PENDING")] = _T("ç­‰å¾…ä¸­");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_META")] = _T("è¯»å–ä¸­");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_RUNNING")] = _T("å¤„ç†ä¸­");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_COMPLETED")] = _T("å·²å®Œæˆ");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_FAILED")] = _T("å¤±è´¥");
+	m_stringsMap[_T("MAINDLG_STATUS_TOTAL")] = _T("æ€»æ–‡ä»¶");
+	m_stringsMap[_T("MAINDLG_STATUS_DONE")] = _T("å®Œæˆ");
+	m_stringsMap[_T("MAINDLG_STATUS_FAILED")] = _T("å¤±è´¥");
+	m_stringsMap[_T("MAINDLG_STATUS_RUNNING")] = _T("è¿›è¡Œä¸­");
+	m_stringsMap[_T("MAINDLG_STATUS_TIME")] = _T("è€—æ—¶");
+	m_stringsMap[_T("MAINDLG_STATUS_SPEED")] = _T("é€Ÿåº¦");
 
 	// Find Dialog Strings
-	m_stringsMap[_T("FINDDLG_TITLE")] = _T("ÑéÖ¤");
+	m_stringsMap[_T("FINDDLG_TITLE")] = _T("éªŒè¯");
 
 	// About Dialog Strings
-	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("¹ØÓÚ LHash");
-	m_stringsMap[_T("ABOUTDLG_INFO_TITLE")] = _T("LHash: ÎÄ¼ş Hash ¼ÆËãÆ÷");
+	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("å…³äº LHash");
+	m_stringsMap[_T("ABOUTDLG_INFO_TITLE")] = _T("LHash: æ–‡ä»¶ Hash è®¡ç®—å™¨");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHT")] = _T("Copyright (C) 2026- LHY.");
-	m_stringsMap[_T("ABOUTDLG_INFO_MD5")] = _T("MD5 ÊµÏÖ copyright (C) RSA Data Security, Inc.");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA256")] = _T("SHA256 ÊµÏÖ copyright (C) Niels Moller");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA512")] = _T("SHA512 ÊµÏÖ copyright (C) Aaron D. Gifford");
-	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("ÏêÏ¸ÊÚÈ¨ĞÅÏ¢¼û¿ª·¢ÕßÍøÕ¾¡£");
-	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("µ±Ç°²Ù×÷ÏµÍ³:");
+	m_stringsMap[_T("ABOUTDLG_INFO_MD5")] = _T("MD5 å®ç° copyright (C) RSA Data Security, Inc.");
+	m_stringsMap[_T("ABOUTDLG_INFO_SHA256")] = _T("SHA256 å®ç° copyright (C) Niels Moller");
+	m_stringsMap[_T("ABOUTDLG_INFO_SHA512")] = _T("SHA512 å®ç° copyright (C) Aaron D. Gifford");
+	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("è¯¦ç»†æˆæƒä¿¡æ¯è§å¼€å‘è€…ç½‘ç«™ã€‚");
+	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("å½“å‰æ“ä½œç³»ç»Ÿ:");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_SITE")] = _T("<a>Hosted on GitHub</a>");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_URL")] = _T("https://github.com/lhy8888/Lhash");
 

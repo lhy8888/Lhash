@@ -24,6 +24,7 @@ public:
 		CButton* btnContext,
 		CButton* chkUppercase,
 		FilesHashAlgorithmSelectionController* hashAlgorithmSelectionController);
+	void AttachSupplementalControls(CButton* btnOpenFolder, CButton* btnSettings);
 
 	BOOL PrepareHashStart(LPCTSTR noSelectionMessage);
 	void StartHashThread();
@@ -55,6 +56,8 @@ private:
 	CButton* m_btnFind;
 	CButton* m_btnContext;
 	CButton* m_chkUppercase;
+	CButton* m_btnOpenFolder;
+	CButton* m_btnSettings;
 	FilesHashAlgorithmSelectionController* m_hashAlgorithmSelectionController;
 	WinHandleGuard::UniqueWinHandle m_hWorkThread;
 };

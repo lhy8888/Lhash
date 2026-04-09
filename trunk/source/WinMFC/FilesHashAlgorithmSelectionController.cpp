@@ -51,6 +51,11 @@ void FilesHashAlgorithmSelectionController::Initialize(ThreadData* threadData, C
 
 void FilesHashAlgorithmSelectionController::ResetChecks()
 {
+	if (m_threadData != NULL)
+	{
+		ResetThreadDataHashAlgorithms(*m_threadData);
+	}
+
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		UNREFERENCED_PARAMETER(index);
@@ -109,6 +114,32 @@ void FilesHashAlgorithmSelectionController::SetEnabled(BOOL enabled)
 
 		return true;
 	});
+}
+
+BOOL FilesHashAlgorithmSelectionController::IsAlgorithmEnabled(const HashAlgorithmId& algorithmId) const
+{
+	if (m_threadData == NULL)
+	{
+		return FALSE;
+	}
+
+	return IsThreadDataHashAlgorithmEnabledById(*m_threadData, algorithmId) ? TRUE : FALSE;
+}
+
+void FilesHashAlgorithmSelectionController::SetAlgorithmEnabled(const HashAlgorithmId& algorithmId, BOOL enabled)
+{
+	if (m_threadData == NULL)
+	{
+		return;
+	}
+
+	SetThreadDataHashAlgorithmEnabledById(*m_threadData, algorithmId, (enabled != FALSE));
+
+	CButton* checkBox = GetCheckBox(algorithmId);
+	if (checkBox != NULL)
+	{
+		checkBox->SetCheck(enabled ? BST_CHECKED : BST_UNCHECKED);
+	}
 }
 
 void FilesHashAlgorithmSelectionController::CreateDynamicCheckBoxes()
@@ -262,6 +293,11 @@ CRect FilesHashAlgorithmSelectionController::GetCheckBoxLayoutRect() const
 		openButton->GetWindowRect(&openButtonRect);
 		m_parentWnd->ScreenToClient(&openButtonRect);
 		layoutRect.right = openButtonRect.left - HASH_ALGORITHM_CHECK_BOX_SPACING_X;
+	}
+
+	if (layoutRect.Width() <= 0 || layoutRect.Height() <= 0)
+	{
+		return CRect(0, 0, 0, 0);
 	}
 
 	return layoutRect;

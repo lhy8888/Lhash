@@ -4,8 +4,10 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
+#include <vector>
 
 #include "HyperEditHash.h"
+#include "FilesHashTaskUpdate.h"
 
 #include "Common/strhelper.h"
 #include "OsUtils/OsThread.h"
@@ -47,8 +49,12 @@ public:
 	afx_msg void OnBnClickedExit();
 	afx_msg void OnBnClickedAbout();
 	afx_msg void OnBnClickedClean();
+	afx_msg void OnBnClickedOpenFolder();
 	afx_msg void OnBnClickedFind();
+	afx_msg void OnBnClickedCopy();
+	afx_msg void OnBnClickedExport();
 	afx_msg void OnBnClickedContext();
+	afx_msg void OnBnClickedSettings();
 	afx_msg void OnBnClickedCheckup();
 	afx_msg void OnBnClickedUpperHash();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
@@ -72,8 +78,14 @@ protected:
 	CButton m_btnExit;
 	CButton m_btnClr;
 	CButton m_btnFind;
+	CButton m_btnOpenFolder;
+	CButton m_btnCopy;
+	CButton m_btnExport;
+	CButton m_btnSettings;
 	CButton m_chkUppercase;
 	CButton m_btnContext;
+	CListCtrl m_taskList;
+	CStatic m_statusOverview;
 
 	sunjwbase::OsMutex m_mainMtx;
 
@@ -93,4 +105,6 @@ protected:
 	ThreadData m_thrdData;
 	BOOL m_bLimited;
 
+	void ShowSettingsMenu();
+	void HandleSettingsCommand(UINT commandId);
 };
