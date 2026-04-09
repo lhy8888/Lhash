@@ -52,7 +52,7 @@ internal static partial class Program
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 
-            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 624, 399", "Legacy MFC main dialog is no longer using the requested larger default size.");
+            AssertContains(mfcRc, "IDD_MAIN_DIALOG DIALOGEX 0, 0, 624, 360", "Legacy MFC main dialog is no longer using the tightened compact height.");
             AssertContains(mfcRc, "FONT 9, \"Segoe UI\"", "Legacy MFC dialog no longer uses the refreshed Win11-style typography.");
             AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,8,8,60,18", "Legacy MFC command bar no longer starts with the tightened open button.");
             AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_OPEN_FOLDER\",IDC_OPEN_FOLDER,72,8,78,18", "Legacy MFC command bar is missing the tightened open-folder action.");
@@ -171,7 +171,8 @@ internal static partial class Program
             AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
-            AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,96", "Legacy MFC task list is no longer constrained to the compact six-row viewport.");
+            AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer constrained to the compact six-row viewport.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"算法选择\");", "Legacy settings menu no longer labels algorithm controls as 算法选择 in Simplified Chinese.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
             AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");

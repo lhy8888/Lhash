@@ -46,7 +46,7 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_EXPORT")] = _T("导出(&E)");
 	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("设置(&S)");
 	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("清空结果");
-	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("算法");
+	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("算法选择");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("选择需要计算的文件夹");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("所选文件夹中没有可计算的普通文件。");
 	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||");

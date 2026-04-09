@@ -46,7 +46,7 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_EXPORT")] = _T("&Export");
 	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("&Settings");
 	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("Clear Results");
-	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithms");
+	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithm Selection");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("Select a folder to hash");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("No regular files were found in the selected folder.");
 	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("Text Files (*.txt)|*.txt|All Files (*.*)|*.*||");
