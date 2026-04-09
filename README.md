@@ -1,4 +1,4 @@
-﻿# LHash
+# LHash
 
 ![LHash Logo](trunk/source/WinUI/Assets/StoreLogo.scale-400.png)
 
@@ -9,126 +9,154 @@
 LHash is a maintained Windows-focused hash utility forked from [fHash](https://github.com/sunjw/fhash).
 The current maintained release line starts at `v1.10.0`.
 
-🔹 LHash
+## Current release
 
-High-performance · Security-first · Re-architected local hashing tool
+- Current release: [`v1.10.1`](https://github.com/lhy8888/Lhash/releases/tag/v1.10.1)
+- Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
+- Main branch: `future-winui-was2`
+- CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
+
+## LHash
+
+High-performance, security-first, re-architected local hashing tool.
 
 LHash is a modern local file hashing tool designed for engineering-grade reliability, security, and scalability.
 
-The latest version introduces a complete architectural redesign and security hardening, transforming LHash from a traditional utility into a modular, extensible, and safety-oriented native application.
+The latest maintained release line introduces a complete architectural redesign and security hardening, transforming LHash from a traditional utility into a modular, extensible, and safety-oriented native application.
 
-🚀 Positioning
-⚡ High-performance local hash computation
-🧱 Clean layered architecture (core fully decoupled from UI)
-🔐 Security-first design (safe by default)
-📦 Lightweight & portable (no heavy runtime dependency)
-🧠 Architecture (Rebuilt from the ground up)
+## Positioning
+
+- High-performance local hash computation
+- Clean layered architecture with the core fully decoupled from the UI
+- Security-first design with safe defaults
+- Lightweight and portable native delivery without a heavy runtime dependency
+
+## Architecture
 
 LHash has been refactored from a monolithic MFC structure into a modular architecture:
 
+```text
 NativeCore (Core Engine)
 ├── Domain          # Data models (HashRequest / Result / Algorithm)
 ├── Runtime         # Execution engine (scheduler / task / progress)
 ├── Algorithms      # Hash implementations (MD5 / SHA / CRC / extensible)
-├── Common          # Utilities & safety primitives
+├── Common          # Utilities and safety primitives
 
 Adapters
 └── UiBridge        # Isolation layer between UI and core
 
 WinMFC              # Lightweight native UI
 LegacyCompat        # Compatibility layer (gradually shrinking)
-✨ Key Improvements
-❌ Removed UI–core coupling
-✅ Fully reusable hash engine (GUI / CLI ready)
-✅ Algorithm registry (extensible design)
-✅ Per-task execution context (thread-safe)
-✅ Strict separation of concerns
-🔐 Security Features (Core Focus)
+```
+
+## Key improvements
+
+- Removed UI-core coupling
+- Rebuilt the hash engine as a reusable core for multiple front ends
+- Introduced an extensible algorithm registry
+- Moved execution to per-task contexts for thread safety
+- Strengthened separation of concerns across core, adapters, and legacy seams
+
+## Security features
 
 LHash is designed with defensive programming and real-world misuse scenarios in mind.
 
-🛡 Safe File Handling
+### Safe file handling
+
 Rejects by default:
-Symbolic links
-Junction points
-Reparse points
+
+- Symbolic links
+- Junction points
+- Reparse points
 
 Prevents:
 
-Accidental access to sensitive system files
-Misuse under elevated privileges
-🧵 Thread Safety
-Independent hash context per task
-No shared mutable static state
-Deterministic results under concurrency
+- Accidental access to sensitive system files
+- Misuse under elevated privileges
 
-👉 Eliminates silent data corruption risks
+### Thread safety
 
-🧮 Large File Safety
-Full 64-bit file size handling (uint64_t)
-Checked arithmetic:
-Overflow protection
-Safe conversions
+- Independent hash context per task
+- No shared mutable static state
+- Deterministic results under concurrency
 
-Supports stable processing of very large files
+This removes silent data corruption risks.
 
-🧷 Resource Safety
-RAII-based handle management
-No reliance on manual CloseHandle
-Safe under large batch workloads
-🧠 UI Stability
-Throttled UI updates (no message flooding)
-Strict separation of UI and worker threads
-Stable under high concurrency
-🧱 System-Level Protections
+### Large file safety
 
-Modern security mitigations enabled:
+- Full 64-bit file size handling with `uint64_t`
+- Checked arithmetic for overflow protection and safe conversions
+- Stable processing of very large files
 
-Control Flow Guard (CFG)
-ASLR + High Entropy VA
-DEP (NX)
-/GS + /sdl
-Hardened DLL loading policy
-⚙️ Core Capabilities
-Batch hashing (files & directories)
-Multi-threaded processing
-Real-time progress tracking
-Explicit error reporting (permissions, IO, etc.)
-Extensible algorithm framework
-🎯 Design Principles
+### Resource safety
+
+- RAII-based handle management
+- No reliance on manual `CloseHandle`
+- Safe under large batch workloads
+
+### UI stability
+
+- Throttled UI updates to avoid message flooding
+- Strict separation of UI and worker threads
+- Stable behavior under high concurrency
+
+### System-level protections
+
+Modern mitigations are enabled where the toolchain supports them:
+
+- Control Flow Guard (CFG)
+- ASLR and High Entropy VA
+- DEP (NX)
+- `/GS` and `/sdl`
+- Hardened DLL loading policy
+
+## Core capabilities
+
+- Batch hashing for files and directories
+- Multi-threaded processing
+- Real-time progress tracking
+- Explicit error reporting for permissions and I/O failures
+- Extensible algorithm framework
+
+## Design principles
 
 LHash follows strict engineering principles:
 
-Secure by default
-Separation of concerns
-Extensibility
-Lightweight deployment
-Deterministic behavior
-🖥 UI Philosophy
-Native Windows UI (MFC-based)
-Fluent / Windows 11 inspired design
-Minimal and task-focused interface
-Progress-driven interaction model
-📦 Why not WinUI?
+- Secure by default
+- Separation of concerns
+- Extensibility
+- Lightweight deployment
+- Deterministic behavior
 
-LHash intentionally avoids heavy UI frameworks.
+## UI philosophy
 
-WinUI introduces large runtime overhead (>100MB)
-Not suitable for portable, single-executable tools
-Higher startup and deployment cost
+- Native Windows UI (MFC-based)
+- Fluent / Windows 11 inspired modernization on the shipped native line
+- Minimal, task-focused interface
+- Progress-driven interaction model
 
-👉 LHash chooses:
+## Why not WinUI as the default release
 
-Smaller · Faster · More predictable native implementation
+LHash intentionally avoids making a heavy UI runtime the default public release.
 
-📈 Current Status
-✅ Core architecture redesigned
-✅ Major security hardening completed
-🔄 UI modernization (Fluent-style MFC)
-🔜 Roadmap:
-Additional algorithms (BLAKE3, SHA3)
-CLI mode
-Shell integration
-📌 One-liner
+- WinUI introduces much larger runtime and package overhead
+- It is less suitable for a lightweight portable hashing tool
+- Startup and deployment costs are higher than the native maintained line
 
-LHash is not just a hashing tool — it is a security-aware, re-architected local computation engine.
+LHash therefore keeps the default release smaller, faster, and more predictable with the native desktop implementation, while still retaining preview WinUI work in the repository.
+
+## Current status
+
+- Core architecture redesigned
+- Major security hardening completed
+- Native desktop UX continuously refined on the maintained release line
+
+Roadmap:
+
+- Additional algorithms such as BLAKE3 and SHA3
+- CLI mode
+- Shell integration
+
+## One-liner
+
+LHash is not just a hashing tool. It is a security-aware, re-architected local computation engine.

@@ -5,6 +5,22 @@ All notable LHash release-line changes are documented in this file.
 The historical upstream fHash release log is intentionally not duplicated here.
 This changelog tracks the maintained LHash release line that starts at `1.10.0`.
 
+## 1.10.1 - 2026-04-09
+
+Refined the maintained Windows release line after the 1.10.0 reset.
+
+### Desktop experience
+
+- tightened the shipped native desktop layout and command density
+- kept the result area stable while preserving task history in the task pane
+- fixed export so the visible hash results are written correctly to UTF-8 text files
+- moved algorithm controls under settings and renamed the settings entry to `Algorithm Selection`
+
+### Release metadata
+
+- bumped maintained product metadata to `1.10.1`
+- aligned legacy, WinUI preview, and UWP preview version resources to `1.10.1.0`
+
 ## 1.10.0 - 2026-03-30
 
 Initial maintained LHash release line.
