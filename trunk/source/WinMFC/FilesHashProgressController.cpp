@@ -63,10 +63,10 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 
 	CRect clientRect;
 	m_taskListCtrl->GetClientRect(&clientRect);
-	int availableWidth = max(420, clientRect.Width() - GetSystemMetrics(SM_CXVSCROLL) - 4);
-	int fileColumnWidth = max(176, (availableWidth * 29) / 100);
-	int algorithmColumnWidth = max(118, (availableWidth * 20) / 100);
-	int statusColumnWidth = max(60, (availableWidth * 10) / 100);
+	int availableWidth = max(420, clientRect.Width() - 2);
+	int fileColumnWidth = max(190, (availableWidth * 35) / 100);
+	int algorithmColumnWidth = max(120, (availableWidth * 20) / 100);
+	int statusColumnWidth = max(56, (availableWidth * 9) / 100);
 	int progressColumnWidth = max(220, availableWidth - fileColumnWidth - algorithmColumnWidth - statusColumnWidth);
 
 	m_taskListCtrl->InsertColumn(0, fileColumnText, LVCFMT_LEFT, fileColumnWidth);
@@ -79,7 +79,6 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 void FilesHashProgressController::BeginTaskSession(const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary)
 {
 	m_algorithmSummary = algorithmSummary;
-	m_taskRows.clear();
 
 	for (TStrVector::const_iterator itr = inputFiles.begin(); itr != inputFiles.end(); ++itr)
 	{
@@ -244,11 +243,14 @@ void FilesHashProgressController::SetWholeProgress(UINT pos)
 
 int FilesHashProgressController::FindTaskRowIndex(const sunjwbase::tstring& fullPath) const
 {
-	for (size_t index = 0; index < m_taskRows.size(); ++index)
+	for (int index = static_cast<int>(m_taskRows.size()) - 1; index >= 0; --index)
 	{
-		if (m_taskRows[index].fullPath == fullPath)
+		const TaskRowState& taskRowState = m_taskRows[static_cast<size_t>(index)];
+		if (taskRowState.fullPath == fullPath &&
+			(taskRowState.state == FILES_HASH_TASK_PENDING ||
+			 taskRowState.state == FILES_HASH_TASK_RUNNING))
 		{
-			return static_cast<int>(index);
+			return index;
 		}
 	}
 
@@ -275,6 +277,7 @@ void FilesHashProgressController::RefreshTaskRow(int rowIndex)
 	m_taskListCtrl->SetItemText(rowIndex, 1, taskRowState.algorithms.c_str());
 	m_taskListCtrl->SetItemText(rowIndex, 2, taskRowState.status.c_str());
 	m_taskListCtrl->SetItemText(rowIndex, 3, BuildProgressText(taskRowState.progress));
+	m_taskListCtrl->EnsureVisible(rowIndex, FALSE);
 }
 
 void FilesHashProgressController::RefreshAllTaskRows()
@@ -353,7 +356,7 @@ sunjwbase::tstring FilesHashProgressController::BuildDisplayName(const sunjwbase
 CString FilesHashProgressController::BuildProgressText(int progress)
 {
 	int clampedProgress = max(0, min(100, progress));
-	const int barWidth = 22;
+	const int barWidth = 24;
 	int filledWidth = (clampedProgress * barWidth) / 100;
 	CString progressText(_T("["));
 	for (int index = 0; index < barWidth; ++index)

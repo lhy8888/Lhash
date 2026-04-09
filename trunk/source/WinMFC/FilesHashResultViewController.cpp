@@ -221,12 +221,23 @@ void FilesHashResultViewController::CopyAllResults() const
 
 CString FilesHashResultViewController::GetCurrentText() const
 {
-	if (m_mainEdit == NULL)
+	if (m_mainMutex == NULL || m_mainEdit == NULL)
 	{
 		return CString();
 	}
 
-	return m_mainEdit->GetTextBuffer();
+	CString currentText;
+	m_mainMutex->lock();
+	{
+		currentText = m_mainEdit->GetTextBuffer();
+		if (currentText.IsEmpty())
+		{
+			m_mainEdit->GetWindowText(currentText);
+		}
+	}
+	m_mainMutex->unlock();
+
+	return currentText;
 }
 
 void FilesHashResultViewController::UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const

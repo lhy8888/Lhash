@@ -13,6 +13,7 @@
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
 #include "FindDlg.h"
+#include "Common/strhelper.h"
 #include <afxdlgs.h>
 
 FilesHashCommandController::FilesHashCommandController()
@@ -147,13 +148,22 @@ void FilesHashCommandController::HandleExportButtonClick(LPCTSTR exportFilter, L
 		return;
 	}
 
-	CStdioFile outputFile;
-	if (!outputFile.Open(saveDialog.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+	CString currentText = m_hashResultViewController->GetCurrentText();
+	CFile outputFile;
+	if (!outputFile.Open(saveDialog.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeBinary))
 	{
 		return;
 	}
 
-	outputFile.WriteString(m_hashResultViewController->GetCurrentText());
+	static const BYTE utf8Bom[] = { 0xEF, 0xBB, 0xBF };
+	outputFile.Write(utf8Bom, sizeof(utf8Bom));
+
+	sunjwbase::tstring exportText = currentText.GetString();
+	std::string utf8Text = sunjwbase::tstrtostrutf8(exportText);
+	if (!utf8Text.empty())
+	{
+		outputFile.Write(utf8Text.data(), static_cast<UINT>(utf8Text.length()));
+	}
 	outputFile.Close();
 }
 

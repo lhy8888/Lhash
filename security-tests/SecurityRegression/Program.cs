@@ -57,7 +57,7 @@ internal static partial class Program
             AssertContains(mfcRc, "DEFPUSHBUTTON   \"BUTTON_OPEN\",IDC_OPEN,8,8,60,18", "Legacy MFC command bar no longer starts with the tightened open button.");
             AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_OPEN_FOLDER\",IDC_OPEN_FOLDER,72,8,78,18", "Legacy MFC command bar is missing the tightened open-folder action.");
             AssertContains(mfcRc, "PUSHBUTTON      \"BUTTON_SETTINGS\",IDC_SETTINGS,340,8,54,18", "Legacy MFC command bar is missing the tightened settings entry.");
-            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,8,32,608,218", "Legacy MFC result text area no longer matches the tightened command-bar layout.");
+            AssertContains(mfcRc, "EDITTEXT        IDE_TXTMAIN,8,32,608,224", "Legacy MFC result text area no longer matches the tightened command-bar layout.");
             AssertContains(mfcRc, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\"", "Legacy MFC task list area is missing from the redesigned layout.");
             AssertContains(mfcRc, "LTEXT           \"STATUS_OVERVIEW\",IDC_STATIC_STATUS_OVERVIEW", "Legacy MFC status overview line is missing from the redesigned layout.");
 
@@ -171,6 +171,7 @@ internal static partial class Program
             AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
+            AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,96", "Legacy MFC task list is no longer constrained to the compact six-row viewport.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
             AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");
@@ -291,6 +292,11 @@ internal static partial class Program
             AssertContains(winUiWin32Helper, "if (IsAppPackaged())", "WinUI helper no longer skips DLL search hardening for packaged activation.");
             AssertContains(fileshashProject, "<RuntimeLibrary>MultiThreaded</RuntimeLibrary>", "Legacy MFC release build no longer uses the static CRT hardening baseline.");
             AssertDoesNotContain(fileshashProject, "<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>", "Legacy MFC release build unexpectedly switched back to the dynamic CRT.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp"), "CFile::modeCreate | CFile::modeWrite | CFile::typeBinary", "Legacy export no longer writes a deterministic binary text file.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp"), "tstrtostrutf8(exportText)", "Legacy export no longer converts visible hash output to UTF-8.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp"), "m_mainEdit->GetWindowText(currentText);", "Legacy export no longer falls back to the visible result text.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "taskRowState.state == FILES_HASH_TASK_PENDING ||", "Legacy task list no longer keeps older completed rows stable while updating current rows.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", "Legacy task list no longer keeps the active row visible inside the compact viewport.");
         }, failures);
         Run("Native compiler and linker mitigations are imported consistently", () =>
         {
