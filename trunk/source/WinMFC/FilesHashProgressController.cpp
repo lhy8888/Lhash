@@ -60,10 +60,19 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 	while (m_taskListCtrl->DeleteColumn(0))
 	{
 	}
-	m_taskListCtrl->InsertColumn(0, fileColumnText, LVCFMT_LEFT, 150);
-	m_taskListCtrl->InsertColumn(1, algorithmColumnText, LVCFMT_LEFT, 108);
-	m_taskListCtrl->InsertColumn(2, statusColumnText, LVCFMT_LEFT, 78);
-	m_taskListCtrl->InsertColumn(3, progressColumnText, LVCFMT_LEFT, 238);
+
+	CRect clientRect;
+	m_taskListCtrl->GetClientRect(&clientRect);
+	int availableWidth = max(420, clientRect.Width() - GetSystemMetrics(SM_CXVSCROLL) - 4);
+	int fileColumnWidth = max(176, (availableWidth * 29) / 100);
+	int algorithmColumnWidth = max(118, (availableWidth * 20) / 100);
+	int statusColumnWidth = max(60, (availableWidth * 10) / 100);
+	int progressColumnWidth = max(220, availableWidth - fileColumnWidth - algorithmColumnWidth - statusColumnWidth);
+
+	m_taskListCtrl->InsertColumn(0, fileColumnText, LVCFMT_LEFT, fileColumnWidth);
+	m_taskListCtrl->InsertColumn(1, algorithmColumnText, LVCFMT_LEFT, algorithmColumnWidth);
+	m_taskListCtrl->InsertColumn(2, statusColumnText, LVCFMT_LEFT, statusColumnWidth);
+	m_taskListCtrl->InsertColumn(3, progressColumnText, LVCFMT_LEFT, progressColumnWidth);
 	UpdateSummaryText();
 }
 
@@ -344,7 +353,7 @@ sunjwbase::tstring FilesHashProgressController::BuildDisplayName(const sunjwbase
 CString FilesHashProgressController::BuildProgressText(int progress)
 {
 	int clampedProgress = max(0, min(100, progress));
-	const int barWidth = 18;
+	const int barWidth = 22;
 	int filledWidth = (clampedProgress * barWidth) / 100;
 	CString progressText(_T("["));
 	for (int index = 0; index < barWidth; ++index)
