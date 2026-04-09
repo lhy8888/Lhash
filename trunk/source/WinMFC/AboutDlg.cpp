@@ -52,16 +52,20 @@ BOOL CAboutDlg::OnInitDialog()
 		m_about.Append(_T(" x64"));
 	}
 	m_about.Append(_T("\r\n"));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SUBTITLE));
+	m_about.Append(_T("\r\n"));
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_RIGHT));
 	m_about.Append(_T("\r\n\r\n"));
-	m_about.Append(GetStringByKey(ABOUTDLG_INFO_MD5));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_TITLE));
 	m_about.Append(_T("\r\n"));
-	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SHA256));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_CORE));
 	m_about.Append(_T("\r\n"));
-	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SHA512));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_EXTENDED));
 	m_about.Append(_T("\r\n\r\n"));
-
-	//m_about = m_about + "当前操作系统:\r\n" + osinfo;
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SECURITY_TITLE));
+	m_about.Append(_T("\r\n"));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SECURITY));
+	m_about.Append(_T("\r\n\r\n"));
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_OSTITLE));
 	m_about.Append(_T("\r\n"));
 	m_about.Append(tstrOsinfo.c_str());

@@ -14,6 +14,8 @@ public sealed class BenchmarkFrameworkUnitTests
         string gitignore = RepositoryTestContext.ReadUtf8File(@".gitignore");
 
         Assert.Contains("name: Native Benchmarks", workflow, StringComparison.Ordinal);
+        Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("push:", workflow, StringComparison.Ordinal);
         Assert.Contains("/p:FHashBlake3SimdProfile=portable", workflow, StringComparison.Ordinal);
         Assert.Contains("/p:FHashBlake3SimdProfile=current", workflow, StringComparison.Ordinal);
         Assert.Contains("native-benchmarks-portable.csv", workflow, StringComparison.Ordinal);

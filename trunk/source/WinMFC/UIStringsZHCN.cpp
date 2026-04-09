@@ -77,10 +77,13 @@ UIStringsZHCN::UIStringsZHCN()
 	// About Dialog Strings
 	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("关于 LHash");
 	m_stringsMap[_T("ABOUTDLG_INFO_TITLE")] = _T("LHash: 文件 Hash 计算器");
+	m_stringsMap[_T("ABOUTDLG_INFO_SUBTITLE")] = _T("面向桌面的原生 Hash 工具，强化了运行时安全与轻量发布体验。");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHT")] = _T("Copyright (C) 2026- LHY.");
-	m_stringsMap[_T("ABOUTDLG_INFO_MD5")] = _T("MD5 实现 copyright (C) RSA Data Security, Inc.");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA256")] = _T("SHA256 实现 copyright (C) Niels Moller");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA512")] = _T("SHA512 实现 copyright (C) Aaron D. Gifford");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_TITLE")] = _T("算法支持:");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("MD5、SHA1、SHA256、SHA512、BLAKE3-256、BLAKE3-512、BLAKE3 XOF");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("XXH3-64、XXH3-128、CRC32C");
+	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY_TITLE")] = _T("安全与运行时:");
+	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY")] = _T("已接入签名发布链、DLL 搜索路径加固、重解析点防护，以及 UTF-8 构建链迁移。");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("详细授权信息见开发者网站。");
 	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("当前操作系统:");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_SITE")] = _T("<a>Hosted on GitHub</a>");

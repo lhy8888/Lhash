@@ -5892,6 +5892,8 @@ internal static class Program
             string benchmarkDoc = ReadRepoFile(repoRoot, @"docs\NATIVE_BENCHMARKS.md");
 
             AssertContains(benchmarkWorkflow, "name: Native Benchmarks", "Phase 94 does not yet define a dedicated native benchmark workflow.");
+            AssertContains(benchmarkWorkflow, "workflow_dispatch:", "Phase 94 native benchmark workflow should remain manually triggered.");
+            AssertDoesNotContain(benchmarkWorkflow, "push:", "Phase 94 native benchmark workflow should not auto-run on every push.");
             AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=portable", "Phase 94 does not yet build a portable BLAKE3 benchmark control.");
             AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=current", "Phase 94 does not yet build the current BLAKE3 benchmark configuration.");
             AssertContains(benchmarkWorkflow, "windows-11-arm", "Phase 94 does not yet schedule a dedicated ARM64 benchmark runner.");

@@ -2,22 +2,6 @@ name: Native Benchmarks
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - future-winui-was2
-      - codex/**
-    paths:
-      - '.github/workflows/native-benchmarks.yml'
-      - 'native-benchmarks/**'
-      - 'sub-proj/fHashNativeCore/**'
-      - 'third_party/blake3/**'
-      - 'trunk/source/Runtime/Hash/BLAKE3HashProvider.*'
-      - 'trunk/source/Domain/HashAlgorithmRegistryCore.h'
-      - 'trunk/source/Common/HashDigestOperationRegistry.cpp'
-      - 'docs/NATIVE_BENCHMARKS.md'
-      - 'unit-tests/FHash.UnitTests/BenchmarkFrameworkUnitTests.cs'
-      - 'refactor-tests/RefactorBaseline/Program.cs'
-      - '.gitignore'
 
 permissions:
   contents: read

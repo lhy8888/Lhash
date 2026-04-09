@@ -77,10 +77,13 @@ UIStringsBase::UIStringsBase()
 	// About Dialog Strings
 	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("About LHash");
 	m_stringsMap[_T("ABOUTDLG_INFO_TITLE")] = _T("LHash: Files Hash Calculator");
+	m_stringsMap[_T("ABOUTDLG_INFO_SUBTITLE")] = _T("Modern native hashing utility with hardened runtime and portable release packaging.");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHT")] = _T("Copyright (C) 2026- LHY.");
-	m_stringsMap[_T("ABOUTDLG_INFO_MD5")] = _T("MD5 implementation copyright (C) RSA Data Security, Inc.");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA256")] = _T("SHA256 implementation copyright (C) Niels Moller");
-	m_stringsMap[_T("ABOUTDLG_INFO_SHA512")] = _T("SHA512 implementation copyright (C) Aaron D. Gifford");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_TITLE")] = _T("Algorithms:");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("MD5, SHA1, SHA256, SHA512, BLAKE3-256, BLAKE3-512, BLAKE3 XOF");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("XXH3-64, XXH3-128, CRC32C");
+	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY_TITLE")] = _T("Security and Runtime:");
+	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY")] = _T("Signed-release ready, DLL-search hardened, reparse-point aware, and UTF-8 toolchain aligned.");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("More details are on Project Site.");
 	m_stringsMap[_T("ABOUTDLG_INFO_OSTITLE")] = _T("Operating System:");
 	m_stringsMap[_T("ABOUTDLG_PROJECT_SITE")] = _T("<a>Hosted on GitHub</a>");
