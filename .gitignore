@@ -21,5 +21,6 @@ native-runtime-tests/**/x64/
 native-runtime-tests/**/Win32/
 native-benchmarks/**/Debug/
 native-benchmarks/**/Release/
+native-benchmarks/**/ARM64/
 native-benchmarks/**/x64/
 native-benchmarks/**/Win32/

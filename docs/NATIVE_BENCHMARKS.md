@@ -17,14 +17,24 @@ Algorithm sets:
 
 Profiles:
 - `portable`: forces the vendored BLAKE3 C code onto the portable path by disabling SIMD translation units through `FHashBlake3SimdProfile=portable`
-- `current`: builds the current desktop native-core configuration with the checked-in x64 Release BLAKE3 settings
+- `current`: builds the current desktop native-core configuration with the checked-in platform-specific BLAKE3 settings
 
 ## Workflow
 
 The benchmark workflow lives at:
 - [native-benchmarks.yml](D:\hash\fhash\.github\workflows\native-benchmarks.yml)
 
-It runs both profiles on the same x64 GitHub-hosted runner and uploads:
+It runs both profiles per platform and uploads one artifact per platform:
+- `FHash-native-benchmarks-x64`
+- `FHash-native-benchmarks-win32`
+- `FHash-native-benchmarks-arm64`
+
+Current runners:
+- `x64`: `windows-2022`
+- `Win32`: `windows-2022`
+- `ARM64`: `windows-11-arm`
+
+Each artifact contains:
 - build logs
 - run logs
 - raw CSV results for `portable` and `current`
@@ -33,7 +43,7 @@ It runs both profiles on the same x64 GitHub-hosted runner and uploads:
 ## Decision rules
 
 Use the benchmark summary before changing shipping SIMD defaults:
-- If `blake3-256` and `hybrid-4` show a clear uplift on `large-single-128m` and `many-small-256x64k`, while `sha256` stays effectively flat, then x64 Release-only BLAKE3 SIMD is justified.
-- If gains are only visible on the large-file case and disappear on many-small-file workloads, prefer a narrower x64 Release-only enablement and keep broader paths off.
-- Do not use the x64 benchmark alone to justify Win32 or ARM64 shipping changes. Those need their own measurements on matching hardware.
+- If `blake3-256` and `hybrid-4` show a clear uplift on `large-single-128m` and `many-small-256x64k`, while `sha256` stays effectively flat, then that platform's BLAKE3 SIMD shipping path is justified.
+- If gains are only visible on the large-file case and disappear on many-small-file workloads, prefer a narrower platform-specific enablement and keep broader paths off.
+- Do not use one platform's benchmark to justify another platform's SIMD changes. `x64`, `Win32`, and `ARM64` each need their own measurements.
 - If the delta is within expected runner noise, keep the portable path as the safer default and revisit only with stronger data.

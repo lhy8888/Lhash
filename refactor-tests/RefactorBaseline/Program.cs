@@ -5894,12 +5894,24 @@ internal static class Program
             AssertContains(benchmarkWorkflow, "name: Native Benchmarks", "Phase 94 does not yet define a dedicated native benchmark workflow.");
             AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=portable", "Phase 94 does not yet build a portable BLAKE3 benchmark control.");
             AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=current", "Phase 94 does not yet build the current BLAKE3 benchmark configuration.");
+            AssertContains(benchmarkWorkflow, "windows-11-arm", "Phase 94 does not yet schedule a dedicated ARM64 benchmark runner.");
+            AssertContains(benchmarkWorkflow, "benchmark_platform: ARM64", "Phase 94 does not yet benchmark the ARM64 platform.");
+            AssertContains(benchmarkWorkflow, "benchmark_platform: Win32", "Phase 94 does not yet benchmark the Win32 platform.");
+            AssertContains(benchmarkWorkflow, "benchmark_platform: x64", "Phase 94 does not yet benchmark the x64 platform.");
             AssertContains(benchmarkWorkflow, "native-benchmarks-portable.csv", "Phase 94 does not yet persist the portable benchmark results.");
             AssertContains(benchmarkWorkflow, "native-benchmarks-current.csv", "Phase 94 does not yet persist the current benchmark results.");
+            AssertContains(benchmarkWorkflow, "artifact_suffix: arm64", "Phase 94 does not yet define an ARM64 benchmark artifact suffix.");
+            AssertContains(benchmarkWorkflow, "artifact_suffix: win32", "Phase 94 does not yet define a Win32 benchmark artifact suffix.");
+            AssertContains(benchmarkWorkflow, "artifact_suffix: x64", "Phase 94 does not yet define an x64 benchmark artifact suffix.");
+            AssertContains(benchmarkWorkflow, "name: FHash-native-benchmarks-${{ matrix.artifact_suffix }}", "Phase 94 does not yet publish per-platform benchmark artifacts.");
             AssertContains(benchmarkProject, "<ProjectName>FHash.NativeBenchmarks</ProjectName>", "Phase 94 does not yet introduce a standalone native benchmark project.");
             AssertContains(benchmarkProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 94 native benchmarks do not yet link against the desktop native core.");
+            AssertContains(benchmarkProject, "Include=\"Debug|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 debug configuration.");
+            AssertContains(benchmarkProject, "Include=\"Release|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 release configuration.");
             AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Phase 94 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
             AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Phase 94 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
+            AssertContains(nativeCoreProject, @"..\..\third_party\blake3\1.8.4\c\blake3_neon.c", "Phase 94 desktop native core does not yet compile the ARM64 NEON BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 94 desktop native core does not yet configure the ARM64 NEON BLAKE3 path.");
             AssertContains(benchmarkSource, "small-single-64k", "Phase 94 native benchmarks do not yet cover the small-file scenario.");
             AssertContains(benchmarkSource, "many-small-256x64k", "Phase 94 native benchmarks do not yet cover the many-file scenario.");
             AssertContains(benchmarkSource, "large-single-128m", "Phase 94 native benchmarks do not yet cover the large-file scenario.");
@@ -5907,9 +5919,10 @@ internal static class Program
             AssertContains(benchmarkSource, "\"blake3-256\"", "Phase 94 native benchmarks do not yet cover a single-algorithm BLAKE3 control.");
             AssertContains(benchmarkSource, "\"classic-4\"", "Phase 94 native benchmarks do not yet cover the legacy multi-algorithm combination.");
             AssertContains(benchmarkSource, "\"hybrid-4\"", "Phase 94 native benchmarks do not yet cover a mixed BLAKE3 multi-algorithm combination.");
-            AssertContains(benchmarkUnitTests, "NativeBenchmarkWorkflow_ComparesCurrentAgainstPortableBLAKE3Profiles", "Phase 94 unit tests do not yet guard the benchmark workflow and control profile.");
+            AssertContains(benchmarkUnitTests, "NativeBenchmarkWorkflow_ComparesCurrentAgainstPortableBLAKE3ProfilesAcrossDesktopPlatforms", "Phase 94 unit tests do not yet guard the benchmark workflow and control profile.");
             AssertContains(benchmarkDoc, "Decision rules", "Phase 94 documentation does not yet explain how benchmark results should drive SIMD decisions.");
-            AssertContains(benchmarkDoc, "Do not use the x64 benchmark alone to justify Win32 or ARM64 shipping changes", "Phase 94 documentation does not yet keep non-x64 SIMD decisions behind dedicated measurements.");
+            AssertContains(benchmarkDoc, "windows-11-arm", "Phase 94 documentation does not yet explain the dedicated ARM64 runner.");
+            AssertContains(benchmarkDoc, "Do not use one platform's benchmark to justify another platform's SIMD changes", "Phase 94 documentation does not yet keep per-platform SIMD decisions behind dedicated measurements.");
         }, failures);
 
         if (failures.Count > 0)

@@ -24,7 +24,21 @@ permissions:
 
 jobs:
   native-benchmarks:
-    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact_suffix: x64
+            benchmark_platform: x64
+            runner_label: windows-2022
+          - artifact_suffix: win32
+            benchmark_platform: Win32
+            runner_label: windows-2022
+          - artifact_suffix: arm64
+            benchmark_platform: ARM64
+            runner_label: windows-11-arm
+
+    runs-on: ${{ matrix.runner_label }}
 
     steps:
       - name: Checkout
@@ -47,6 +61,8 @@ jobs:
           os_caption=$($os.Caption)
           os_version=$($os.Version)
           runner=$env:RUNNER_NAME
+          runner_label=${{ matrix.runner_label }}
+          benchmark_platform=${{ matrix.benchmark_platform }}
           commit=$env:GITHUB_SHA
           "@ | Set-Content -Path (Join-Path $artifactRoot 'benchmark-machine-info.txt') -Encoding ASCII
 
@@ -58,16 +74,16 @@ jobs:
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-portable.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-portable.csv'
 
-          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-portable /p:FHashBlake3SimdProfile=portable 2>&1 |
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-portable /p:FHashBlake3SimdProfile=portable 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
             throw "MSBuild failed while building the portable benchmark control. See artifacts/build-native-benchmarks-portable.log for details."
           }
 
-          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\x64\Release-bench-portable\FHash.NativeBenchmarks.exe'
+          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\${{ matrix.benchmark_platform }}\Release-bench-portable\FHash.NativeBenchmarks.exe'
           if (-not (Test-Path $exePath)) {
-            throw 'Portable benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\x64\\Release-bench-portable.'
+            throw 'Portable benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\${{ matrix.benchmark_platform }}\\Release-bench-portable.'
           }
 
           & $exePath --profile portable --csv $csvPath 2>&1 | Tee-Object -FilePath $runLogPath
@@ -84,16 +100,16 @@ jobs:
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-current.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-current.csv'
 
-          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-current /p:FHashBlake3SimdProfile=current 2>&1 |
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-current /p:FHashBlake3SimdProfile=current 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
             throw "MSBuild failed while building the current benchmark configuration. See artifacts/build-native-benchmarks-current.log for details."
           }
 
-          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\x64\Release-bench-current\FHash.NativeBenchmarks.exe'
+          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\${{ matrix.benchmark_platform }}\Release-bench-current\FHash.NativeBenchmarks.exe'
           if (-not (Test-Path $exePath)) {
-            throw 'Current benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\x64\\Release-bench-current.'
+            throw 'Current benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\${{ matrix.benchmark_platform }}\\Release-bench-current.'
           }
 
           & $exePath --profile current --csv $csvPath 2>&1 | Tee-Object -FilePath $runLogPath
@@ -120,7 +136,9 @@ jobs:
           $lines = @()
           $lines += '# Native Benchmark Summary'
           $lines += ''
-          $lines += 'Positive deltas mean the current x64 Release configuration outperformed the portable BLAKE3 control on the same runner.'
+          $lines += 'Positive deltas mean the current benchmark configuration outperformed the portable BLAKE3 control on the same runner.'
+          $lines += ''
+          $lines += 'target_platform=${{ matrix.benchmark_platform }}'
           $lines += ''
           $lines += '```'
           $lines += Get-Content $machineInfoPath
@@ -150,8 +168,8 @@ jobs:
 
           $lines += ''
           $lines += 'Decision guide:'
-          $lines += '- If BLAKE3-heavy cases show a clear uplift on x64 while SHA-256 control stays flat, x64 Release-only SIMD is justified.'
-          $lines += '- Do not use this x64-only result to justify Win32 or ARM64 release changes without dedicated measurements.'
+          $lines += '- If BLAKE3-heavy cases show a clear uplift while SHA-256 control stays flat, that platform''s SIMD-enabled shipping path is justified.'
+          $lines += '- Keep each platform decision local to that platform''s own benchmark run.'
           $lines += '- If many-small-file gains are negligible, keep extra SIMD paths off the shipping line and leave them benchmark-only.'
 
           $lines | Set-Content -Path $summaryPath -Encoding UTF8
@@ -161,7 +179,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: FHash-native-benchmarks
+          name: FHash-native-benchmarks-${{ matrix.artifact_suffix }}
           path: |
             artifacts/benchmark-machine-info.txt
             artifacts/build-native-benchmarks-portable.log
