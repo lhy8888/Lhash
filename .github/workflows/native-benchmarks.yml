@@ -1,0 +1,174 @@
+name: Native Benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - future-winui-was2
+      - codex/**
+    paths:
+      - '.github/workflows/native-benchmarks.yml'
+      - 'native-benchmarks/**'
+      - 'sub-proj/fHashNativeCore/**'
+      - 'third_party/blake3/**'
+      - 'trunk/source/Runtime/Hash/BLAKE3HashProvider.*'
+      - 'trunk/source/Domain/HashAlgorithmRegistryCore.h'
+      - 'trunk/source/Common/HashDigestOperationRegistry.cpp'
+      - 'docs/NATIVE_BENCHMARKS.md'
+      - 'unit-tests/FHash.UnitTests/BenchmarkFrameworkUnitTests.cs'
+      - 'refactor-tests/RefactorBaseline/Program.cs'
+      - '.gitignore'
+
+permissions:
+  contents: read
+
+jobs:
+  native-benchmarks:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Capture benchmark machine info
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+          $os = Get-CimInstance Win32_OperatingSystem
+          @"
+          cpu_name=$($cpu.Name)
+          cpu_cores=$($cpu.NumberOfCores)
+          cpu_logical_processors=$($cpu.NumberOfLogicalProcessors)
+          os_caption=$($os.Caption)
+          os_version=$($os.Version)
+          runner=$env:RUNNER_NAME
+          commit=$env:GITHUB_SHA
+          "@ | Set-Content -Path (Join-Path $artifactRoot 'benchmark-machine-info.txt') -Encoding ASCII
+
+      - name: Build and run portable benchmark control
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $buildLogPath = Join-Path $artifactRoot 'build-native-benchmarks-portable.log'
+          $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-portable.log'
+          $csvPath = Join-Path $artifactRoot 'native-benchmarks-portable.csv'
+
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-portable /p:FHashBlake3SimdProfile=portable 2>&1 |
+            Tee-Object -FilePath $buildLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building the portable benchmark control. See artifacts/build-native-benchmarks-portable.log for details."
+          }
+
+          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\x64\Release-bench-portable\FHash.NativeBenchmarks.exe'
+          if (-not (Test-Path $exePath)) {
+            throw 'Portable benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\x64\\Release-bench-portable.'
+          }
+
+          & $exePath --profile portable --csv $csvPath 2>&1 | Tee-Object -FilePath $runLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Portable benchmark run failed with exit code $LASTEXITCODE. See artifacts/run-native-benchmarks-portable.log for details."
+          }
+
+      - name: Build and run current benchmark configuration
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $buildLogPath = Join-Path $artifactRoot 'build-native-benchmarks-current.log'
+          $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-current.log'
+          $csvPath = Join-Path $artifactRoot 'native-benchmarks-current.csv'
+
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-current /p:FHashBlake3SimdProfile=current 2>&1 |
+            Tee-Object -FilePath $buildLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building the current benchmark configuration. See artifacts/build-native-benchmarks-current.log for details."
+          }
+
+          $exePath = 'native-benchmarks\FHash.NativeBenchmarks\x64\Release-bench-current\FHash.NativeBenchmarks.exe'
+          if (-not (Test-Path $exePath)) {
+            throw 'Current benchmark executable was not produced in native-benchmarks\\FHash.NativeBenchmarks\\x64\\Release-bench-current.'
+          }
+
+          & $exePath --profile current --csv $csvPath 2>&1 | Tee-Object -FilePath $runLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Current benchmark run failed with exit code $LASTEXITCODE. See artifacts/run-native-benchmarks-current.log for details."
+          }
+
+      - name: Summarize benchmark deltas
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $portable = Import-Csv (Join-Path $artifactRoot 'native-benchmarks-portable.csv')
+          $current = Import-Csv (Join-Path $artifactRoot 'native-benchmarks-current.csv')
+          $machineInfoPath = Join-Path $artifactRoot 'benchmark-machine-info.txt'
+          $summaryPath = Join-Path $artifactRoot 'native-benchmark-summary.md'
+
+          $currentMap = @{}
+          foreach ($row in $current) {
+            $key = "$($row.ScenarioId)|$($row.AlgorithmSetId)"
+            $currentMap[$key] = $row
+          }
+
+          $lines = @()
+          $lines += '# Native Benchmark Summary'
+          $lines += ''
+          $lines += 'Positive deltas mean the current x64 Release configuration outperformed the portable BLAKE3 control on the same runner.'
+          $lines += ''
+          $lines += '```'
+          $lines += Get-Content $machineInfoPath
+          $lines += '```'
+          $lines += ''
+          $lines += '| Scenario | Algorithms | Portable input MiB/s | Current input MiB/s | Input delta | Portable effective MiB/s | Current effective MiB/s | Effective delta |'
+          $lines += '|---|---|---:|---:|---:|---:|---:|---:|'
+
+          foreach ($portableRow in $portable) {
+            $key = "$($portableRow.ScenarioId)|$($portableRow.AlgorithmSetId)"
+            if (-not $currentMap.ContainsKey($key)) {
+              continue
+            }
+
+            $currentRow = $currentMap[$key]
+            $portableInput = [double]$portableRow.InputMiBPerSecond
+            $currentInput = [double]$currentRow.InputMiBPerSecond
+            $portableEffective = [double]$portableRow.EffectiveMiBPerSecond
+            $currentEffective = [double]$currentRow.EffectiveMiBPerSecond
+
+            $inputDelta = if ($portableInput -gt 0) { (($currentInput - $portableInput) / $portableInput) * 100.0 } else { 0.0 }
+            $effectiveDelta = if ($portableEffective -gt 0) { (($currentEffective - $portableEffective) / $portableEffective) * 100.0 } else { 0.0 }
+
+            $lines += "| $($portableRow.ScenarioLabel) | $($portableRow.AlgorithmSetLabel) | {0:N1} | {1:N1} | {2:+0.0;-0.0;0.0}% | {3:N1} | {4:N1} | {5:+0.0;-0.0;0.0}% |" -f `
+              $portableInput, $currentInput, $inputDelta, $portableEffective, $currentEffective, $effectiveDelta
+          }
+
+          $lines += ''
+          $lines += 'Decision guide:'
+          $lines += '- If BLAKE3-heavy cases show a clear uplift on x64 while SHA-256 control stays flat, x64 Release-only SIMD is justified.'
+          $lines += '- Do not use this x64-only result to justify Win32 or ARM64 release changes without dedicated measurements.'
+          $lines += '- If many-small-file gains are negligible, keep extra SIMD paths off the shipping line and leave them benchmark-only.'
+
+          $lines | Set-Content -Path $summaryPath -Encoding UTF8
+          $lines | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Upload native benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FHash-native-benchmarks
+          path: |
+            artifacts/benchmark-machine-info.txt
+            artifacts/build-native-benchmarks-portable.log
+            artifacts/run-native-benchmarks-portable.log
+            artifacts/native-benchmarks-portable.csv
+            artifacts/build-native-benchmarks-current.log
+            artifacts/run-native-benchmarks-current.log
+            artifacts/native-benchmarks-current.csv
+            artifacts/native-benchmark-summary.md
+          if-no-files-found: warn

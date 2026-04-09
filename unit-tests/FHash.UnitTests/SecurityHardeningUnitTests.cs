@@ -163,6 +163,9 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains(@"blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);

@@ -314,11 +314,13 @@ internal static partial class Program
             AssertContains(nativeCoreProject, @"blake3_sse41.c", "Desktop native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
             AssertContains(nativeCoreProject, @"blake3_avx2.c", "Desktop native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
             AssertContains(nativeCoreProject, @"blake3_avx512.c", "Desktop native core no longer compiles the BLAKE3 AVX512 implementation for x64.");
+            AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Desktop native core no longer exposes a benchmark-selectable BLAKE3 SIMD profile.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer exposes the portable BLAKE3 benchmark control.");
+            AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Desktop native core no longer allows benchmark runs to disable SIMD translation units.");
             AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Desktop native core no longer enables the Win32 SSE2 BLAKE3 path.");
             AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Desktop native core no longer enables the Win32 SSE4.1-compatible BLAKE3 path.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Desktop native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX512", "Desktop native core no longer enables AVX512 for the dedicated BLAKE3 translation unit.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer keeps Win32 BLAKE3 on the x86 SIMD plus AVX-512-disabled path.");
             AssertContains(uwpNativeProject, @"blake3_sse2.c", "UWP native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_sse41.c", "UWP native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_avx2.c", "UWP native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
