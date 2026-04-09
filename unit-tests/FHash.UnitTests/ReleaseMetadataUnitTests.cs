@@ -75,12 +75,24 @@ public sealed class ReleaseMetadataUnitTests
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string signingScript = RepositoryTestContext.ReadUtf8File(@"trunk\sign_legacy_exe.ps1");
+        string signingGuide = RepositoryTestContext.ReadUtf8File(@"CODE_SIGNING.md");
 
         Assert.Contains("LHASH_SIGN_PFX_BASE64", workflow, StringComparison.Ordinal);
         Assert.Contains("LHASH_SIGN_PFX_PASSWORD", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_TENANT_ID", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_CLIENT_ID", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_CLIENT_SECRET", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_ENDPOINT", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_ACCOUNT_NAME", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME", workflow, StringComparison.Ordinal);
+        Assert.Contains("azure/trusted-signing-action@v0.5.11", workflow, StringComparison.Ordinal);
+        Assert.Contains("Sign legacy Windows app with Artifact Signing (optional)", workflow, StringComparison.Ordinal);
         Assert.Contains("Sign WinUI desktop app (optional)", workflow, StringComparison.Ordinal);
+        Assert.Contains("timestamp.acs.microsoft.com", workflow, StringComparison.Ordinal);
         Assert.Contains("trunk/sign_legacy_exe.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("Get-AuthenticodeSignature", workflow, StringComparison.Ordinal);
+        Assert.Contains("Artifact Signing Public Trust", signingGuide, StringComparison.Ordinal);
+        Assert.Contains("Publisher unknown", signingGuide, StringComparison.Ordinal);
 
         Assert.Contains("param(", signingScript, StringComparison.Ordinal);
         Assert.Contains("signtool.exe", signingScript, StringComparison.Ordinal);
