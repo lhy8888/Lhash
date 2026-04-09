@@ -256,6 +256,11 @@ namespace
 		});
 	}
 
+	static HashAlgorithmId CreateAlgorithmId(const char *stableName)
+	{
+		return NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(stableName)));
+	}
+
 	static void ConfigureThreadDataFiles(ThreadData& threadData, CapturingProgressSink& progressSink, const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
 	{
 		ResetThreadDataForNewSession(threadData);
@@ -270,6 +275,23 @@ namespace
 		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithms.size(); ++algorithmIndex)
 		{
 			SetThreadDataHashAlgorithmEnabled(threadData, enabledAlgorithms[algorithmIndex], true);
+		}
+	}
+
+	static void ConfigureThreadDataFilesByAlgorithmIds(ThreadData& threadData, CapturingProgressSink& progressSink, const std::vector<sunjwbase::tstring>& filePaths, const std::vector<HashAlgorithmId>& enabledAlgorithmIds, bool uppercaseDigest = false)
+	{
+		ResetThreadDataForNewSession(threadData);
+		SetThreadDataObserver(threadData, &progressSink);
+		SetThreadDataUppercase(threadData, uppercaseDigest);
+		for (size_t fileIndex = 0; fileIndex < filePaths.size(); ++fileIndex)
+		{
+			AppendThreadDataInputFile(threadData, filePaths[fileIndex]);
+		}
+
+		DisableAllAlgorithms(threadData);
+		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithmIds.size(); ++algorithmIndex)
+		{
+			SetThreadDataHashAlgorithmEnabledById(threadData, enabledAlgorithmIds[algorithmIndex], true);
 		}
 	}
 
@@ -323,6 +345,20 @@ namespace
 	static sunjwbase::tstring FindDigestValue(const HashResult& result, ResultDigestType digestType)
 	{
 		HashAlgorithmId targetAlgorithmId = NormalizeHashAlgorithmId(GetHashAlgorithmId(digestType));
+		for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
+		{
+			if (ResolveDigestResultAlgorithmId(result.digests[digestIndex]) == targetAlgorithmId)
+			{
+				return result.digests[digestIndex].value;
+			}
+		}
+
+		return sunjwbase::tstring();
+	}
+
+	static sunjwbase::tstring FindDigestValueByAlgorithmId(const HashResult& result, const HashAlgorithmId& algorithmId)
+	{
+		HashAlgorithmId targetAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
 		for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
 		{
 			if (ResolveDigestResultAlgorithmId(result.digests[digestIndex]) == targetAlgorithmId)
@@ -451,6 +487,43 @@ namespace
 			ResolveDigestResultAlgorithmId(result.digests[0]),
 			"The only emitted digest should be SHA256.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
+	}
+
+	static void HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("blake3-vector.bin"), std::string("\x00\x01\x02", 3));
+
+		CapturingProgressSink progressSink;
+		ThreadData threadData;
+		std::vector<sunjwbase::tstring> filePaths;
+		std::vector<HashAlgorithmId> algorithmIds;
+		filePaths.push_back(filePath);
+		algorithmIds.push_back(CreateAlgorithmId("blake3-256"));
+		algorithmIds.push_back(CreateAlgorithmId("blake3-512"));
+		algorithmIds.push_back(CreateAlgorithmId("blake3-xof"));
+		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, algorithmIds);
+
+		int exitCode = RunHashThreadData(threadData);
+		NativeAssertEqual(0, exitCode, "BLAKE3 hashing should succeed for the official vector input.");
+		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "BLAKE3 hashing should still emit one result for one input file.");
+
+		const HashResult& result = GetThreadDataResults(threadData).front();
+		NativeAssertEqual(RESULT_ALL, result.state, "Successful BLAKE3 hashing should end in RESULT_ALL.");
+		NativeAssertEqual(static_cast<size_t>(3), result.digests.size(), "Only the requested BLAKE3 variants should be emitted.");
+		NativeAssertEqual(
+			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F")),
+			FindDigestValueByAlgorithmId(result, algorithmIds[0]),
+			"BLAKE3-256 did not match the official BLAKE3 vector for input length 3.");
+		NativeAssertEqual(
+			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE")),
+			FindDigestValueByAlgorithmId(result, algorithmIds[1]),
+			"BLAKE3-512 did not match the official 64-byte extended BLAKE3 vector for input length 3.");
+		NativeAssertEqual(
+			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE9454B7E9996DE4900C8E723512883F93F4345F8A58BFE64EE38D3AD71AB027765D25CDD0E448328A8E7A683B9A6AF8B0AF94FA09010D9186890B096A08471E42")),
+			FindDigestValueByAlgorithmId(result, algorithmIds[2]),
+			"BLAKE3 XOF did not match the official 128-byte extended BLAKE3 vector for input length 3.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "BLAKE3 hashing should emit a hash-ready event.");
 	}
 
 	static void HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns()
@@ -1040,6 +1113,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
+	tests.push_back({ "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector });
 	tests.push_back({ "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", &HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", &RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests });

@@ -128,7 +128,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -150,7 +150,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -172,7 +172,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -192,7 +192,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -214,7 +214,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -238,7 +238,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -294,11 +294,14 @@
     <ClInclude Include="..\..\trunk\source\Common\HashSchedulerPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h" />
     <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h" />
+    <ClInclude Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.h" />
     <ClInclude Include="..\..\trunk\source\Adapters\UiBridge\HashEngineBridge.h" />
     <ClInclude Include="..\..\trunk\source\OsUtils\OsFile.h" />
     <ClInclude Include="..\..\trunk\source\OsUtils\OsThread.h" />
     <ClInclude Include="..\..\trunk\source\WinCommon\FileVersionHelper.h" />
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h" />
+    <ClInclude Include="..\..\third_party\blake3\1.8.4\c\blake3.h" />
+    <ClInclude Include="..\..\third_party\blake3\1.8.4\c\blake3_impl.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
@@ -307,6 +310,19 @@
     <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp" />
+    <ClCompile Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp" />
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_dispatch.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_portable.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp" />

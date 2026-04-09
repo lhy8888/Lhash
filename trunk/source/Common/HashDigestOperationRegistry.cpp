@@ -36,6 +36,24 @@ namespace HashEngineInternal
 		return algorithmId;
 	}
 
+	static const HashAlgorithmId& GetBlake3_256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("blake3-256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetBlake3_512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("blake3-512");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetBlake3XofAlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("blake3-xof");
+		return algorithmId;
+	}
+
 	static void InitializeMD5DigestContext(FileHashContexts *hashContexts)
 	{
 		MD5Init(&hashContexts->mdContext, 0);
@@ -56,6 +74,21 @@ namespace HashEngineInternal
 		SHA512_Init(&hashContexts->sha512Ctx);
 	}
 
+	static void InitializeBLAKE3_256DigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeBlake3Hasher(&hashContexts->blake3_256);
+	}
+
+	static void InitializeBLAKE3_512DigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeBlake3Hasher(&hashContexts->blake3_512);
+	}
+
+	static void InitializeBLAKE3XofDigestContext(FileHashContexts *hashContexts)
+	{
+		HashRuntime::InitializeBlake3Hasher(&hashContexts->blake3Xof);
+	}
+
 	static void UpdateMD5DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		MD5Update(&hashContexts.mdContext, data, dataLen);
@@ -74,6 +107,21 @@ namespace HashEngineInternal
 	static void UpdateSHA512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		SHA512_Update(&hashContexts.sha512Ctx, data, dataLen);
+	}
+
+	static void UpdateBLAKE3_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateBlake3Hasher(hashContexts.blake3_256, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateBLAKE3_512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateBlake3Hasher(hashContexts.blake3_512, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateBLAKE3XofDigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateBlake3Hasher(hashContexts.blake3Xof, data, static_cast<size_t>(dataLen));
 	}
 
 	static void FinalizeMD5DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -156,6 +204,30 @@ namespace HashEngineInternal
 		SetDigestStorageValueById(digestBundle, GetSha512AlgorithmId(), sunjwbase::strtotstr(strSHA512));
 	}
 
+	static void FinalizeBLAKE3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetBlake3_256AlgorithmId(),
+			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3_256, HashRuntime::BLAKE3_256_OUTPUT_BYTES));
+	}
+
+	static void FinalizeBLAKE3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetBlake3_512AlgorithmId(),
+			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3_512, HashRuntime::BLAKE3_512_OUTPUT_BYTES));
+	}
+
+	static void FinalizeBLAKE3XofDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetBlake3XofAlgorithmId(),
+			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3Xof, HashRuntime::BLAKE3_XOF_OUTPUT_BYTES));
+	}
+
 	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()
 	{
 		static std::vector<HashDigestOperationDescriptor> operationDescriptorStorage;
@@ -236,6 +308,24 @@ namespace HashEngineInternal
 			InitializeSHA512DigestContext,
 			UpdateSHA512DigestContext,
 			FinalizeSHA512DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetBlake3_256AlgorithmId(),
+			InitializeBLAKE3_256DigestContext,
+			UpdateBLAKE3_256DigestContext,
+			FinalizeBLAKE3_256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetBlake3_512AlgorithmId(),
+			InitializeBLAKE3_512DigestContext,
+			UpdateBLAKE3_512DigestContext,
+			FinalizeBLAKE3_512DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetBlake3XofAlgorithmId(),
+			InitializeBLAKE3XofDigestContext,
+			UpdateBLAKE3XofDigestContext,
+			FinalizeBLAKE3XofDigestContext
 		});
 		defaultsInitialized = true;
 	}

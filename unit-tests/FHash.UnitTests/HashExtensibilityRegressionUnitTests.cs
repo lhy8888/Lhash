@@ -68,4 +68,47 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", legacyTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgorithmId *algorithmId)", legacyTypeCompat, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Blake3Integration_VendorsOfficialFixedVersion_AndAddsThreeDescriptorVariants()
+    {
+        string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string threadAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+        string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
+        string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\README.LHash.md");
+        string upstreamHeader = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\c\blake3.h");
+        string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+
+        Assert.Contains("bool enabledByDefault;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"blake3-256\", \"BLAKE3-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"blake3-512\", \"BLAKE3-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"blake3-xof\", \"BLAKE3 XOF\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault", registryCore, StringComparison.Ordinal);
+
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor)", threadAccess, StringComparison.Ordinal);
+
+        Assert.Contains("BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_XOF_OUTPUT_BYTES = 128", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("blake3_hasher_finalize(&hasher", providerImplementation, StringComparison.Ordinal);
+
+        Assert.Contains(@"third_party\blake3\1.8.4\c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_NO_SSE2", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"third_party\blake3\1.8.4\c", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
+
+        Assert.Contains("Upstream tag: 1.8.4", upstreamNote, StringComparison.Ordinal);
+        Assert.Contains("b97a24f8754819755ef78d8016c0391c65c943c5", upstreamNote, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_VERSION_STRING \"1.8.4\"", upstreamHeader, StringComparison.Ordinal);
+
+        Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("\"blake3-256\"", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("\"blake3-512\"", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("\"blake3-xof\"", nativeRuntimeSource, StringComparison.Ordinal);
+    }
 }

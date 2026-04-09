@@ -31,6 +31,7 @@
 #include "Common/HashPreScanWorkflow.h"
 #include "Common/HashPreparationWorkflow.h"
 #include "Common/HashProgressTracker.h"
+#include "Runtime/Hash/BLAKE3HashProvider.h"
 #include "Runtime/HashExecutionContext.h"
 #include "Runtime/HashProgressSink.h"
 #include "Common/HashErrorResultWorkflow.h"
@@ -96,7 +97,10 @@ namespace HashEngineInternal
 			: mdContext(),
 			sha1(),
 			sha256Ctx(),
-			sha512Ctx()
+			sha512Ctx(),
+			blake3_256(),
+			blake3_512(),
+			blake3Xof()
 		{
 			std::memset(digestSHA512, 0, sizeof(digestSHA512));
 		}
@@ -105,6 +109,9 @@ namespace HashEngineInternal
 		CSHA1 sha1;
 		SHA256_CTX sha256Ctx;
 		SHA512_CTX sha512Ctx;
+		blake3_hasher blake3_256;
+		blake3_hasher blake3_512;
+		blake3_hasher blake3Xof;
 		uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
 	};
 

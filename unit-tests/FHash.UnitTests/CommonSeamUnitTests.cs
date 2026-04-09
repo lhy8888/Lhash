@@ -79,10 +79,13 @@ public sealed class CommonSeamUnitTests
         Assert.False(File.Exists(legacyRegistryShimPath));
         RepositoryTestContext.AssertContainsInOrder(
             registryCore,
-            "RegisterHashAlgorithmDescriptor({ \"md5\", \"MD5\", true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha1\", \"SHA1\", true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha256\", \"SHA256\", true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha512\", \"SHA512\", true });");
+            "RegisterHashAlgorithmDescriptor({ \"md5\", \"MD5\", true, true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha1\", \"SHA1\", true, true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha256\", \"SHA256\", true, true });",
+            "RegisterHashAlgorithmDescriptor({ \"sha512\", \"SHA512\", true, true });",
+            "RegisterHashAlgorithmDescriptor({ \"blake3-256\", \"BLAKE3-256\", true, false });",
+            "RegisterHashAlgorithmDescriptor({ \"blake3-512\", \"BLAKE3-512\", true, false });",
+            "RegisterHashAlgorithmDescriptor({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registryCore, StringComparison.Ordinal);
@@ -90,7 +93,9 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registryCore, StringComparison.Ordinal);
         Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registryCore, StringComparison.Ordinal);
         Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool enabledByDefault;", registryCore, StringComparison.Ordinal);
         Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
@@ -317,12 +322,14 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<UseOfMfc Condition=\"'$(FHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"$(MSBuildProjectName)$(FHashRuntimeSuffix)", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Common\HashFileRunner.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Common\HashScheduler.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
 
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);

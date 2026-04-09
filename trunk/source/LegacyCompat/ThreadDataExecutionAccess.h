@@ -10,12 +10,27 @@ static inline void EnsureThreadDataHashAlgorithmSelectionStateSize(HashAlgorithm
 	size_t registeredAlgorithmCount = static_cast<size_t>(GetRegisteredHashAlgorithmCount());
 	if (hashAlgorithmSelectionState.enabled.empty())
 	{
-		hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, true);
+		hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, false);
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+		{
+			hashAlgorithmSelectionState.enabled[static_cast<size_t>(index)] = IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor);
+			return true;
+		});
 		return;
 	}
 	if (hashAlgorithmSelectionState.enabled.size() < registeredAlgorithmCount)
 	{
-		hashAlgorithmSelectionState.enabled.resize(registeredAlgorithmCount, true);
+		size_t previousCount = hashAlgorithmSelectionState.enabled.size();
+		hashAlgorithmSelectionState.enabled.resize(registeredAlgorithmCount, false);
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+		{
+			size_t normalizedIndex = static_cast<size_t>(index);
+			if (normalizedIndex >= previousCount)
+			{
+				hashAlgorithmSelectionState.enabled[normalizedIndex] = IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor);
+			}
+			return true;
+		});
 	}
 }
 
@@ -216,7 +231,10 @@ static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
 	{
 		(void)index;
-		SetThreadDataHashAlgorithmEnabledById(threadData, GetHashAlgorithmDescriptorId(algorithmDescriptor), true);
+		SetThreadDataHashAlgorithmEnabledById(
+			threadData,
+			GetHashAlgorithmDescriptorId(algorithmDescriptor),
+			IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor));
 		return true;
 	});
 }

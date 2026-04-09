@@ -53,7 +53,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
         Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool enabledByDefault;", registryCore, StringComparison.Ordinal);
         Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);

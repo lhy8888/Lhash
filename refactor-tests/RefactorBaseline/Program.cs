@@ -843,10 +843,10 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the centralized algorithm metadata struct introduced in phase 11.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
             AssertContains(digestAccess, "GetResultDigestMetadataAt(int index)", "ResultDigestAccess does not yet expose the centralized digest metadata lookup helper introduced in phase 3.");
-            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true, true }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
             AssertContains(digestAccess, "GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata type accessor.");
             AssertContains(digestAccess, "GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata label accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
@@ -2124,7 +2124,8 @@ internal static class Program
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadDataAccess does not yet route algorithm iteration through the registry seam.");
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(ThreadData& threadData)", "ThreadDataAccess does not yet expose the default hash-algorithm reset helper.");
             AssertContains(threadAccess, "ResetThreadDataHashAlgorithms(threadData);", "New ThreadData sessions do not yet reset hash algorithms to the default enabled set.");
-            AssertContains(threadAccess, "hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, true);", "ThreadDataAccess does not yet default a new algorithm-selection vector to enabled.");
+            AssertContains(threadAccess, "hashAlgorithmSelectionState.enabled.assign(registeredAlgorithmCount, false);", "ThreadDataAccess does not yet initialize a new algorithm-selection vector through the registry-sized seam.");
+            AssertContains(threadAccess, "hashAlgorithmSelectionState.enabled[static_cast<size_t>(index)] = IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor);", "ThreadDataAccess does not yet seed default algorithm selection from descriptor metadata.");
 
             AssertContains(engineImpl, "InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "HashEngine does not yet thread the algorithm-selection state into file-hashing initialization.");
             AssertContainsAny(engineImpl,
@@ -2357,7 +2358,8 @@ internal static class Program
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineInternal.h", "Desktop native core project does not yet include HashEngineInternal.h.");
             AssertContains(nativeProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "Desktop native core project is missing the standalone SolutionDir fallback required by the direct CI build.");
             AssertContains(nativeProject, "<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", "Desktop native core project is missing the runtime-variant suffix required for CLR-compatible WinUI builds.");
-            AssertContains(nativeProject, @"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)", "Desktop native core project is missing the standalone include-root fallback required by the direct CI build.");
+            AssertContains(nativeProject, @"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\", "Desktop native core project is missing the standalone include-root fallback required by the direct CI build.");
+            AssertContains(nativeProject, @"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", "Desktop native core project is missing the fixed-version BLAKE3 vendor include root.");
             AssertContains(nativeProject, "<UseOfMfc Condition=\"'$(FHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", "Desktop native core project is missing the CLR-compatible shared-MFC override.");
             AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
             AssertContains(nativeProject, @"$(MSBuildProjectName)$(FHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
@@ -2391,12 +2393,13 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "bool requiresDigestOperations;", "HashAlgorithmRegistry does not yet expose the digest-operation requirement field.");
             AssertContains(hashAlgorithmRegistry, "const char *stableName;", "HashAlgorithmRegistry does not yet expose the stable algorithm name field.");
             AssertContains(hashAlgorithmRegistry, "const char *displayLabel;", "HashAlgorithmRegistry does not yet expose the display label field.");
+            AssertContains(hashAlgorithmRegistry, "bool enabledByDefault;", "HashAlgorithmRegistry does not yet expose default-enabled metadata for registry descriptors.");
             AssertContains(hashAlgorithmRegistry, "GetRegisteredHashAlgorithmCount()", "HashAlgorithmRegistry does not yet expose the registry-count helper.");
             AssertContains(hashAlgorithmRegistry, "VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)", "HashAlgorithmRegistry does not yet expose the algorithm visitor seam.");
-            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true }", "HashAlgorithmRegistry does not yet register MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true }", "HashAlgorithmRegistry does not yet register SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true }", "HashAlgorithmRegistry does not yet register SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true }", "HashAlgorithmRegistry does not yet register SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true, true }", "HashAlgorithmRegistry does not yet register MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true, true }", "HashAlgorithmRegistry does not yet register SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true, true }", "HashAlgorithmRegistry does not yet register SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true, true }", "HashAlgorithmRegistry does not yet register SHA512.");
 
             AssertContains(digestAccess, "#include \"Domain/HashAlgorithmRegistryCore.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
@@ -2414,7 +2417,8 @@ internal static class Program
                 "ThreadData access seams do not yet consume the hash-algorithm registry seam.");
             AssertContains(threadAccess, "TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex)", "ThreadData access seams do not yet route selection storage through the registry index seam.");
             AssertContains(threadAccess, "VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", "ThreadData access seams do not yet route enabled-algorithm iteration through the registry seam.");
-            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabledById(threadData, GetHashAlgorithmDescriptorId(algorithmDescriptor), true);", "ThreadData access seams do not yet reset algorithm selection through descriptor ids.");
+            AssertContains(threadAccess, "SetThreadDataHashAlgorithmEnabledById(", "ThreadData access seams do not yet reset algorithm selection through descriptor ids.");
+            AssertContains(threadAccess, "IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor)", "ThreadData access seams do not yet route default selection through descriptor metadata.");
             AssertContains(threadAccess, "VisitEnabledThreadDataHashAlgorithmIds(const ThreadData& threadData, THashAlgorithmIdVisitor visitor)", "ThreadData access seams do not yet expose id-based enabled-algorithm traversal.");
         }, failures);
 
@@ -5749,6 +5753,55 @@ internal static class Program
             AssertContains(securityUnitTests, "HandleOwnership_UsesRaiiAcrossWorkerAndShellPaths", "Phase 90 unit tests do not yet gate HANDLE RAII adoption.");
             AssertContains(securityUnitTests, "RuntimeUses_CheckedArithmetic_ForSizesAndProgress", "Phase 90 unit tests do not yet gate checked arithmetic usage.");
             AssertContains(securityUnitTests, "DigestExecution_RemainsThreadLocal_AndUiProgress_IsThrottled", "Phase 90 unit tests do not yet gate thread-local digest execution and throttled UI progress.");
+        }, failures);
+
+        Run("Phase 91 vendors fixed-version official BLAKE3 C code behind provider and descriptor seams", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+            string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
+            string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
+            string internalHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
+            string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string upstreamNote = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\README.LHash.md");
+            string upstreamHeader = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\c\blake3.h");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+
+            AssertContains(registryCore, "{ \"blake3-256\", \"BLAKE3-256\", true, false }", "Phase 91 registry does not yet register BLAKE3-256 as a fixed descriptor variant.");
+            AssertContains(registryCore, "{ \"blake3-512\", \"BLAKE3-512\", true, false }", "Phase 91 registry does not yet register BLAKE3-512 as a fixed descriptor variant.");
+            AssertContains(registryCore, "{ \"blake3-xof\", \"BLAKE3 XOF\", true, false }", "Phase 91 registry does not yet register BLAKE3 XOF as a fixed descriptor variant.");
+            AssertContains(registryCore, "bool enabledByDefault;", "Phase 91 registry does not yet expose default-enabled metadata for new algorithms.");
+            AssertContains(threadAccess, "IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor)", "Phase 91 thread-data defaults do not yet honor per-descriptor default selection.");
+
+            AssertContains(providerHeader, "BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", "Phase 91 BLAKE3 provider does not yet expose the 256-bit output profile.");
+            AssertContains(providerHeader, "BLAKE3_512_OUTPUT_BYTES = 64", "Phase 91 BLAKE3 provider does not yet expose the 512-bit output profile.");
+            AssertContains(providerHeader, "BLAKE3_XOF_OUTPUT_BYTES = 128", "Phase 91 BLAKE3 provider does not yet expose the XOF output profile.");
+            AssertContains(providerImplementation, "blake3_hasher_finalize(&hasher", "Phase 91 BLAKE3 provider does not yet finalize through the official C API.");
+            AssertContains(internalHeader, "blake3_hasher blake3_256;", "Phase 91 runtime context does not yet carry a dedicated BLAKE3-256 state.");
+            AssertContains(internalHeader, "blake3_hasher blake3_512;", "Phase 91 runtime context does not yet carry a dedicated BLAKE3-512 state.");
+            AssertContains(internalHeader, "blake3_hasher blake3Xof;", "Phase 91 runtime context does not yet carry a dedicated BLAKE3 XOF state.");
+            AssertContains(digestRegistry, "GetBlake3_256AlgorithmId()", "Phase 91 digest-operation registry does not yet register BLAKE3-256.");
+            AssertContains(digestRegistry, "GetBlake3_512AlgorithmId()", "Phase 91 digest-operation registry does not yet register BLAKE3-512.");
+            AssertContains(digestRegistry, "GetBlake3XofAlgorithmId()", "Phase 91 digest-operation registry does not yet register BLAKE3 XOF.");
+
+            AssertContains(nativeCoreProject, @"third_party\blake3\1.8.4\c", "Phase 91 native core project does not yet include the fixed-version BLAKE3 vendor path.");
+            AssertContains(nativeCoreProject, @"Runtime\Hash\BLAKE3HashProvider.cpp", "Phase 91 native core project does not yet compile the BLAKE3 provider.");
+            AssertContains(nativeCoreProject, "BLAKE3_NO_SSE2", "Phase 91 native core project does not yet lock the current portable BLAKE3 build flags.");
+            AssertContains(uwpNativeProject, @"third_party\blake3\1.8.4\c", "Phase 91 UWP native project does not yet include the fixed-version BLAKE3 vendor path.");
+
+            AssertContains(upstreamNote, "Upstream tag: 1.8.4", "Phase 91 third-party note does not yet pin the imported BLAKE3 tag.");
+            AssertContains(upstreamNote, "b97a24f8754819755ef78d8016c0391c65c943c5", "Phase 91 third-party note does not yet pin the imported BLAKE3 commit.");
+            AssertContains(upstreamHeader, "BLAKE3_VERSION_STRING \"1.8.4\"", "Phase 91 vendored BLAKE3 header is not the expected fixed upstream version.");
+
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", "Phase 91 native runtime tests do not yet cover official BLAKE3 vectors.");
+            AssertContains(nativeRuntimeSource, "\"blake3-256\"", "Phase 91 native runtime tests do not yet request BLAKE3-256 by descriptor id.");
+            AssertContains(nativeRuntimeSource, "\"blake3-512\"", "Phase 91 native runtime tests do not yet request BLAKE3-512 by descriptor id.");
+            AssertContains(nativeRuntimeSource, "\"blake3-xof\"", "Phase 91 native runtime tests do not yet request BLAKE3 XOF by descriptor id.");
+            AssertContains(nativeRuntimeSource, "E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F", "Phase 91 native runtime tests do not yet assert the official BLAKE3 vector.");
+            AssertContains(extensibilityUnitTests, "Blake3Integration_VendorsOfficialFixedVersion_AndAddsThreeDescriptorVariants", "Phase 91 unit tests do not yet gate the fixed-version BLAKE3 integration.");
         }, failures);
 
         if (failures.Count > 0)

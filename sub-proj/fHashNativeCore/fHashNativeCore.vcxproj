@@ -99,7 +99,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
@@ -116,7 +116,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
@@ -135,7 +135,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
@@ -155,7 +155,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
@@ -175,6 +175,19 @@
     <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp" />
+    <ClCompile Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp" />
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_dispatch.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_portable.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp" />
@@ -231,6 +244,9 @@
     <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h" />
     <ClInclude Include="..\..\trunk\source\Algorithms\sha256.h" />
     <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h" />
+    <ClInclude Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.h" />
+    <ClInclude Include="..\..\third_party\blake3\1.8.4\c\blake3.h" />
+    <ClInclude Include="..\..\third_party\blake3\1.8.4\c\blake3_impl.h" />
     <ClInclude Include="..\..\trunk\source\Common\Global.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestBufferPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestCompletion.h" />
