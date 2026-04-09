@@ -6,8 +6,6 @@
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 
-LHash is a maintained Windows-focused hash utility forked from [fHash](https://github.com/sunjw/fhash).
-The current maintained release line starts at `v1.10.0`.
 
 ## Current release
 
