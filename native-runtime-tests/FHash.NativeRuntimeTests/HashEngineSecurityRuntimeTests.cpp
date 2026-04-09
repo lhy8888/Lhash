@@ -131,7 +131,7 @@ namespace
 			(leafAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0,
 			"The nested linked file should demonstrate that a leaf-only attribute check misses ancestor reparse points.");
 
-		TCHAR openError[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
+		TCHAR openError[sunjwbase::OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 		sunjwbase::OsFile osFile(linkedFilePath);
 		NativeAssertTrue(!osFile.isHashTargetAllowed(openError), "OsFile should reject file paths that traverse a directory junction.");
 		NativeAssertTrue(sunjwbase::tstring(openError).find(_T("reparse point")) != sunjwbase::tstring::npos,
@@ -147,7 +147,7 @@ namespace
 		WinHandleGuard::UniqueWinHandle lockedHandle(::CreateFile(filePath.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
 		NativeAssertTrue(lockedHandle.isValid(), "Unable to acquire the exclusive test lock on the security test file.");
 
-		TCHAR openError[OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
+		TCHAR openError[sunjwbase::OsFile::ERR_MSG_BUFFER_LEN] = { 0 };
 		sunjwbase::OsFile osFile(filePath);
 		NativeAssertTrue(osFile.isHashTargetAllowed(openError), "A regular file should remain eligible for hashing before the share-violation probe.");
 		NativeAssertTrue(!osFile.openReadScan(openError), "OsFile should fail when another process holds an exclusive lock on the file.");

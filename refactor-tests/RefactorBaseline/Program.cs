@@ -5872,6 +5872,7 @@ internal static class Program
             AssertContains(nativeSecurityRuntime, "OsFile_ReportsSharingViolationsForLockedFiles", "Phase 93 native runtime tests do not yet cover locked-file sharing violations.");
             AssertContains(nativeSecurityRuntime, "mklink /J", "Phase 93 native runtime tests do not yet create directory junctions.");
             AssertContains(nativeSecurityRuntime, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 93 native runtime tests do not yet assert reparse-point attributes.");
+            AssertContains(nativeSecurityRuntime, "sunjwbase::OsFile::ERR_MSG_BUFFER_LEN", "Phase 93 native runtime tests do not yet qualify OsFile buffer constants through the OsFile namespace.");
             AssertContains(nativeRuntimeProject, "HashEngineSecurityRuntimeTests.cpp", "Phase 93 native runtime project does not yet compile the dedicated security runtime tests.");
 
             AssertContains(nativeRuntimeUnitTests, "HashEngineSecurityRuntimeTests.cpp", "Phase 93 unit tests do not yet gate the dedicated native security runtime source file.");

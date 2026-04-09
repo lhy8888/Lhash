@@ -83,6 +83,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("OsFile_ReportsSharingViolationsForLockedFiles", securityTestSource, StringComparison.Ordinal);
         Assert.Contains("mklink /J", securityTestSource, StringComparison.Ordinal);
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", securityTestSource, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::OsFile::ERR_MSG_BUFFER_LEN", securityTestSource, StringComparison.Ordinal);
         Assert.Contains("openReadScan(openError)", securityTestSource, StringComparison.Ordinal);
 
         Assert.Contains("struct NativeTestCase", harness, StringComparison.Ordinal);
