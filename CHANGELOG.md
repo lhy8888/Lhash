@@ -5,6 +5,26 @@ All notable LHash release-line changes are documented in this file.
 The historical upstream fHash release log is intentionally not duplicated here.
 This changelog tracks the maintained LHash release line that starts at `1.10.0`.
 
+## 1.11.0 - 2026-04-09
+
+Introduced the first maintained release with built-in BLAKE3 variants and deeper runtime hardening coverage.
+
+### Algorithms
+
+- added fixed-version official BLAKE3 C integration
+- added `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` descriptor variants
+- enabled x64 SIMD-backed BLAKE3 build paths while keeping non-x64 targets on the portable path
+
+### Runtime and architecture
+
+- strengthened `HashExecutionContext` so the progress sink is modeled as a non-owning observer seam with a null fallback
+- expanded native runtime coverage for BLAKE3 uppercase behavior, unknown-id handling, ordering, and concurrent stability
+- kept the maintained native desktop release line lightweight and portable
+
+### Validation
+
+- extended unit, refactor-baseline, and security-regression gates for BLAKE3 behavior and runtime-seam expectations
+
 ## 1.10.1 - 2026-04-09
 
 Refined the maintained Windows release line after the 1.10.0 reset.

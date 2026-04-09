@@ -11,7 +11,7 @@ The current maintained release line starts at `v1.10.0`.
 
 ## Current release
 
-- Current release: [`v1.10.1`](https://github.com/lhy8888/Lhash/releases/tag/v1.10.1)
+- Current release: [`v1.11.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.11.0)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Main branch: `future-winui-was2`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
@@ -119,6 +119,7 @@ Modern mitigations are enabled where the toolchain supports them:
 - Real-time progress tracking
 - Explicit error reporting for permissions and I/O failures
 - Extensible algorithm framework
+- Built-in BLAKE3 variants for modern high-speed hashing
 
 ## Design principles
 
@@ -155,7 +156,7 @@ LHash therefore keeps the default release smaller, faster, and more predictable 
 
 Roadmap:
 
-- Additional algorithms such as BLAKE3 and SHA3
+- Additional algorithms such as SHA3
 - CLI mode
 - Shell integration
 
