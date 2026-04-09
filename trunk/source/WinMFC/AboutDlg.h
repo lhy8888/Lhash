@@ -1,21 +1,21 @@
-#pragma once
+ï»¿#pragma once
 #include "afxwin.h"
 
-// CAboutDlg ¶Ô»°¿ò
+// CAboutDlg å¯¹è¯æ¡†
 
 class CAboutDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CAboutDlg)
 
 public:
-	CAboutDlg(CWnd* pParent = NULL);   // ±ê×¼¹¹Ôìº¯Êı
+	CAboutDlg(CWnd* pParent = NULL);   // æ ‡å‡†æ„é€ å‡½æ•°
 	virtual ~CAboutDlg();
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 	enum { IDD = IDD_ABOUT };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 	virtual BOOL OnInitDialog();
 
 	DECLARE_MESSAGE_MAP()

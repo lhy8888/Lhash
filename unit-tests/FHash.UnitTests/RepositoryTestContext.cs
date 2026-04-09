@@ -63,6 +63,18 @@ internal static class RepositoryTestContext
             return new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
         }
 
+        try
+        {
+            Encoding strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+            _ = strictUtf8.GetString(bytes);
+            return strictUtf8;
+        }
+        catch (ArgumentException)
+        {
+            // Fall through to the legacy code-page reader for historical files
+            // that have not yet been migrated.
+        }
+
         return Encoding.GetEncoding(936);
     }
 }

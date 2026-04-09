@@ -6010,6 +6010,41 @@ internal static class Program
             AssertContains(securityRegression, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 security regression does not yet track the stronger XXH3/CRC32C concurrent multi-file comparison.");
         }, failures);
 
+        Run("Phase 97 switches native compiler inputs and resource code pages onto a shared UTF-8 toolchain", () =>
+        {
+            string nativeUtf8Targets = ReadRepoFile(repoRoot, @"NativeUtf8.targets");
+            string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
+            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
+            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.vcxproj");
+            string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
+            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\ReleaseMetadataUnitTests.cs");
+            string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
+            string shellRc = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc");
+
+            AssertContains(nativeUtf8Targets, "<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /utf-8.");
+            AssertContains(nativeUtf8Targets, "<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /c65001.");
+
+            foreach (string projectContents in new[] { legacyProject, nativeCoreProject, runtimeTestsProject, benchmarkProject, shellProject })
+            {
+                AssertContains(projectContents, "NativeUtf8.targets", "Phase 97 native project does not yet import the shared UTF-8 targets.");
+                AssertDoesNotContain(projectContents, "/source-charset:.936", "Phase 97 native project still forces the old 936 source charset.");
+                AssertDoesNotContain(projectContents, "/execution-charset:.936", "Phase 97 native project still forces the old 936 execution charset.");
+                AssertDoesNotContain(projectContents, "/c936", "Phase 97 native project still forces the old 936 resource code page.");
+            }
+
+            AssertContains(mfcRc, "#pragma code_page(65001)", "Phase 97 legacy resource chain does not yet use UTF-8 code pages.");
+            AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Phase 97 legacy version resource block is not yet migrated to Unicode metadata.");
+            AssertContains(mfcRc2, "VALUE \"Translation\", 0x804, 1200", "Phase 97 legacy version resource translation is not yet migrated to Unicode metadata.");
+            AssertContains(shellRc, "#pragma code_page(65001)", "Phase 97 shell-extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(shellRc, "VALUE \"Translation\", 0x804, 1200", "Phase 97 shell-extension translation metadata is not yet Unicode.");
+
+            AssertContains(securityRegression, "strictUtf8.GetString(bytes)", "Phase 97 security regression reader does not yet prefer strict UTF-8 decoding before 936 fallback.");
+            AssertContains(releaseMetadataTests, "NativeProjects_AndResourceChain_Are_Migrating_To_Utf8", "Phase 97 unit coverage does not yet gate the UTF-8 migration seams.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");
@@ -6120,6 +6155,18 @@ internal static class Program
             bytes[2] == 0xBF)
         {
             return new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+        }
+
+        try
+        {
+            Encoding strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+            _ = strictUtf8.GetString(bytes);
+            return strictUtf8;
+        }
+        catch (ArgumentException)
+        {
+            // Fall through to the legacy code-page reader for historical files
+            // that have not yet been migrated.
         }
 
         return Encoding.GetEncoding(936);

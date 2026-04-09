@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "WindowsComm.h"
 
@@ -14,22 +14,22 @@ using namespace sunjwbase;
 
 #define BUFSIZE 80
 
-// ÒÔÏÂÊÇ»ñµÃ Windows °æ±¾ÐÅÏ¢µÄ¶¨ÒåÄÚÈÝ
+// ä»¥ä¸‹æ˜¯èŽ·å¾— Windows ç‰ˆæœ¬ä¿¡æ¯çš„å®šä¹‰å†…å®¹
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
-// GetProductInfo º¯ÊýÔ­ÐÍ(Vista/2008)
+// GetProductInfo å‡½æ•°åŽŸåž‹(Vista/2008)
 typedef BOOL(WINAPI *PGPI)(DWORD, DWORD, DWORD,
 	DWORD, PDWORD);
 // 10 additional
 #define PRODUCT_CORE 0x00000065
-// ÒÔÉÏÊÇ»ñµÃ Windows °æ±¾ÐÅÏ¢µÄ¶¨ÒåÄÚÈÝ
+// ä»¥ä¸Šæ˜¯èŽ·å¾— Windows ç‰ˆæœ¬ä¿¡æ¯çš„å®šä¹‰å†…å®¹
 
 namespace WindowsComm
 {
 	/*
 	 * GetExeFileVersion
-	 * »ñµÃÖ¸¶¨Â·¾¶ÎÄ¼þ°æ±¾
-	 * ¸ñÊ½»¯Îª Ö÷°æ±¾ºÅ.¸±°æ±¾ºÅ.µÍ°æ±¾ºÅ.±àÒë°æ±¾ºÅ
-	 * Èç¹ûÎÄ¼þÃ»ÓÐ°æ±¾ºÅ£¬·µ»Ø""
+	 * èŽ·å¾—æŒ‡å®šè·¯å¾„æ–‡ä»¶ç‰ˆæœ¬
+	 * æ ¼å¼åŒ–ä¸º ä¸»ç‰ˆæœ¬å·.å‰¯ç‰ˆæœ¬å·.ä½Žç‰ˆæœ¬å·.ç¼–è¯‘ç‰ˆæœ¬å·
+	 * å¦‚æžœæ–‡ä»¶æ²¡æœ‰ç‰ˆæœ¬å·ï¼Œè¿”å›ž""
 	 */
 	tstring GetExeFileVersion(TCHAR* path)
 	{
@@ -48,14 +48,14 @@ namespace WindowsComm
 			bret = VerQueryValue(pver, TEXT("\\"), &pbuf, &uLen);
 			memcpy(&pvsf, pbuf, sizeof(VS_FIXEDFILEINFO));
 
-			// ½«°æ±¾ºÅ×ª»»ÎªÊý×Ö //
+			// å°†ç‰ˆæœ¬å·è½¬æ¢ä¸ºæ•°å­— //
 			MVer = pvsf.dwFileVersionMS / 65536;
 			SVer = pvsf.dwFileVersionMS - 65536 * MVer;
 			LVer = pvsf.dwFileVersionLS / 65536;
 			BVer = pvsf.dwFileVersionLS - 65536 * LVer;
 			strVer = strappendformat(strVer, ("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
 			// Ver.Format(_T("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
-			// ½«°æ±¾ºÅ×ª»»ÎªÊý×Ö //
+			// å°†ç‰ˆæœ¬å·è½¬æ¢ä¸ºæ•°å­— //
 
 			delete[] pver;
 		}
@@ -84,7 +84,7 @@ namespace WindowsComm
 
 	/*
 	 * GetWindowsInfo()
-	 * »ñµÃ Windows °æ±¾ÐÅÏ¢
+	 * èŽ·å¾— Windows ç‰ˆæœ¬ä¿¡æ¯
 	 */
 	tstring GetWindowsInfo()
 	{
@@ -215,7 +215,7 @@ namespace WindowsComm
 			else
 			{
 				// >= 6, Vista, 7, 8, 10...
-				// »ñµÃ GetProductInfo º¯ÊýÔ­ÐÍ
+				// èŽ·å¾— GetProductInfo å‡½æ•°åŽŸåž‹
 				PGPI pGetProductInfo  = NULL;
 				pGetProductInfo = (PGPI)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetProductInfo");
 				if (pGetProductInfo != NULL)

@@ -1,4 +1,4 @@
-// FindDialog.cpp : ÊµÏÖÎÄ¼ş
+ï»¿// FindDialog.cpp : å®ç°æ–‡ä»¶
 //
 
 #include "stdafx.h"
@@ -7,7 +7,7 @@
 #include "FindDlg.h"
 #include "WinCommon/WindowsStrings.h"
 
-// CFindDlg ¶Ô»°¿ò
+// CFindDlg å¯¹è¯æ¡†
 
 IMPLEMENT_DYNAMIC(CFindDlg, CDialog)
 
@@ -37,7 +37,7 @@ BOOL CFindDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  ÔÚ´ËÌí¼Ó¶îÍâµÄ³õÊ¼»¯
+	// TODO:  åœ¨æ­¤æ·»åŠ é¢å¤–çš„åˆå§‹åŒ–
 	SetWindowText(GetStringByKey(FINDDLG_TITLE));
 
 	CWnd* pWnd;
@@ -49,13 +49,13 @@ BOOL CFindDlg::OnInitDialog()
 	pWnd->SetWindowText(GetStringByKey(HASHVALUE_STRING));
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// Òì³£: OCX ÊôĞÔÒ³Ó¦·µ»Ø FALSE
+	// å¼‚å¸¸: OCX å±æ€§é¡µåº”è¿”å› FALSE
 }
 
-// CFindDialog ÏûÏ¢´¦Àí³ÌĞò
+// CFindDialog æ¶ˆæ¯å¤„ç†ç¨‹åº
 void CFindDlg::OnBnClickedOk()
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 	UpdateData();
 
 	OnOK();

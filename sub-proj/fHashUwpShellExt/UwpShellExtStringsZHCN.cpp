@@ -1,4 +1,4 @@
-#include "UwpShellExtStringsZHCN.h"
+ï»¿#include "UwpShellExtStringsZHCN.h"
 
 #include <tchar.h>
 
@@ -6,9 +6,9 @@ UwpShlExtStringsZHCN::UwpShlExtStringsZHCN()
 {
 	// Shell ext
 #if defined (_DEBUG)
-	m_stringsMap[_T("SHELL_EXT_DISPLAY_NAME")] = _T("Ê¹ÓÃ LHash UWP DEV ¼ÆËã¹þÏ£");
+	m_stringsMap[_T("SHELL_EXT_DISPLAY_NAME")] = _T("ä½¿ç”¨ LHash UWP DEV è®¡ç®—å“ˆå¸Œ");
 #else
-	m_stringsMap[_T("SHELL_EXT_DISPLAY_NAME")] = _T("Ê¹ÓÃ LHash UWP ¼ÆËã¹þÏ£");
+	m_stringsMap[_T("SHELL_EXT_DISPLAY_NAME")] = _T("ä½¿ç”¨ LHash UWP è®¡ç®—å“ˆå¸Œ");
 #endif
 }
 

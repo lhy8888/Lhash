@@ -140,7 +140,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -157,7 +157,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -174,7 +174,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -193,7 +193,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -213,7 +213,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -233,7 +233,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/source-charset:.936 /execution-charset:.936 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -448,6 +448,7 @@
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h" />
   </ItemGroup>
   <Import Project="..\..\NativeSecurity.targets" />
+  <Import Project="..\..\NativeUtf8.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

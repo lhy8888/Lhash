@@ -1,5 +1,5 @@
-//
-// MD5SUM03.RC2 - Microsoft Visual C++ ≤ªª·÷±Ω”±‡º≠µƒ◊ ‘¥
+Ôªø//
+// MD5SUM03.RC2 - Microsoft Visual C++ ‰∏ç‰ºöÁõ¥Êé•ÁºñËæëÁöÑËµÑÊ∫ê
 //
 
 #ifdef APSTUDIO_INVOKED
@@ -8,7 +8,7 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-// ‘⁄¥À¥¶ÃÌº” ÷∂Ø±‡º≠µƒ◊ ‘¥...
+// Âú®Ê≠§Â§ÑÊ∑ªÂä†ÊâãÂä®ÁºñËæëÁöÑËµÑÊ∫ê...
 /////////////////////////////////////////////////////////////////////////////
 #include "version.h"
 //
@@ -30,7 +30,7 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "080403a8"
+        BLOCK "080404b0"
         BEGIN
             VALUE "CompanyName", "LHY"
             VALUE "FileDescription", "LHash: Files Hash Calculator"
@@ -44,7 +44,7 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x804, 936
+        VALUE "Translation", 0x804, 1200
     END
 END
 

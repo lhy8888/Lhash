@@ -442,6 +442,37 @@ internal static partial class Program
                 AssertContains(projectContents, "NativeSecurity.targets", $"{relativePath} does not import the shared native security targets.");
             }
         }, failures);
+        Run("UTF-8 native compiler settings and resource code pages are imported consistently", () =>
+        {
+            string nativeUtf8Targets = ReadRepoFile(repoRoot, @"NativeUtf8.targets");
+            string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
+            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
+            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.vcxproj");
+            string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
+            string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
+
+            AssertContains(nativeUtf8Targets, "<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", "Shared native UTF-8 targets do not enable /utf-8.");
+            AssertContains(nativeUtf8Targets, "<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", "Shared native UTF-8 targets do not enable /c65001 for resources.");
+
+            foreach (string projectContents in new[] { legacyProject, nativeCoreProject, runtimeTestsProject, benchmarkProject, shellProject })
+            {
+                AssertContains(projectContents, "NativeUtf8.targets", "A native project does not import the shared UTF-8 targets.");
+                AssertDoesNotContain(projectContents, "/source-charset:.936", "A native project still forces the old 936 source charset.");
+                AssertDoesNotContain(projectContents, "/execution-charset:.936", "A native project still forces the old 936 execution charset.");
+                AssertDoesNotContain(projectContents, "/c936", "A native project still forces the old 936 resource compiler code page.");
+            }
+
+            AssertContains(mfcRc, "#pragma code_page(65001)", "Legacy MFC resource chain does not yet use UTF-8 resource code pages.");
+            AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Legacy MFC version resource block is not yet migrated to Unicode translation metadata.");
+            AssertContains(mfcRc2, "VALUE \"Translation\", 0x804, 1200", "Legacy MFC version resource translation is not yet migrated to Unicode metadata.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc"), "#pragma code_page(65001)", "WinRT bridge resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc"), "#pragma code_page(65001)", "WinUI shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc"), "#pragma code_page(65001)", "UWP shell extension resource chain does not yet use UTF-8 code pages.");
+        }, failures);
         Run("WinMFC context-menu controller preserves elevation and context-menu safety flow", () =>
         {
             string dialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
@@ -586,6 +617,18 @@ internal static partial class Program
             bytes[2] == 0xBF)
         {
             return new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+        }
+
+        try
+        {
+            Encoding strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+            _ = strictUtf8.GetString(bytes);
+            return strictUtf8;
+        }
+        catch (ArgumentException)
+        {
+            // Fall through to the legacy code-page reader for historical files
+            // that have not yet been migrated.
         }
 
         return Encoding.GetEncoding(936);

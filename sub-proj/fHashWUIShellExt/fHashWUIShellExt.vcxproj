@@ -366,6 +366,7 @@
     <ResourceCompile Include="fHashWUIShellExt.rc" />
   </ItemGroup>
   <Import Project="..\..\NativeSecurity.targets" />
+  <Import Project="..\..\NativeUtf8.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

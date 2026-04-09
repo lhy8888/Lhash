@@ -1,4 +1,4 @@
-// MD5SUM03.h : PROJECT_NAME Ó¦ÓÃ³ÌĞòµÄÖ÷Í·ÎÄ¼ş
+ï»¿// MD5SUM03.h : PROJECT_NAME åº”ç”¨ç¨‹åºçš„ä¸»å¤´æ–‡ä»¶
 //
 
 #pragma once
@@ -7,10 +7,10 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
-#include "resource.h"		// Ö÷·ûºÅ
+#include "resource.h"		// ä¸»ç¬¦å·
 
 // CMD5SUM03App:
-// ÓĞ¹Ø´ËÀàµÄÊµÏÖ£¬Çë²ÎÔÄ MD5SUM03.cpp
+// æœ‰å…³æ­¤ç±»çš„å®ç°ï¼Œè¯·å‚é˜… MD5SUM03.cpp
 //
 
 class CFILESHASHApp : public CWinApp
@@ -18,11 +18,11 @@ class CFILESHASHApp : public CWinApp
 public:
 	CFILESHASHApp();
 
-// ÖØĞ´
+// é‡å†™
 	public:
 	virtual BOOL InitInstance();
 
-// ÊµÏÖ
+// å®ç°
 
 	DECLARE_MESSAGE_MAP()
 };

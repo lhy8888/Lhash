@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "FileVersionHelper.h"
 
@@ -214,7 +214,7 @@ tstring FileVersionHelper::Find()
             VS_FIXEDFILEINFO pvsf;
             ReadSize((LPCBYTE)fixed, sizeof(VS_FIXEDFILEINFO), (LPBYTE)&pvsf); //memcpy(&pvsf, pbuf, sizeof(VS_FIXEDFILEINFO));
 
-            // ½«°æ±¾ºÅ×ª»»ÎªÊı×Ö //
+            // å°†ç‰ˆæœ¬å·è½¬æ¢ä¸ºæ•°å­— //
             unsigned int MVer, SVer, LVer, BVer;
             MVer = pvsf.dwFileVersionMS / 65536;
             SVer = pvsf.dwFileVersionMS - 65536 * MVer;

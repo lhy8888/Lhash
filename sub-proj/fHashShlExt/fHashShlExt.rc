@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+Ôªø// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -17,12 +17,12 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ÷–Œƒ(÷–ª™»À√Òπ≤∫Õπ˙) resources
+// ‰∏≠Êñá(‰∏≠Âçé‰∫∫Ê∞ëÂÖ±ÂíåÂõΩ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 #ifdef _WIN32
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-#pragma code_page(936)
+#pragma code_page(65001)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
@@ -74,7 +74,7 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "080403a8"
+        BLOCK "080404b0"
         BEGIN
             VALUE "CompanyName", "LHY"
             VALUE "FileDescription", "ShellExt for LHash"
@@ -88,7 +88,7 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x804, 936
+        VALUE "Translation", 0x804, 1200
     END
 END
 
@@ -111,7 +111,7 @@ BEGIN
     IDS_PROJNAME            "LHashShlExt"
 END
 
-#endif    // ÷–Œƒ(÷–ª™»À√Òπ≤∫Õπ˙) resources
+#endif    // ‰∏≠Êñá(‰∏≠Âçé‰∫∫Ê∞ëÂÖ±ÂíåÂõΩ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

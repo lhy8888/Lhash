@@ -1,4 +1,4 @@
-// dllmain.h : Ä£¿éÀàµÄÉùÃ÷¡£
+ï»¿// dllmain.h : æ¨¡å—ç±»çš„å£°æ˜ã€‚
 
 class CfHashShlExtModule : public CAtlDllModuleT< CfHashShlExtModule >
 {

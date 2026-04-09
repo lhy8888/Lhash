@@ -119,4 +119,53 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("artifacts/winui-x64-*", workflow, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void NativeProjects_AndResourceChain_Are_Migrating_To_Utf8()
+    {
+        string utf8Targets = RepositoryTestContext.ReadUtf8File(@"NativeUtf8.targets");
+        string legacyProject = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash.vcxproj");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string runtimeTestsProject = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
+        string benchmarksProject = RepositoryTestContext.ReadUtf8File(@"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
+        string shellProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashShlExt\fHashShlExt.vcxproj");
+        string legacyRc = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\fileshash.rc");
+        string legacyRc2 = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\res\fileshash.rc2");
+        string shellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashShlExt\fHashShlExt.rc");
+        string bridgeRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc");
+        string wuiShellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc");
+        string uwpShellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc");
+
+        Assert.Contains("<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
+        Assert.Contains("<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
+
+        Assert.Contains("NativeUtf8.targets", legacyProject, StringComparison.Ordinal);
+        Assert.Contains("NativeUtf8.targets", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("NativeUtf8.targets", runtimeTestsProject, StringComparison.Ordinal);
+        Assert.Contains("NativeUtf8.targets", benchmarksProject, StringComparison.Ordinal);
+        Assert.Contains("NativeUtf8.targets", shellProject, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("/source-charset:.936", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/execution-charset:.936", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/c936", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/source-charset:.936", nativeCoreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/execution-charset:.936", nativeCoreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/source-charset:.936", runtimeTestsProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/execution-charset:.936", runtimeTestsProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/source-charset:.936", benchmarksProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/execution-charset:.936", benchmarksProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/source-charset:.936", shellProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/execution-charset:.936", shellProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("/c936", shellProject, StringComparison.Ordinal);
+
+        Assert.Contains("#pragma code_page(65001)", legacyRc, StringComparison.Ordinal);
+        Assert.Contains("BLOCK \"080404b0\"", legacyRc2, StringComparison.Ordinal);
+        Assert.Contains("VALUE \"Translation\", 0x804, 1200", legacyRc2, StringComparison.Ordinal);
+        Assert.Contains("#pragma code_page(65001)", shellRc, StringComparison.Ordinal);
+        Assert.Contains("BLOCK \"080404b0\"", shellRc, StringComparison.Ordinal);
+        Assert.Contains("VALUE \"Translation\", 0x804, 1200", shellRc, StringComparison.Ordinal);
+        Assert.Contains("#pragma code_page(65001)", bridgeRc, StringComparison.Ordinal);
+        Assert.Contains("#pragma code_page(65001)", wuiShellRc, StringComparison.Ordinal);
+        Assert.Contains("#pragma code_page(65001)", uwpShellRc, StringComparison.Ordinal);
+    }
 }

@@ -1,16 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
-// CFindDialog ¶Ô»°¿ò
+// CFindDialog å¯¹è¯æ¡†
 
 class CFindDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CFindDlg)
 
 public:
-	CFindDlg(CWnd* pParent = NULL);   // ±ê×¼¹¹Ôìº¯Êı
+	CFindDlg(CWnd* pParent = NULL);   // æ ‡å‡†æ„é€ å‡½æ•°
 	virtual ~CFindDlg();
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 	enum { IDD = IDD_FIND_DIALOG };
 
 	virtual BOOL OnInitDialog();
@@ -20,7 +20,7 @@ public:
 	void SetFindHash(const CString& str);
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 
 	DECLARE_MESSAGE_MAP()
 

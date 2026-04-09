@@ -1,4 +1,4 @@
-// fHashShellExt.cpp : CfHashShellExt µÄÊµÏÖ
+ï»¿// fHashShellExt.cpp : CfHashShellExt çš„å®žçŽ°
 
 #include "stdafx.h"
 #include "fHashShellExt.h"
@@ -75,7 +75,7 @@ HRESULT CfHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 		return E_INVALIDARG;
 	}
 
-	// Sanity check ¨C make sure there is at least one filename.
+	// Sanity check â€“ make sure there is at least one filename.
 	UINT uNumFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 	HRESULT hr = S_OK;
 

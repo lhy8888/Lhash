@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "WindowsUtils.h"
 
@@ -64,7 +64,7 @@ namespace WindowsUtils
 
 		LONG lResEnv;
 
-		// ´ò¿ª
+		// æ‰“å¼€
 		lResEnv = key.Open(HKEY_LOCAL_MACHINE, lpszEnvKeyName, KEY_READ);
 
 		if(lResEnv != ERROR_SUCCESS)
@@ -264,17 +264,17 @@ namespace WindowsUtils
 		else
 			lpszKeyName = CONTEXT_MENU_REGESTRY_EN_US;
 
-		// ´´½¨Ä¿Â¼
+		// åˆ›å»ºç›®å½•
 		lResult = key.Create(HKEY_CLASSES_ROOT, lpszKeyName);
 		if(lResult != ERROR_SUCCESS)
-			return false; // Ê§°Ü
+			return false; // å¤±è´¥
 
-		// ´ò¿ª
+		// æ‰“å¼€
 		lResult = key.Open(HKEY_CLASSES_ROOT, lpszKeyName, KEY_ALL_ACCESS);
 		if(lResult != ERROR_SUCCESS)
 			return false;
 
-		// ³É¹¦´ò¿ª
+		// æˆåŠŸæ‰“å¼€
 		TCHAR pszCommand[270];
 
 #if defined(UNICODE) || defined(_UNICODE)
@@ -300,17 +300,17 @@ namespace WindowsUtils
 		LONG lResult;
 		LPCTSTR lpszKeyName = SHELL_EXT_REGESTRY;
 
-		// ´´½¨Ä¿Â¼
+		// åˆ›å»ºç›®å½•
 		lResult = key.Create(HKEY_CLASSES_ROOT, lpszKeyName);
 		if(lResult != ERROR_SUCCESS)
-			return false; // Ê§°Ü
+			return false; // å¤±è´¥
 
-		// ´ò¿ª
+		// æ‰“å¼€
 		lResult = key.Open(HKEY_CLASSES_ROOT, lpszKeyName, KEY_ALL_ACCESS);
 		if(lResult != ERROR_SUCCESS)
 			return false;
 
-		// ³É¹¦´ò¿ª
+		// æˆåŠŸæ‰“å¼€
 		LPCTSTR pszUuid = SHELL_EXT_UUID;
 		LPCTSTR pszExePath = pszExeFullPath;
 
@@ -329,7 +329,7 @@ namespace WindowsUtils
 		TCHAR pszExeFullPath[MAX_PATH + 10] = { L'0' };
 		TCHAR pszShlDllPath[MAX_PATH + 10] = { L'0' };
 
-		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // µÃµ½³ÌĞòÄ£¿éÃû³Æ£¬È«Â·¾¶
+		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // å¾—åˆ°ç¨‹åºæ¨¡å—åç§°ï¼Œå…¨è·¯å¾„
 
 		if(FindShlExtDll(pszExeFullPath, pszShlDllPath))
 		{
@@ -352,7 +352,7 @@ namespace WindowsUtils
 		TCHAR pszExeFullPath[MAX_PATH + 10] = { L'0' };
 		TCHAR pszShlDllPath[MAX_PATH + 10] = { L'0' };
 
-		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // µÃµ½³ÌĞòÄ£¿éÃû³Æ£¬È«Â·¾¶
+		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // å¾—åˆ°ç¨‹åºæ¨¡å—åç§°ï¼Œå…¨è·¯å¾„
 		if(FindShlExtDll(pszExeFullPath, pszShlDllPath))
 		{
 			UnregShellExt(pszShlDllPath);
@@ -363,7 +363,7 @@ namespace WindowsUtils
 		LPCTSTR lpszKeyShellExName = _T("*\\shellex\\ContextMenuHandlers\\");
 		LONG lResShell, lResShellEx;
 
-		// ´ò¿ª
+		// æ‰“å¼€
 		lResShell = keyShell.Open(HKEY_CLASSES_ROOT, lpszKeyShellName, KEY_ALL_ACCESS);
 		lResShellEx = keyShellEx.Open(HKEY_CLASSES_ROOT, lpszKeyShellExName, KEY_ALL_ACCESS);
 		if(lResShell != ERROR_SUCCESS &&
@@ -406,7 +406,7 @@ namespace WindowsUtils
 		LONG lResCtxMenuZh;
 		LONG lResShlExt;
 
-		// ´ò¿ª
+		// æ‰“å¼€
 		lResCtxMenuBase = keyCtxMenuBase.Open(HKEY_CLASSES_ROOT, lpszCtxMenuKeyNameBase, KEY_READ);
 		lResCtxMenuZh = keyCtxMenuZh.Open(HKEY_CLASSES_ROOT, lpszCtxMenuKeyNameZh, KEY_READ);
 		lResShlExt = keyShlExt.Open(HKEY_CLASSES_ROOT, lpszShlExtKeyName, KEY_READ);

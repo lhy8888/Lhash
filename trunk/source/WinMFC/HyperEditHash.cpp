@@ -1,4 +1,4 @@
-// src\HyperEditHash.cpp : ÊµÏÖÎÄ¼þ
+ï»¿// src\HyperEditHash.cpp : å®žçŽ°æ–‡ä»¶
 //
 #include "stdafx.h"
 #include "HyperEditHash.h"
@@ -30,43 +30,43 @@ END_MESSAGE_MAP()
 
 
 
-// CHyperEditHash ÏûÏ¢´¦Àí³ÌÐò
+// CHyperEditHash æ¶ˆæ¯å¤„ç†ç¨‹åº
 BOOL CHyperEditHash::PreTranslateMessage(MSG* pMsg)
-{  
-    // ±à¼­¿ò¿ì½Ý¼ü²Ù×÷  
-    if(WM_KEYDOWN == pMsg->message)   
+{
+    // ç¼–è¾‘æ¡†å¿«æ·é”®æ“ä½œ
+    if(WM_KEYDOWN == pMsg->message)
     {
 		if(::GetFocus() == GetSafeHwnd() && (GetKeyState( VK_CONTROL) & 0xFF00 ) == 0xFF00)   
         {
-            // È«Ñ¡
+            // å…¨é€‰
             if( pMsg->wParam == 'A' || pMsg->wParam == 'a')
             {
                 this->SetSel(0, -1);
                 return true;
             }
 
-            // ¿½±´
+            // æ‹·è´
             if( pMsg->wParam == 'C' || pMsg->wParam == 'c')
             {
                 this->Copy();
                 return true;
 			}
 
-            // ¼ôÇÐ
+            // å‰ªåˆ‡
             if( pMsg->wParam == 'X' || pMsg->wParam == 'x')
             {
                 this->Cut();
                 return true;
 			}
 
-            // Õ³Ìù
+            // ç²˜è´´
             if( pMsg->wParam == 'V' || pMsg->wParam == 'v')
             {
                 this->Paste();
                 return true;
             }
 
-            // ³·Ïú
+            // æ’¤é”€
             if( pMsg->wParam == 'Z' || pMsg->wParam == 'z')
             {
                 this->Undo();
