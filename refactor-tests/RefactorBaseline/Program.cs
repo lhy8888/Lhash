@@ -5979,10 +5979,35 @@ internal static class Program
             AssertContains(nativeRuntimeSource, "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Phase 95 native runtime coverage does not yet include XXH3/CRC32C request normalization behavior.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", "Phase 95 native runtime coverage does not yet include concurrent XXH3/CRC32C stability.");
             AssertContains(extensibilityUnitTests, "XXH3AndCRC32CIntegration_VendorsOfficialFixedVersions_AndAddsRuntimeCoverage", "Phase 95 unit tests do not yet gate the xxHash3/CRC32C extensibility seam.");
-            AssertContains(securityUnitTests, "XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversOrderingAndConcurrency", "Phase 95 unit tests do not yet gate the xxHash3/CRC32C hardening seam.");
+            AssertContains(securityUnitTests, "XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversVectorsOrderingAndConcurrency", "Phase 95 unit tests do not yet gate the xxHash3/CRC32C hardening seam.");
             AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", "Phase 95 native-runtime framework tests do not yet require the official XXH3 vector coverage.");
             AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", "Phase 95 native-runtime framework tests do not yet require the official CRC32C vector coverage.");
             AssertContains(securityRegression, "XXH3 and CRC32C providers stay covered by hardening gates", "Phase 95 security regression does not yet gate the xxHash3/CRC32C coverage.");
+        }, failures);
+
+        Run("Phase 96 expands xxHash3 and CRC32C from presence checks into stronger runtime vector and concurrent multi-file coverage", () =>
+        {
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
+
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 native runtime coverage does not yet sweep official CRC32C boundary vectors.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 native runtime coverage does not yet compare multi-file concurrent XXH3/CRC32C runs against a baseline.");
+            AssertContains(nativeRuntimeSource, "8A9136AA", "Phase 96 native runtime coverage does not yet preserve the CRC32C zero-input vector.");
+            AssertContains(nativeRuntimeSource, "62A8AB43", "Phase 96 native runtime coverage does not yet preserve the CRC32C all-0xFF vector.");
+            AssertContains(nativeRuntimeSource, "113FDB5C", "Phase 96 native runtime coverage does not yet preserve the CRC32C descending-input vector.");
+            AssertContains(nativeRuntimeSource, "D9963A56", "Phase 96 native runtime coverage does not yet preserve the CRC32C iSCSI vector.");
+
+            AssertContains(extensibilityUnitTests, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 extensibility tests do not yet gate the stronger CRC32C boundary vectors.");
+            AssertContains(extensibilityUnitTests, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 extensibility tests do not yet gate the stronger XXH3/CRC32C concurrent multi-file comparison.");
+            AssertContains(securityUnitTests, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 hardening tests do not yet gate the stronger CRC32C boundary vectors.");
+            AssertContains(securityUnitTests, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 hardening tests do not yet gate the stronger XXH3/CRC32C concurrent multi-file comparison.");
+            AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 native-runtime framework tests do not yet require the stronger CRC32C boundary vectors.");
+            AssertContains(nativeRuntimeUnitTests, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 native-runtime framework tests do not yet require the stronger XXH3/CRC32C concurrent multi-file comparison.");
+            AssertContains(securityRegression, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 security regression does not yet track the stronger CRC32C boundary vectors.");
+            AssertContains(securityRegression, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Phase 96 security regression does not yet track the stronger XXH3/CRC32C concurrent multi-file comparison.");
         }, failures);
 
         if (failures.Count > 0)

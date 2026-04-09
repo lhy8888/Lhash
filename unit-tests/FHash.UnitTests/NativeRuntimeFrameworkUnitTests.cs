@@ -44,11 +44,13 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_FindsMatchingRuntimeDigests", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_MatchesPathAndDigestForRuntimeResults", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);
@@ -78,6 +80,10 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("54247382A8D6B94D", testSource, StringComparison.Ordinal);
         Assert.Contains("20EFC49FF02422EA54247382A8D6B94D", testSource, StringComparison.Ordinal);
         Assert.Contains("46DD794E", testSource, StringComparison.Ordinal);
+        Assert.Contains("8A9136AA", testSource, StringComparison.Ordinal);
+        Assert.Contains("62A8AB43", testSource, StringComparison.Ordinal);
+        Assert.Contains("113FDB5C", testSource, StringComparison.Ordinal);
+        Assert.Contains("D9963A56", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"blake3-1024\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"xxh3\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", testSource, StringComparison.Ordinal);

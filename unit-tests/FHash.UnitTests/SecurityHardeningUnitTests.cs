@@ -184,7 +184,7 @@ public sealed class SecurityHardeningUnitTests
     }
 
     [Fact]
-    public void XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversOrderingAndConcurrency()
+    public void XXH3AndCRC32CIntegration_UsesOfficialProviders_AndCoversVectorsOrderingAndConcurrency()
     {
         string xxh3ProviderHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\XXHash3HashProvider.h");
         string xxh3ProviderImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
@@ -211,11 +211,17 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("std::async(std::launch::async, runSingleRequest)", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"xxh3\")", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("8A9136AA", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("62A8AB43", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("113FDB5C", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("D9963A56", runtimeTests, StringComparison.Ordinal);
 
         Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", nativeCoreProject, StringComparison.Ordinal);

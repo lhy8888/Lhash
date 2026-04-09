@@ -168,10 +168,16 @@ public sealed class HashExtensibilityRegressionUnitTests
 
         Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("54247382A8D6B94D", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("20EFC49FF02422EA54247382A8D6B94D", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("46DD794E", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("8A9136AA", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("62A8AB43", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("113FDB5C", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("D9963A56", nativeRuntimeSource, StringComparison.Ordinal);
     }
 }

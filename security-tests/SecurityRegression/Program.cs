@@ -369,11 +369,17 @@ internal static partial class Program
 
             AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", "Native runtime coverage no longer includes the official XXH3 vector.");
             AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", "Native runtime coverage no longer includes the official CRC32C vector.");
+            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Native runtime coverage no longer includes the CRC32C boundary vector sweep.");
             AssertContains(runtimeSource, "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Native runtime coverage no longer includes XXH3/CRC32C request normalization behavior.");
             AssertContains(runtimeSource, "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", "Native runtime coverage no longer includes concurrent XXH3/CRC32C stability.");
+            AssertContains(runtimeSource, "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", "Native runtime coverage no longer compares xxHash3/CRC32C multi-file concurrent runs against a single-run baseline.");
             AssertContains(runtimeSource, "54247382A8D6B94D", "Native runtime coverage no longer preserves the official XXH3-64 vector.");
             AssertContains(runtimeSource, "20EFC49FF02422EA54247382A8D6B94D", "Native runtime coverage no longer preserves the official XXH3-128 vector.");
             AssertContains(runtimeSource, "46DD794E", "Native runtime coverage no longer preserves the official CRC32C vector.");
+            AssertContains(runtimeSource, "8A9136AA", "Native runtime coverage no longer preserves the CRC32C zero-input vector.");
+            AssertContains(runtimeSource, "62A8AB43", "Native runtime coverage no longer preserves the CRC32C all-0xFF vector.");
+            AssertContains(runtimeSource, "113FDB5C", "Native runtime coverage no longer preserves the CRC32C descending-input vector.");
+            AssertContains(runtimeSource, "D9963A56", "Native runtime coverage no longer preserves the CRC32C iSCSI vector.");
 
             AssertContains(nativeCoreProject, @"third_party\xxhash\0.8.3\xxhash.c", "Desktop native core no longer compiles the vendored xxHash source snapshot.");
             AssertContains(nativeCoreProject, @"third_party\crc32c\1.1.2\src\crc32c.cc", "Desktop native core no longer compiles the vendored CRC32C source snapshot.");
