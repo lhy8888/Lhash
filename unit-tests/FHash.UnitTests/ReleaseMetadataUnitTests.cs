@@ -89,6 +89,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Publisher unknown", signingGuide, StringComparison.Ordinal);
         Assert.Contains("Code Signing Policy", signingPolicy, StringComparison.Ordinal);
         Assert.Contains("repository owner and release maintainer", signingPolicy, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_TRUSTED_SIGNING_", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Azure Trusted Signing", signingGuide, StringComparison.Ordinal);
 
         Assert.Contains("param(", signingScript, StringComparison.Ordinal);
         Assert.Contains("signtool.exe", signingScript, StringComparison.Ordinal);
