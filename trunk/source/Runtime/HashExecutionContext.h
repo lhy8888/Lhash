@@ -5,15 +5,35 @@
 #include "Common/Global.h"
 #include "Runtime/HashProgressSink.h"
 
+class NullHashProgressSink : public HashProgressSink
+{
+public:
+	virtual int progressMax()
+	{
+		return 100;
+	}
+
+	virtual void onProgressEvent(const ProgressEvent& progressEvent)
+	{
+		(void)progressEvent;
+	}
+};
+
+static inline HashProgressSink& GetNullHashProgressSink()
+{
+	static NullHashProgressSink sink;
+	return sink;
+}
+
 struct HashExecutionContext
 {
 	HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)
-		: progressSink(sink),
+		: progressSinkObserver(sink != NULL ? *sink : GetNullHashProgressSink()),
 		jobState(state),
 		cancellationState(cancellation)
 	{
 	}
-	HashProgressSink *progressSink;
+	HashProgressSink& progressSinkObserver;
 	HashJobState& jobState;
 	HashCancellationState& cancellationState;
 };
@@ -25,7 +45,7 @@ static inline HashExecutionContext CreateHashExecutionContext(HashProgressSink *
 
 static inline HashProgressSink *GetHashExecutionProgressSink(const HashExecutionContext& executionContext)
 {
-	return executionContext.progressSink;
+	return &executionContext.progressSinkObserver;
 }
 
 static inline void SetHashExecutionWorking(HashExecutionContext& executionContext, bool working)

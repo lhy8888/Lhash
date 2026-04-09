@@ -3493,7 +3493,7 @@ internal static class Program
             AssertContains(hashEngineObserver, "typedef HashProgressEventBridge HashEngineObserver;", "Phase 34 HashEngineObserver compatibility alias is missing.");
             AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashProgressEventBridge no longer satisfies the progress-max sink contract.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashProgressEventBridge no longer satisfies the semantic progress-event sink contract.");
-            AssertContains(hashExecutionContext, "HashProgressSink *progressSink;", "Phase 35 hash execution context does not yet carry the neutral progress sink.");
+            AssertContains(hashExecutionContext, "HashProgressSink& progressSinkObserver;", "Phase 35 hash execution context does not yet carry the neutral progress sink observer.");
             AssertContains(hashExecutionContext, "HashJobState& jobState;", "Phase 35 hash execution context does not yet carry the grouped job-state seam.");
             AssertContains(hashExecutionContext, "HashCancellationState& cancellationState;", "Phase 35 hash execution context does not yet carry the grouped cancellation seam.");
             AssertContains(hashExecutionContext, "HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", "Phase 35 hash execution context does not yet require explicit state dependencies.");
@@ -5802,6 +5802,47 @@ internal static class Program
             AssertContains(nativeRuntimeSource, "\"blake3-xof\"", "Phase 91 native runtime tests do not yet request BLAKE3 XOF by descriptor id.");
             AssertContains(nativeRuntimeSource, "E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F", "Phase 91 native runtime tests do not yet assert the official BLAKE3 vector.");
             AssertContains(extensibilityUnitTests, "Blake3Integration_VendorsOfficialFixedVersion_AndAddsThreeDescriptorVariants", "Phase 91 unit tests do not yet gate the fixed-version BLAKE3 integration.");
+        }, failures);
+        Run("Phase 92 strengthens BLAKE3 runtime coverage and keeps the progress sink non-owning", () =>
+        {
+            string executionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string hashContractTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+
+            AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "Phase 92 execution context does not yet expose the null-object progress sink.");
+            AssertContains(executionContext, "HashProgressSink& progressSinkObserver;", "Phase 92 execution context does not yet model the sink as a non-owning observer reference.");
+            AssertContains(executionContext, "sink != NULL ? *sink : GetNullHashProgressSink()", "Phase 92 execution context does not yet provide a null-safe sink fallback.");
+            AssertDoesNotContain(executionContext, "HashProgressSink *progressSink;", "Phase 92 execution context regressed to a raw stored sink pointer.");
+
+            AssertContains(nativeRuntimeSource, "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", "Phase 92 native runtime tests do not yet cover uppercase BLAKE3 behavior.");
+            AssertContains(nativeRuntimeSource, "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Phase 92 native runtime tests do not yet cover BLAKE3 id normalization behavior.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", "Phase 92 native runtime tests do not yet cover concurrent BLAKE3 stability.");
+            AssertContains(nativeRuntimeSource, "CreateAlgorithmId(\"blake3-1024\")", "Phase 92 native runtime tests do not yet probe unsupported BLAKE3 ids.");
+
+            AssertContains(nativeCoreProject, @"blake3_sse2.c", "Phase 92 desktop native core does not yet compile the BLAKE3 SSE2 translation unit.");
+            AssertContains(nativeCoreProject, @"blake3_sse41.c", "Phase 92 desktop native core does not yet compile the BLAKE3 SSE4.1 translation unit.");
+            AssertContains(nativeCoreProject, @"blake3_avx2.c", "Phase 92 desktop native core does not yet compile the BLAKE3 AVX2 translation unit.");
+            AssertContains(nativeCoreProject, "/arch:AVX2", "Phase 92 desktop native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "<ExcludedFromBuild Condition=\"'$(Platform)'!='x64'\">true</ExcludedFromBuild>", "Phase 92 desktop native core does not yet exclude x64-only BLAKE3 SIMD files from non-x64 builds.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet keep non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(uwpNativeProject, @"blake3_sse2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 SSE2 translation unit.");
+            AssertContains(uwpNativeProject, @"blake3_sse41.c", "Phase 92 UWP native core does not yet compile the BLAKE3 SSE4.1 translation unit.");
+            AssertContains(uwpNativeProject, @"blake3_avx2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 AVX2 translation unit.");
+            AssertContains(uwpNativeProject, "/arch:AVX2", "Phase 92 UWP native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
+            AssertContains(uwpNativeProject, "<ExcludedFromBuild Condition=\"'$(Platform)'!='x64'\">true</ExcludedFromBuild>", "Phase 92 UWP native core does not yet exclude x64-only BLAKE3 SIMD files from non-x64 builds.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 UWP native core does not yet keep non-x64 BLAKE3 builds on the portable path.");
+
+            AssertContains(securityUnitTests, "Blake3Integration_UsesOfficialProviderProfiles_AndCoversUppercaseOrderingAndConcurrency", "Phase 92 unit tests do not yet gate the deeper BLAKE3 behavior coverage.");
+            AssertContains(securityUnitTests, "HashExecutionContext_UsesANonOwningSinkReferenceWithNullFallback", "Phase 92 unit tests do not yet gate the execution-context sink lifetime seam.");
+            AssertContains(hashContractTests, "HashExecutionContext_ModelsProgressSinkAsANonOwningObserverSeam", "Phase 92 contract tests do not yet describe the non-owning sink seam.");
+            AssertContains(nativeRuntimeUnitTests, "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", "Phase 92 native-runtime framework tests do not yet require uppercase BLAKE3 coverage.");
+            AssertContains(nativeRuntimeUnitTests, "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", "Phase 92 native-runtime framework tests do not yet require concurrent BLAKE3 coverage.");
+            AssertContains(securityRegression, "BLAKE3 provider and descriptor variants stay covered by hardening gates", "Phase 92 security regression does not yet gate BLAKE3 coverage.");
         }, failures);
 
         if (failures.Count > 0)

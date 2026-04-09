@@ -129,4 +129,45 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("ResetProgressDispatchState(m_totalProgressDispatchState);", uiBridge, StringComparison.Ordinal);
         Assert.Contains("case PROGRESS_EVENT_FILE_STARTED:", uiBridge, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Blake3Integration_UsesOfficialProviderProfiles_AndCoversUppercaseOrderingAndConcurrency()
+    {
+        string providerHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
+        string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
+        string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+
+        Assert.Contains("BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_XOF_OUTPUT_BYTES = 128", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("blake3_hasher_init", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("blake3_hasher_update", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("blake3_hasher_finalize", providerImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static blake3_hasher", providerImplementation, StringComparison.Ordinal);
+
+        Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"blake3-1024\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("std::async(std::launch::async, runSingleRequest)", runtimeTests, StringComparison.Ordinal);
+
+        Assert.Contains(@"blake3_sse2.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("BLAKE3_NO_AVX512", nativeCoreProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashExecutionContext_UsesANonOwningSinkReferenceWithNullFallback()
+    {
+        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+
+        Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("sink != NULL ? *sink : GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashProgressSink *progressSink;", executionContext, StringComparison.Ordinal);
+    }
 }

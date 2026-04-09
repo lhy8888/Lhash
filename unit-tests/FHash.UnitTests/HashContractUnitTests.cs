@@ -169,6 +169,19 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
+    public void HashExecutionContext_ModelsProgressSinkAsANonOwningObserverSeam()
+    {
+        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+
+        Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("sink != NULL ? *sink : GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("return &executionContext.progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashProgressSink *progressSink;", executionContext, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");

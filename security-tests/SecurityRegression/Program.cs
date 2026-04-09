@@ -256,6 +256,10 @@ internal static partial class Program
             AssertContains(checkedArithmetic, "TryMultiplyUInt64", "Checked arithmetic helpers no longer expose checked uint64 multiplication.");
             AssertContains(checkedArithmetic, "SaturatingAddUInt64", "Checked arithmetic helpers no longer expose saturating addition.");
             AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Checked arithmetic helpers no longer expose bounded replace arithmetic.");
+            AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "HashExecutionContext no longer exposes a null-object progress sink.");
+            AssertContains(executionContext, "HashProgressSink& progressSinkObserver;", "HashExecutionContext no longer models the progress sink as a non-owning observer reference.");
+            AssertContains(executionContext, "sink != NULL ? *sink : GetNullHashProgressSink()", "HashExecutionContext no longer provides a null-safe progress sink fallback.");
+            AssertDoesNotContain(executionContext, "HashProgressSink *progressSink;", "HashExecutionContext regressed to a raw stored progress sink pointer.");
             AssertContains(executionContext, "SaturatingAddUInt64", "HashExecutionContext no longer uses saturating size accounting.");
             AssertContains(executionContext, "ReplaceSizedValueUInt64", "HashExecutionContext no longer uses checked replace arithmetic.");
             AssertContains(threadAccess, "SaturatingAddUInt64", "Legacy ThreadData size accounting no longer uses saturating arithmetic.");
@@ -271,6 +275,43 @@ internal static partial class Program
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "MFC UI bridge no longer gates total-progress posts through the throttling helper.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Native runtime tests no longer cover concurrent digest consistency.");
             AssertContains(nativeRuntimeSource, "std::async(std::launch::async, runSingleRequest)", "Native runtime tests no longer exercise concurrent hashing via async tasks.");
+        }, failures);
+        Run("BLAKE3 provider and descriptor variants stay covered by hardening gates", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
+            string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+
+            AssertContains(registryCore, "{ \"blake3-256\", \"BLAKE3-256\", true, false }", "The algorithm registry no longer carries the BLAKE3-256 descriptor variant.");
+            AssertContains(registryCore, "{ \"blake3-512\", \"BLAKE3-512\", true, false }", "The algorithm registry no longer carries the BLAKE3-512 descriptor variant.");
+            AssertContains(registryCore, "{ \"blake3-xof\", \"BLAKE3 XOF\", true, false }", "The algorithm registry no longer carries the BLAKE3 XOF descriptor variant.");
+            AssertContains(providerHeader, "BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", "The BLAKE3 provider no longer exposes the 256-bit output profile.");
+            AssertContains(providerHeader, "BLAKE3_512_OUTPUT_BYTES = 64", "The BLAKE3 provider no longer exposes the 512-bit output profile.");
+            AssertContains(providerHeader, "BLAKE3_XOF_OUTPUT_BYTES = 128", "The BLAKE3 provider no longer exposes the XOF output profile.");
+            AssertContains(providerImplementation, "blake3_hasher_init", "The BLAKE3 provider no longer initializes through the official C API.");
+            AssertContains(providerImplementation, "blake3_hasher_update", "The BLAKE3 provider no longer updates through the official C API.");
+            AssertContains(providerImplementation, "blake3_hasher_finalize", "The BLAKE3 provider no longer finalizes through the official C API.");
+            AssertDoesNotContain(providerImplementation, "static blake3_hasher", "The BLAKE3 provider reintroduced shared mutable hasher state.");
+
+            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", "Native runtime coverage no longer includes the official BLAKE3 vector.");
+            AssertContains(runtimeSource, "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", "Native runtime coverage no longer includes uppercase BLAKE3 behavior.");
+            AssertContains(runtimeSource, "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "Native runtime coverage no longer includes BLAKE3 id normalization behavior.");
+            AssertContains(runtimeSource, "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", "Native runtime coverage no longer includes concurrent BLAKE3 stability.");
+            AssertContains(runtimeSource, "CreateAlgorithmId(\"blake3-1024\")", "Native runtime coverage no longer probes unsupported BLAKE3 ids.");
+
+            AssertContains(nativeCoreProject, @"blake3_sse2.c", "Desktop native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
+            AssertContains(nativeCoreProject, @"blake3_sse41.c", "Desktop native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
+            AssertContains(nativeCoreProject, @"blake3_avx2.c", "Desktop native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
+            AssertContains(nativeCoreProject, "/arch:AVX2", "Desktop native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer keeps non-x64 BLAKE3 builds on the portable path.");
+            AssertContains(uwpNativeProject, @"blake3_sse2.c", "UWP native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
+            AssertContains(uwpNativeProject, @"blake3_sse41.c", "UWP native core no longer compiles the BLAKE3 SSE4.1 implementation for x64.");
+            AssertContains(uwpNativeProject, @"blake3_avx2.c", "UWP native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
+            AssertContains(uwpNativeProject, "/arch:AVX2", "UWP native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
+            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'!='x64'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "UWP native core no longer keeps non-x64 BLAKE3 builds on the portable path.");
         }, failures);
         Run("DLL search path hardening is present", () =>
         {

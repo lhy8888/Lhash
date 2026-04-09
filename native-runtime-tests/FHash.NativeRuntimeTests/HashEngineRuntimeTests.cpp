@@ -261,6 +261,30 @@ namespace
 		return NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(stableName)));
 	}
 
+	static std::vector<HashAlgorithmId> CreateBlake3VariantAlgorithmIds()
+	{
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("blake3-256"));
+		algorithmIds.push_back(CreateAlgorithmId("blake3-512"));
+		algorithmIds.push_back(CreateAlgorithmId("blake3-xof"));
+		return algorithmIds;
+	}
+
+	static sunjwbase::tstring GetOfficialBlake3_256Vector()
+	{
+		return sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F"));
+	}
+
+	static sunjwbase::tstring GetOfficialBlake3_512Vector()
+	{
+		return sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE"));
+	}
+
+	static sunjwbase::tstring GetOfficialBlake3Xof128Vector()
+	{
+		return sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE9454B7E9996DE4900C8E723512883F93F4345F8A58BFE64EE38D3AD71AB027765D25CDD0E448328A8E7A683B9A6AF8B0AF94FA09010D9186890B096A08471E42"));
+	}
+
 	static void ConfigureThreadDataFiles(ThreadData& threadData, CapturingProgressSink& progressSink, const std::vector<sunjwbase::tstring>& filePaths, const std::vector<ResultDigestType>& enabledAlgorithms, bool uppercaseDigest = false)
 	{
 		ResetThreadDataForNewSession(threadData);
@@ -314,6 +338,18 @@ namespace
 		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithms.size(); ++algorithmIndex)
 		{
 			AppendHashRequestAlgorithm(request, enabledAlgorithms[algorithmIndex]);
+		}
+		request.uppercaseDigest = uppercaseDigest;
+		return request;
+	}
+
+	static HashRequest CreateRequestByAlgorithmIds(const std::vector<sunjwbase::tstring>& filePaths, const std::vector<HashAlgorithmId>& enabledAlgorithmIds, bool uppercaseDigest = false)
+	{
+		HashRequest request;
+		request.files = filePaths;
+		for (size_t algorithmIndex = 0; algorithmIndex < enabledAlgorithmIds.size(); ++algorithmIndex)
+		{
+			AppendHashRequestAlgorithmId(request, enabledAlgorithmIds[algorithmIndex]);
 		}
 		request.uppercaseDigest = uppercaseDigest;
 		return request;
@@ -497,11 +533,8 @@ namespace
 		CapturingProgressSink progressSink;
 		ThreadData threadData;
 		std::vector<sunjwbase::tstring> filePaths;
-		std::vector<HashAlgorithmId> algorithmIds;
 		filePaths.push_back(filePath);
-		algorithmIds.push_back(CreateAlgorithmId("blake3-256"));
-		algorithmIds.push_back(CreateAlgorithmId("blake3-512"));
-		algorithmIds.push_back(CreateAlgorithmId("blake3-xof"));
+		std::vector<HashAlgorithmId> algorithmIds = CreateBlake3VariantAlgorithmIds();
 		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, algorithmIds);
 
 		int exitCode = RunHashThreadData(threadData);
@@ -512,18 +545,140 @@ namespace
 		NativeAssertEqual(RESULT_ALL, result.state, "Successful BLAKE3 hashing should end in RESULT_ALL.");
 		NativeAssertEqual(static_cast<size_t>(3), result.digests.size(), "Only the requested BLAKE3 variants should be emitted.");
 		NativeAssertEqual(
-			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F")),
+			GetOfficialBlake3_256Vector(),
 			FindDigestValueByAlgorithmId(result, algorithmIds[0]),
 			"BLAKE3-256 did not match the official BLAKE3 vector for input length 3.");
 		NativeAssertEqual(
-			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE")),
+			GetOfficialBlake3_512Vector(),
 			FindDigestValueByAlgorithmId(result, algorithmIds[1]),
 			"BLAKE3-512 did not match the official 64-byte extended BLAKE3 vector for input length 3.");
 		NativeAssertEqual(
-			sunjwbase::strtotstr(std::string("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F5B49B82F805A538C68915C1AE8035C900FD1D4B13902920FD05E1450822F36DE9454B7E9996DE4900C8E723512883F93F4345F8A58BFE64EE38D3AD71AB027765D25CDD0E448328A8E7A683B9A6AF8B0AF94FA09010D9186890B096A08471E42")),
+			GetOfficialBlake3Xof128Vector(),
 			FindDigestValueByAlgorithmId(result, algorithmIds[2]),
 			"BLAKE3 XOF did not match the official 128-byte extended BLAKE3 vector for input length 3.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "BLAKE3 hashing should emit a hash-ready event.");
+	}
+
+	static void RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("blake3-uppercase.bin"), std::string("\x00\x01\x02", 3));
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<HashAlgorithmId> algorithmIds = CreateBlake3VariantAlgorithmIds();
+
+		CapturingProgressSink lowercaseProgressSink;
+		HashJobState lowercaseJobState;
+		HashCancellationState lowercaseCancellationState;
+		HashExecutionContext lowercaseExecutionContext = CreateExecutionContext(lowercaseProgressSink, lowercaseJobState, lowercaseCancellationState);
+		HashRequest lowercaseRequest = CreateRequestByAlgorithmIds(filePaths, algorithmIds, false);
+
+		int lowercaseExitCode = RunHashRequest(&lowercaseExecutionContext, lowercaseRequest);
+		NativeAssertEqual(0, lowercaseExitCode, "BLAKE3 hashing should succeed for lowercase output preference.");
+		ProgressEvent lowercaseHashReadyEvent;
+		NativeAssertTrue(lowercaseProgressSink.TryGetFirstEvent(PROGRESS_EVENT_FILE_HASH_READY, &lowercaseHashReadyEvent), "BLAKE3 hashing should emit a hash-ready event for lowercase preference.");
+		NativeAssertTrue(!lowercaseHashReadyEvent.uppercaseDigest, "The lowercase BLAKE3 request should preserve uppercaseDigest=false in the event.");
+		NativeAssertEqual(GetOfficialBlake3_256Vector(), FindDigestValueByAlgorithmId(lowercaseHashReadyEvent.result, algorithmIds[0]), "The lowercase BLAKE3-256 digest should stay deterministic.");
+		NativeAssertEqual(GetOfficialBlake3_512Vector(), FindDigestValueByAlgorithmId(lowercaseHashReadyEvent.result, algorithmIds[1]), "The lowercase BLAKE3-512 digest should stay deterministic.");
+		NativeAssertEqual(GetOfficialBlake3Xof128Vector(), FindDigestValueByAlgorithmId(lowercaseHashReadyEvent.result, algorithmIds[2]), "The lowercase BLAKE3 XOF digest should stay deterministic.");
+
+		CapturingProgressSink uppercaseProgressSink;
+		HashJobState uppercaseJobState;
+		HashCancellationState uppercaseCancellationState;
+		HashExecutionContext uppercaseExecutionContext = CreateExecutionContext(uppercaseProgressSink, uppercaseJobState, uppercaseCancellationState);
+		HashRequest uppercaseRequest = CreateRequestByAlgorithmIds(filePaths, algorithmIds, true);
+
+		int uppercaseExitCode = RunHashRequest(&uppercaseExecutionContext, uppercaseRequest);
+		NativeAssertEqual(0, uppercaseExitCode, "BLAKE3 hashing should succeed for uppercase output preference.");
+		ProgressEvent uppercaseHashReadyEvent;
+		NativeAssertTrue(uppercaseProgressSink.TryGetFirstEvent(PROGRESS_EVENT_FILE_HASH_READY, &uppercaseHashReadyEvent), "BLAKE3 hashing should emit a hash-ready event for uppercase preference.");
+		NativeAssertTrue(uppercaseHashReadyEvent.uppercaseDigest, "The uppercase BLAKE3 request should preserve uppercaseDigest=true in the event.");
+		NativeAssertEqual(GetOfficialBlake3_256Vector(), FindDigestValueByAlgorithmId(uppercaseHashReadyEvent.result, algorithmIds[0]), "The uppercase BLAKE3-256 digest should stay deterministic.");
+		NativeAssertEqual(GetOfficialBlake3_512Vector(), FindDigestValueByAlgorithmId(uppercaseHashReadyEvent.result, algorithmIds[1]), "The uppercase BLAKE3-512 digest should stay deterministic.");
+		NativeAssertEqual(GetOfficialBlake3Xof128Vector(), FindDigestValueByAlgorithmId(uppercaseHashReadyEvent.result, algorithmIds[2]), "The uppercase BLAKE3 XOF digest should stay deterministic.");
+	}
+
+	static void RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("blake3-order.bin"), std::string("\x00\x01\x02", 3));
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+
+		HashRequest request;
+		request.files.push_back(filePath);
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3-1024"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3-512"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3-xof"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3-256"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("blake3-512"));
+
+		std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);
+		NativeAssertEqual(static_cast<size_t>(3), normalizedAlgorithmIds.size(), "Unknown or duplicate BLAKE3 ids should be removed during request normalization.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-512"), normalizedAlgorithmIds[0], "Known BLAKE3 variants should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-xof"), normalizedAlgorithmIds[1], "Known BLAKE3 variants should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-256"), normalizedAlgorithmIds[2], "Known BLAKE3 variants should preserve explicit request order after unknown ids are removed.");
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "BLAKE3 hashing should ignore unknown ids and still succeed.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Ignoring unknown BLAKE3 ids should still produce one file result.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(static_cast<size_t>(3), result.digests.size(), "Only known BLAKE3 variants should be emitted.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-512"), ResolveDigestResultAlgorithmId(result.digests[0]), "BLAKE3 result order should follow the normalized request order.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-xof"), ResolveDigestResultAlgorithmId(result.digests[1]), "BLAKE3 result order should follow the normalized request order.");
+		NativeAssertEqual(CreateAlgorithmId("blake3-256"), ResolveDigestResultAlgorithmId(result.digests[2]), "BLAKE3 result order should follow the normalized request order.");
+		NativeAssertEqual(GetOfficialBlake3_512Vector(), result.digests[0].value, "BLAKE3-512 digest value should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(GetOfficialBlake3Xof128Vector(), result.digests[1].value, "BLAKE3 XOF digest value should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(GetOfficialBlake3_256Vector(), result.digests[2].value, "BLAKE3-256 digest value should stay deterministic after unknown id filtering.");
+	}
+
+	static void HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns()
+	{
+		ScopedTempDirectory tempDirectory;
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("blake3-concurrency.bin"), std::string((kHashEngineBufferSize * 2) + 257, 'B'));
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		std::vector<HashAlgorithmId> algorithmIds = CreateBlake3VariantAlgorithmIds();
+
+		auto runSingleRequest = [&]() -> HashResult
+		{
+			CapturingProgressSink progressSink;
+			HashJobState jobState;
+			HashCancellationState cancellationState;
+			HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+			HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
+
+			int exitCode = RunHashRequest(&executionContext, request);
+			NativeAssertEqual(0, exitCode, "Concurrent BLAKE3 hashing should succeed.");
+			NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Concurrent BLAKE3 hashing should still produce exactly one file result per request.");
+			return jobState.results.front();
+		};
+
+		HashResult baselineResult = runSingleRequest();
+		sunjwbase::tstring expectedBlake3_256 = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[0]);
+		sunjwbase::tstring expectedBlake3_512 = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[1]);
+		sunjwbase::tstring expectedBlake3Xof = FindDigestValueByAlgorithmId(baselineResult, algorithmIds[2]);
+
+		const size_t concurrentRunCount = 6;
+		std::vector<std::future<HashResult>> tasks;
+		tasks.reserve(concurrentRunCount);
+		for (size_t runIndex = 0; runIndex < concurrentRunCount; ++runIndex)
+		{
+			tasks.push_back(std::async(std::launch::async, runSingleRequest));
+		}
+
+		for (size_t taskIndex = 0; taskIndex < tasks.size(); ++taskIndex)
+		{
+			HashResult concurrentResult = tasks[taskIndex].get();
+			NativeAssertEqual(expectedBlake3_256, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[0]), "Concurrent runtime hashing produced an inconsistent BLAKE3-256 digest.");
+			NativeAssertEqual(expectedBlake3_512, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[1]), "Concurrent runtime hashing produced an inconsistent BLAKE3-512 digest.");
+			NativeAssertEqual(expectedBlake3Xof, FindDigestValueByAlgorithmId(concurrentResult, algorithmIds[2]), "Concurrent runtime hashing produced an inconsistent BLAKE3 XOF digest.");
+		}
 	}
 
 	static void HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns()
@@ -1114,6 +1269,9 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 	tests.push_back({ "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector });
+	tests.push_back({ "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", &RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants });
+	tests.push_back({ "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered });
+	tests.push_back({ "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", &HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns });
 	tests.push_back({ "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", &HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns });
 	tests.push_back({ "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", &RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest });
 	tests.push_back({ "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", &RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests });
