@@ -119,6 +119,24 @@ Modern mitigations are enabled where the toolchain supports them:
 - Extensible algorithm framework
 - Built-in BLAKE3 variants for modern high-speed hashing
 
+## BLAKE3 SIMD status
+
+The current native-core configuration keeps BLAKE3 SIMD enabled on the platforms where benchmark evidence now exists:
+
+- `x64`: `SSE2`, `SSE4.1`, `AVX2`, `AVX512`
+- `Win32`: `SSE2`, `SSE4.1`, `AVX2`
+- `ARM64`: `NEON`
+
+The benchmark workflow now measures `portable` vs `current` on all three platforms and keeps the decision local to each platform instead of guessing from x64 alone.
+
+Observed headline results on the current GitHub-hosted runners:
+
+- `x64`: `BLAKE3-256` on `large-single-128m` improves from about `481 MiB/s` to about `1641 MiB/s`
+- `Win32`: `BLAKE3-256` on `large-single-128m` improves from about `390 MiB/s` to about `1369 MiB/s`
+- `ARM64`: `BLAKE3-256` on `large-single-128m` improves from about `532 MiB/s` to about `901 MiB/s`
+
+These measurements justify keeping the current SIMD-backed BLAKE3 paths enabled.
+
 ## Design principles
 
 LHash follows strict engineering principles:
@@ -151,6 +169,7 @@ LHash therefore keeps the default release smaller, faster, and more predictable 
 - Core architecture redesigned
 - Major security hardening completed
 - Native desktop UX continuously refined on the maintained release line
+- Benchmark-backed BLAKE3 SIMD policy established for `x64`, `Win32`, and `ARM64`
 
 Roadmap:
 

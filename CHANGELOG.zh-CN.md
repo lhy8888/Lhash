@@ -13,7 +13,10 @@
 
 - 以固定版本方式接入官方 BLAKE3 C 实现
 - 新增 `BLAKE3-256`、`BLAKE3-512`、`BLAKE3 XOF` 三个算法描述符
-- 在 x64 路径启用 BLAKE3 的 SIMD 编译单元，同时让非 x64 目标继续走 portable 路线
+- 基于 benchmark 结果，当前保留的 BLAKE3 SIMD 路径为：
+  - `x64`：`SSE2`、`SSE4.1`、`AVX2`、`AVX512`
+  - `Win32`：`SSE2`、`SSE4.1`、`AVX2`
+  - `ARM64`：`NEON`
 
 ### 运行时与架构
 
@@ -24,6 +27,11 @@
 ### 验证体系
 
 - 扩展 unit-tests、refactor baseline、security regression 对 BLAKE3 和运行时契约的约束
+- 新增 `x64 / Win32 / ARM64` 三平台原生 benchmark 流水线
+- 当前 benchmark 结果显示，`BLAKE3-256` 在大文件场景大致提升为：
+  - `x64`：`481 MiB/s -> 1641 MiB/s`
+  - `Win32`：`390 MiB/s -> 1369 MiB/s`
+  - `ARM64`：`532 MiB/s -> 901 MiB/s`
 
 ## 1.10.1 - 2026-04-09
 

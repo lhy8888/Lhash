@@ -13,7 +13,10 @@ Introduced the first maintained release with built-in BLAKE3 variants and deeper
 
 - added fixed-version official BLAKE3 C integration
 - added `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` descriptor variants
-- enabled x64 SIMD-backed BLAKE3 build paths while keeping non-x64 targets on the portable path
+- benchmark-backed BLAKE3 SIMD decisions now keep:
+  - `x64`: `SSE2`, `SSE4.1`, `AVX2`, `AVX512`
+  - `Win32`: `SSE2`, `SSE4.1`, `AVX2`
+  - `ARM64`: `NEON`
 
 ### Runtime and architecture
 
@@ -24,6 +27,11 @@ Introduced the first maintained release with built-in BLAKE3 variants and deeper
 ### Validation
 
 - extended unit, refactor-baseline, and security-regression gates for BLAKE3 behavior and runtime-seam expectations
+- added dedicated native benchmark coverage for `x64`, `Win32`, and `ARM64`
+- current benchmark evidence shows large-file `BLAKE3-256` uplift of roughly:
+  - `x64`: `481 MiB/s -> 1641 MiB/s`
+  - `Win32`: `390 MiB/s -> 1369 MiB/s`
+  - `ARM64`: `532 MiB/s -> 901 MiB/s`
 
 ## 1.10.1 - 2026-04-09
 

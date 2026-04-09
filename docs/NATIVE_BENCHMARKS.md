@@ -47,3 +47,19 @@ Use the benchmark summary before changing shipping SIMD defaults:
 - If gains are only visible on the large-file case and disappear on many-small-file workloads, prefer a narrower platform-specific enablement and keep broader paths off.
 - Do not use one platform's benchmark to justify another platform's SIMD changes. `x64`, `Win32`, and `ARM64` each need their own measurements.
 - If the delta is within expected runner noise, keep the portable path as the safer default and revisit only with stronger data.
+
+## Current decision
+
+The current maintained conclusion is to keep BLAKE3 SIMD enabled on every platform that now has direct benchmark evidence:
+
+- `x64`: keep `SSE2`, `SSE4.1`, `AVX2`, and `AVX512`
+- `Win32`: keep `SSE2`, `SSE4.1`, and `AVX2`
+- `ARM64`: keep `NEON`
+
+Headline large-file (`large-single-128m`) `BLAKE3-256` results from the current benchmark runs:
+
+- `x64`: about `481 MiB/s -> 1641 MiB/s`
+- `Win32`: about `390 MiB/s -> 1369 MiB/s`
+- `ARM64`: about `532 MiB/s -> 901 MiB/s`
+
+Small-file gains remain modest, but the large-file uplift is strong enough on each measured platform that the current SIMD-backed shipping configuration should stay enabled.
