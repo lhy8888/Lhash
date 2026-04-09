@@ -1,4 +1,4 @@
-ï»¿// Microsoft Visual C++ generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ä¸­æ–‡(ç®€ä½“ï¼Œä¸­å›½) resources
+// ÖĞÎÄ(¼òÌå£¬ÖĞ¹ú) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -46,8 +46,8 @@ BEGIN
     "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
     "LANGUAGE 4, 2\r\n"
     "#pragma code_page(936)\r\n"
-    "#include ""res\\fileshash.rc2""  // é Microsoft Visual C++ ç¼–è¾‘èµ„æº\r\n"
-    "#include ""afxres.rc""         // æ ‡å‡†ç»„ä»¶\r\n"
+    "#include ""res\\fileshash.rc2""  // ·Ç Microsoft Visual C++ ±à¼­×ÊÔ´\r\n"
+    "#include ""afxres.rc""         // ±ê×¼×é¼ş\r\n"
     "#endif\r\n"
     "\0"
 END
@@ -106,9 +106,9 @@ END
 IDD_ABOUT DIALOGEX 0, 0, 252, 166
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ABOUT_TITLE"
-FONT 9, "å®‹ä½“", 0, 0, 0x0
+FONT 9, "ËÎÌå", 0, 0, 0x0
 BEGIN
-    LTEXT           "é™æ€",IDC_MAIN,74,10,168,121
+    LTEXT           "¾²Ì¬",IDC_MAIN,74,10,168,121
     PUSHBUTTON      "BUTTON_OK",IDOK,192,142,50,14
     ICON            IDI_ICON1,IDC_ICON2,10,10,20,20
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,135,231,1
@@ -186,7 +186,7 @@ BEGIN
     0
 END
 
-#endif    // ä¸­æ–‡(ç®€ä½“ï¼Œä¸­å›½) resources
+#endif    // ÖĞÎÄ(¼òÌå£¬ÖĞ¹ú) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -204,10 +204,11 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE 4, 2
 #pragma code_page(936)
-#include "res\fileshash.rc2"  // é Microsoft Visual C++ ç¼–è¾‘èµ„æº
-#include "afxres.rc"         // æ ‡å‡†ç»„ä»¶
+#include "res\fileshash.rc2"  // ·Ç Microsoft Visual C++ ±à¼­×ÊÔ´
+#include "afxres.rc"         // ±ê×¼×é¼ş
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
