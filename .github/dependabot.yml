@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:10"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:25"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      dotnet-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
