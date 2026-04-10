@@ -1,0 +1,90 @@
+name: Release SBOM
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to process, for example v1.12.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  generate-release-sbom:
+    name: Generate and attest release SBOM
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Resolve release tag
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            tag="${{ github.event.release.tag_name }}"
+          else
+            tag="${{ inputs.tag }}"
+          fi
+          if [[ -z "$tag" ]]; then
+            echo "A release tag is required." >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          gh release download "${{ steps.resolve.outputs.tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir release-assets
+
+      - name: Locate release bundle
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_path="$(find release-assets -maxdepth 1 -type f -name 'LHash-legacy-x64-*.zip' | head -n 1)"
+          if [[ -z "$bundle_path" ]]; then
+            echo "Expected a release asset matching LHash-legacy-x64-*.zip." >&2
+            exit 1
+          fi
+          echo "bundle_path=$bundle_path" >> "$GITHUB_OUTPUT"
+
+      - name: Generate CycloneDX SBOM for release assets
+        uses: anchore/sbom-action@v0
+        with:
+          path: release-assets
+          format: cyclonedx-json
+          output-file: release-assets/LHash-release.cyclonedx.json
+
+      - name: Upload SBOM to the release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "${{ steps.resolve.outputs.tag }}" \
+            release-assets/LHash-release.cyclonedx.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Attest SBOM against the release bundle
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: ${{ steps.prepare.outputs.bundle_path }}
+          sbom-path: release-assets/LHash-release.cyclonedx.json
+
+# Note:
+# This first pass creates a GitHub-managed SBOM artifact for each published
+# release and binds it to the packaged desktop bundle. A later pass can refine
+# the SBOM scope further once the release workflow emits more per-component
+# metadata directly from the build stage.
