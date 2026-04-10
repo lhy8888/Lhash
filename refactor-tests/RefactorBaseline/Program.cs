@@ -6047,6 +6047,46 @@ internal static class Program
             AssertContains(releaseMetadataTests, "NativeProjects_AndResourceChain_Are_Migrating_To_Utf8", "Phase 97 unit coverage does not yet gate the UTF-8 migration seams.");
         }, failures);
 
+        Run("Phase 98 adds a fixed-version OpenSSL EVP family without disturbing the legacy SHA ids", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+            string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string readme = ReadRepoFile(repoRoot, @"README.md");
+            string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
+            string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
+            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\ReleaseMetadataUnitTests.cs");
+            string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string licenseException = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
+
+            AssertContains(registryCore, "{ \"sha256\", \"SHA256\", true, true }", "Phase 98 no longer preserves the legacy SHA256 descriptor while the OpenSSL family coexists.");
+            AssertContains(registryCore, "{ \"sha512\", \"SHA512\", true, true }", "Phase 98 no longer preserves the legacy SHA512 descriptor while the OpenSSL family coexists.");
+            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, false }", "Phase 98 is missing the OpenSSL SHA-256 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, false }", "Phase 98 is missing the OpenSSL SHA-512 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "Phase 98 is missing the OpenSSL SHA3-256 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "Phase 98 is missing the OpenSSL SHA3-512 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", "Phase 98 is missing the OpenSSL BLAKE2b-512 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", "Phase 98 is missing the OpenSSL BLAKE2s-256 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", "Phase 98 is missing the OpenSSL SHAKE128-256 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", "Phase 98 is missing the OpenSSL SHAKE256-512 descriptor.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha256DigestContext", "Phase 98 is missing the OpenSSL SHA-256 digest registration hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "Phase 98 is missing the OpenSSL SHAKE256-512 digest registration hook.");
+            AssertContains(providerImplementation, "EVP_MD_fetch", "Phase 98 OpenSSL provider no longer uses EVP fetch semantics.");
+            AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
+            AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
+            AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
+            AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
+            AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
+            AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
+            AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
+            AssertContains(changelog, "OpenSSL 3 EVP", "Phase 98 changelog no longer records the OpenSSL EVP family.");
+            AssertContains(changelogZh, "OpenSSL 3 EVP", "Phase 98 Chinese changelog no longer records the OpenSSL EVP family.");
+            AssertContains(releaseMetadataTests, "OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild", "Phase 98 release metadata coverage no longer guards the OpenSSL vendor pipeline.");
+            AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndKeepsLegacyShaIdsUntouched", "Phase 98 extensibility coverage no longer guards the OpenSSL coexistence seam.");
+        }, failures);
+
         if (failures.Count > 0)
         {
             Console.Error.WriteLine("Refactor baseline checks failed:");

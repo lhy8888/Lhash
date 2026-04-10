@@ -231,6 +231,75 @@ public sealed class SecurityHardeningUnitTests
     }
 
     [Fact]
+    public void OpenSslEvpIntegration_UsesOfficialVendorAndKeepsLegacySha2Distinct()
+    {
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string digestRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+        string providerHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
+        string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+        string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
+        string vendorTargets = RepositoryTestContext.ReadTextFile(@"NativeOpenSslVendor.targets");
+        string vendorScript = RepositoryTestContext.ReadTextFile(@"trunk\build_openssl_vendor.ps1");
+        string vendorNote = RepositoryTestContext.ReadTextFile(@"third_party\openssl\3.0.20\README.LHash.md");
+        string licenseException = RepositoryTestContext.ReadTextFile(@"LICENSE-OPENSSL-EXCEPTION.md");
+
+        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha256\", \"SHA256\", true, true }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha512\", \"SHA512\", true, true }", registryCore, StringComparison.Ordinal);
+
+        Assert.Contains("InitializeOpenSslSha256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslSha512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslSha3_256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslSha3_512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslBlake2b_512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslBlake2s_256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslShake128_256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslShake256_512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("SetDigestStorageValueById(", digestRegistry, StringComparison.Ordinal);
+
+        Assert.Contains("EVP_MD_fetch", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestInit_ex2", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestUpdate", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestFinal_ex", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("static EVP_MD_CTX", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("openssl-3.0.20", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("/p:FHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
+
+        Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
+        Assert.Contains("Upstream tag: openssl-3.0.20", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("OpenSSL-backed algorithm descriptors are exposed through the registry with", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
+
+        Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"openssl-sha-256\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"openssl-sha3\")", runtimeTests, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashExecutionContext_UsesANonOwningSinkReferenceWithNullFallback()
     {
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");

@@ -5,6 +5,23 @@
 上游 fHash 的长期历史版本记录不再在这里重复维护。
 当前这份日志从 `1.10.0` 开始，专门对应 LHash 的维护和发布。
 
+## Unreleased
+
+这一轮新增了固定版本的 OpenSSL 3 EVP 算法族，并让它与现有内置 SHA-2 实现并存。
+
+### 算法能力
+
+- 以固定版本方式接入 `OpenSSL 3 EVP`
+- 新增独立的 `SHA-256` 和 `SHA-512` 描述符，不改动原有 `SHA256` / `SHA512` 的 id 与显示名称
+- 新增 `SHA3-256`、`SHA3-512`、`BLAKE2b-512`、`BLAKE2s-256`、`SHAKE128-256`、`SHAKE256-512`
+- 新增算法通过独立 provider 与 `third_party/openssl` vendor 目录接入，不污染原有内置 SHA-2 实现
+
+### 构建与授权
+
+- 维护版原生构建新增 OpenSSL vendor 构建步骤
+- 增加 `GPL-2.0-only` 下的 OpenSSL linking exception 说明
+- 保留原有内置 SHA-2 实现不动，方便后续逐步停用其中一条算法族
+
 ## 1.11.0 - 2026-04-09
 
 这是维护版第一次把 BLAKE3 正式接入发行线，并同步补强运行时回归与验证门禁。

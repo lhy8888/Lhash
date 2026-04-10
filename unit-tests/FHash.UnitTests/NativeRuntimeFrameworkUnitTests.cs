@@ -42,9 +42,13 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_RespectsSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
@@ -85,6 +89,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("113FDB5C", testSource, StringComparison.Ordinal);
         Assert.Contains("D9963A56", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"blake3-1024\")", testSource, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"openssl-sha3\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"xxh3\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
@@ -96,6 +101,13 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", testSource, StringComparison.Ordinal);
         Assert.Contains("D41D8CD98F00B204E9800998ECF8427E", testSource, StringComparison.Ordinal);
         Assert.Contains("5D41402ABC4B2A76B9719D911017C592", testSource, StringComparison.Ordinal);
+        Assert.Contains("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A", testSource, StringComparison.Ordinal);
+        Assert.Contains("3A985DA74FE225B2045C172D6BD390BD855F086E3E9D525B46BFE24511431532", testSource, StringComparison.Ordinal);
+        Assert.Contains("B751850B1A57168A5693CD924B6B096E08F621827444F70D884F5D0240D2712E", testSource, StringComparison.Ordinal);
+        Assert.Contains("BA80A53F981C4D0D6A2797B69F12F6E94C212F14685AC4B74B12BB6FDBFFA2D1", testSource, StringComparison.Ordinal);
+        Assert.Contains("508C5E8C327C14E2E1A72BA34EEB452F37458B209ED63A294D999B4C86675982", testSource, StringComparison.Ordinal);
+        Assert.Contains("5881092DD818BF5CF8A3DDB793FBCBA74097D5C526A6D35F97B83351940F2CC8", testSource, StringComparison.Ordinal);
+        Assert.Contains("483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", testSource, StringComparison.Ordinal);
         Assert.Contains("OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions", securityTestSource, StringComparison.Ordinal);
         Assert.Contains("OsFile_ReportsSharingViolationsForLockedFiles", securityTestSource, StringComparison.Ordinal);
         Assert.Contains("mklink /J", securityTestSource, StringComparison.Ordinal);

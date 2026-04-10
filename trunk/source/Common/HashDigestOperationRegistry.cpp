@@ -72,6 +72,63 @@ namespace HashEngineInternal
 		return algorithmId;
 	}
 
+	static const HashAlgorithmId& GetOpenSslSha256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-sha-256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslSha512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-sha-512");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslSha3_256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-sha3-256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslSha3_512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-sha3-512");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslBlake2b_512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2b-512");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslBlake2s_256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2s-256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslShake128_256AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-shake128-256");
+		return algorithmId;
+	}
+
+	static const HashAlgorithmId& GetOpenSslShake256_512AlgorithmId()
+	{
+		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-shake256-512");
+		return algorithmId;
+	}
+
+	static void InitializeOpenSslDigestContext(
+		HashRuntime::OpenSslEvpHashContext *hashContext,
+		const char *const *algorithmNames,
+		size_t algorithmNameCount,
+		bool xofMode)
+	{
+		HashRuntime::InitializeOpenSslEvpHashContext(hashContext, algorithmNames, algorithmNameCount, xofMode);
+	}
+
 	static void InitializeMD5DigestContext(FileHashContexts *hashContexts)
 	{
 		MD5Init(&hashContexts->mdContext, 0);
@@ -122,6 +179,54 @@ namespace HashEngineInternal
 		HashRuntime::InitializeCRC32CHasher(&hashContexts->crc32c);
 	}
 
+	static void InitializeOpenSslSha256DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHA256", "SHA-256", "SHA2-256" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslSha256, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslSha512DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHA512", "SHA-512", "SHA2-512" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslSha512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslSha3_256DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHA3-256", "SHA3_256" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslSha3_256, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslSha3_512DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHA3-512", "SHA3_512" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslSha3_512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslBlake2b_512DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "BLAKE2b512", "BLAKE2B512", "BLAKE2b-512", "BLAKE2B-512" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2b_512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslBlake2s_256DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "BLAKE2s256", "BLAKE2S256", "BLAKE2s-256", "BLAKE2S-256" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2s_256, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false);
+	}
+
+	static void InitializeOpenSslShake128_256DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHAKE128", "SHAKE-128" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslShake128_256, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), true);
+	}
+
+	static void InitializeOpenSslShake256_512DigestContext(FileHashContexts *hashContexts)
+	{
+		static const char *const kAlgorithmNames[] = { "SHAKE256", "SHAKE-256" };
+		InitializeOpenSslDigestContext(&hashContexts->openSslShake256_512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), true);
+	}
+
 	static void UpdateMD5DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		MD5Update(&hashContexts.mdContext, data, dataLen);
@@ -170,6 +275,46 @@ namespace HashEngineInternal
 	static void UpdateCRC32CDigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		HashRuntime::UpdateCRC32CHasher(hashContexts.crc32c, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslSha256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslSha256, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslSha512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslSha512, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslSha3_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslSha3_256, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslSha3_512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslSha3_512, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2b_512, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2s_256, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslShake128_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslShake128_256, data, static_cast<size_t>(dataLen));
+	}
+
+	static void UpdateOpenSslShake256_512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslShake256_512, data, static_cast<size_t>(dataLen));
 	}
 
 	static void FinalizeMD5DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -300,6 +445,70 @@ namespace HashEngineInternal
 			HashRuntime::FinalizeCRC32CHasherHex(hashContexts.crc32c));
 	}
 
+	static void FinalizeOpenSslSha256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslSha256AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha256, HashRuntime::OPENSSL_SHA_256_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslSha512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslSha512AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha512, HashRuntime::OPENSSL_SHA_512_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslSha3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslSha3_256AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_256, HashRuntime::OPENSSL_SHA3_256_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslSha3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslSha3_512AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_512, HashRuntime::OPENSSL_SHA3_512_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslBlake2b_512AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2b_512, HashRuntime::OPENSSL_BLAKE2B_512_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslBlake2s_256AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2s_256, HashRuntime::OPENSSL_BLAKE2S_256_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslShake128_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslShake128_256AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslShake128_256, HashRuntime::OPENSSL_SHAKE128_256_OUTPUT_BYTES));
+	}
+
+	static void FinalizeOpenSslShake256_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	{
+		SetDigestStorageValueById(
+			digestBundle,
+			GetOpenSslShake256_512AlgorithmId(),
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslShake256_512, HashRuntime::OPENSSL_SHAKE256_512_OUTPUT_BYTES));
+	}
+
 	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()
 	{
 		static std::vector<HashDigestOperationDescriptor> operationDescriptorStorage;
@@ -417,6 +626,56 @@ namespace HashEngineInternal
 			UpdateCRC32CDigestContext,
 			FinalizeCRC32CDigestContext
 		});
+#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslSha256AlgorithmId(),
+			InitializeOpenSslSha256DigestContext,
+			UpdateOpenSslSha256DigestContext,
+			FinalizeOpenSslSha256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslSha512AlgorithmId(),
+			InitializeOpenSslSha512DigestContext,
+			UpdateOpenSslSha512DigestContext,
+			FinalizeOpenSslSha512DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslSha3_256AlgorithmId(),
+			InitializeOpenSslSha3_256DigestContext,
+			UpdateOpenSslSha3_256DigestContext,
+			FinalizeOpenSslSha3_256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslSha3_512AlgorithmId(),
+			InitializeOpenSslSha3_512DigestContext,
+			UpdateOpenSslSha3_512DigestContext,
+			FinalizeOpenSslSha3_512DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslBlake2b_512AlgorithmId(),
+			InitializeOpenSslBlake2b_512DigestContext,
+			UpdateOpenSslBlake2b_512DigestContext,
+			FinalizeOpenSslBlake2b_512DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslBlake2s_256AlgorithmId(),
+			InitializeOpenSslBlake2s_256DigestContext,
+			UpdateOpenSslBlake2s_256DigestContext,
+			FinalizeOpenSslBlake2s_256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslShake128_256AlgorithmId(),
+			InitializeOpenSslShake128_256DigestContext,
+			UpdateOpenSslShake128_256DigestContext,
+			FinalizeOpenSslShake128_256DigestContext
+		});
+		RegisterHashDigestOperationDescriptor({
+			GetOpenSslShake256_512AlgorithmId(),
+			InitializeOpenSslShake256_512DigestContext,
+			UpdateOpenSslShake256_512DigestContext,
+			FinalizeOpenSslShake256_512DigestContext
+		});
+#endif
 		defaultsInitialized = true;
 	}
 

@@ -168,4 +168,34 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("#pragma code_page(65001)", wuiShellRc, StringComparison.Ordinal);
         Assert.Contains("#pragma code_page(65001)", uwpShellRc, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild()
+    {
+        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string vendorTargets = RepositoryTestContext.ReadUtf8File(@"NativeOpenSslVendor.targets");
+        string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
+        string vendorNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
+        string exceptionNote = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
+        string readme = RepositoryTestContext.ReadTextFile(@"README.md");
+
+        Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
+
+        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("VC-WIN32", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("openssl-3.0.20", vendorScript, StringComparison.Ordinal);
+
+        Assert.Contains("Upstream tag: openssl-3.0.20", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("OpenSSL-backed algorithm descriptors", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("OpenSSL Linking Exception", exceptionNote, StringComparison.Ordinal);
+        Assert.Contains("GPL-2.0-only with an OpenSSL linking exception", readme, StringComparison.Ordinal);
+    }
 }

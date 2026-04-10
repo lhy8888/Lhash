@@ -33,6 +33,7 @@
 #include "Common/HashProgressTracker.h"
 #include "Runtime/Hash/BLAKE3HashProvider.h"
 #include "Runtime/Hash/CRC32CHashProvider.h"
+#include "Runtime/Hash/OpenSslEvpHashProvider.h"
 #include "Runtime/Hash/XXHash3HashProvider.h"
 #include "Runtime/HashExecutionContext.h"
 #include "Runtime/HashProgressSink.h"
@@ -105,10 +106,33 @@ namespace HashEngineInternal
 			blake3Xof(),
 			xxh3_64(),
 			xxh3_128(),
-			crc32c(0)
+			crc32c(0),
+			openSslSha256(),
+			openSslSha512(),
+			openSslSha3_256(),
+			openSslSha3_512(),
+			openSslBlake2b_512(),
+			openSslBlake2s_256(),
+			openSslShake128_256(),
+			openSslShake256_512()
 		{
 			std::memset(digestSHA512, 0, sizeof(digestSHA512));
 		}
+
+		~FileHashContexts()
+		{
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha256);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha512);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha3_256);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha3_512);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2b_512);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2s_256);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslShake128_256);
+			HashRuntime::CleanupOpenSslEvpHashContext(&openSslShake256_512);
+		}
+
+		FileHashContexts(const FileHashContexts&) = delete;
+		FileHashContexts& operator=(const FileHashContexts&) = delete;
 
 		MD5_CTX mdContext;
 		CSHA1 sha1;
@@ -120,6 +144,14 @@ namespace HashEngineInternal
 		XXH3_state_t xxh3_64;
 		XXH3_state_t xxh3_128;
 		uint32_t crc32c;
+		HashRuntime::OpenSslEvpHashContext openSslSha256;
+		HashRuntime::OpenSslEvpHashContext openSslSha512;
+		HashRuntime::OpenSslEvpHashContext openSslSha3_256;
+		HashRuntime::OpenSslEvpHashContext openSslSha3_512;
+		HashRuntime::OpenSslEvpHashContext openSslBlake2b_512;
+		HashRuntime::OpenSslEvpHashContext openSslBlake2s_256;
+		HashRuntime::OpenSslEvpHashContext openSslShake128_256;
+		HashRuntime::OpenSslEvpHashContext openSslShake256_512;
 		uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
 	};
 

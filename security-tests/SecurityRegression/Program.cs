@@ -394,6 +394,70 @@ internal static partial class Program
             AssertContains(crc32cNote, "Upstream tag: 1.1.2", "The vendored CRC32C note no longer pins the official upstream tag.");
             AssertContains(crc32cNote, "02e65f4fd3065d27b2e29324800ca6d04df16126", "The vendored CRC32C note no longer pins the official upstream commit.");
         }, failures);
+        Run("OpenSSL EVP providers stay covered by hardening gates", () =>
+        {
+            string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+            string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
+            string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
+            string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
+            string vendorScript = ReadRepoFile(repoRoot, @"trunk\build_openssl_vendor.ps1");
+            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string vendorNote = ReadRepoFile(repoRoot, @"third_party\openssl\3.0.20\README.LHash.md");
+            string exceptionNote = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
+
+            AssertContains(registryCore, "{ \"sha256\", \"SHA256\", true, true }", "The legacy SHA256 descriptor is no longer preserved alongside the OpenSSL family.");
+            AssertContains(registryCore, "{ \"sha512\", \"SHA512\", true, true }", "The legacy SHA512 descriptor is no longer preserved alongside the OpenSSL family.");
+            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, false }", "The OpenSSL SHA-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, false }", "The OpenSSL SHA-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "The OpenSSL SHA3-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "The OpenSSL SHA3-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", "The OpenSSL BLAKE2b-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", "The OpenSSL BLAKE2s-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", "The OpenSSL SHAKE128-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", "The OpenSSL SHAKE256-512 descriptor variant is missing.");
+
+            AssertContains(providerImplementation, "EVP_MD_fetch", "The OpenSSL provider no longer fetches digest implementations through EVP.");
+            AssertContains(providerImplementation, "EVP_DigestInit_ex2", "The OpenSSL provider no longer initializes digest contexts through EVP.");
+            AssertContains(providerImplementation, "EVP_DigestUpdate", "The OpenSSL provider no longer updates digest contexts through EVP.");
+            AssertContains(providerImplementation, "EVP_DigestFinal_ex", "The OpenSSL provider no longer finalizes fixed-size digests through EVP.");
+            AssertContains(providerImplementation, "EVP_DigestFinalXOF", "The OpenSSL provider no longer finalizes XOF digests through EVP.");
+            AssertDoesNotContain(providerImplementation, "static EVP_MD_CTX", "The OpenSSL provider unexpectedly reintroduced a shared mutable EVP context.");
+            AssertContains(providerHeader, "OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", "The OpenSSL provider header no longer exposes the SHAKE256-512 output profile.");
+
+            AssertContains(digestRegistry, "InitializeOpenSslSha256DigestContext", "The digest registry no longer exposes the OpenSSL SHA-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha512DigestContext", "The digest registry no longer exposes the OpenSSL SHA-512 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha3_256DigestContext", "The digest registry no longer exposes the OpenSSL SHA3-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha3_512DigestContext", "The digest registry no longer exposes the OpenSSL SHA3-512 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslBlake2b_512DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2b-512 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslBlake2s_256DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2s-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslShake128_256DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE128-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE256-512 initialization hook.");
+
+            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", "The native runtime suite no longer covers the OpenSSL official-vector test.");
+            AssertContains(runtimeSource, "RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", "The native runtime suite no longer verifies that the OpenSSL SHA-2 variants coexist with the legacy SHA ids.");
+            AssertContains(runtimeSource, "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "The native runtime suite no longer covers unknown OpenSSL algorithm ids.");
+            AssertContains(runtimeSource, "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", "The native runtime suite no longer covers OpenSSL concurrent stability.");
+            AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-sha3\")", "The OpenSSL runtime suite no longer exercises the unknown OpenSSL id path.");
+            AssertContains(runtimeSource, "483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", "The OpenSSL runtime suite no longer carries the SHAKE256 known vector.");
+
+            AssertContains(nativeCoreProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The maintained native core project no longer builds the OpenSSL provider.");
+            AssertContains(uwpNativeProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The UWP native core project no longer builds the OpenSSL provider.");
+            AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
+            AssertContains(vendorTargets, "libcrypto.lib", "The shared OpenSSL vendor targets no longer link libcrypto.");
+            AssertContains(vendorScript, "VC-WIN64A", "The OpenSSL vendor build script no longer covers x64.");
+            AssertContains(vendorScript, "VC-WIN32", "The OpenSSL vendor build script no longer covers Win32.");
+            AssertContains(vendorScript, "VC-WIN64-ARM", "The OpenSSL vendor build script no longer covers ARM64.");
+            AssertContains(workflow, "build_openssl_vendor.ps1", "The Windows build workflow no longer builds the vendored OpenSSL package.");
+            AssertContains(workflow, "FHashOpenSslInstallRoot", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");
+            AssertContains(vendorNote, "Upstream tag: openssl-3.0.20", "The vendored OpenSSL note no longer pins the upstream tag.");
+            AssertContains(vendorNote, "5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", "The vendored OpenSSL note no longer pins the upstream commit.");
+            AssertContains(vendorNote, "legacy `sha256` / `sha512` ids and labels untouched", "The vendored OpenSSL note no longer documents the coexistence policy with legacy SHA ids.");
+            AssertContains(exceptionNote, "OpenSSL Linking Exception", "The repository no longer carries the OpenSSL linking exception note.");
+        }, failures);
         Run("DLL search path hardening is present", () =>
         {
             string filesHashApp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHash.cpp");

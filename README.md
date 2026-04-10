@@ -6,7 +6,6 @@
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 
-
 ## Current release
 
 - Current release: [`v1.11.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.11.0)
@@ -15,6 +14,7 @@
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)
+- License note: `GPL-2.0-only with an OpenSSL linking exception`; see [LICENSE-OPENSSL-EXCEPTION.md](LICENSE-OPENSSL-EXCEPTION.md)
 
 ## LHash
 
@@ -36,17 +36,18 @@ The latest maintained release line introduces a complete architectural redesign 
 LHash has been refactored from a monolithic MFC structure into a modular architecture:
 
 ```text
-NativeCore (Core Engine)
-├── Domain          # Data models (HashRequest / Result / Algorithm)
-├── Runtime         # Execution engine (scheduler / task / progress)
-├── Algorithms      # Hash implementations (MD5 / SHA / CRC / extensible)
-├── Common          # Utilities and safety primitives
+NativeCore
+- Domain        # HashRequest / HashResult / algorithm descriptors
+- Runtime       # Scheduling, execution, providers, progress
+- Algorithms    # Legacy built-in implementations
+- Common        # Shared utilities and safety primitives
 
 Adapters
-└── UiBridge        # Isolation layer between UI and core
+- UiBridge      # Isolation seam between UI and runtime events
 
-WinMFC              # Lightweight native UI
-LegacyCompat        # Compatibility layer (gradually shrinking)
+WinMFC           # Lightweight native desktop UI
+LegacyCompat     # Compatibility layer (gradually shrinking)
+third_party      # Fixed-version vendored upstream algorithm families
 ```
 
 ## Key improvements
@@ -119,6 +120,8 @@ Modern mitigations are enabled where the toolchain supports them:
 - Extensible algorithm framework
 - Built-in `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` variants for modern high-speed hashing
 - Built-in `XXH3-64`, `XXH3-128`, and `CRC32C` variants vendored from fixed upstream snapshots
+- Fixed-version `OpenSSL 3 EVP` family with distinct `SHA-256`, `SHA-512`, `SHA3-256`, `SHA3-512`, `BLAKE2b-512`, `BLAKE2s-256`, `SHAKE128-256`, and `SHAKE256-512` descriptors
+- Legacy `SHA256` / `SHA512` kept intact so the original built-in family can coexist with the new OpenSSL-backed family during migration
 
 ## SIMD-backed algorithm status
 
@@ -178,10 +181,10 @@ LHash therefore keeps the default release smaller, faster, and more predictable 
 - Native desktop UX continuously refined on the maintained release line
 - Benchmark-backed BLAKE3 SIMD policy established for `x64`, `Win32`, and `ARM64`
 - Fixed-version `XXH3-64`, `XXH3-128`, and `CRC32C` integrated into the native runtime
+- Fixed-version `OpenSSL 3 EVP` family integrated alongside the legacy SHA-2 algorithms without changing their ids or display names
 
 Roadmap:
 
-- Additional algorithms such as SHA3
 - CLI mode
 - Shell integration
 

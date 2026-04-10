@@ -8,4 +8,5 @@
       <AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <Import Project="$(MSBuildThisFileDirectory)NativeOpenSslVendor.targets" Condition="Exists('$(MSBuildThisFileDirectory)NativeOpenSslVendor.targets')" />
 </Project>

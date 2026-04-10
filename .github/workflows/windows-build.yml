@@ -95,10 +95,19 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-x64.log'
           $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed while preparing native runtime tests. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -122,6 +131,7 @@ jobs:
         with:
           name: FHash-native-runtime-tests
           path: |
+            artifacts/build-openssl-vendor-x64.log
             artifacts/build-native-runtime-tests-x64.log
             artifacts/run-native-runtime-tests-x64.log
           if-no-files-found: warn
@@ -160,9 +170,18 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $logPath = Join-Path $artifactRoot 'build-legacy-x64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & msbuild trunk/fileshash15.sln /m /t:fHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed while preparing the legacy Windows app. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+          & msbuild trunk/fileshash15.sln /m /t:fHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -274,6 +293,7 @@ jobs:
         with:
           name: LHash-legacy-x64
           path: |
+            artifacts/build-openssl-vendor-x64.log
             artifacts/build-legacy-x64.log
             artifacts/legacy-x64-*
             artifacts/LHash-legacy-x64-*.zip
@@ -306,28 +326,37 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $coreLogPath = Join-Path $artifactRoot 'build-native-core-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
           $publishLogPath = Join-Path $artifactRoot 'publish-winui-x64.log'
           $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
           New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
 
-          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed while preparing the WinUI desktop app. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $coreLogPath
 
           if ($LASTEXITCODE -ne 0) {
             throw "MSBuild failed while building fHashNativeCore. See artifacts/build-native-core-x64.log for details."
           }
 
-          & msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $nativeLogPath
 
           if ($LASTEXITCODE -ne 0) {
             throw "MSBuild failed while building fHashWUINative. See artifacts/build-winui-native-x64.log for details."
           }
 
-          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $bridgeLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -445,6 +474,7 @@ jobs:
         with:
           name: LHash-winui-preview-x64
           path: |
+            artifacts/build-openssl-vendor-x64.log
             artifacts/build-native-core-x64.log
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
@@ -471,17 +501,26 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-uwp-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-uwp-bridge-x64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & msbuild sub-proj/fHashUwpNative/fHashUwpNative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed while preparing the UWP native/bridge build. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashUwpNative/fHashUwpNative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $nativeLogPath
 
           if ($LASTEXITCODE -ne 0) {
             throw "MSBuild failed while building fHashUwpNative. See artifacts/build-uwp-native-x64.log for details."
           }
 
-          & msbuild sub-proj/fHashWinRtBridge/fHashWinRtBridge.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 2>&1 |
+          & msbuild sub-proj/fHashWinRtBridge/fHashWinRtBridge.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $bridgeLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -494,6 +533,7 @@ jobs:
         with:
           name: LHash-UWP-bridge-x64
           path: |
+            artifacts/build-openssl-vendor-x64.log
             artifacts/build-uwp-native-x64.log
             artifacts/build-uwp-bridge-x64.log
           if-no-files-found: warn

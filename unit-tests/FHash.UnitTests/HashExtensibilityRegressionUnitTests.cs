@@ -180,4 +180,74 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("113FDB5C", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("D9963A56", nativeRuntimeSource, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndKeepsLegacyShaIdsUntouched()
+    {
+        string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string digestRegistry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+        string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
+        string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
+        string licenseException = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
+        string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+
+        Assert.Contains("{ \"sha256\", \"SHA256\", true, true }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha512\", \"SHA512\", true, true }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
+
+        Assert.Contains("GetOpenSslSha256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslSha512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslSha3_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslSha3_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslBlake2b_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslBlake2s_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslShake128_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetOpenSslShake256_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("SHA256\", \"SHA-256\", \"SHA2-256", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("BLAKE2b512", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("SHAKE256", digestRegistry, StringComparison.Ordinal);
+
+        Assert.Contains("OPENSSL_SHA_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHA_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHA3_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHA3_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHAKE128_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("EVP_MD_fetch", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestInit_ex2", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestUpdate", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestFinal_ex", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
+
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
+        Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
+
+        Assert.Contains("Upstream tag: openssl-3.0.20", upstreamNote, StringComparison.Ordinal);
+        Assert.Contains("5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", upstreamNote, StringComparison.Ordinal);
+        Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
+
+        Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("B751850B1A57168A5693CD924B6B096E08F621827444F70D884F5D0240D2712E", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", nativeRuntimeSource, StringComparison.Ordinal);
+    }
 }

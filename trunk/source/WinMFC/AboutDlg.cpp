@@ -61,6 +61,8 @@ BOOL CAboutDlg::OnInitDialog()
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_CORE));
 	m_about.Append(_T("\r\n"));
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_EXTENDED));
+	m_about.Append(_T("\r\n"));
+	m_about.Append(GetStringByKey(ABOUTDLG_INFO_ALGORITHMS_VENDOR));
 	m_about.Append(_T("\r\n\r\n"));
 	m_about.Append(GetStringByKey(ABOUTDLG_INFO_SECURITY_TITLE));
 	m_about.Append(_T("\r\n"));
