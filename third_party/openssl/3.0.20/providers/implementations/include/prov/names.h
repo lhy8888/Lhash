@@ -229,11 +229,8 @@
 #define PROV_NAMES_KECCAK_KMAC_128 "KECCAK-KMAC-128:KECCAK-KMAC128"
 #define PROV_NAMES_KECCAK_KMAC_256 "KECCAK-KMAC-256:KECCAK-KMAC256"
 /*
- * https://blake2.net/ doesn't specify size variants, but mentions that
- * Bouncy Castle uses the names BLAKE2b-160, BLAKE2b-256, BLAKE2b-384, and
- * BLAKE2b-512
- * If we assume that "2b" and "2s" are versions, that pattern fits with ours.
- *  We also add our historical names.
+ * Keep the provider name aliases aligned with the variants that are actually
+ * registered in the default provider: BLAKE2S-256 and BLAKE2B-512.
  */
 #define PROV_NAMES_BLAKE2S_256 "BLAKE2S-256:BLAKE2s256:1.3.6.1.4.1.1722.12.2.2.8"
 #define PROV_NAMES_BLAKE2B_512 "BLAKE2B-512:BLAKE2b512:1.3.6.1.4.1.1722.12.2.1.16"

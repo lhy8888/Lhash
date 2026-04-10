@@ -129,11 +129,8 @@ static const OSSL_ALGORITHM deflt_digests[] = {
 
 #ifndef OPENSSL_NO_BLAKE2
     /*
-     * https://blake2.net/ doesn't specify size variants,
-     * but mentions that Bouncy Castle uses the names
-     * BLAKE2b-160, BLAKE2b-256, BLAKE2b-384, and BLAKE2b-512
-     * If we assume that "2b" and "2s" are versions, that pattern
-     * fits with ours.  We also add our historical names.
+     * We expose the provider names that are actually registered here:
+     * BLAKE2S-256 and BLAKE2B-512, together with their historical aliases.
      */
     { PROV_NAMES_BLAKE2S_256, "provider=default", ossl_blake2s256_functions },
     { PROV_NAMES_BLAKE2B_512, "provider=default", ossl_blake2b512_functions },
