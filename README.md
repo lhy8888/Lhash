@@ -24,12 +24,13 @@ LHash is a modern local file hashing tool designed for engineering-grade reliabi
 
 The latest maintained release line introduces a complete architectural redesign and security hardening, transforming LHash from a traditional utility into a modular, extensible, and safety-oriented native application.
 
-## Positioning
-
-- High-performance local hash computation
-- Clean layered architecture with the core fully decoupled from the UI
-- Security-first design with safe defaults
-- Lightweight and portable native delivery without a heavy runtime dependency
+## ✨ Features
+⚡ Fast multi-threaded hashing engine
+📦 Portable single executable (no installation required)
+🖱️ Drag & drop support for files and directories
+📊 Real-time progress tracking
+📤 Easy export and copy of hash results
+🧩 Extensible algorithm framework
 
 ## Architecture
 
