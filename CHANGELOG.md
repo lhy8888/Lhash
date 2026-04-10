@@ -12,8 +12,8 @@ Introduced a fixed-version OpenSSL 3 EVP algorithm family that coexists with the
 ### Algorithms
 
 - added fixed-version vendored `OpenSSL 3 EVP` integration
-- added distinct `SHA-256` and `SHA-512` descriptors without changing the legacy `SHA256` / `SHA512` ids
-- added `SHA3-256`, `SHA3-512`, `BLAKE2b-512`, `BLAKE2s-256`, `SHAKE128-256`, and `SHAKE256-512`
+- added distinct `SHA-256`, `SHA-384`, and `SHA-512` descriptors without changing the legacy `SHA256` / `SHA512` ids
+- added `SHA3-256`, `SHA3-384`, `SHA3-512`, `BLAKE2b-160`, `BLAKE2b-256`, `BLAKE2b-512`, `BLAKE2s-128`, `BLAKE2s-256`, `SHAKE128-256`, and `SHAKE256-512`
 - kept the new OpenSSL-backed family isolated behind separate provider and vendor seams under `third_party/openssl`
 
 ### Build and licensing

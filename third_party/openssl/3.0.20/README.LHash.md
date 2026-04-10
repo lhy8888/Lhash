@@ -47,4 +47,8 @@ LHash integration notes:
 - OpenSSL-backed algorithm descriptors are exposed through the registry with
   `openssl-*` stable ids, so they can coexist with the legacy in-tree SHA2
   implementations.
+- Current OpenSSL-backed descriptors include `SHA-256`, `SHA-384`, `SHA-512`,
+  `SHA3-256`, `SHA3-384`, `SHA3-512`, `BLAKE2b-160`, `BLAKE2b-256`,
+  `BLAKE2b-512`, `BLAKE2s-128`, `BLAKE2s-256`, `SHAKE128-256`, and
+  `SHAKE256-512`.
 - LHash keeps the original legacy `sha256` / `sha512` ids and labels untouched.

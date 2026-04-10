@@ -7,6 +7,7 @@
 
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/core_names.h>
+#include <openssl/params.h>
 #endif
 
 namespace
@@ -39,13 +40,15 @@ namespace HashRuntime
 		OpenSslEvpHashContext *hashContext,
 		const char *const *algorithmNames,
 		size_t algorithmNameCount,
-		bool xofMode)
+		bool xofMode,
+		size_t digestOutputBytes)
 	{
 #if !defined(FHASH_WITH_OPENSSL3_VENDOR)
 		(void)hashContext;
 		(void)algorithmNames;
 		(void)algorithmNameCount;
 		(void)xofMode;
+		(void)digestOutputBytes;
 		return false;
 #else
 		if (hashContext == NULL || algorithmNames == NULL || algorithmNameCount == 0)
@@ -75,7 +78,17 @@ namespace HashRuntime
 				continue;
 			}
 
-			if (EVP_DigestInit_ex2(mdContext, digestImplementation, NULL) != 1)
+			OSSL_PARAM digestParams[2];
+			OSSL_PARAM *resolvedDigestParams = NULL;
+			size_t resolvedDigestOutputBytes = digestOutputBytes;
+			if (!xofMode && resolvedDigestOutputBytes > 0)
+			{
+				digestParams[0] = OSSL_PARAM_construct_size_t(OSSL_DIGEST_PARAM_SIZE, &resolvedDigestOutputBytes);
+				digestParams[1] = OSSL_PARAM_construct_end();
+				resolvedDigestParams = digestParams;
+			}
+
+			if (EVP_DigestInit_ex2(mdContext, digestImplementation, resolvedDigestParams) != 1)
 			{
 				EVP_MD_CTX_free(mdContext);
 				EVP_MD_free(digestImplementation);
@@ -85,6 +98,7 @@ namespace HashRuntime
 			hashContext->mdContext = mdContext;
 			hashContext->mdImplementation = digestImplementation;
 			hashContext->xofMode = xofMode;
+			hashContext->digestOutputBytes = resolvedDigestOutputBytes;
 			return true;
 		}
 
@@ -165,6 +179,7 @@ namespace HashRuntime
 		}
 
 		hashContext->xofMode = false;
+		hashContext->digestOutputBytes = 0;
 #else
 		(void)hashContext;
 #endif

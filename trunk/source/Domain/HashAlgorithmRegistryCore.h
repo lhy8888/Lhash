@@ -117,10 +117,15 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 	RegisterHashAlgorithmDescriptor({ "crc32c", "CRC32C", true, false });
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
 	RegisterHashAlgorithmDescriptor({ "openssl-sha-256", "SHA-256", true, false });
+	RegisterHashAlgorithmDescriptor({ "openssl-sha-384", "SHA-384", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-sha-512", "SHA-512", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-sha3-256", "SHA3-256", true, false });
+	RegisterHashAlgorithmDescriptor({ "openssl-sha3-384", "SHA3-384", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-sha3-512", "SHA3-512", true, false });
+	RegisterHashAlgorithmDescriptor({ "openssl-blake2b-160", "BLAKE2b-160", true, false });
+	RegisterHashAlgorithmDescriptor({ "openssl-blake2b-256", "BLAKE2b-256", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-blake2b-512", "BLAKE2b-512", true, false });
+	RegisterHashAlgorithmDescriptor({ "openssl-blake2s-128", "BLAKE2s-128", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-blake2s-256", "BLAKE2s-256", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-shake128-256", "SHAKE128-256", true, false });
 	RegisterHashAlgorithmDescriptor({ "openssl-shake256-512", "SHAKE256-512", true, false });

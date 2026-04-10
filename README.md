@@ -166,7 +166,7 @@ Modern mitigations are enabled where the toolchain supports them:
 - Extensible algorithm framework
 - Built-in `BLAKE3-256`, `BLAKE3-512`, and `BLAKE3 XOF` variants for modern high-speed hashing
 - Built-in `XXH3-64`, `XXH3-128`, and `CRC32C` variants vendored from fixed upstream snapshots
-- Fixed-version `OpenSSL 3 EVP` family with distinct `SHA-256`, `SHA-512`, `SHA3-256`, `SHA3-512`, `BLAKE2b-512`, `BLAKE2s-256`, `SHAKE128-256`, and `SHAKE256-512` descriptors
+- Fixed-version `OpenSSL 3 EVP` family with distinct `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`, `BLAKE2b-160`, `BLAKE2b-256`, `BLAKE2b-512`, `BLAKE2s-128`, `BLAKE2s-256`, `SHAKE128-256`, and `SHAKE256-512` descriptors
 - Legacy `SHA256` / `SHA512` kept intact so the original built-in family can coexist with the new OpenSSL-backed family during migration
 
 ## SIMD-backed algorithm status

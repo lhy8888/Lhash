@@ -414,27 +414,43 @@ internal static partial class Program
             AssertContains(registryCore, "{ \"sha256\", \"SHA256\", true, true }", "The legacy SHA256 descriptor is no longer preserved alongside the OpenSSL family.");
             AssertContains(registryCore, "{ \"sha512\", \"SHA512\", true, true }", "The legacy SHA512 descriptor is no longer preserved alongside the OpenSSL family.");
             AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, false }", "The OpenSSL SHA-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "The OpenSSL SHA-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, false }", "The OpenSSL SHA-512 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "The OpenSSL SHA3-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", "The OpenSSL SHA3-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "The OpenSSL SHA3-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-blake2b-160\", \"BLAKE2b-160\", true, false }", "The OpenSSL BLAKE2b-160 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-blake2b-256\", \"BLAKE2b-256\", true, false }", "The OpenSSL BLAKE2b-256 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", "The OpenSSL BLAKE2b-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-blake2s-128\", \"BLAKE2s-128\", true, false }", "The OpenSSL BLAKE2s-128 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", "The OpenSSL BLAKE2s-256 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", "The OpenSSL SHAKE128-256 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", "The OpenSSL SHAKE256-512 descriptor variant is missing.");
 
             AssertContains(providerImplementation, "EVP_MD_fetch", "The OpenSSL provider no longer fetches digest implementations through EVP.");
             AssertContains(providerImplementation, "EVP_DigestInit_ex2", "The OpenSSL provider no longer initializes digest contexts through EVP.");
+            AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "The OpenSSL provider no longer configures truncated digest output through OSSL params.");
             AssertContains(providerImplementation, "EVP_DigestUpdate", "The OpenSSL provider no longer updates digest contexts through EVP.");
             AssertContains(providerImplementation, "EVP_DigestFinal_ex", "The OpenSSL provider no longer finalizes fixed-size digests through EVP.");
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "The OpenSSL provider no longer finalizes XOF digests through EVP.");
             AssertDoesNotContain(providerImplementation, "static EVP_MD_CTX", "The OpenSSL provider unexpectedly reintroduced a shared mutable EVP context.");
+            AssertContains(providerHeader, "OPENSSL_SHA_384_OUTPUT_BYTES = 48", "The OpenSSL provider header no longer exposes the SHA-384 output profile.");
+            AssertContains(providerHeader, "OPENSSL_SHA3_384_OUTPUT_BYTES = 48", "The OpenSSL provider header no longer exposes the SHA3-384 output profile.");
+            AssertContains(providerHeader, "OPENSSL_BLAKE2B_160_OUTPUT_BYTES = 20", "The OpenSSL provider header no longer exposes the BLAKE2b-160 output profile.");
+            AssertContains(providerHeader, "OPENSSL_BLAKE2B_256_OUTPUT_BYTES = 32", "The OpenSSL provider header no longer exposes the BLAKE2b-256 output profile.");
+            AssertContains(providerHeader, "OPENSSL_BLAKE2S_128_OUTPUT_BYTES = 16", "The OpenSSL provider header no longer exposes the BLAKE2s-128 output profile.");
             AssertContains(providerHeader, "OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", "The OpenSSL provider header no longer exposes the SHAKE256-512 output profile.");
 
             AssertContains(digestRegistry, "InitializeOpenSslSha256DigestContext", "The digest registry no longer exposes the OpenSSL SHA-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha384DigestContext", "The digest registry no longer exposes the OpenSSL SHA-384 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslSha512DigestContext", "The digest registry no longer exposes the OpenSSL SHA-512 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslSha3_256DigestContext", "The digest registry no longer exposes the OpenSSL SHA3-256 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslSha3_384DigestContext", "The digest registry no longer exposes the OpenSSL SHA3-384 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslSha3_512DigestContext", "The digest registry no longer exposes the OpenSSL SHA3-512 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslBlake2b_160DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2b-160 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslBlake2b_256DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2b-256 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslBlake2b_512DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2b-512 initialization hook.");
+            AssertContains(digestRegistry, "InitializeOpenSslBlake2s_128DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2s-128 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslBlake2s_256DigestContext", "The digest registry no longer exposes the OpenSSL BLAKE2s-256 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslShake128_256DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE128-256 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE256-512 initialization hook.");
@@ -444,6 +460,13 @@ internal static partial class Program
             AssertContains(runtimeSource, "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "The native runtime suite no longer covers unknown OpenSSL algorithm ids.");
             AssertContains(runtimeSource, "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", "The native runtime suite no longer covers OpenSSL concurrent stability.");
             AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-sha3\")", "The OpenSSL runtime suite no longer exercises the unknown OpenSSL id path.");
+            AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-blake2b-256\")", "The OpenSSL runtime suite no longer covers the BLAKE2b-256 variant path.");
+            AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-blake2s-128\")", "The OpenSSL runtime suite no longer covers the BLAKE2s-128 variant path.");
+            AssertContains(runtimeSource, "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED", "The OpenSSL runtime suite no longer carries the SHA-384 known vector.");
+            AssertContains(runtimeSource, "EC01498288516FC926459F58E2C6AD8DF9B473CB0FC08C2596DA7CF0E49BE4B2", "The OpenSSL runtime suite no longer carries the SHA3-384 known vector.");
+            AssertContains(runtimeSource, "384264F676F39536840523F284921CDC68B6846B", "The OpenSSL runtime suite no longer carries the BLAKE2b-160 known vector.");
+            AssertContains(runtimeSource, "BDDD813C634239723171EF3FEE98579B94964E3BB1CB3E427262C8C068D52319", "The OpenSSL runtime suite no longer carries the BLAKE2b-256 known vector.");
+            AssertContains(runtimeSource, "AA4938119B1DC7B87CBAD0FFD200D0AE", "The OpenSSL runtime suite no longer carries the BLAKE2s-128 known vector.");
             AssertContains(runtimeSource, "483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", "The OpenSSL runtime suite no longer carries the SHAKE256 known vector.");
 
             AssertContains(nativeCoreProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The maintained native core project no longer builds the OpenSSL provider.");

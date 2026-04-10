@@ -247,10 +247,15 @@ public sealed class SecurityHardeningUnitTests
         string licenseException = RepositoryTestContext.ReadTextFile(@"LICENSE-OPENSSL-EXCEPTION.md");
 
         Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-384\", \"SHA-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2b-160\", \"BLAKE2b-160\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2b-256\", \"BLAKE2b-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-blake2s-128\", \"BLAKE2s-128\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
@@ -258,10 +263,15 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("{ \"sha512\", \"SHA512\", true, true }", registryCore, StringComparison.Ordinal);
 
         Assert.Contains("InitializeOpenSslSha256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslSha384DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslSha512DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslSha3_256DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslSha3_384DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslSha3_512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslBlake2b_160DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslBlake2b_256DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslBlake2b_512DigestContext", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("InitializeOpenSslBlake2s_128DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslBlake2s_256DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslShake128_256DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslShake256_512DigestContext", digestRegistry, StringComparison.Ordinal);
@@ -269,10 +279,17 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("EVP_MD_fetch", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestInit_ex2", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("OSSL_DIGEST_PARAM_SIZE", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("OSSL_PARAM_construct_size_t", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestUpdate", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestFinal_ex", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
         Assert.DoesNotContain("static EVP_MD_CTX", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHA_384_OUTPUT_BYTES = 48", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_SHA3_384_OUTPUT_BYTES = 48", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_BLAKE2B_160_OUTPUT_BYTES = 20", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_BLAKE2B_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_BLAKE2S_128_OUTPUT_BYTES = 16", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
@@ -296,6 +313,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-sha-256\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"openssl-blake2b-256\")", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("CreateAlgorithmId(\"openssl-blake2s-128\")", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-sha3\")", runtimeTests, StringComparison.Ordinal);
     }
 

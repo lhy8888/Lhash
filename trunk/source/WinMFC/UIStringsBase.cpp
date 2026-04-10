@@ -80,8 +80,8 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("ABOUTDLG_INFO_SUBTITLE")] = _T("Modern native hashing utility with hardened runtime and portable release packaging.");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHT")] = _T("Copyright (C) 2026- LHY.");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_TITLE")] = _T("Algorithms:");
-	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("MD5, SHA1, SHA256, SHA512, SHA-256, SHA-512");
-	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("SHA3-256, SHA3-512, BLAKE2b-512, BLAKE2s-256, SHAKE128-256, SHAKE256-512");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("MD5, SHA1, SHA256, SHA512, SHA-256, SHA-384, SHA-512");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("SHA3-256, SHA3-384, SHA3-512, BLAKE2b-160, BLAKE2b-256, BLAKE2b-512, BLAKE2s-128, BLAKE2s-256, SHAKE128-256, SHAKE256-512");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_VENDOR")] = _T("BLAKE3-256, BLAKE3-512, BLAKE3 XOF, XXH3-64, XXH3-128, CRC32C");
 	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY_TITLE")] = _T("Security and Runtime:");
 	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY")] = _T("Signed-release ready, DLL-search hardened, reparse-point aware, UTF-8 toolchain aligned, and OpenSSL-vendor capable.");

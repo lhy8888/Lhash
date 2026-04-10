@@ -19,20 +19,27 @@ namespace HashRuntime
 		OpenSslEvpHashContext()
 			: mdContext(NULL),
 			mdImplementation(NULL),
-			xofMode(false)
+			xofMode(false),
+			digestOutputBytes(0)
 		{
 		}
 
 		EVP_MD_CTX *mdContext;
 		EVP_MD *mdImplementation;
 		bool xofMode;
+		size_t digestOutputBytes;
 	};
 
 	static const size_t OPENSSL_SHA_256_OUTPUT_BYTES = 32;
+	static const size_t OPENSSL_SHA_384_OUTPUT_BYTES = 48;
 	static const size_t OPENSSL_SHA_512_OUTPUT_BYTES = 64;
 	static const size_t OPENSSL_SHA3_256_OUTPUT_BYTES = 32;
+	static const size_t OPENSSL_SHA3_384_OUTPUT_BYTES = 48;
 	static const size_t OPENSSL_SHA3_512_OUTPUT_BYTES = 64;
+	static const size_t OPENSSL_BLAKE2B_160_OUTPUT_BYTES = 20;
+	static const size_t OPENSSL_BLAKE2B_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64;
+	static const size_t OPENSSL_BLAKE2S_128_OUTPUT_BYTES = 16;
 	static const size_t OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_SHAKE128_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64;
@@ -41,7 +48,8 @@ namespace HashRuntime
 		OpenSslEvpHashContext *hashContext,
 		const char *const *algorithmNames,
 		size_t algorithmNameCount,
-		bool xofMode);
+		bool xofMode,
+		size_t digestOutputBytes);
 
 	void UpdateOpenSslEvpHashContext(OpenSslEvpHashContext& hashContext, const unsigned char *data, size_t dataLen);
 	sunjwbase::tstring FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes);
