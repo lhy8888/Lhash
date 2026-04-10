@@ -5,9 +5,9 @@ All notable LHash release-line changes are documented in this file.
 The historical upstream fHash release log is intentionally not duplicated here.
 This changelog tracks the maintained LHash release line that starts at `1.10.0`.
 
-## Unreleased
+## 1.12.0 - 2026-04-10
 
-Introduced a fixed-version OpenSSL 3 EVP algorithm family that coexists with the existing built-in SHA-2 implementations.
+Introduced a fixed-version OpenSSL 3 EVP algorithm family alongside deeper runtime hardening and repository cleanup.
 
 ### Algorithms
 
@@ -21,6 +21,18 @@ Introduced a fixed-version OpenSSL 3 EVP algorithm family that coexists with the
 - added a dedicated OpenSSL vendor build step for maintained native builds
 - added `GPL-2.0-only` OpenSSL linking exception documentation
 - kept the original built-in SHA-2 implementations untouched so either family can be retired later without rewriting the old code
+
+### Security and maintenance
+
+- hardened Windows version metadata extraction against malformed PE version resources
+- tightened `WM_COPYDATA` sender validation and command payload parsing
+- removed stale duplicated macro remnants from the legacy `sha256.cpp` source
+- archived old UWP, WAP, macOS, and deprecated shell/bridge platform trees out of the live repository surface
+
+### CI and delivery
+
+- trimmed normal `push` builds down to the maintained native desktop path
+- cached the vendored OpenSSL build output so routine Actions runs stay fast
 
 ## 1.11.0 - 2026-04-09
 

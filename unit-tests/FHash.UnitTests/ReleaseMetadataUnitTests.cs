@@ -3,39 +3,31 @@ namespace FHash.UnitTests;
 public sealed class ReleaseMetadataUnitTests
 {
     [Fact]
-    public void LegacyVersion_IsUpdatedTo_1_11_0_0_AndAboutDialogDisplays_1_11_0()
+    public void LegacyVersion_IsUpdatedTo_1_12_0_0_AndAboutDialogDisplays_1_12_0()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,11,0,0", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.11.0.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,0,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.0.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (fHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void PlatformVersionMetadata_IsAlignedTo_1_11_0_0()
+    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_0_0()
     {
         string[] files =
         {
             @"trunk\source\WinUI\Properties\AssemblyInfo.cs",
             @"trunk\source\WinUI\app.manifest",
-            @"trunk\fHashWUIWap\version.h",
-            @"trunk\fHashWUIWap\Package.appxmanifest",
-            @"trunk\fHashWUIWap\Package-DEV.appxmanifest",
-            @"trunk\source\WinUWP\Properties\AssemblyInfo.cs",
-            @"trunk\source\WinUWP\Package.appxmanifest",
-            @"trunk\source\WinUWP\Package-DEBUG.appxmanifest",
-            @"trunk\fHashUwpWap\version.h",
-            @"trunk\fHashUwpWap\Package.appxmanifest",
-            @"trunk\fHashUwpWap\Package-DEBUG.appxmanifest"
+            @"sub-proj\fHashClrBridge\version.h"
         };
 
         foreach (string relativePath in files)
         {
             string content = RepositoryTestContext.ReadTextFile(relativePath);
-            Assert.Contains("1.11.0.0", content, StringComparison.Ordinal);
+            Assert.Contains("1.12.0.0", content, StringComparison.Ordinal);
         }
     }
 

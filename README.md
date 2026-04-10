@@ -8,7 +8,7 @@
 
 ## Current release
 
-- Current release: [`v1.11.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.11.0)
+- Current release: [`v1.12.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.0)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Main branch: `future-winui-was2`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
