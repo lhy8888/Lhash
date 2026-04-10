@@ -5,6 +5,8 @@ param(
 
     [string]$InstallRoot = '',
 
+    [string]$CombinedLogPath = '',
+
     [string]$Configuration = 'Release'
 )
 
@@ -51,6 +53,47 @@ foreach ($requiredVendorFile in $requiredVendorFiles) {
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
     $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}-{1}" -f $Platform, $Configuration)
+}
+
+if ([string]::IsNullOrWhiteSpace($CombinedLogPath)) {
+    $CombinedLogPath = Join-Path $InstallRoot 'build-openssl-vendor.log'
+}
+
+function Reset-CombinedOpenSslLog {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    $parent = Split-Path -Parent $Path
+    if (-not [string]::IsNullOrWhiteSpace($parent)) {
+        New-Item -ItemType Directory -Force -Path $parent | Out-Null
+    }
+
+    Set-Content -Path $Path -Value '' -Encoding UTF8
+}
+
+function Append-OpenSslStepLog {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CombinedLogPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$StepName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$LogPath
+    )
+
+    Add-Content -Path $CombinedLogPath -Value ("==== {0} ({1}) ====" -f $StepName, $LogPath) -Encoding UTF8
+    if (Test-Path $LogPath) {
+        Get-Content -Path $LogPath | Add-Content -Path $CombinedLogPath -Encoding UTF8
+    }
+    else {
+        Add-Content -Path $CombinedLogPath -Value '<missing log file>' -Encoding UTF8
+    }
+
+    Add-Content -Path $CombinedLogPath -Value '' -Encoding UTF8
 }
 
 $libPath = Join-Path $InstallRoot 'lib\libcrypto.lib'
@@ -116,31 +159,67 @@ function Invoke-OpenSslBuildStep {
         [string]$CommandLine,
 
         [Parameter(Mandatory = $true)]
-        [string]$LogPath
+        [string]$LogPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$CombinedLogPath
     )
 
-    $fullCommand = @(
+    $safeStepName = ($StepName -replace '[^A-Za-z0-9]+', '-').Trim('-').ToLowerInvariant()
+    $commandScriptPath = Join-Path $tempRoot ("openssl-{0}.cmd" -f $safeStepName)
+    $stderrLogPath = "{0}.stderr" -f $LogPath
+    $commandScript = @(
+        '@echo off',
         "call `"$vcvarsall`" $vcvarsArch",
+        'if errorlevel 1 exit /b %errorlevel%',
         "cd /d `"$WorkingDirectory`"",
-        $CommandLine
-    ) -join ' && '
+        'if errorlevel 1 exit /b %errorlevel%',
+        $CommandLine,
+        'exit /b %errorlevel%'
+    ) -join "`r`n"
 
-    $output = & cmd.exe /d /s /c $fullCommand 2>&1
-    if ($null -ne $output) {
-        $output | Tee-Object -FilePath $LogPath
+    Set-Content -Path $commandScriptPath -Value $commandScript -Encoding ASCII
+
+    if (Test-Path $LogPath) {
+        Remove-Item $LogPath -Force
     }
-    else {
+
+    if (Test-Path $stderrLogPath) {
+        Remove-Item $stderrLogPath -Force
+    }
+
+    $process = Start-Process -FilePath 'cmd.exe' -ArgumentList '/d', '/s', '/c', "`"$commandScriptPath`"" -NoNewWindow -Wait -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $stderrLogPath
+
+    if (Test-Path $stderrLogPath) {
+        if (-not (Test-Path $LogPath)) {
+            New-Item -ItemType File -Force -Path $LogPath | Out-Null
+        }
+
+        if ((Get-Item $stderrLogPath).Length -gt 0) {
+            Add-Content -Path $LogPath -Value '' -Encoding UTF8
+            Get-Content -Path $stderrLogPath | Add-Content -Path $LogPath -Encoding UTF8
+        }
+
+        Remove-Item $stderrLogPath -Force
+    }
+
+    if (-not (Test-Path $LogPath)) {
         New-Item -ItemType File -Force -Path $LogPath | Out-Null
     }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "OpenSSL vendor $StepName failed with exit code $LASTEXITCODE. See $LogPath for details."
+    Append-OpenSslStepLog -CombinedLogPath $CombinedLogPath -StepName $StepName -LogPath $LogPath
+
+    if ($process.ExitCode -ne 0) {
+        Write-Host ("OpenSSL vendor {0} failed. Emitting {1}:" -f $StepName, $LogPath)
+        Get-Content -Path $LogPath
+        throw "OpenSSL vendor $StepName failed with exit code $($process.ExitCode). See $CombinedLogPath for details."
     }
 }
 
 try {
     Copy-Item -Path $sourceRoot -Destination $buildRoot -Recurse -Force
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+    Reset-CombinedOpenSslLog -Path $CombinedLogPath
     $openSslDir = Join-Path $InstallRoot 'ssl'
     $includeInstallRoot = Join-Path $InstallRoot 'include'
     $libInstallRoot = Join-Path $InstallRoot 'lib'
@@ -164,9 +243,9 @@ try {
         "--openssldir=$openSslDir"
     ) -join ' '
 
-    Invoke-OpenSslBuildStep -StepName 'configure' -WorkingDirectory $buildRoot -CommandLine $configureCommand -LogPath $configureLog
-    Invoke-OpenSslBuildStep -StepName 'generated-header build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_generated' -LogPath $generatedLog
-    Invoke-OpenSslBuildStep -StepName 'libcrypto build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_libs' -LogPath $buildLog
+    Invoke-OpenSslBuildStep -StepName 'configure' -WorkingDirectory $buildRoot -CommandLine $configureCommand -LogPath $configureLog -CombinedLogPath $CombinedLogPath
+    Invoke-OpenSslBuildStep -StepName 'generated-header build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_generated' -LogPath $generatedLog -CombinedLogPath $CombinedLogPath
+    Invoke-OpenSslBuildStep -StepName 'libcrypto build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_libs' -LogPath $buildLog -CombinedLogPath $CombinedLogPath
 
     New-Item -ItemType Directory -Force -Path $includeInstallRoot | Out-Null
     New-Item -ItemType Directory -Force -Path $libInstallRoot | Out-Null
@@ -183,6 +262,7 @@ try {
         throw "OpenSSL vendor build did not produce $libPath."
     }
 
+    Add-Content -Path $CombinedLogPath -Value "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot" -Encoding UTF8
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"
 }
 finally {

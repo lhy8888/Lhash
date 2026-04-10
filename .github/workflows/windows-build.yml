@@ -100,7 +100,7 @@ jobs:
           $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath $openSslLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -132,6 +132,7 @@ jobs:
           name: FHash-native-runtime-tests
           path: |
             artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/*.log
             artifacts/build-native-runtime-tests-x64.log
             artifacts/run-native-runtime-tests-x64.log
           if-no-files-found: warn
@@ -174,7 +175,7 @@ jobs:
           $logPath = Join-Path $artifactRoot 'build-legacy-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath $openSslLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -294,6 +295,7 @@ jobs:
           name: LHash-legacy-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/*.log
             artifacts/build-legacy-x64.log
             artifacts/legacy-x64-*
             artifacts/LHash-legacy-x64-*.zip
@@ -335,7 +337,7 @@ jobs:
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
           New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath $openSslLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -475,6 +477,7 @@ jobs:
           name: LHash-winui-preview-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/*.log
             artifacts/build-native-core-x64.log
             artifacts/build-winui-native-x64.log
             artifacts/build-winui-bridge-x64.log
@@ -506,7 +509,7 @@ jobs:
           $bridgeLogPath = Join-Path $artifactRoot 'build-uwp-bridge-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath $openSslLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -534,6 +537,7 @@ jobs:
           name: LHash-UWP-bridge-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/*.log
             artifacts/build-uwp-native-x64.log
             artifacts/build-uwp-bridge-x64.log
           if-no-files-found: warn

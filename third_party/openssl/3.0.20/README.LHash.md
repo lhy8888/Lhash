@@ -37,6 +37,10 @@ LHash integration notes:
 - The local vendor build stages `include/` and `libcrypto.lib` manually after
   `Configure`, `build_generated`, and `build_libs`, rather than depending on
   OpenSSL's broader `install_dev` packaging target
+- Each build step writes a dedicated log (`configure.log`,
+  `build-generated.log`, `build-libs.log`) plus a combined
+  `build-openssl-vendor.log` so CI failures surface the actual OpenSSL stderr
+  instead of only the outer PowerShell wrapper error
 - Runtime adapter layer lives in `trunk/source/Runtime/Hash/OpenSslEvpHashProvider.*`
 - OpenSSL-backed algorithm descriptors are exposed through the registry with
   `openssl-*` stable ids, so they can coexist with the legacy in-tree SHA2

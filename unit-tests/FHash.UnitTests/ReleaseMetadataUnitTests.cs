@@ -191,6 +191,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
+        Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
+        Assert.Contains("artifacts/openssl-vendor-x64/*.log", workflow, StringComparison.Ordinal);
 
         Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
@@ -201,6 +203,9 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("external\\perl\\MODULES.txt", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Text-Template-1.56\\lib\\Text\\Template.pm", vendorScript, StringComparison.Ordinal);
         Assert.Contains("ms\\applink.c", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Reset-CombinedOpenSslLog", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Append-OpenSslStepLog", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("OpenSSL vendor {0} failed. Emitting {1}:", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'configure'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'generated-header build'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'libcrypto build'", vendorScript, StringComparison.Ordinal);
