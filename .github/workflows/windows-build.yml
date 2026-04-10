@@ -86,7 +86,7 @@ jobs:
 
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: artifacts/openssl-vendor-x64
           key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
