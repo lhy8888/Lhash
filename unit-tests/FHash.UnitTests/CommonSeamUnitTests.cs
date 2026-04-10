@@ -115,6 +115,22 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void RegistryUnlockedHelpers_DoNotReenterTheirOwnMutexes()
+    {
+        string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string digestRegistry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+
+        Assert.DoesNotContain(
+            "RegisterHashAlgorithmDescriptorUnlocked(const HashAlgorithmDescriptor& algorithmDescriptor)\r\n{\r\n\tif (!IsHashAlgorithmDescriptorValid(algorithmDescriptor))\r\n\t{\r\n\t\treturn false;\r\n\t}\r\n\r\n\tstd::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());",
+            registryCore,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RegisterHashDigestOperationDescriptorUnlocked(const HashDigestOperationDescriptor& operationDescriptor)\r\n\t{\r\n\t\tHashAlgorithmId normalizedAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);\r\n\t\tif (normalizedAlgorithmId.empty())\r\n\t\t{\r\n\t\t\treturn false;\r\n\t\t}\r\n\r\n\t\tstd::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());",
+            digestRegistry,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");

@@ -86,7 +86,6 @@ static inline bool RegisterHashAlgorithmDescriptorUnlocked(const HashAlgorithmDe
 		return false;
 	}
 
-	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
 	for (size_t descriptorIndex = 0; descriptorIndex < descriptorStorage.size(); ++descriptorIndex)
 	{

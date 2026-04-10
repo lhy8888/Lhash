@@ -599,7 +599,6 @@ namespace HashEngineInternal
 			return false;
 		}
 
-		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
 		std::vector<HashDigestOperationDescriptor>& operationDescriptorStorage = GetMutableHashDigestOperationDescriptorStorage();
 		for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptorStorage.size(); ++descriptorIndex)
 		{
