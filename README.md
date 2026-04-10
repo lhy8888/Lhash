@@ -103,11 +103,15 @@ BLAKE2s-256
 
 🚀 Non-Cryptographic (Fast Checksums)
 
-XXH3-64
+XXHash3-64
 
-XXH3-128
+XXHash3-128
 
 CRC32C
+
+SHAKE128-256
+
+SHAKE256-512
 
 
 ## Security features
