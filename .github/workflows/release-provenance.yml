@@ -1,0 +1,96 @@
+name: Release Provenance
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to process, for example v1.12.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  attest-release-assets:
+    name: Attest release assets
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Resolve release tag
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            tag="${{ github.event.release.tag_name }}"
+          else
+            tag="${{ inputs.tag }}"
+          fi
+          if [[ -z "$tag" ]]; then
+            echo "A release tag is required." >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          gh release download "${{ steps.resolve.outputs.tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir release-assets
+
+      - name: Prepare attestation subjects
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_path="$(find release-assets -maxdepth 1 -type f -name 'LHash-legacy-x64-*.zip' | head -n 1)"
+          manifest_path="$(find release-assets -maxdepth 1 -type f -name 'RELEASE_MANIFEST.txt' | head -n 1)"
+
+          if [[ -z "$bundle_path" ]]; then
+            echo "Expected a release asset matching LHash-legacy-x64-*.zip." >&2
+            exit 1
+          fi
+
+          if [[ -z "$manifest_path" ]]; then
+            echo "Expected RELEASE_MANIFEST.txt in the published release assets." >&2
+            exit 1
+          fi
+
+          sha256sum "$bundle_path" "$manifest_path" > release-assets/SHA256SUMS.txt
+
+          echo "bundle_path=$bundle_path" >> "$GITHUB_OUTPUT"
+          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload checksum manifest to the release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "${{ steps.resolve.outputs.tag }}" \
+            release-assets/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Generate provenance attestation for release metadata bundle
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            ${{ steps.prepare.outputs.bundle_path }}
+            ${{ steps.prepare.outputs.manifest_path }}
+            release-assets/SHA256SUMS.txt
+
+# Note:
+# This workflow adds GitHub-native attestations and immutable checksum metadata to
+# published release assets. A later hardening pass can move the provenance step
+# fully inside the primary build job so the attestation is emitted at the exact
+# binary production point.
