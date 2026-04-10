@@ -293,13 +293,16 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds()
+    public void Workflow_RunsIndependentUnitTests_And_PreparesNativeOpenSslVendor_Once()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
 
         Assert.Contains("unit-tests:", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore", workflow, StringComparison.Ordinal);
+        Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests:", workflow, StringComparison.Ordinal);
         Assert.Contains("msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", workflow, StringComparison.Ordinal);
         Assert.Contains(@"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", workflow, StringComparison.Ordinal);
@@ -309,7 +312,7 @@ public sealed class CommonSeamUnitTests
             "needs:",
             "- security-regression",
             "- unit-tests",
-            "- native-runtime-tests");
+            "- prepare-openssl-vendor-x64");
     }
 
     [Fact]

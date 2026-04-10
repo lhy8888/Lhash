@@ -77,7 +77,7 @@ jobs:
             artifacts/FHash.UnitTests.trx
           if-no-files-found: warn
 
-  native-runtime-tests:
+  prepare-openssl-vendor-x64:
     needs:
       - security-regression
       - unit-tests
@@ -90,21 +90,61 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build and run native runtime tests
+      - name: Build OpenSSL vendor x64 once
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
           $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
-          $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-x64.log'
-          $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
           & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath $openSslLogPath
 
           if ($LASTEXITCODE -ne 0) {
-            throw "OpenSSL vendor build failed while preparing native runtime tests. See artifacts/build-openssl-vendor-x64.log for details."
+            throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+      - name: Upload OpenSSL vendor x64 artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FHash-openssl-vendor-x64
+          path: |
+            artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/**
+          if-no-files-found: warn
+
+  native-runtime-tests:
+    needs:
+      - security-regression
+      - unit-tests
+      - prepare-openssl-vendor-x64
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download OpenSSL vendor x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FHash-openssl-vendor-x64
+          path: artifacts
+
+      - name: Build and run native runtime tests
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-x64.log'
+          $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
           & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
@@ -141,7 +181,7 @@ jobs:
     needs:
       - security-regression
       - unit-tests
-      - native-runtime-tests
+      - prepare-openssl-vendor-x64
     runs-on: windows-2022
     env:
       LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
@@ -153,6 +193,12 @@ jobs:
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+
+      - name: Download OpenSSL vendor x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FHash-openssl-vendor-x64
+          path: artifacts
 
       - name: Show Visual Studio toolchain info
         shell: powershell
@@ -171,15 +217,10 @@ jobs:
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
-          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $logPath = Join-Path $artifactRoot 'build-legacy-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
-
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
-            Tee-Object -FilePath $openSslLogPath
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "OpenSSL vendor build failed while preparing the legacy Windows app. See artifacts/build-openssl-vendor-x64.log for details."
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
           & msbuild trunk/fileshash15.sln /m /t:fHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
@@ -302,10 +343,11 @@ jobs:
           if-no-files-found: warn
 
   build-winui-bridge-x64:
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - security-regression
       - unit-tests
-      - native-runtime-tests
+      - prepare-openssl-vendor-x64
     runs-on: windows-2022
     env:
       LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
@@ -323,12 +365,17 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Download OpenSSL vendor x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FHash-openssl-vendor-x64
+          path: artifacts
+
       - name: Build and publish WinUI desktop app
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
-          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $coreLogPath = Join-Path $artifactRoot 'build-native-core-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
@@ -336,12 +383,8 @@ jobs:
           $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
           New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
-
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
-            Tee-Object -FilePath $openSslLogPath
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "OpenSSL vendor build failed while preparing the WinUI desktop app. See artifacts/build-openssl-vendor-x64.log for details."
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
           & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
@@ -486,10 +529,11 @@ jobs:
           if-no-files-found: warn
 
   build-uwp-bridge-x64:
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - security-regression
       - unit-tests
-      - native-runtime-tests
+      - prepare-openssl-vendor-x64
     runs-on: windows-2022
 
     steps:
@@ -499,21 +543,22 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Download OpenSSL vendor x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: FHash-openssl-vendor-x64
+          path: artifacts
+
       - name: Build UWP native and WinRT bridge
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
-          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $nativeLogPath = Join-Path $artifactRoot 'build-uwp-native-x64.log'
           $bridgeLogPath = Join-Path $artifactRoot 'build-uwp-bridge-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
-
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
-            Tee-Object -FilePath $openSslLogPath
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "OpenSSL vendor build failed while preparing the UWP native/bridge build. See artifacts/build-openssl-vendor-x64.log for details."
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
           & msbuild sub-proj/fHashUwpNative/fHashUwpNative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
@@ -543,10 +588,10 @@ jobs:
           if-no-files-found: warn
 
   build-wui-shell-ext-x64:
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - security-regression
       - unit-tests
-      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
@@ -580,10 +625,10 @@ jobs:
           if-no-files-found: warn
 
   build-uwp-shell-ext-x64:
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - security-regression
       - unit-tests
-      - native-runtime-tests
     runs-on: windows-2022
 
     steps:
@@ -617,13 +662,9 @@ jobs:
           if-no-files-found: warn
 
   publish-release:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - build-legacy-x64
-      - build-winui-bridge-x64
-      - build-uwp-bridge-x64
-      - build-wui-shell-ext-x64
-      - build-uwp-shell-ext-x64
     runs-on: ubuntu-latest
 
     steps:

@@ -127,6 +127,8 @@
   <PropertyGroup>
     <FHashOpenSslInstallRoot Condition="'$(FHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</FHashOpenSslInstallRoot>
     <FHashOpenSslLibDir Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>
+    <FHashOpenSslAdditionalDependencies Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>
+    <FHashOpenSslAdditionalLibraryDirectories Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslLibDir);</FHashOpenSslAdditionalLibraryDirectories>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -179,8 +181,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -200,8 +202,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -221,8 +223,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -242,8 +244,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -263,8 +265,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -284,8 +286,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -305,8 +307,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -326,8 +328,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashUwpNative\$(Platform)\$(Configuration)\fHashUwpNative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashUwpNative\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashUwpWap\;</AdditionalIncludeDirectories>
@@ -372,12 +374,6 @@
   <ItemGroup>
     <ResourceCompile Include="fHashWinRtBridge.rc" />
   </ItemGroup>
-  <ItemDefinitionGroup Condition="'$(FHashOpenSslInstallRoot)'!=''">
-    <Link>
-      <AdditionalLibraryDirectories>$(FHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <Import Project="..\..\NativeSecurity.targets" />
   <Import Project="..\..\NativeUtf8.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

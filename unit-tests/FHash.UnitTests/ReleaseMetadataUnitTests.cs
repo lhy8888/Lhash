@@ -99,12 +99,12 @@ public sealed class ReleaseMetadataUnitTests
     }
 
     [Fact]
-    public void Workflow_PublishRelease_RunsRehearsal_OnBranches_AndPublishes_OnTags()
+    public void Workflow_PublishRelease_RunsManualRehearsal_And_Publishes_OnTags()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
 
         Assert.Contains("publish-release:", workflow, StringComparison.Ordinal);
-        Assert.Contains("if: github.event_name != 'pull_request'", workflow, StringComparison.Ordinal);
+        Assert.Contains("if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
         Assert.Contains("pattern: LHash-legacy-*", workflow, StringComparison.Ordinal);
         Assert.Contains("merge-multiple: true", workflow, StringComparison.Ordinal);
         Assert.Contains("Stage release rehearsal bundle", workflow, StringComparison.Ordinal);
@@ -193,15 +193,20 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
+        Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
         Assert.Contains("artifacts/openssl-vendor-x64/*.log", workflow, StringComparison.Ordinal);
 
         Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains(@"<FHashOpenSslLibDir Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>", clrBridgeProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(FHashOpenSslLibDir)\libcrypto.lib", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", clrBridgeProject, StringComparison.Ordinal);
         Assert.Contains(@"<FHashOpenSslLibDir Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>", uwpBridgeProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(FHashOpenSslLibDir)\libcrypto.lib", uwpBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", uwpBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)", uwpBridgeProject, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN32", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);

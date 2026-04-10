@@ -3321,7 +3321,7 @@ internal static class Program
             AssertContains(unitTests, "[Fact]", "Phase 30 unit test project does not yet contain xUnit facts.");
             AssertContains(unitTests, "HashAlgorithmRegistry_DefinesStableCompatibilityOrder", "Phase 30 unit tests do not yet cover the hash-algorithm registry seam.");
             AssertContains(unitTests, "ResultDigestAccess_UmbrellaShimDependsOnDedicatedSeams", "Phase 30 unit tests do not yet cover the digest umbrella seam.");
-            AssertContains(unitTests, "Workflow_RunsIndependentUnitTests_AndGatesNativeBuilds", "Phase 30 unit tests do not yet cover CI gating for the new unit framework.");
+            AssertContains(unitTests, "Workflow_RunsIndependentUnitTests_And_PreparesNativeOpenSslVendor_Once", "Phase 30 unit tests do not yet cover CI gating for the new unit framework.");
             AssertContains(unitTestContext, "FindRepoRoot()", "Phase 30 unit test helper is missing repository-root discovery.");
             AssertContains(workflow, "unit-tests:", "Workflow does not yet declare the phase 30 unit-tests job.");
             AssertContains(workflow, "dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", "Workflow does not yet restore the phase 30 unit test project.");
@@ -3833,7 +3833,7 @@ internal static class Program
             AssertContains(resultSearch, "return CountDigestMatchingHashResults(resultList, digestText);", "Phase 46 ResultDataSearch digest-count helper does not yet defer to HashResultSearch.");
         }, failures);
 
-        Run("Phase 47 introduces a native C++ runtime test project and gates all native builds on it", () =>
+        Run("Phase 47 introduces a native C++ runtime test project and prepares the vendored OpenSSL package once for parallel native builds", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
             string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
@@ -3873,6 +3873,9 @@ internal static class Program
             AssertContains(workflow, "native-runtime-tests:", "Phase 47 workflow does not yet define a native-runtime-tests job.");
             AssertContains(workflow, "msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", "Phase 47 workflow does not yet build the native runtime test project.");
             AssertContains(workflow, @"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
+            AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 47 workflow does not yet define the shared OpenSSL vendor preparation job.");
+            AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
+            AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertInOrder(
                 workflow,
                 new[]
@@ -3881,17 +3884,17 @@ internal static class Program
                     "needs:",
                     "- security-regression",
                     "- unit-tests",
-                    "- native-runtime-tests"
+                    "- prepare-openssl-vendor-x64"
                 },
-                "Phase 47 build-legacy-x64 is not yet gated by native-runtime-tests.");
+                "Phase 47 build-legacy-x64 does not yet depend on the shared OpenSSL vendor artifact.");
         }, failures);
 
-        Run("Phase 48 exercises the publish-release chain on branches while reserving GitHub releases for version tags", () =>
+        Run("Phase 48 exercises the publish-release chain on manual dispatch while reserving GitHub releases for version tags", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
 
             AssertContains(workflow, "publish-release:", "Phase 48 workflow does not yet define a publish-release job.");
-            AssertContains(workflow, "if: github.event_name != 'pull_request'", "Phase 48 publish-release is not yet enabled for non-PR rehearsal runs.");
+            AssertContains(workflow, "if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')", "Phase 48 publish-release is not yet limited to manual rehearsal runs and version tags.");
             AssertContains(workflow, "pattern: LHash-legacy-*", "Phase 48 publish-release does not yet target the lightweight native release artifacts.");
             AssertContains(workflow, "merge-multiple: true", "Phase 48 publish-release does not yet merge downloaded artifacts into a single release-assets directory.");
             AssertContains(workflow, "Stage release rehearsal bundle", "Phase 48 publish-release does not yet stage a rehearsal bundle.");
@@ -6078,9 +6081,14 @@ internal static class Program
             AssertContains(providerImplementation, "EVP_MD_fetch", "Phase 98 OpenSSL provider no longer uses EVP fetch semantics.");
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
-            AssertContains(clrBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "Phase 98 CLR bridge does not yet link libcrypto explicitly when the vendored OpenSSL root is present.");
-            AssertContains(uwpBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "Phase 98 WinRT bridge does not yet link libcrypto explicitly when the vendored OpenSSL root is present.");
+            AssertContains(clrBridgeProject, @"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", "Phase 98 CLR bridge does not yet define explicit OpenSSL bridge-link dependencies.");
+            AssertContains(clrBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 CLR bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
+            AssertContains(uwpBridgeProject, @"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", "Phase 98 WinRT bridge does not yet define explicit OpenSSL bridge-link dependencies.");
+            AssertContains(uwpBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 WinRT bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
+            AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
+            AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
+            AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
