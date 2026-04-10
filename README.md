@@ -66,23 +66,41 @@ third_party      # Fixed-version vendored upstream algorithm families
 - Strengthened separation of concerns across core, adapters, and legacy seams
 
 ## 🧮 Supported Algorithms
+
 🔐 Cryptographic Hashes
+
 MD5
+
 SHA-1
+
 SHA-256
+
 SHA-512
+
 ⚡ Modern High-Performance Hashes
+
 BLAKE3-256
+
 BLAKE3-512
+
 🧪 OpenSSL 3 (Extended Algorithms)
+
 SHA-256 (OpenSSL)
+
 SHA-512 (OpenSSL)
+
 SHA3-256
+
 SHA3-512
+
 BLAKE2b-512
+
 🚀 Non-Cryptographic (Fast Checksums)
+
 XXH3-64
+
 XXH3-128
+
 CRC32C
 
 
