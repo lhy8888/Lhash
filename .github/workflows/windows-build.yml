@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload unit test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-unit-tests
           path: |
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload OpenSSL vendor x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-openssl-vendor-x64
           path: |
@@ -171,7 +171,7 @@ jobs:
 
       - name: Upload native runtime test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-native-runtime-tests
           path: |
@@ -335,7 +335,7 @@ jobs:
 
       - name: Upload legacy x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LHash-legacy-x64
           path: |
@@ -519,7 +519,7 @@ jobs:
 
       - name: Upload WinUI desktop artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LHash-winui-preview-x64
           path: |
@@ -581,7 +581,7 @@ jobs:
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
       - name: Upload release rehearsal artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LHash-release-rehearsal
           path: |
