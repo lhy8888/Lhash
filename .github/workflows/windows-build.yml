@@ -134,7 +134,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: FHash-openssl-vendor-x64
           path: artifacts
@@ -199,7 +199,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: FHash-openssl-vendor-x64
           path: artifacts
@@ -370,7 +370,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: FHash-openssl-vendor-x64
           path: artifacts
@@ -540,7 +540,7 @@ jobs:
 
     steps:
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: LHash-legacy-*
           path: release-assets
