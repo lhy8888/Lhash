@@ -2517,7 +2517,7 @@ internal static class Program
             AssertContains(mfcProjectFilters, "source\\WinMFC\\FilesHashAlgorithmSelectionController.h", "fileshash.vcxproj.filters does not yet track the dedicated phase 13 controller header.");
         }, failures);
 
-        Run("Phase 14 extracts shell ExplorerCommand launch flow into a shared core seam and compiles shell extensions in CI", () =>
+        Run("Phase 14 keeps the shared shell ExplorerCommand seam while archiving legacy shell-extension projects", () =>
         {
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string wuiShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
@@ -2525,6 +2525,7 @@ internal static class Program
             string wuiShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj");
             string uwpShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string archiveReadme = ReadRepoFile(repoRoot, @"archive\README.md");
 
             AssertContains(shellCore, "ResolveWindowsAppExePath(PCWSTR pszExecName, LPWSTR pszPath, size_t cchPath)", "Phase 14 is missing the shared WindowsApps executable-path resolver.");
             AssertContains(shellCore, "BuildShellItemCommandLine(IShellItemArray *psia", "Phase 14 is missing the shared shell-item command-line builder.");
@@ -2551,12 +2552,12 @@ internal static class Program
             AssertContains(uwpShellProject, "$(ProjectDir)..\\..\\trunk\\source\\WinUWP\\", "UWP shell extension project does not yet route post-build output through an explicit ProjectDir-to-trunk WinUWP seam in phase 14.");
             AssertContains(uwpShellProject, "$(ProjectDir)..\\..\\trunk\\fHashUwpWap\\;", "UWP shell extension project does not yet route resource includes through an explicit ProjectDir-to-trunk WAP seam in phase 14.");
 
-            AssertContains(workflow, "build-wui-shell-ext-x64:", "Windows workflow does not yet compile the WinUI shell extension in phase 14.");
-            AssertContains(workflow, "build-uwp-shell-ext-x64:", "Windows workflow does not yet compile the UWP shell extension in phase 14.");
-            AssertContains(workflow, "msbuild sub-proj/fHashWUIShellExt/fHashWUIShellExt.vcxproj", "Windows workflow does not yet build the WinUI shell extension project in phase 14.");
-            AssertContains(workflow, "msbuild sub-proj/fHashUwpShellExt/fHashUwpShellExt.vcxproj", "Windows workflow does not yet build the UWP shell extension project in phase 14.");
-            AssertContains(workflow, "build-wui-shell-ext-x64", "Release gating does not yet include the WinUI shell extension job in phase 14.");
-            AssertContains(workflow, "build-uwp-shell-ext-x64", "Release gating does not yet include the UWP shell extension job in phase 14.");
+            AssertDoesNotContain(workflow, "build-wui-shell-ext-x64:", "Windows workflow still builds the archived WinUI shell extension job in phase 14.");
+            AssertDoesNotContain(workflow, "build-uwp-shell-ext-x64:", "Windows workflow still builds the archived UWP shell extension job in phase 14.");
+            AssertDoesNotContain(workflow, "msbuild sub-proj/fHashWUIShellExt/fHashWUIShellExt.vcxproj", "Windows workflow still builds the archived WinUI shell extension project in phase 14.");
+            AssertDoesNotContain(workflow, "msbuild sub-proj/fHashUwpShellExt/fHashUwpShellExt.vcxproj", "Windows workflow still builds the archived UWP shell extension project in phase 14.");
+            AssertContains(archiveReadme, "legacy-platforms/sub-proj/fHashWUIShellExt", "Archive documentation does not record the WinUI shell extension as an archived legacy platform.");
+            AssertContains(archiveReadme, "legacy-platforms/sub-proj/fHashUwpShellExt", "Archive documentation does not record the UWP shell extension as an archived legacy platform.");
         }, failures);
 
         Run("Phase 15 extracts shell registration flow into a shared core seam", () =>
@@ -6130,8 +6131,46 @@ internal static class Program
 
     private static string ReadRepoFile(string repoRoot, string relativePath)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = ResolveRepoPath(repoRoot, relativePath);
         return File.ReadAllText(path, DetectEncoding(path));
+    }
+
+    private static string ResolveRepoPath(string repoRoot, string relativePath)
+    {
+        string livePath = Path.Combine(repoRoot, relativePath);
+        if (File.Exists(livePath) || Directory.Exists(livePath))
+        {
+            return livePath;
+        }
+
+        foreach ((string livePrefix, string archivePrefix) in GetArchivePathMappings())
+        {
+            if (!relativePath.StartsWith(livePrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string archivedRelativePath = archivePrefix + relativePath.Substring(livePrefix.Length);
+            string archivedPath = Path.Combine(repoRoot, archivedRelativePath);
+            if (File.Exists(archivedPath) || Directory.Exists(archivedPath))
+            {
+                return archivedPath;
+            }
+        }
+
+        return livePath;
+    }
+
+    private static IEnumerable<(string LivePrefix, string ArchivePrefix)> GetArchivePathMappings()
+    {
+        yield return (@"trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
+        yield return (@"trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
+        yield return (@"trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
+        yield return (@"trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
+        yield return (@"sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
+        yield return (@"sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
+        yield return (@"sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
+        yield return (@"sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
     }
 
     private static string ReadResultDigestAccessSeams(string repoRoot)

@@ -1,6 +1,8 @@
 #ifndef _HASH_DIGEST_OPERATION_REGISTRY_RUNTIME_H_
 #define _HASH_DIGEST_OPERATION_REGISTRY_RUNTIME_H_
 
+#include <vector>
+
 #include "Common/Global.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
 
@@ -25,6 +27,7 @@ namespace HashEngineInternal
 	bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId);
 	bool IsHashDigestOperationRegistryConsistent();
 
+	std::vector<HashDigestOperationDescriptor> GetHashDigestOperationDescriptorSnapshot();
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount);
 	bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);
 }

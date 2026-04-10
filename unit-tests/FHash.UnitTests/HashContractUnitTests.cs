@@ -726,18 +726,29 @@ public sealed class HashContractUnitTests
         Assert.Contains("dlgOpen.GetOFN().nMaxFile = static_cast<DWORD>(nameBuffer.size());", inputController, StringComparison.Ordinal);
         Assert.Contains("charCount > GetCopyDataCommandCharLimit()", inputController, StringComparison.Ordinal);
         Assert.Contains("szData[charCount - 1] != _T('\\0')", inputController, StringComparison.Ordinal);
+        Assert.Contains("bool sawTerminator = false;", inputController, StringComparison.Ordinal);
+        Assert.Contains("if (sawTerminator)", inputController, StringComparison.Ordinal);
+        Assert.Contains("return sawTerminator;", inputController, StringComparison.Ordinal);
         Assert.Contains("parameters.size() > MAX_FILES_NUM", inputController, StringComparison.Ordinal);
+        Assert.Contains("std::deque<sunjwbase::tstring> pendingFolders;", inputController, StringComparison.Ordinal);
 
         Assert.Contains("BOOL HandleCopyData(const CWnd* pSenderWnd, const COPYDATASTRUCT* pCopyDataStruct", messageControllerHeader, StringComparison.Ordinal);
         Assert.Contains("static bool IsTrustedCopyDataSender(const CWnd* pSenderWnd);", messageControllerHeader, StringComparison.Ordinal);
         Assert.Contains("IsTrustedCopyDataSender(pSenderWnd)", messageController, StringComparison.Ordinal);
-        Assert.Contains("_tcsicmp(pszFileName, _T(\"explorer.exe\")) == 0", messageController, StringComparison.Ordinal);
+        Assert.Contains("QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable)", messageController, StringComparison.Ordinal);
+        Assert.Contains("GetTrustedExplorerImagePath()", messageController, StringComparison.Ordinal);
+        Assert.Contains("GetCurrentExecutableImagePath()", messageController, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(senderImagePath.c_str(), trustedExplorerPath.c_str()) == 0", messageController, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(senderImagePath.c_str(), currentExecutablePath.c_str()) == 0", messageController, StringComparison.Ordinal);
         Assert.Contains("m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct", dialog, StringComparison.Ordinal);
 
         Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked", registryCore, StringComparison.Ordinal);
+        Assert.Contains("thread_local std::vector<HashAlgorithmDescriptor> snapshotStorage;", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestOperationRegistryMutex()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestOperationDescriptorSnapshot()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("thread_local std::vector<HashDigestOperationDescriptor> snapshotStorage;", digestRegistry, StringComparison.Ordinal);
     }
 
     [Fact]

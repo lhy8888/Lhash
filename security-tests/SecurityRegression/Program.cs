@@ -153,6 +153,12 @@ internal static partial class Program
             AssertContains(content, "charCount > GetCopyDataCommandCharLimit()", "WM_COPYDATA validation no longer bounds total payload length.");
             AssertContains(content, "parameters.size() > MAX_FILES_NUM", "WM_COPYDATA ingestion no longer caps parsed path counts.");
             AssertContains(content, "IsTrustedCopyDataSender(pSenderWnd)", "WM_COPYDATA handler no longer checks the sender process.");
+            AssertContains(content, "QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable)", "WM_COPYDATA sender validation no longer resolves the sender image path.");
+            AssertContains(content, "GetTrustedExplorerImagePath()", "WM_COPYDATA sender validation no longer resolves the trusted explorer path.");
+            AssertContains(content, "GetCurrentExecutableImagePath()", "WM_COPYDATA sender validation no longer resolves the current executable path.");
+            AssertContains(content, "if (sawTerminator)", "WM_COPYDATA validation no longer rejects non-empty data after the first terminator.");
+            AssertContains(content, "return sawTerminator;", "WM_COPYDATA validation no longer accepts a single strict terminator.");
+            AssertContains(content, "std::deque<sunjwbase::tstring> pendingFolders;", "Folder enumeration no longer uses an explicit queue/stack traversal.");
             AssertContains(content, "!IsThreadDataWorking(*m_threadData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>
@@ -694,8 +700,46 @@ internal static partial class Program
 
     private static string ReadRepoFile(string repoRoot, string relativePath)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = ResolveRepoPath(repoRoot, relativePath);
         return File.ReadAllText(path, DetectEncoding(path));
+    }
+
+    private static string ResolveRepoPath(string repoRoot, string relativePath)
+    {
+        string livePath = Path.Combine(repoRoot, relativePath);
+        if (File.Exists(livePath) || Directory.Exists(livePath))
+        {
+            return livePath;
+        }
+
+        foreach ((string livePrefix, string archivePrefix) in GetArchivePathMappings())
+        {
+            if (!relativePath.StartsWith(livePrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string archivedRelativePath = archivePrefix + relativePath.Substring(livePrefix.Length);
+            string archivedPath = Path.Combine(repoRoot, archivedRelativePath);
+            if (File.Exists(archivedPath) || Directory.Exists(archivedPath))
+            {
+                return archivedPath;
+            }
+        }
+
+        return livePath;
+    }
+
+    private static IEnumerable<(string LivePrefix, string ArchivePrefix)> GetArchivePathMappings()
+    {
+        yield return (@"trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
+        yield return (@"trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
+        yield return (@"trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
+        yield return (@"trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
+        yield return (@"sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
+        yield return (@"sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
+        yield return (@"sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
+        yield return (@"sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
     }
 
     private static Encoding DetectEncoding(string path)
@@ -807,7 +851,7 @@ internal static partial class Program
 
     private static void AssertPngAsset(string repoRoot, string relativePath, int expectedWidth, int expectedHeight, int minBytes)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = ResolveRepoPath(repoRoot, relativePath);
         byte[] bytes = File.ReadAllBytes(path);
         if (bytes.Length < minBytes)
         {
@@ -835,7 +879,7 @@ internal static partial class Program
 
     private static void AssertNonEmptyFile(string repoRoot, string relativePath)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = ResolveRepoPath(repoRoot, relativePath);
         var info = new FileInfo(path);
         if (!info.Exists || info.Length <= 0)
         {

@@ -568,6 +568,12 @@ namespace HashEngineInternal
 		return operationDescriptorStorage;
 	}
 
+	static std::vector<HashDigestOperationDescriptor>& GetHashDigestOperationDescriptorSnapshotStorage()
+	{
+		thread_local std::vector<HashDigestOperationDescriptor> snapshotStorage;
+		return snapshotStorage;
+	}
+
 	static std::mutex& GetHashDigestOperationRegistryMutex()
 	{
 		static std::mutex registryMutex;
@@ -766,11 +772,17 @@ namespace HashEngineInternal
 			operationDescriptor.finalizeAction != NULL;
 	}
 
-	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
+	std::vector<HashDigestOperationDescriptor> GetHashDigestOperationDescriptorSnapshot()
 	{
 		EnsureDefaultHashDigestOperationDescriptorsRegistered();
 		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
-		std::vector<HashDigestOperationDescriptor>& operationDescriptors = GetMutableHashDigestOperationDescriptorStorage();
+		return GetMutableHashDigestOperationDescriptorStorage();
+	}
+
+	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
+	{
+		std::vector<HashDigestOperationDescriptor>& operationDescriptors = GetHashDigestOperationDescriptorSnapshotStorage();
+		operationDescriptors = GetHashDigestOperationDescriptorSnapshot();
 
 		if (descriptorCount != NULL)
 		{

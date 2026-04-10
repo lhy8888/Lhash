@@ -1527,14 +1527,14 @@ namespace
 
 	static void HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry()
 	{
-		int descriptorCount = 0;
-		const HashEngineInternal::HashDigestOperationDescriptor *operationDescriptors = HashEngineInternal::GetHashDigestOperationDescriptors(&descriptorCount);
-		NativeAssertTrue(operationDescriptors != NULL, "Digest operation registry should publish descriptors for registered algorithms.");
-		NativeAssertEqual(GetRegisteredHashAlgorithmCount(), descriptorCount, "Digest operation descriptor count should match registered algorithm count.");
+		std::vector<HashEngineInternal::HashDigestOperationDescriptor> operationDescriptors =
+			HashEngineInternal::GetHashDigestOperationDescriptorSnapshot();
+		NativeAssertTrue(!operationDescriptors.empty(), "Digest operation registry should publish descriptors for registered algorithms.");
+		NativeAssertEqual(GetRegisteredHashAlgorithmCount(), static_cast<int>(operationDescriptors.size()), "Digest operation descriptor count should match registered algorithm count.");
 
-		for (int descriptorIndex = 0; descriptorIndex < descriptorCount; ++descriptorIndex)
+		for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptors.size(); ++descriptorIndex)
 		{
-			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(descriptorIndex);
+			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(static_cast<int>(descriptorIndex));
 			NativeAssertEqual(
 				GetHashAlgorithmDescriptorId(algorithmDescriptor),
 				NormalizeHashAlgorithmId(operationDescriptors[descriptorIndex].algorithmId),

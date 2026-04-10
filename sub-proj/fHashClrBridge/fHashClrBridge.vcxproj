@@ -129,15 +129,13 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
@@ -145,15 +143,13 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -183,15 +179,13 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
@@ -199,18 +193,16 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\trunk\fHashWUIWap\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\trunk\fHashWUIWap\version.h" />
+    <ClInclude Include="version.h" />
     <ClInclude Include="..\..\trunk\source\Common\Global.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashEngine.h" />
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h" />

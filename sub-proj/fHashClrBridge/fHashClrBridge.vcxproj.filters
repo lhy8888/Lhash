@@ -24,7 +24,7 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\trunk\fHashWUIWap\version.h">
+    <ClInclude Include="version.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\Global.h">

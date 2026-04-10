@@ -334,10 +334,13 @@ public sealed class CommonSeamUnitTests
             "- unit-tests",
             "- prepare-openssl-vendor-x64");
         Assert.DoesNotContain("prepare-openssl-vendor-x64:\r\n    needs:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("build-uwp-bridge-x64:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("build-wui-shell-ext-x64:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("build-uwp-shell-ext-x64:", workflow, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void TrunkRoot_ArchivesLegacySolutionWrappers_And_UsesSharedSecurityTargetsAsSingleAuthority()
+    public void TrunkRoot_ArchivesLegacySolutionWrappers_And_PlatformTrees_While_KeepingSharedSecurityTargetsAsSingleAuthority()
     {
         string[] archivedRelativePaths =
         [
@@ -347,7 +350,15 @@ public sealed class CommonSeamUnitTests
             @"archive\legacy-projects\trunk\fhashwui18.slnx",
             @"archive\legacy-projects\trunk\fileshashuwp17.sln",
             @"archive\legacy-projects\trunk\package_macos_dmg.sh",
-            @"archive\legacy-projects\trunk\package_win_mfc64.py"
+            @"archive\legacy-projects\trunk\package_win_mfc64.py",
+            @"archive\legacy-platforms\trunk\fHashWUIWap\version.h",
+            @"archive\legacy-platforms\trunk\fHashUwpWap\version.h",
+            @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest",
+            @"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h",
+            @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj",
+            @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj",
+            @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj",
+            @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj"
         ];
 
         string[] removedFromTrunkRoot =
@@ -358,7 +369,15 @@ public sealed class CommonSeamUnitTests
             @"trunk\fhashwui18.slnx",
             @"trunk\fileshashuwp17.sln",
             @"trunk\package_macos_dmg.sh",
-            @"trunk\package_win_mfc64.py"
+            @"trunk\package_win_mfc64.py",
+            @"trunk\fHashWUIWap",
+            @"trunk\fHashUwpWap",
+            @"trunk\source\WinUWP",
+            @"trunk\source\OSXUI",
+            @"sub-proj\fHashWinRtBridge",
+            @"sub-proj\fHashUwpNative",
+            @"sub-proj\fHashUwpShellExt",
+            @"sub-proj\fHashWUIShellExt"
         ];
 
         foreach (string relativePath in archivedRelativePaths)
@@ -378,7 +397,9 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("historical project shells and packaging scripts", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("trunk/fileshash15.sln", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("trunk/fHashWUIWap", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("legacy-platforms/trunk/fHashWUIWap", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("legacy-platforms/sub-proj/fHashWinRtBridge", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("sub-proj/fHashClrBridge", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("NativeSecurity.targets", legacyProject, StringComparison.Ordinal);
         Assert.DoesNotContain("<RandomizedBaseAddress>false</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
         Assert.DoesNotContain("<RandomizedBaseAddress>true</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);

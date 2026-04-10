@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <vector>
+#include <deque>
 #include <shlobj.h>
 
 #include "FilesHashInputController.h"
@@ -194,15 +195,22 @@ bool FilesHashInputController::IsValidCopyDataString(const COPYDATASTRUCT* pCopy
 		return false;
 	}
 
-	for (size_t i = 0; i + 1 < charCount; ++i)
+	bool sawTerminator = false;
+	for (size_t i = 0; i < charCount; ++i)
 	{
 		if (szData[i] == _T('\0'))
 		{
-			return true;
+			sawTerminator = true;
+			continue;
+		}
+
+		if (sawTerminator)
+		{
+			return false;
 		}
 	}
 
-	return false;
+	return sawTerminator;
 }
 
 TStrVector FilesHashInputController::ParseFilesCmdLine(LPTSTR filesCmdLine)
@@ -258,57 +266,70 @@ void FilesHashInputController::AppendFolderFilesRecursive(const sunjwbase::tstri
 		return;
 	}
 
-	sunjwbase::tstring searchPath = folderPath;
-	if (searchPath[searchPath.length() - 1] != _T('\\') &&
-		searchPath[searchPath.length() - 1] != _T('/'))
-	{
-		searchPath += _T("\\");
-	}
-	searchPath += _T("*");
+	std::deque<sunjwbase::tstring> pendingFolders;
+	pendingFolders.push_back(folderPath);
 
-	WIN32_FIND_DATA findData = {};
-	HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
-	if (hFind == INVALID_HANDLE_VALUE)
+	while (!pendingFolders.empty() && files.size() < MAX_FILES_NUM)
 	{
-		return;
-	}
-
-	do
-	{
-		if (_tcscmp(findData.cFileName, _T(".")) == 0 ||
-			_tcscmp(findData.cFileName, _T("..")) == 0)
+		sunjwbase::tstring currentFolder = pendingFolders.back();
+		pendingFolders.pop_back();
+		if (currentFolder.empty())
 		{
 			continue;
 		}
 
-		sunjwbase::tstring fullPath = folderPath;
-		if (fullPath[fullPath.length() - 1] != _T('\\') &&
-			fullPath[fullPath.length() - 1] != _T('/'))
+		sunjwbase::tstring searchPath = currentFolder;
+		if (searchPath[searchPath.length() - 1] != _T('\\') &&
+			searchPath[searchPath.length() - 1] != _T('/'))
 		{
-			fullPath += _T("\\");
+			searchPath += _T("\\");
 		}
-		fullPath += findData.cFileName;
+		searchPath += _T("*");
 
-		if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+		WIN32_FIND_DATA findData = {};
+		HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
+		if (hFind == INVALID_HANDLE_VALUE)
 		{
 			continue;
 		}
 
-		if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+		do
 		{
-			AppendFolderFilesRecursive(fullPath, files);
-		}
-		else
-		{
-			files.push_back(fullPath);
-			if (files.size() >= MAX_FILES_NUM)
+			if (_tcscmp(findData.cFileName, _T(".")) == 0 ||
+				_tcscmp(findData.cFileName, _T("..")) == 0)
 			{
-				break;
+				continue;
 			}
-		}
-	} while (FindNextFile(hFind, &findData) != FALSE);
 
-	FindClose(hFind);
+			sunjwbase::tstring fullPath = currentFolder;
+			if (fullPath[fullPath.length() - 1] != _T('\\') &&
+				fullPath[fullPath.length() - 1] != _T('/'))
+			{
+				fullPath += _T("\\");
+			}
+			fullPath += findData.cFileName;
+
+			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+			{
+				continue;
+			}
+
+			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+			{
+				pendingFolders.push_back(fullPath);
+			}
+			else
+			{
+				files.push_back(fullPath);
+				if (files.size() >= MAX_FILES_NUM)
+				{
+					break;
+				}
+			}
+		} while (FindNextFile(hFind, &findData) != FALSE);
+
+		FindClose(hFind);
+	}
 }
 
 void FilesHashInputController::ClearFilePaths()
