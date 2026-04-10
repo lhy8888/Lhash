@@ -164,16 +164,6 @@ LHash follows strict engineering principles:
 - Minimal, task-focused interface
 - Progress-driven interaction model
 
-## Why not WinUI as the default release
-
-LHash intentionally avoids making a heavy UI runtime the default public release.
-
-- WinUI introduces much larger runtime and package overhead
-- It is less suitable for a lightweight portable hashing tool
-- Startup and deployment costs are higher than the native maintained line
-
-LHash therefore keeps the default release smaller, faster, and more predictable with the native desktop implementation, while still retaining preview WinUI work in the repository.
-
 ## Current status
 
 - Core architecture redesigned
