@@ -97,13 +97,17 @@ function Append-OpenSslStepLog {
 }
 
 $libPath = Join-Path $InstallRoot 'lib\libcrypto.lib'
-if (Test-Path $libPath) {
+$pdbPath = Join-Path $InstallRoot 'lib\ossl_static.pdb'
+if ((Test-Path $libPath) -and (Test-Path $pdbPath)) {
     Reset-CombinedOpenSslLog -Path $CombinedLogPath
     Add-Content -Path $CombinedLogPath -Value ("Reusing existing OpenSSL vendor build at {0}" -f $InstallRoot) -Encoding UTF8
     Add-Content -Path $CombinedLogPath -Value ("OPENSSL_VENDOR_INSTALL_ROOT={0}" -f $InstallRoot) -Encoding UTF8
     Write-Host "Reusing existing OpenSSL vendor build at $InstallRoot"
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"
     return
+}
+elseif (Test-Path $libPath) {
+    Write-Host "Existing OpenSSL vendor build at $InstallRoot is missing ossl_static.pdb; rebuilding to restore full debug companion assets."
 }
 
 $perl = Get-Command perl -ErrorAction SilentlyContinue
@@ -253,6 +257,15 @@ try {
 
     Copy-Item -Path (Join-Path $buildRoot 'include\*') -Destination $includeInstallRoot -Recurse -Force
     Copy-Item -Path (Join-Path $buildRoot 'libcrypto.lib') -Destination (Join-Path $libInstallRoot 'libcrypto.lib') -Force
+
+    $builtPdbPath = Join-Path $buildRoot 'ossl_static.pdb'
+    if (Test-Path $builtPdbPath) {
+        Copy-Item -Path $builtPdbPath -Destination (Join-Path $libInstallRoot 'ossl_static.pdb') -Force
+    }
+    else {
+        Add-Content -Path $CombinedLogPath -Value "ossl_static.pdb was not produced by the OpenSSL vendor build; downstream linkers may emit LNK4099 warnings." -Encoding UTF8
+        Write-Warning "OpenSSL vendor build did not produce ossl_static.pdb."
+    }
 
     $generatedConfigurationHeader = Join-Path $includeInstallRoot 'openssl\configuration.h'
     if (-not (Test-Path $generatedConfigurationHeader)) {

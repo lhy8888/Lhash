@@ -744,7 +744,8 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked", registryCore, StringComparison.Ordinal);
-        Assert.Contains("thread_local std::vector<HashAlgorithmDescriptor> snapshotStorage;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("static inline HashAlgorithmDescriptorRegistry GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("thread_local std::vector<HashAlgorithmDescriptor> snapshotStorage;", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestOperationRegistryMutex()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestOperationDescriptorSnapshot()", digestRegistry, StringComparison.Ordinal);

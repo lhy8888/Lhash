@@ -214,6 +214,9 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'configure'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'generated-header build'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'libcrypto build'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("$pdbPath = Join-Path $InstallRoot 'lib\\ossl_static.pdb'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("missing ossl_static.pdb; rebuilding to restore full debug companion assets", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Copy-Item -Path $builtPdbPath -Destination (Join-Path $libInstallRoot 'ossl_static.pdb') -Force", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'no-shared'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'no-tests'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'no-module'", vendorScript, StringComparison.Ordinal);

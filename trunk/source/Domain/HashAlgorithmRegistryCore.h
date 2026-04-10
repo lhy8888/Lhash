@@ -41,18 +41,6 @@ inline bool& GetHashAlgorithmDefaultsInitializedFlag()
 	return defaultsInitialized;
 }
 
-inline HashAlgorithmDescriptorRegistry& GetMutableHashAlgorithmDescriptorRegistryView()
-{
-	static HashAlgorithmDescriptorRegistry registryView = { NULL, 0 };
-	return registryView;
-}
-
-inline std::vector<HashAlgorithmDescriptor>& GetHashAlgorithmDescriptorSnapshotStorage()
-{
-	thread_local std::vector<HashAlgorithmDescriptor> snapshotStorage;
-	return snapshotStorage;
-}
-
 static inline bool IsHashAlgorithmDescriptorValid(const HashAlgorithmDescriptor& algorithmDescriptor)
 {
 	return algorithmDescriptor.stableName != NULL &&
@@ -77,14 +65,6 @@ static inline bool IsHashAlgorithmDescriptorIdEqual(const HashAlgorithmDescripto
 	return GetHashAlgorithmDescriptorId(left) == GetHashAlgorithmDescriptorId(right);
 }
 
-static inline void RefreshHashAlgorithmDescriptorRegistryView()
-{
-	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
-	HashAlgorithmDescriptorRegistry& registryView = GetMutableHashAlgorithmDescriptorRegistryView();
-	registryView.descriptors = descriptorStorage.empty() ? NULL : &descriptorStorage[0];
-	registryView.count = static_cast<int>(descriptorStorage.size());
-}
-
 static inline bool RegisterHashAlgorithmDescriptorUnlocked(const HashAlgorithmDescriptor& algorithmDescriptor)
 {
 	if (!IsHashAlgorithmDescriptorValid(algorithmDescriptor))
@@ -102,12 +82,10 @@ static inline bool RegisterHashAlgorithmDescriptorUnlocked(const HashAlgorithmDe
 		}
 
 		descriptorStorage[descriptorIndex] = algorithmDescriptor;
-		RefreshHashAlgorithmDescriptorRegistryView();
 		return true;
 	}
 
 	descriptorStorage.push_back(algorithmDescriptor);
-	RefreshHashAlgorithmDescriptorRegistryView();
 	return true;
 }
 
@@ -186,7 +164,6 @@ static inline bool ClearHashAlgorithmDescriptorsForTesting()
 {
 	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	GetMutableHashAlgorithmDescriptorStorage().clear();
-	RefreshHashAlgorithmDescriptorRegistryView();
 	GetHashAlgorithmDefaultsInitializedFlag() = false;
 	return true;
 }
@@ -198,15 +175,16 @@ static inline bool ResetHashAlgorithmDescriptorsToDefaultsForTesting()
 	return true;
 }
 
-static inline const HashAlgorithmDescriptorRegistry& GetHashAlgorithmDescriptorRegistry()
+static inline HashAlgorithmDescriptorRegistry GetHashAlgorithmDescriptorRegistry()
 {
 	EnsureDefaultHashAlgorithmDescriptorsRegistered();
 	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
-	std::vector<HashAlgorithmDescriptor>& snapshotStorage = GetHashAlgorithmDescriptorSnapshotStorage();
-	snapshotStorage = GetMutableHashAlgorithmDescriptorStorage();
-	HashAlgorithmDescriptorRegistry& registryView = GetMutableHashAlgorithmDescriptorRegistryView();
-	registryView.descriptors = snapshotStorage.empty() ? NULL : &snapshotStorage[0];
-	registryView.count = static_cast<int>(snapshotStorage.size());
+	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
+	HashAlgorithmDescriptorRegistry registryView =
+	{
+		descriptorStorage.empty() ? NULL : &descriptorStorage[0],
+		static_cast<int>(descriptorStorage.size())
+	};
 	return registryView;
 }
 
