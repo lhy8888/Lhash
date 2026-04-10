@@ -34,6 +34,9 @@ LHash integration notes:
   - `no-asm`
 - Keeping the full upstream snapshot does not mean these disabled product
   surfaces are linked into LHash; they remain excluded by the build flags above
+- The local vendor build stages `include/` and `libcrypto.lib` manually after
+  `Configure`, `build_generated`, and `build_libs`, rather than depending on
+  OpenSSL's broader `install_dev` packaging target
 - Runtime adapter layer lives in `trunk/source/Runtime/Hash/OpenSslEvpHashProvider.*`
 - OpenSSL-backed algorithm descriptors are exposed through the registry with
   `openssl-*` stable ids, so they can coexist with the legacy in-tree SHA2

@@ -201,6 +201,11 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("external\\perl\\MODULES.txt", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Text-Template-1.56\\lib\\Text\\Template.pm", vendorScript, StringComparison.Ordinal);
         Assert.Contains("ms\\applink.c", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Invoke-OpenSslBuildStep -StepName 'configure'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Invoke-OpenSslBuildStep -StepName 'generated-header build'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Invoke-OpenSslBuildStep -StepName 'libcrypto build'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Copy-Item -Path (Join-Path $buildRoot 'include\\*')", vendorScript, StringComparison.Ordinal);
+        Assert.DoesNotContain("install_dev", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'apps'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'demos'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'doc'", vendorScript, StringComparison.Ordinal);
@@ -212,6 +217,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Full official OpenSSL 3.0.20 source snapshot is retained in-tree", vendorNote, StringComparison.Ordinal);
         Assert.Contains("keeps the complete upstream vendor tree", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("stages `include/` and `libcrypto.lib` manually", vendorNote, StringComparison.Ordinal);
         Assert.Contains("OpenSSL-backed algorithm descriptors", vendorNote, StringComparison.Ordinal);
         Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Keeping the full upstream snapshot does not mean these disabled product", vendorNote, StringComparison.Ordinal);

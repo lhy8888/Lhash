@@ -104,10 +104,49 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("lhash-openssl-build-{0
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 $buildRoot = Join-Path $tempRoot 'src'
 
+function Invoke-OpenSslBuildStep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$StepName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$WorkingDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string]$CommandLine,
+
+        [Parameter(Mandatory = $true)]
+        [string]$LogPath
+    )
+
+    $fullCommand = @(
+        "call `"$vcvarsall`" $vcvarsArch",
+        "cd /d `"$WorkingDirectory`"",
+        $CommandLine
+    ) -join ' && '
+
+    $output = & cmd.exe /d /s /c $fullCommand 2>&1
+    if ($null -ne $output) {
+        $output | Tee-Object -FilePath $LogPath
+    }
+    else {
+        New-Item -ItemType File -Force -Path $LogPath | Out-Null
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "OpenSSL vendor $StepName failed with exit code $LASTEXITCODE. See $LogPath for details."
+    }
+}
+
 try {
     Copy-Item -Path $sourceRoot -Destination $buildRoot -Recurse -Force
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
     $openSslDir = Join-Path $InstallRoot 'ssl'
+    $includeInstallRoot = Join-Path $InstallRoot 'include'
+    $libInstallRoot = Join-Path $InstallRoot 'lib'
+    $configureLog = Join-Path $InstallRoot 'configure.log'
+    $generatedLog = Join-Path $InstallRoot 'build-generated.log'
+    $buildLog = Join-Path $InstallRoot 'build-libs.log'
 
     $configureCommand = @(
         'perl',
@@ -125,17 +164,19 @@ try {
         "--openssldir=$openSslDir"
     ) -join ' '
 
-    $command = @(
-        "call `"$vcvarsall`" $vcvarsArch",
-        "cd /d `"$buildRoot`"",
-        $configureCommand,
-        "nmake /NOLOGO build_libs",
-        "nmake /NOLOGO install_dev"
-    ) -join ' && '
+    Invoke-OpenSslBuildStep -StepName 'configure' -WorkingDirectory $buildRoot -CommandLine $configureCommand -LogPath $configureLog
+    Invoke-OpenSslBuildStep -StepName 'generated-header build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_generated' -LogPath $generatedLog
+    Invoke-OpenSslBuildStep -StepName 'libcrypto build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_libs' -LogPath $buildLog
 
-    & cmd.exe /d /s /c $command
-    if ($LASTEXITCODE -ne 0) {
-        throw "OpenSSL vendor build failed with exit code $LASTEXITCODE."
+    New-Item -ItemType Directory -Force -Path $includeInstallRoot | Out-Null
+    New-Item -ItemType Directory -Force -Path $libInstallRoot | Out-Null
+
+    Copy-Item -Path (Join-Path $buildRoot 'include\*') -Destination $includeInstallRoot -Recurse -Force
+    Copy-Item -Path (Join-Path $buildRoot 'libcrypto.lib') -Destination (Join-Path $libInstallRoot 'libcrypto.lib') -Force
+
+    $generatedConfigurationHeader = Join-Path $includeInstallRoot 'openssl\configuration.h'
+    if (-not (Test-Path $generatedConfigurationHeader)) {
+        throw "OpenSSL vendor build did not produce the generated public header $generatedConfigurationHeader."
     }
 
     if (-not (Test-Path $libPath)) {
