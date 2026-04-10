@@ -174,6 +174,8 @@ public sealed class ReleaseMetadataUnitTests
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string vendorTargets = RepositoryTestContext.ReadUtf8File(@"NativeOpenSslVendor.targets");
+        string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+        string uwpBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
         string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
         string vendorNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
         string vendorModules = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\external\perl\MODULES.txt");
@@ -196,6 +198,10 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains(@"<FHashOpenSslLibDir Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(FHashOpenSslLibDir)\libcrypto.lib", clrBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"<FHashOpenSslLibDir Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>", uwpBridgeProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(FHashOpenSslLibDir)\libcrypto.lib", uwpBridgeProject, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN32", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);

@@ -6053,6 +6053,8 @@ internal static class Program
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
+            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+            string uwpBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
@@ -6076,6 +6078,8 @@ internal static class Program
             AssertContains(providerImplementation, "EVP_MD_fetch", "Phase 98 OpenSSL provider no longer uses EVP fetch semantics.");
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
+            AssertContains(clrBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "Phase 98 CLR bridge does not yet link libcrypto explicitly when the vendored OpenSSL root is present.");
+            AssertContains(uwpBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "Phase 98 WinRT bridge does not yet link libcrypto explicitly when the vendored OpenSSL root is present.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");

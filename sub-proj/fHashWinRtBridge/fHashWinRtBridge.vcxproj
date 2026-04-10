@@ -124,6 +124,10 @@
   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)..\..\trunk\</SolutionDir>
   </PropertyGroup>
+  <PropertyGroup>
+    <FHashOpenSslInstallRoot Condition="'$(FHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</FHashOpenSslInstallRoot>
+    <FHashOpenSslLibDir Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>
+  </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <GenerateManifest>false</GenerateManifest>
@@ -368,6 +372,12 @@
   <ItemGroup>
     <ResourceCompile Include="fHashWinRtBridge.rc" />
   </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(FHashOpenSslInstallRoot)'!=''">
+    <Link>
+      <AdditionalLibraryDirectories>$(FHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <Import Project="..\..\NativeSecurity.targets" />
   <Import Project="..\..\NativeUtf8.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

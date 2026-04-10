@@ -403,6 +403,8 @@ internal static partial class Program
             string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+            string uwpBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
             string vendorScript = ReadRepoFile(repoRoot, @"trunk\build_openssl_vendor.ps1");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
@@ -446,6 +448,8 @@ internal static partial class Program
 
             AssertContains(nativeCoreProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The maintained native core project no longer builds the OpenSSL provider.");
             AssertContains(uwpNativeProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The UWP native core project no longer builds the OpenSSL provider.");
+            AssertContains(clrBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "The CLR bridge no longer links libcrypto explicitly when the vendored OpenSSL root is present.");
+            AssertContains(uwpBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "The WinRT bridge no longer links libcrypto explicitly when the vendored OpenSSL root is present.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
             AssertContains(vendorTargets, "libcrypto.lib", "The shared OpenSSL vendor targets no longer link libcrypto.");
             AssertContains(vendorScript, "VC-WIN64A", "The OpenSSL vendor build script no longer covers x64.");
