@@ -400,10 +400,7 @@ namespace
 		algorithmIds.push_back(CreateAlgorithmId("openssl-sha3-256"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-sha3-384"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-sha3-512"));
-		algorithmIds.push_back(CreateAlgorithmId("openssl-blake2b-160"));
-		algorithmIds.push_back(CreateAlgorithmId("openssl-blake2b-256"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-blake2b-512"));
-		algorithmIds.push_back(CreateAlgorithmId("openssl-blake2s-128"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-blake2s-256"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-shake128-256"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-shake256-512"));
@@ -440,24 +437,9 @@ namespace
 		return sunjwbase::strtotstr(std::string("B751850B1A57168A5693CD924B6B096E08F621827444F70D884F5D0240D2712E10E116E9192AF3C91A7EC57647E3934057340B4CF408D5A56592F8274EEC53F0"));
 	}
 
-	static sunjwbase::tstring GetOfficialOpenSslBlake2b_160Vector()
-	{
-		return sunjwbase::strtotstr(std::string("384264F676F39536840523F284921CDC68B6846B"));
-	}
-
-	static sunjwbase::tstring GetOfficialOpenSslBlake2b_256Vector()
-	{
-		return sunjwbase::strtotstr(std::string("BDDD813C634239723171EF3FEE98579B94964E3BB1CB3E427262C8C068D52319"));
-	}
-
 	static sunjwbase::tstring GetOfficialOpenSslBlake2b_512Vector()
 	{
 		return sunjwbase::strtotstr(std::string("BA80A53F981C4D0D6A2797B69F12F6E94C212F14685AC4B74B12BB6FDBFFA2D17D87C5392AAB792DC252D5DE4533CC9518D38AA8DBF1925AB92386EDD4009923"));
-	}
-
-	static sunjwbase::tstring GetOfficialOpenSslBlake2s_128Vector()
-	{
-		return sunjwbase::strtotstr(std::string("AA4938119B1DC7B87CBAD0FFD200D0AE"));
 	}
 
 	static sunjwbase::tstring GetOfficialOpenSslBlake2s_256Vector()
@@ -869,20 +851,17 @@ namespace
 
 		const HashResult& result = GetThreadDataResults(threadData).front();
 		NativeAssertEqual(RESULT_ALL, result.state, "Successful OpenSSL EVP hashing should end in RESULT_ALL.");
-		NativeAssertEqual(static_cast<size_t>(13), result.digests.size(), "All requested OpenSSL digest variants should be emitted.");
+		NativeAssertEqual(static_cast<size_t>(10), result.digests.size(), "All requested supported OpenSSL digest variants should be emitted.");
 		NativeAssertEqual(GetOfficialOpenSslSha256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[0]), "OpenSSL SHA-256 did not match the known vector for 'abc'.");
 		NativeAssertEqual(GetOfficialOpenSslSha384Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[1]), "OpenSSL SHA-384 did not match the known vector for 'abc'.");
 		NativeAssertEqual(GetOfficialOpenSslSha512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[2]), "OpenSSL SHA-512 did not match the known vector for 'abc'.");
 		NativeAssertEqual(GetOfficialOpenSslSha3_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[3]), "OpenSSL SHA3-256 did not match the known vector for 'abc'.");
 		NativeAssertEqual(GetOfficialOpenSslSha3_384Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[4]), "OpenSSL SHA3-384 did not match the known vector for 'abc'.");
 		NativeAssertEqual(GetOfficialOpenSslSha3_512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[5]), "OpenSSL SHA3-512 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2b_160Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[6]), "OpenSSL BLAKE2b-160 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2b_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[7]), "OpenSSL BLAKE2b-256 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2b_512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[8]), "OpenSSL BLAKE2b-512 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2s_128Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[9]), "OpenSSL BLAKE2s-128 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2s_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[10]), "OpenSSL BLAKE2s-256 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslShake128_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[11]), "OpenSSL SHAKE128-256 did not match the known vector for 'abc'.");
-		NativeAssertEqual(GetOfficialOpenSslShake256_512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[12]), "OpenSSL SHAKE256-512 did not match the known vector for 'abc'.");
+		NativeAssertEqual(GetOfficialOpenSslBlake2b_512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[6]), "OpenSSL BLAKE2b-512 did not match the known vector for 'abc'.");
+		NativeAssertEqual(GetOfficialOpenSslBlake2s_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[7]), "OpenSSL BLAKE2s-256 did not match the known vector for 'abc'.");
+		NativeAssertEqual(GetOfficialOpenSslShake128_256Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[8]), "OpenSSL SHAKE128-256 did not match the known vector for 'abc'.");
+		NativeAssertEqual(GetOfficialOpenSslShake256_512Vector(), FindDigestValueByAlgorithmId(result, algorithmIds[9]), "OpenSSL SHAKE256-512 did not match the known vector for 'abc'.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "OpenSSL EVP hashing should emit a hash-ready event.");
 	}
 
@@ -935,20 +914,20 @@ namespace
 		request.files.push_back(filePath);
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha3"));
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha3-512"));
-		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-blake2b-256"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-blake2b-512"));
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-shake256-512"));
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha-256"));
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha3-512"));
 		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-blake2"));
-		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-blake2s-128"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-blake2s-256"));
 
 		std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);
 		NativeAssertEqual(static_cast<size_t>(5), normalizedAlgorithmIds.size(), "Unknown or duplicate OpenSSL EVP ids should be removed during request normalization.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-sha3-512"), normalizedAlgorithmIds[0], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-blake2b-256"), normalizedAlgorithmIds[1], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-blake2b-512"), normalizedAlgorithmIds[1], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-shake256-512"), normalizedAlgorithmIds[2], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-sha-256"), normalizedAlgorithmIds[3], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-blake2s-128"), normalizedAlgorithmIds[4], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-blake2s-256"), normalizedAlgorithmIds[4], "OpenSSL EVP ids should preserve explicit request order after unknown ids are removed.");
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "OpenSSL EVP hashing should ignore unknown ids and still succeed.");
@@ -957,15 +936,15 @@ namespace
 		const HashResult& result = jobState.results.front();
 		NativeAssertEqual(static_cast<size_t>(5), result.digests.size(), "Only known OpenSSL EVP variants should be emitted.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-sha3-512"), ResolveDigestResultAlgorithmId(result.digests[0]), "OpenSSL EVP result order should follow the normalized request order.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-blake2b-256"), ResolveDigestResultAlgorithmId(result.digests[1]), "OpenSSL EVP result order should follow the normalized request order.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-blake2b-512"), ResolveDigestResultAlgorithmId(result.digests[1]), "OpenSSL EVP result order should follow the normalized request order.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-shake256-512"), ResolveDigestResultAlgorithmId(result.digests[2]), "OpenSSL EVP result order should follow the normalized request order.");
 		NativeAssertEqual(CreateAlgorithmId("openssl-sha-256"), ResolveDigestResultAlgorithmId(result.digests[3]), "OpenSSL EVP result order should follow the normalized request order.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-blake2s-128"), ResolveDigestResultAlgorithmId(result.digests[4]), "OpenSSL EVP result order should follow the normalized request order.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-blake2s-256"), ResolveDigestResultAlgorithmId(result.digests[4]), "OpenSSL EVP result order should follow the normalized request order.");
 		NativeAssertEqual(GetOfficialOpenSslSha3_512Vector(), result.digests[0].value, "OpenSSL SHA3-512 should stay deterministic after unknown id filtering.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2b_256Vector(), result.digests[1].value, "OpenSSL BLAKE2b-256 should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(GetOfficialOpenSslBlake2b_512Vector(), result.digests[1].value, "OpenSSL BLAKE2b-512 should stay deterministic after unknown id filtering.");
 		NativeAssertEqual(GetOfficialOpenSslShake256_512Vector(), result.digests[2].value, "OpenSSL SHAKE256-512 should stay deterministic after unknown id filtering.");
 		NativeAssertEqual(GetOfficialOpenSslSha256Vector(), result.digests[3].value, "OpenSSL SHA-256 should stay deterministic after unknown id filtering.");
-		NativeAssertEqual(GetOfficialOpenSslBlake2s_128Vector(), result.digests[4].value, "OpenSSL BLAKE2s-128 should stay deterministic after unknown id filtering.");
+		NativeAssertEqual(GetOfficialOpenSslBlake2s_256Vector(), result.digests[4].value, "OpenSSL BLAKE2s-256 should stay deterministic after unknown id filtering.");
 	}
 
 	static void HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns()

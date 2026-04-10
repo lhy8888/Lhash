@@ -13,7 +13,7 @@
 
 - 以固定版本方式接入 `OpenSSL 3 EVP`
 - 新增独立的 `SHA-256`、`SHA-384` 和 `SHA-512` 描述符，不改动原有 `SHA256` / `SHA512` 的 id 与显示名称
-- 新增 `SHA3-256`、`SHA3-384`、`SHA3-512`、`BLAKE2b-160`、`BLAKE2b-256`、`BLAKE2b-512`、`BLAKE2s-128`、`BLAKE2s-256`、`SHAKE128-256`、`SHAKE256-512`
+- 新增 `SHA3-256`、`SHA3-384`、`SHA3-512`、`BLAKE2b-512`、`BLAKE2s-256`、`SHAKE128-256`、`SHAKE256-512`
 - 新增算法通过独立 provider 与 `third_party/openssl` vendor 目录接入，不污染原有内置 SHA-2 实现
 
 ### 构建与授权

@@ -36,10 +36,7 @@ namespace HashRuntime
 	static const size_t OPENSSL_SHA3_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_SHA3_384_OUTPUT_BYTES = 48;
 	static const size_t OPENSSL_SHA3_512_OUTPUT_BYTES = 64;
-	static const size_t OPENSSL_BLAKE2B_160_OUTPUT_BYTES = 20;
-	static const size_t OPENSSL_BLAKE2B_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64;
-	static const size_t OPENSSL_BLAKE2S_128_OUTPUT_BYTES = 16;
 	static const size_t OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_SHAKE128_256_OUTPUT_BYTES = 32;
 	static const size_t OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64;

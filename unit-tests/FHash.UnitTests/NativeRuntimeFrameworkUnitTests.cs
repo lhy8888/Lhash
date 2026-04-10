@@ -106,10 +106,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("3A985DA74FE225B2045C172D6BD390BD855F086E3E9D525B46BFE24511431532", testSource, StringComparison.Ordinal);
         Assert.Contains("EC01498288516FC926459F58E2C6AD8DF9B473CB0FC08C2596DA7CF0E49BE4B2", testSource, StringComparison.Ordinal);
         Assert.Contains("B751850B1A57168A5693CD924B6B096E08F621827444F70D884F5D0240D2712E", testSource, StringComparison.Ordinal);
-        Assert.Contains("384264F676F39536840523F284921CDC68B6846B", testSource, StringComparison.Ordinal);
-        Assert.Contains("BDDD813C634239723171EF3FEE98579B94964E3BB1CB3E427262C8C068D52319", testSource, StringComparison.Ordinal);
         Assert.Contains("BA80A53F981C4D0D6A2797B69F12F6E94C212F14685AC4B74B12BB6FDBFFA2D1", testSource, StringComparison.Ordinal);
-        Assert.Contains("AA4938119B1DC7B87CBAD0FFD200D0AE", testSource, StringComparison.Ordinal);
         Assert.Contains("508C5E8C327C14E2E1A72BA34EEB452F37458B209ED63A294D999B4C86675982", testSource, StringComparison.Ordinal);
         Assert.Contains("5881092DD818BF5CF8A3DDB793FBCBA74097D5C526A6D35F97B83351940F2CC8", testSource, StringComparison.Ordinal);
         Assert.Contains("483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", testSource, StringComparison.Ordinal);

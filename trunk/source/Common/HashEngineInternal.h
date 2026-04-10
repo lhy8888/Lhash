@@ -113,10 +113,7 @@ namespace HashEngineInternal
 			openSslSha3_256(),
 			openSslSha3_384(),
 			openSslSha3_512(),
-			openSslBlake2b_160(),
-			openSslBlake2b_256(),
 			openSslBlake2b_512(),
-			openSslBlake2s_128(),
 			openSslBlake2s_256(),
 			openSslShake128_256(),
 			openSslShake256_512()
@@ -132,10 +129,7 @@ namespace HashEngineInternal
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha3_256);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha3_384);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslSha3_512);
-			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2b_160);
-			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2b_256);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2b_512);
-			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2s_128);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslBlake2s_256);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslShake128_256);
 			HashRuntime::CleanupOpenSslEvpHashContext(&openSslShake256_512);
@@ -160,10 +154,7 @@ namespace HashEngineInternal
 		HashRuntime::OpenSslEvpHashContext openSslSha3_256;
 		HashRuntime::OpenSslEvpHashContext openSslSha3_384;
 		HashRuntime::OpenSslEvpHashContext openSslSha3_512;
-		HashRuntime::OpenSslEvpHashContext openSslBlake2b_160;
-		HashRuntime::OpenSslEvpHashContext openSslBlake2b_256;
 		HashRuntime::OpenSslEvpHashContext openSslBlake2b_512;
-		HashRuntime::OpenSslEvpHashContext openSslBlake2s_128;
 		HashRuntime::OpenSslEvpHashContext openSslBlake2s_256;
 		HashRuntime::OpenSslEvpHashContext openSslShake128_256;
 		HashRuntime::OpenSslEvpHashContext openSslShake256_512;

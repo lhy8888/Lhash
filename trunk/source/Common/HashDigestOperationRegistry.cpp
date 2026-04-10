@@ -108,27 +108,9 @@ namespace HashEngineInternal
 		return algorithmId;
 	}
 
-	static const HashAlgorithmId& GetOpenSslBlake2b_160AlgorithmId()
-	{
-		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2b-160");
-		return algorithmId;
-	}
-
-	static const HashAlgorithmId& GetOpenSslBlake2b_256AlgorithmId()
-	{
-		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2b-256");
-		return algorithmId;
-	}
-
 	static const HashAlgorithmId& GetOpenSslBlake2b_512AlgorithmId()
 	{
 		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2b-512");
-		return algorithmId;
-	}
-
-	static const HashAlgorithmId& GetOpenSslBlake2s_128AlgorithmId()
-	{
-		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("openssl-blake2s-128");
 		return algorithmId;
 	}
 
@@ -246,28 +228,10 @@ namespace HashEngineInternal
 		InitializeOpenSslDigestContext(&hashContexts->openSslSha3_512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false, HashRuntime::OPENSSL_SHA3_512_OUTPUT_BYTES);
 	}
 
-	static void InitializeOpenSslBlake2b_160DigestContext(FileHashContexts *hashContexts)
-	{
-		static const char *const kAlgorithmNames[] = { "BLAKE2b512", "BLAKE2B512", "BLAKE2b-512", "BLAKE2B-512" };
-		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2b_160, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false, HashRuntime::OPENSSL_BLAKE2B_160_OUTPUT_BYTES);
-	}
-
-	static void InitializeOpenSslBlake2b_256DigestContext(FileHashContexts *hashContexts)
-	{
-		static const char *const kAlgorithmNames[] = { "BLAKE2b512", "BLAKE2B512", "BLAKE2b-512", "BLAKE2B-512" };
-		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2b_256, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false, HashRuntime::OPENSSL_BLAKE2B_256_OUTPUT_BYTES);
-	}
-
 	static void InitializeOpenSslBlake2b_512DigestContext(FileHashContexts *hashContexts)
 	{
 		static const char *const kAlgorithmNames[] = { "BLAKE2b512", "BLAKE2B512", "BLAKE2b-512", "BLAKE2B-512" };
 		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2b_512, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false, HashRuntime::OPENSSL_BLAKE2B_512_OUTPUT_BYTES);
-	}
-
-	static void InitializeOpenSslBlake2s_128DigestContext(FileHashContexts *hashContexts)
-	{
-		static const char *const kAlgorithmNames[] = { "BLAKE2s256", "BLAKE2S256", "BLAKE2s-256", "BLAKE2S-256" };
-		InitializeOpenSslDigestContext(&hashContexts->openSslBlake2s_128, kAlgorithmNames, sizeof(kAlgorithmNames) / sizeof(kAlgorithmNames[0]), false, HashRuntime::OPENSSL_BLAKE2S_128_OUTPUT_BYTES);
 	}
 
 	static void InitializeOpenSslBlake2s_256DigestContext(FileHashContexts *hashContexts)
@@ -368,24 +332,9 @@ namespace HashEngineInternal
 		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslSha3_512, data, static_cast<size_t>(dataLen));
 	}
 
-	static void UpdateOpenSslBlake2b_160DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
-	{
-		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2b_160, data, static_cast<size_t>(dataLen));
-	}
-
-	static void UpdateOpenSslBlake2b_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
-	{
-		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2b_256, data, static_cast<size_t>(dataLen));
-	}
-
 	static void UpdateOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2b_512, data, static_cast<size_t>(dataLen));
-	}
-
-	static void UpdateOpenSslBlake2s_128DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
-	{
-		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslBlake2s_128, data, static_cast<size_t>(dataLen));
 	}
 
 	static void UpdateOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
@@ -579,36 +528,12 @@ namespace HashEngineInternal
 			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_512, HashRuntime::OPENSSL_SHA3_512_OUTPUT_BYTES));
 	}
 
-	static void FinalizeOpenSslBlake2b_160DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
-	{
-		SetDigestStorageValueById(
-			digestBundle,
-			GetOpenSslBlake2b_160AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2b_160, HashRuntime::OPENSSL_BLAKE2B_160_OUTPUT_BYTES));
-	}
-
-	static void FinalizeOpenSslBlake2b_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
-	{
-		SetDigestStorageValueById(
-			digestBundle,
-			GetOpenSslBlake2b_256AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2b_256, HashRuntime::OPENSSL_BLAKE2B_256_OUTPUT_BYTES));
-	}
-
 	static void FinalizeOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
 	{
 		SetDigestStorageValueById(
 			digestBundle,
 			GetOpenSslBlake2b_512AlgorithmId(),
 			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2b_512, HashRuntime::OPENSSL_BLAKE2B_512_OUTPUT_BYTES));
-	}
-
-	static void FinalizeOpenSslBlake2s_128DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
-	{
-		SetDigestStorageValueById(
-			digestBundle,
-			GetOpenSslBlake2s_128AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2s_128, HashRuntime::OPENSSL_BLAKE2S_128_OUTPUT_BYTES));
 	}
 
 	static void FinalizeOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -790,28 +715,10 @@ namespace HashEngineInternal
 			FinalizeOpenSslSha3_512DigestContext
 		});
 		RegisterHashDigestOperationDescriptor({
-			GetOpenSslBlake2b_160AlgorithmId(),
-			InitializeOpenSslBlake2b_160DigestContext,
-			UpdateOpenSslBlake2b_160DigestContext,
-			FinalizeOpenSslBlake2b_160DigestContext
-		});
-		RegisterHashDigestOperationDescriptor({
-			GetOpenSslBlake2b_256AlgorithmId(),
-			InitializeOpenSslBlake2b_256DigestContext,
-			UpdateOpenSslBlake2b_256DigestContext,
-			FinalizeOpenSslBlake2b_256DigestContext
-		});
-		RegisterHashDigestOperationDescriptor({
 			GetOpenSslBlake2b_512AlgorithmId(),
 			InitializeOpenSslBlake2b_512DigestContext,
 			UpdateOpenSslBlake2b_512DigestContext,
 			FinalizeOpenSslBlake2b_512DigestContext
-		});
-		RegisterHashDigestOperationDescriptor({
-			GetOpenSslBlake2s_128AlgorithmId(),
-			InitializeOpenSslBlake2s_128DigestContext,
-			UpdateOpenSslBlake2s_128DigestContext,
-			FinalizeOpenSslBlake2s_128DigestContext
 		});
 		RegisterHashDigestOperationDescriptor({
 			GetOpenSslBlake2s_256AlgorithmId(),

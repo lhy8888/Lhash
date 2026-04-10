@@ -203,10 +203,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-blake2b-160\", \"BLAKE2b-160\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-blake2b-256\", \"BLAKE2b-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-blake2s-128\", \"BLAKE2s-128\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
@@ -217,10 +214,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("GetOpenSslSha3_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslSha3_384AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslSha3_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
-        Assert.Contains("GetOpenSslBlake2b_160AlgorithmId()", digestRegistry, StringComparison.Ordinal);
-        Assert.Contains("GetOpenSslBlake2b_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslBlake2b_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
-        Assert.Contains("GetOpenSslBlake2s_128AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslBlake2s_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslShake128_256AlgorithmId()", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("GetOpenSslShake256_512AlgorithmId()", digestRegistry, StringComparison.Ordinal);
@@ -234,10 +228,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("OPENSSL_SHA3_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHA3_384_OUTPUT_BYTES = 48", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHA3_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_BLAKE2B_160_OUTPUT_BYTES = 20", providerHeader, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_BLAKE2B_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_BLAKE2S_128_OUTPUT_BYTES = 16", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHAKE128_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
@@ -264,9 +255,8 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("EC01498288516FC926459F58E2C6AD8DF9B473CB0FC08C2596DA7CF0E49BE4B2", nativeRuntimeSource, StringComparison.Ordinal);
-        Assert.Contains("384264F676F39536840523F284921CDC68B6846B", nativeRuntimeSource, StringComparison.Ordinal);
-        Assert.Contains("BDDD813C634239723171EF3FEE98579B94964E3BB1CB3E427262C8C068D52319", nativeRuntimeSource, StringComparison.Ordinal);
-        Assert.Contains("AA4938119B1DC7B87CBAD0FFD200D0AE", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("BA80A53F981C4D0D6A2797B69F12F6E94C212F14685AC4B74B12BB6FDBFFA2D17D87C5392AAB792DC252D5DE4533CC9518D38AA8DBF1925AB92386EDD4009923", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("508C5E8C327C14E2E1A72BA34EEB452F37458B209ED63A294D999B4C86675982", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("B751850B1A57168A5693CD924B6B096E08F621827444F70D884F5D0240D2712E", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("483366601360A8771C6863080CC4114D8DB44530F8F1E1EE4F94EA37E78B5739", nativeRuntimeSource, StringComparison.Ordinal);
