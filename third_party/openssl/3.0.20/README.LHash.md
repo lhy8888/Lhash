@@ -10,6 +10,8 @@ Imported content:
   vendor library for Windows
 - Upstream `LICENSE.txt` (Apache License 2.0)
 - Upstream build metadata and provider sources used by EVP digest fetch
+- Upstream `external/perl` fallback subset (`MODULES.txt` and `Text::Template`)
+  required by OpenSSL `Configure`
 
 LHash integration notes:
 

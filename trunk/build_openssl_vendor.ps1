@@ -19,6 +19,18 @@ if (-not (Test-Path $sourceRoot)) {
     throw "OpenSSL vendor source for $openSslVersion was not found at $sourceRoot."
 }
 
+$requiredVendorFiles = @(
+    'external\perl\MODULES.txt',
+    'external\perl\Text-Template-1.56\lib\Text\Template.pm',
+    'external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm'
+)
+foreach ($requiredVendorFile in $requiredVendorFiles) {
+    $requiredVendorPath = Join-Path $sourceRoot $requiredVendorFile
+    if (-not (Test-Path $requiredVendorPath)) {
+        throw "OpenSSL vendor source is incomplete. Missing required build asset: $requiredVendorPath"
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
     $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}-{1}" -f $Platform, $Configuration)
 }
