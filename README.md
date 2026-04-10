@@ -85,11 +85,15 @@ BLAKE3-512
 
 🧪 OpenSSL 3 (Extended Algorithms)
 
-SHA-256 (OpenSSL)
+SHA-256 
 
-SHA-512 (OpenSSL)
+SHA-384
+
+SHA-512 
 
 SHA3-256
+
+SHA3-384
 
 SHA3-512
 
