@@ -131,6 +131,16 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void LegacySha256Source_DropsDuplicateExtractAndStringMacros()
+    {
+        string sha256Source = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\sha256.cpp");
+
+        Assert.DoesNotContain("mutils_word8", sha256Source, StringComparison.Ordinal);
+        Assert.Equal(1, CountOccurrences(sha256Source, "#ifndef EXTRACT_UCHAR"));
+        Assert.Equal(1, CountOccurrences(sha256Source, "#define STRING2INT("));
+    }
+
+    [Fact]
     public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");
@@ -486,5 +496,22 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/ThreadDataAccess.h\"", legacyContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
+    }
+
+    private static int CountOccurrences(string content, string needle)
+    {
+        int count = 0;
+        int startIndex = 0;
+        while (true)
+        {
+            int index = content.IndexOf(needle, startIndex, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return count;
+            }
+
+            count++;
+            startIndex = index + needle.Length;
+        }
     }
 }
