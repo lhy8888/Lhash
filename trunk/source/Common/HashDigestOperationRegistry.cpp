@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <mutex>
+
 #include "Common/HashEngineInternal.h"
 #include "Common/strhelper.h"
 
@@ -566,12 +568,18 @@ namespace HashEngineInternal
 		return operationDescriptorStorage;
 	}
 
+	static std::mutex& GetHashDigestOperationRegistryMutex()
+	{
+		static std::mutex registryMutex;
+		return registryMutex;
+	}
+
 	static HashAlgorithmId ResolveHashDigestOperationDescriptorAlgorithmId(const HashDigestOperationDescriptor& operationDescriptor)
 	{
 		return NormalizeHashAlgorithmId(operationDescriptor.algorithmId);
 	}
 
-	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)
+	static bool RegisterHashDigestOperationDescriptorUnlocked(const HashDigestOperationDescriptor& operationDescriptor)
 	{
 		HashAlgorithmId normalizedAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);
 		if (normalizedAlgorithmId.empty())
@@ -591,6 +599,7 @@ namespace HashEngineInternal
 			return false;
 		}
 
+		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
 		std::vector<HashDigestOperationDescriptor>& operationDescriptorStorage = GetMutableHashDigestOperationDescriptorStorage();
 		for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptorStorage.size(); ++descriptorIndex)
 		{
@@ -609,130 +618,137 @@ namespace HashEngineInternal
 		return true;
 	}
 
+	bool RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)
+	{
+		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
+		return RegisterHashDigestOperationDescriptorUnlocked(operationDescriptor);
+	}
+
 	static void EnsureDefaultHashDigestOperationDescriptorsRegistered()
 	{
 		static bool defaultsInitialized = false;
+		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
 		if (defaultsInitialized)
 		{
 			return;
 		}
 
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetMd5AlgorithmId(),
 			InitializeMD5DigestContext,
 			UpdateMD5DigestContext,
 			FinalizeMD5DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetSha1AlgorithmId(),
 			InitializeSHA1DigestContext,
 			UpdateSHA1DigestContext,
 			FinalizeSHA1DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetSha256AlgorithmId(),
 			InitializeSHA256DigestContext,
 			UpdateSHA256DigestContext,
 			FinalizeSHA256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetSha512AlgorithmId(),
 			InitializeSHA512DigestContext,
 			UpdateSHA512DigestContext,
 			FinalizeSHA512DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetBlake3_256AlgorithmId(),
 			InitializeBLAKE3_256DigestContext,
 			UpdateBLAKE3_256DigestContext,
 			FinalizeBLAKE3_256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetBlake3_512AlgorithmId(),
 			InitializeBLAKE3_512DigestContext,
 			UpdateBLAKE3_512DigestContext,
 			FinalizeBLAKE3_512DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetBlake3XofAlgorithmId(),
 			InitializeBLAKE3XofDigestContext,
 			UpdateBLAKE3XofDigestContext,
 			FinalizeBLAKE3XofDigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetXXH3_64AlgorithmId(),
 			InitializeXXH3_64DigestContext,
 			UpdateXXH3_64DigestContext,
 			FinalizeXXH3_64DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetXXH3_128AlgorithmId(),
 			InitializeXXH3_128DigestContext,
 			UpdateXXH3_128DigestContext,
 			FinalizeXXH3_128DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetCRC32CAlgorithmId(),
 			InitializeCRC32CDigestContext,
 			UpdateCRC32CDigestContext,
 			FinalizeCRC32CDigestContext
 		});
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha256AlgorithmId(),
 			InitializeOpenSslSha256DigestContext,
 			UpdateOpenSslSha256DigestContext,
 			FinalizeOpenSslSha256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha384AlgorithmId(),
 			InitializeOpenSslSha384DigestContext,
 			UpdateOpenSslSha384DigestContext,
 			FinalizeOpenSslSha384DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha512AlgorithmId(),
 			InitializeOpenSslSha512DigestContext,
 			UpdateOpenSslSha512DigestContext,
 			FinalizeOpenSslSha512DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha3_256AlgorithmId(),
 			InitializeOpenSslSha3_256DigestContext,
 			UpdateOpenSslSha3_256DigestContext,
 			FinalizeOpenSslSha3_256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha3_384AlgorithmId(),
 			InitializeOpenSslSha3_384DigestContext,
 			UpdateOpenSslSha3_384DigestContext,
 			FinalizeOpenSslSha3_384DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha3_512AlgorithmId(),
 			InitializeOpenSslSha3_512DigestContext,
 			UpdateOpenSslSha3_512DigestContext,
 			FinalizeOpenSslSha3_512DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslBlake2b_512AlgorithmId(),
 			InitializeOpenSslBlake2b_512DigestContext,
 			UpdateOpenSslBlake2b_512DigestContext,
 			FinalizeOpenSslBlake2b_512DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslBlake2s_256AlgorithmId(),
 			InitializeOpenSslBlake2s_256DigestContext,
 			UpdateOpenSslBlake2s_256DigestContext,
 			FinalizeOpenSslBlake2s_256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslShake128_256AlgorithmId(),
 			InitializeOpenSslShake128_256DigestContext,
 			UpdateOpenSslShake128_256DigestContext,
 			FinalizeOpenSslShake128_256DigestContext
 		});
-		RegisterHashDigestOperationDescriptor({
+		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslShake256_512AlgorithmId(),
 			InitializeOpenSslShake256_512DigestContext,
 			UpdateOpenSslShake256_512DigestContext,
@@ -754,6 +770,7 @@ namespace HashEngineInternal
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
 	{
 		EnsureDefaultHashDigestOperationDescriptorsRegistered();
+		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
 		std::vector<HashDigestOperationDescriptor>& operationDescriptors = GetMutableHashDigestOperationDescriptorStorage();
 
 		if (descriptorCount != NULL)
@@ -772,12 +789,12 @@ namespace HashEngineInternal
 			return false;
 		}
 
-		int descriptorCount = 0;
-		const HashDigestOperationDescriptor *operationDescriptors = GetHashDigestOperationDescriptors(&descriptorCount);
-		for (int descriptorIndex = 0; descriptorIndex < descriptorCount; ++descriptorIndex)
+		EnsureDefaultHashDigestOperationDescriptorsRegistered();
+		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
+		std::vector<HashDigestOperationDescriptor>& operationDescriptors = GetMutableHashDigestOperationDescriptorStorage();
+		for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptors.size(); ++descriptorIndex)
 		{
-			HashAlgorithmId descriptorAlgorithmId =
-				ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptors[descriptorIndex]);
+			HashAlgorithmId descriptorAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptors[descriptorIndex]);
 			if (descriptorAlgorithmId != normalizedAlgorithmId)
 			{
 				continue;

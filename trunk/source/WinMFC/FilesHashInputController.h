@@ -21,6 +21,7 @@ public:
 	BOOL LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct);
 
 private:
+	static size_t GetCopyDataCommandCharLimit();
 	static bool CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath);
 	static bool IsValidCopyDataString(const COPYDATASTRUCT* pCopyDataStruct);
 	static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);

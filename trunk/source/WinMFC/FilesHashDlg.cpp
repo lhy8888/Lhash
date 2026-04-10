@@ -185,7 +185,7 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 }
 BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
-	if (m_hashMessageController.HandleCopyData(pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
+	if (m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
 	{
 		return TRUE;
 	}

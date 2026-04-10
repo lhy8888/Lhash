@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <vector>
 
 #include "Common/strhelper.h"
 
@@ -33,34 +34,50 @@ namespace WindowsComm
 	 */
 	tstring GetExeFileVersion(TCHAR* path)
 	{
-		// get file version //
-		string strVer("");
-		unsigned int MVer,SVer,LVer,BVer;
-		VS_FIXEDFILEINFO pvsf;
-		DWORD dwHandle;
-		DWORD cchver = GetFileVersionInfoSize(path, &dwHandle);
-		BYTE *pver = new BYTE[cchver];
-		BOOL bret = GetFileVersionInfo(path, dwHandle, cchver, pver);
-		if (bret)
+		if (path == NULL || path[0] == TEXT('\0'))
 		{
-			UINT uLen;
-			void *pbuf;
-			bret = VerQueryValue(pver, TEXT("\\"), &pbuf, &uLen);
-			memcpy(&pvsf, pbuf, sizeof(VS_FIXEDFILEINFO));
-
-			// 将版本号转换为数字 //
-			MVer = pvsf.dwFileVersionMS / 65536;
-			SVer = pvsf.dwFileVersionMS - 65536 * MVer;
-			LVer = pvsf.dwFileVersionLS / 65536;
-			BVer = pvsf.dwFileVersionLS - 65536 * LVer;
-			strVer = strappendformat(strVer, ("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
-			// Ver.Format(_T("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
-			// 将版本号转换为数字 //
-
-			delete[] pver;
+			return _T("");
 		}
 
-		// get file version //
+		string strVer("");
+		DWORD dwHandle = 0;
+		DWORD cchver = GetFileVersionInfoSize(path, &dwHandle);
+		if (cchver == 0)
+		{
+			return _T("");
+		}
+
+		std::vector<BYTE> pver(cchver, 0);
+		if (!GetFileVersionInfo(path, dwHandle, cchver, pver.data()))
+		{
+			return _T("");
+		}
+
+		UINT uLen = 0;
+		void *pbuf = NULL;
+		if (!VerQueryValue(pver.data(), TEXT("\\"), &pbuf, &uLen) ||
+			pbuf == NULL ||
+			uLen < sizeof(VS_FIXEDFILEINFO))
+		{
+			return _T("");
+		}
+
+		unsigned int MVer = 0;
+		unsigned int SVer = 0;
+		unsigned int LVer = 0;
+		unsigned int BVer = 0;
+		VS_FIXEDFILEINFO pvsf = {};
+		memcpy(&pvsf, pbuf, sizeof(VS_FIXEDFILEINFO));
+
+		// 将版本号转换为数字 //
+		MVer = pvsf.dwFileVersionMS / 65536;
+		SVer = pvsf.dwFileVersionMS - 65536 * MVer;
+		LVer = pvsf.dwFileVersionLS / 65536;
+		BVer = pvsf.dwFileVersionLS - 65536 * LVer;
+		strVer = strappendformat(strVer, ("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
+		// Ver.Format(_T("%d.%d.%d.%d"), MVer, SVer, LVer, BVer);
+		// 将版本号转换为数字 //
+
 		return strtotstr(strVer);
 	}
 

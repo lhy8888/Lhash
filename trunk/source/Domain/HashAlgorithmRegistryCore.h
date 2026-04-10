@@ -2,6 +2,7 @@
 #define _HASH_ALGORITHM_REGISTRY_CORE_H_
 
 #include <string>
+#include <mutex>
 #include <vector>
 
 #include "Common/strhelper.h"
@@ -26,6 +27,12 @@ inline std::vector<HashAlgorithmDescriptor>& GetMutableHashAlgorithmDescriptorSt
 {
 	static std::vector<HashAlgorithmDescriptor> descriptorStorage;
 	return descriptorStorage;
+}
+
+inline std::mutex& GetHashAlgorithmDescriptorRegistryMutex()
+{
+	static std::mutex registryMutex;
+	return registryMutex;
 }
 
 inline bool& GetHashAlgorithmDefaultsInitializedFlag()
@@ -72,13 +79,14 @@ static inline void RefreshHashAlgorithmDescriptorRegistryView()
 	registryView.count = static_cast<int>(descriptorStorage.size());
 }
 
-static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)
+static inline bool RegisterHashAlgorithmDescriptorUnlocked(const HashAlgorithmDescriptor& algorithmDescriptor)
 {
 	if (!IsHashAlgorithmDescriptorValid(algorithmDescriptor))
 	{
 		return false;
 	}
 
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
 	for (size_t descriptorIndex = 0; descriptorIndex < descriptorStorage.size(); ++descriptorIndex)
 	{
@@ -98,34 +106,41 @@ static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor
 	return true;
 }
 
+static inline bool RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)
+{
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
+	return RegisterHashAlgorithmDescriptorUnlocked(algorithmDescriptor);
+}
+
 static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 {
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	if (GetHashAlgorithmDefaultsInitializedFlag())
 	{
 		return;
 	}
 
-	RegisterHashAlgorithmDescriptor({ "md5", "MD5", true, true });
-	RegisterHashAlgorithmDescriptor({ "sha1", "SHA1", true, true });
-	RegisterHashAlgorithmDescriptor({ "sha256", "SHA256", true, true });
-	RegisterHashAlgorithmDescriptor({ "sha512", "SHA512", true, true });
-	RegisterHashAlgorithmDescriptor({ "blake3-256", "BLAKE3-256", true, false });
-	RegisterHashAlgorithmDescriptor({ "blake3-512", "BLAKE3-512", true, false });
-	RegisterHashAlgorithmDescriptor({ "blake3-xof", "BLAKE3 XOF", true, false });
-	RegisterHashAlgorithmDescriptor({ "xxh3-64", "XXH3-64", true, false });
-	RegisterHashAlgorithmDescriptor({ "xxh3-128", "XXH3-128", true, false });
-	RegisterHashAlgorithmDescriptor({ "crc32c", "CRC32C", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "md5", "MD5", true, true });
+	RegisterHashAlgorithmDescriptorUnlocked({ "sha1", "SHA1", true, true });
+	RegisterHashAlgorithmDescriptorUnlocked({ "sha256", "SHA256", true, true });
+	RegisterHashAlgorithmDescriptorUnlocked({ "sha512", "SHA512", true, true });
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-256", "BLAKE3-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-512", "BLAKE3-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-xof", "BLAKE3 XOF", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-64", "XXH3-64", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-128", "XXH3-128", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "crc32c", "CRC32C", true, false });
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
-	RegisterHashAlgorithmDescriptor({ "openssl-sha-256", "SHA-256", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-sha-384", "SHA-384", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-sha-512", "SHA-512", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-sha3-256", "SHA3-256", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-sha3-384", "SHA3-384", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-sha3-512", "SHA3-512", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-blake2b-512", "BLAKE2b-512", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-blake2s-256", "BLAKE2s-256", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-shake128-256", "SHAKE128-256", true, false });
-	RegisterHashAlgorithmDescriptor({ "openssl-shake256-512", "SHAKE256-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-256", "SHA-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-384", "SHA-384", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-512", "SHA-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-256", "SHA3-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-384", "SHA3-384", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-512", "SHA3-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-blake2b-512", "BLAKE2b-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-blake2s-256", "BLAKE2s-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-shake128-256", "SHAKE128-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-shake256-512", "SHAKE256-512", true, false });
 #endif
 	GetHashAlgorithmDefaultsInitializedFlag() = true;
 }
@@ -164,6 +179,7 @@ static inline sunjwbase::tstring GetHashAlgorithmDescriptorDisplayLabel(const Ha
 
 static inline bool ClearHashAlgorithmDescriptorsForTesting()
 {
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	GetMutableHashAlgorithmDescriptorStorage().clear();
 	RefreshHashAlgorithmDescriptorRegistryView();
 	GetHashAlgorithmDefaultsInitializedFlag() = false;
@@ -180,6 +196,7 @@ static inline bool ResetHashAlgorithmDescriptorsToDefaultsForTesting()
 static inline const HashAlgorithmDescriptorRegistry& GetHashAlgorithmDescriptorRegistry()
 {
 	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
 	RefreshHashAlgorithmDescriptorRegistryView();
 	return GetMutableHashAlgorithmDescriptorRegistryView();
 }
@@ -196,12 +213,14 @@ static inline int GetRegisteredHashAlgorithmCount()
 
 static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int index)
 {
-	const HashAlgorithmDescriptor *algorithmDescriptors = GetRegisteredHashAlgorithmDescriptors();
-	if (index < 0 || index >= GetRegisteredHashAlgorithmCount())
+	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
+	std::vector<HashAlgorithmDescriptor>& algorithmDescriptors = GetMutableHashAlgorithmDescriptorStorage();
+	if (index < 0 || index >= static_cast<int>(algorithmDescriptors.size()))
 	{
 		return GetUnknownHashAlgorithmDescriptor();
 	}
-	return algorithmDescriptors[index];
+	return algorithmDescriptors[static_cast<size_t>(index)];
 }
 
 static inline int GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)
@@ -212,12 +231,14 @@ static inline int GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)
 		return -1;
 	}
 
-	for (int index = 0; index < GetRegisteredHashAlgorithmCount(); ++index)
+	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
+	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
+	for (size_t index = 0; index < descriptorStorage.size(); ++index)
 	{
-		const HashAlgorithmDescriptor& descriptor = GetHashAlgorithmDescriptorAt(index);
-		if (GetHashAlgorithmDescriptorId(descriptor) == normalizedAlgorithmId)
+		if (GetHashAlgorithmDescriptorId(descriptorStorage[index]) == normalizedAlgorithmId)
 		{
-			return index;
+			return static_cast<int>(index);
 		}
 	}
 

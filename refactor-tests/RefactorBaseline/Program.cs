@@ -3202,7 +3202,7 @@ internal static class Program
             AssertContains(messageControllerHeader, "BOOL HandlePaint(HICON icon) const;", "Phase 28 message controller is missing the paint seam.");
             AssertContains(messageControllerHeader, "HCURSOR GetDragCursor(HICON icon) const;", "Phase 28 message controller is missing the drag-cursor seam.");
             AssertContains(messageControllerHeader, "void HandleDropFiles(HDROP hDropInfo, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the drop-files seam.");
-            AssertContains(messageControllerHeader, "BOOL HandleCopyData(const COPYDATASTRUCT* pCopyDataStruct, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the copy-data seam.");
+            AssertContains(messageControllerHeader, "BOOL HandleCopyData(const CWnd* pSenderWnd, const COPYDATASTRUCT* pCopyDataStruct, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the copy-data seam.");
             AssertContains(messageControllerHeader, "LRESULT HandleCustomMessage(WPARAM wParam) const;", "Phase 28 message controller is missing the custom-message seam.");
             AssertContains(messageControllerHeader, "void HandleInitMenuPopup(CMenu* pPopupMenu) const;", "Phase 28 message controller is missing the popup-menu seam.");
             AssertContains(messageControllerHeader, "void HandleCopyHash() const;", "Phase 28 message controller is missing the copy-hash seam.");
@@ -3228,7 +3228,7 @@ internal static class Program
             AssertContains(dlgCpp, "if (m_hashMessageController.HandlePaint(m_hIcon))", "FilesHashDlg.cpp does not yet route icon paint through the phase 28 message controller.");
             AssertContains(dlgCpp, "return m_hashMessageController.GetDragCursor(m_hIcon);", "FilesHashDlg.cpp does not yet route drag-cursor queries through the phase 28 message controller.");
             AssertContains(dlgCpp, "m_hashMessageController.HandleDropFiles(hDropInfo, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route WM_DROPFILES through the phase 28 message controller.");
-            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyData(pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM))", "FilesHashDlg.cpp does not yet route WM_COPYDATA through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM))", "FilesHashDlg.cpp does not yet route WM_COPYDATA through the phase 28 message controller.");
             AssertContains(dlgCpp, "return m_hashMessageController.HandleCustomMessage(wParam);", "FilesHashDlg.cpp does not yet route custom messages through the phase 28 message controller.");
             AssertContains(dlgCpp, "m_hashMessageController.HandleInitMenuPopup(pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu updates through the phase 28 message controller.");
             AssertContains(dlgCpp, "m_hashMessageController.HandleCopyHash();", "FilesHashDlg.cpp does not yet route copy-hash commands through the phase 28 message controller.");
@@ -5450,7 +5450,7 @@ internal static class Program
                 "Phase 83 HashDigestOperationRegistry.h does not yet expose digest-type descriptor lookup.");
             AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor/id lookup.");
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize operation descriptors behind dedicated storage.");
-            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 83 HashDigestOperationRegistry.cpp does not yet register default operation descriptors through the registration seam.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptorUnlocked({", "Phase 83 HashDigestOperationRegistry.cpp does not yet register default operation descriptors through the registration seam.");
             AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestOperationRegistry.h\"", "Phase 83 HashEngineInternal.h does not yet consume HashDigestOperationRegistry.");
 
@@ -5566,7 +5566,7 @@ internal static class Program
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose dedicated descriptor storage.");
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor registration through a dedicated seam.");
             AssertContains(hashDigestOperationRegistry, "EnsureDefaultHashDigestOperationDescriptorsRegistered()", "Phase 86 HashDigestOperationRegistry.cpp does not yet bootstrap defaults through registration.");
-            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize default descriptors through registration.");
+            AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptorUnlocked({", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize default descriptors through registration.");
             AssertDoesNotContain(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 86 HashDigestOperationRegistry.cpp still hardcodes a fixed operation-descriptor table.");
 
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 native runtime tests do not yet cover descriptor snapshot generation.");
@@ -5962,7 +5962,7 @@ internal static class Program
             AssertContains(digestRegistry, "GetXXH3_64AlgorithmId()", "Phase 95 digest operation registry does not yet define the XXH3-64 algorithm id seam.");
             AssertContains(digestRegistry, "GetXXH3_128AlgorithmId()", "Phase 95 digest operation registry does not yet define the XXH3-128 algorithm id seam.");
             AssertContains(digestRegistry, "GetCRC32CAlgorithmId()", "Phase 95 digest operation registry does not yet define the CRC32C algorithm id seam.");
-            AssertContains(digestRegistry, "RegisterHashDigestOperationDescriptor({", "Phase 95 digest operation registry no longer registers runtime digest descriptors.");
+            AssertContains(digestRegistry, "RegisterHashDigestOperationDescriptorUnlocked({", "Phase 95 digest operation registry no longer registers runtime digest descriptors.");
 
             AssertContains(xxh3ProviderHeader, "XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", "Phase 95 XXH3 provider header does not yet expose the 64-bit profile.");
             AssertContains(xxh3ProviderImplementation, "XXH3_64bits_reset", "Phase 95 XXH3 provider does not yet initialize through the official xxHash API.");

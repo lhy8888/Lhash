@@ -419,7 +419,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)", digestOperationTypeCompat, StringComparison.Ordinal);
         Assert.Contains("IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)", digestOperationTypeCompat, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
-        Assert.Contains("RegisterHashDigestOperationDescriptor({", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked({", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashDigestOperationDescriptorsRegistered()", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)", digestLifecycle, StringComparison.Ordinal);
@@ -703,6 +703,41 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", internalHeader, StringComparison.Ordinal);
         Assert.Contains("FileExecutionState *executionState", internalHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", internalHeader, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WindowsComm_AndMfcInputPaths_HardenVersionExtraction_CopyData_AndRegistryInitialization()
+    {
+        string windowsComm = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\WindowsComm.cpp");
+        string inputHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashInputController.h");
+        string inputController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashInputController.cpp");
+        string messageControllerHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashMessageController.h");
+        string messageController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashMessageController.cpp");
+        string dialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashDlg.cpp");
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string digestRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+
+        Assert.Contains("if (cchver == 0)", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("std::vector<BYTE> pver(cchver, 0);", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("uLen < sizeof(VS_FIXEDFILEINFO)", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("BYTE *pver = new BYTE[cchver];", windowsComm, StringComparison.Ordinal);
+
+        Assert.Contains("static size_t GetCopyDataCommandCharLimit();", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("dlgOpen.GetOFN().nMaxFile = static_cast<DWORD>(nameBuffer.size());", inputController, StringComparison.Ordinal);
+        Assert.Contains("charCount > GetCopyDataCommandCharLimit()", inputController, StringComparison.Ordinal);
+        Assert.Contains("szData[charCount - 1] != _T('\\0')", inputController, StringComparison.Ordinal);
+        Assert.Contains("parameters.size() > MAX_FILES_NUM", inputController, StringComparison.Ordinal);
+
+        Assert.Contains("BOOL HandleCopyData(const CWnd* pSenderWnd, const COPYDATASTRUCT* pCopyDataStruct", messageControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("static bool IsTrustedCopyDataSender(const CWnd* pSenderWnd);", messageControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("IsTrustedCopyDataSender(pSenderWnd)", messageController, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(pszFileName, _T(\"explorer.exe\")) == 0", messageController, StringComparison.Ordinal);
+        Assert.Contains("m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct", dialog, StringComparison.Ordinal);
+
+        Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestOperationRegistryMutex()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked", digestRegistry, StringComparison.Ordinal);
     }
 
     [Fact]

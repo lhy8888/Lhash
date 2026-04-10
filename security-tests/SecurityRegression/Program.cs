@@ -145,7 +145,10 @@ internal static partial class Program
             AssertContains(content, "cbData < sizeof(TCHAR)", "WM_COPYDATA validation no longer rejects undersized payloads.");
             AssertContains(content, "% sizeof(TCHAR)", "WM_COPYDATA validation no longer checks character alignment.");
             AssertContains(content, "pCopyDataStruct == NULL || pCopyDataStruct->lpData == NULL", "WM_COPYDATA validation no longer rejects null buffers.");
-            AssertContains(content, "szData[i] == _T('\\0')", "WM_COPYDATA validation no longer checks for null termination.");
+            AssertContains(content, "szData[charCount - 1] != _T('\\0')", "WM_COPYDATA validation no longer enforces a strict trailing null terminator.");
+            AssertContains(content, "charCount > GetCopyDataCommandCharLimit()", "WM_COPYDATA validation no longer bounds total payload length.");
+            AssertContains(content, "parameters.size() > MAX_FILES_NUM", "WM_COPYDATA ingestion no longer caps parsed path counts.");
+            AssertContains(content, "IsTrustedCopyDataSender(pSenderWnd)", "WM_COPYDATA handler no longer checks the sender process.");
             AssertContains(content, "!IsThreadDataWorking(*m_threadData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>

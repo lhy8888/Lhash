@@ -10,6 +10,11 @@
 
 using namespace sunjwbase;
 
+namespace
+{
+	const size_t COPYDATA_COMMAND_CHAR_LIMIT = 32768;
+}
+
 FilesHashInputController::FilesHashInputController()
 	: m_threadData(NULL),
 	m_parentWnd(NULL)
@@ -44,7 +49,7 @@ BOOL FilesHashInputController::LoadOpenFileDialogSelection(LPCTSTR fileFilter)
 	std::vector<TCHAR> nameBuffer(MAX_FILES_NUM * MAX_PATH + 1, 0);
 	CFileDialog dlgOpen(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT, fileFilter, m_parentWnd, 0);
 	dlgOpen.GetOFN().lpstrFile = nameBuffer.data();
-	dlgOpen.GetOFN().nMaxFile = MAX_FILES_NUM;
+	dlgOpen.GetOFN().nMaxFile = static_cast<DWORD>(nameBuffer.size());
 	if (IDOK != dlgOpen.DoModal())
 	{
 		return FALSE;
@@ -130,10 +135,20 @@ BOOL FilesHashInputController::LoadCopyDataFiles(const COPYDATASTRUCT* pCopyData
 
 	const TCHAR* szFiles = static_cast<const TCHAR*>(pCopyDataStruct->lpData);
 	TStrVector parameters = ParseFilesCmdLine(const_cast<TCHAR*>(szFiles));
+	if (parameters.empty() || parameters.size() > MAX_FILES_NUM)
+	{
+		return FALSE;
+	}
+
 	ClearFilePaths();
 	ReplaceTrimmedThreadDataInputFiles(*m_threadData, parameters);
 
 	return HasThreadDataInputFiles(*m_threadData) ? TRUE : FALSE;
+}
+
+size_t FilesHashInputController::GetCopyDataCommandCharLimit()
+{
+	return COPYDATA_COMMAND_CHAR_LIMIT;
 }
 
 bool FilesHashInputController::CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath)
@@ -168,8 +183,18 @@ bool FilesHashInputController::IsValidCopyDataString(const COPYDATASTRUCT* pCopy
 	}
 
 	size_t charCount = pCopyDataStruct->cbData / sizeof(TCHAR);
+	if (charCount == 0 || charCount > GetCopyDataCommandCharLimit())
+	{
+		return false;
+	}
+
 	const TCHAR* szData = static_cast<const TCHAR*>(pCopyDataStruct->lpData);
-	for (size_t i = 0; i < charCount; ++i)
+	if (szData[charCount - 1] != _T('\0'))
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i + 1 < charCount; ++i)
 	{
 		if (szData[i] == _T('\0'))
 		{

@@ -79,16 +79,18 @@ public sealed class CommonSeamUnitTests
         Assert.False(File.Exists(legacyRegistryShimPath));
         RepositoryTestContext.AssertContainsInOrder(
             registryCore,
-            "RegisterHashAlgorithmDescriptor({ \"md5\", \"MD5\", true, true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha1\", \"SHA1\", true, true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha256\", \"SHA256\", true, true });",
-            "RegisterHashAlgorithmDescriptor({ \"sha512\", \"SHA512\", true, true });",
-            "RegisterHashAlgorithmDescriptor({ \"blake3-256\", \"BLAKE3-256\", true, false });",
-            "RegisterHashAlgorithmDescriptor({ \"blake3-512\", \"BLAKE3-512\", true, false });",
-            "RegisterHashAlgorithmDescriptor({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"md5\", \"MD5\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha1\", \"SHA1\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha256\", \"SHA256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha512\", \"SHA512\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-256\", \"BLAKE3-256\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-512\", \"BLAKE3-512\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("std::lock_guard<std::mutex>", registryCore, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("EnsureDefaultHashAlgorithmDescriptorsRegistered()", registryCore, StringComparison.Ordinal);
         Assert.Contains("typedef sunjwbase::tstring HashAlgorithmId;", registryCore, StringComparison.Ordinal);
