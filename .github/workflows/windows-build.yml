@@ -78,14 +78,18 @@ jobs:
           if-no-files-found: warn
 
   prepare-openssl-vendor-x64:
-    needs:
-      - security-regression
-      - unit-tests
     runs-on: windows-2022
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Restore cached OpenSSL vendor x64
+        id: restore-openssl-vendor-x64-cache
+        uses: actions/cache@v4
+        with:
+          path: artifacts/openssl-vendor-x64
+          key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2

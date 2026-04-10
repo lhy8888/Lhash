@@ -301,6 +301,8 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
         Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests:", workflow, StringComparison.Ordinal);
@@ -313,6 +315,7 @@ public sealed class CommonSeamUnitTests
             "- security-regression",
             "- unit-tests",
             "- prepare-openssl-vendor-x64");
+        Assert.DoesNotContain("prepare-openssl-vendor-x64:\r\n    needs:", workflow, StringComparison.Ordinal);
     }
 
     [Fact]

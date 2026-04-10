@@ -3833,7 +3833,7 @@ internal static class Program
             AssertContains(resultSearch, "return CountDigestMatchingHashResults(resultList, digestText);", "Phase 46 ResultDataSearch digest-count helper does not yet defer to HashResultSearch.");
         }, failures);
 
-        Run("Phase 47 introduces a native C++ runtime test project and prepares the vendored OpenSSL package once for parallel native builds", () =>
+        Run("Phase 47 introduces a native C++ runtime test project and caches the vendored OpenSSL package for parallel native builds", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
             string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
@@ -3874,8 +3874,11 @@ internal static class Program
             AssertContains(workflow, "msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", "Phase 47 workflow does not yet build the native runtime test project.");
             AssertContains(workflow, @"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 47 workflow does not yet define the shared OpenSSL vendor preparation job.");
+            AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 47 workflow does not yet restore the shared OpenSSL vendor cache.");
+            AssertContains(workflow, "actions/cache@v4", "Phase 47 workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
+            AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
             AssertInOrder(
                 workflow,
                 new[]
@@ -6087,6 +6090,8 @@ internal static class Program
             AssertContains(uwpBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 WinRT bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
+            AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
+            AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");

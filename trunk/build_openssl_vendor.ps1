@@ -98,6 +98,9 @@ function Append-OpenSslStepLog {
 
 $libPath = Join-Path $InstallRoot 'lib\libcrypto.lib'
 if (Test-Path $libPath) {
+    Reset-CombinedOpenSslLog -Path $CombinedLogPath
+    Add-Content -Path $CombinedLogPath -Value ("Reusing existing OpenSSL vendor build at {0}" -f $InstallRoot) -Encoding UTF8
+    Add-Content -Path $CombinedLogPath -Value ("OPENSSL_VENDOR_INSTALL_ROOT={0}" -f $InstallRoot) -Encoding UTF8
     Write-Host "Reusing existing OpenSSL vendor build at $InstallRoot"
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"
     return

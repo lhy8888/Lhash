@@ -194,6 +194,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
         Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
