@@ -22,7 +22,7 @@ internal static partial class Program
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string legacyPackScript = ReadRepoFile(repoRoot, @"trunk\package_win_mfc64.py");
+            string legacyPackScript = ReadRepoFile(repoRoot, @"archive\legacy-projects\trunk\package_win_mfc64.py");
             string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
             string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
             string winUiAssembly = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Properties\AssemblyInfo.cs");
@@ -46,6 +46,10 @@ internal static partial class Program
 
             AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
             AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\package_win_mfc64.py")))
+            {
+                throw new InvalidOperationException("Legacy Windows packaging script should be archived instead of living in trunk root.");
+            }
             AssertContains(legacyPackScript, "EXE_FILE_NAME = 'LHash.exe'", "Legacy packaging script still packages the old executable name.");
             AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
             AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");

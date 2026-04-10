@@ -337,6 +337,56 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void TrunkRoot_ArchivesLegacySolutionWrappers_And_UsesSharedSecurityTargetsAsSingleAuthority()
+    {
+        string[] archivedRelativePaths =
+        [
+            @"archive\legacy-projects\trunk\fHash.xcworkspace\contents.xcworkspacedata",
+            @"archive\legacy-projects\trunk\fHashMacUI.xcodeproj\project.pbxproj",
+            @"archive\legacy-projects\trunk\fhashwui17.sln",
+            @"archive\legacy-projects\trunk\fhashwui18.slnx",
+            @"archive\legacy-projects\trunk\fileshashuwp17.sln",
+            @"archive\legacy-projects\trunk\package_macos_dmg.sh",
+            @"archive\legacy-projects\trunk\package_win_mfc64.py"
+        ];
+
+        string[] removedFromTrunkRoot =
+        [
+            @"trunk\fHash.xcworkspace",
+            @"trunk\fHashMacUI.xcodeproj",
+            @"trunk\fhashwui17.sln",
+            @"trunk\fhashwui18.slnx",
+            @"trunk\fileshashuwp17.sln",
+            @"trunk\package_macos_dmg.sh",
+            @"trunk\package_win_mfc64.py"
+        ];
+
+        foreach (string relativePath in archivedRelativePaths)
+        {
+            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
+            Assert.True(File.Exists(fullPath) || Directory.Exists(fullPath), $"{relativePath} should exist in archive after the trunk-root cleanup.");
+        }
+
+        foreach (string relativePath in removedFromTrunkRoot)
+        {
+            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
+            Assert.False(File.Exists(fullPath) || Directory.Exists(fullPath), $"{relativePath} should no longer live in trunk root after archiving.");
+        }
+
+        string archiveReadme = RepositoryTestContext.ReadUtf8File(@"archive\README.md");
+        string legacyProject = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash.vcxproj");
+
+        Assert.Contains("historical project shells and packaging scripts", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("trunk/fileshash15.sln", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("trunk/fHashWUIWap", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("NativeSecurity.targets", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<RandomizedBaseAddress>false</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<RandomizedBaseAddress>true</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<DataExecutionPrevention />", legacyProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("<DataExecutionPrevention>true</DataExecutionPrevention>", legacyProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void WinUiNativeStack_ReusesNativeCore_InsteadOfRecompilingCoreSources()
     {
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
