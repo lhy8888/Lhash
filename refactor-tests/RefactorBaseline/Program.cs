@@ -5490,7 +5490,7 @@ internal static class Program
 
             AssertContains(hashAlgorithmRegistry, "GetUnknownHashAlgorithmDescriptor()", "Phase 84 HashAlgorithmRegistry does not yet expose the unknown descriptor fallback seam.");
             AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", "Phase 84 HashAlgorithmRegistry does not yet expose safe algorithm-index lookup.");
-            AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", "Phase 84 HashAlgorithmRegistry does not yet expose safe descriptor lookup.");
+        AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmDescriptor(ResultDigestType digestType, HashAlgorithmDescriptor *algorithmDescriptor)", "Phase 84 HashAlgorithmRegistry does not yet expose safe descriptor lookup.");
             AssertDoesNotContain(hashAlgorithmRegistry, "return algorithmDescriptors[0];", "Phase 84 HashAlgorithmRegistry should no longer implicitly fall back to MD5 for invalid indices.");
             AssertContains(hashAlgorithmRegistry, "int algorithmIndex = -1;", "Phase 84 HashAlgorithmRegistry does not yet initialize unresolved algorithm index to -1.");
 
@@ -5503,7 +5503,7 @@ internal static class Program
             AssertDoesNotContain(legacyThreadExecutionAccess, "enabled[GetHashAlgorithmIndex(digestType)]", "Phase 84 ThreadData execution access still indexes selection arrays through unsafe direct digest-index conversion.");
 
             AssertContains(digestMetadataAccess, "TryGetResultDigestIndex(ResultDigestType digestType, int *index)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-index lookup.");
-            AssertContains(digestMetadataAccess, "TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-metadata lookup.");
+        AssertContains(digestMetadataAccess, "TryGetResultDigestMetadata(ResultDigestType digestType, ResultDigestMetadata *digestMetadata)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-metadata lookup.");
 
             AssertContains(digestStateAccess, "TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", "Phase 84 ResultDigestStateAccess does not yet expose safe digest-storage index resolution.");
             AssertContains(digestStateAccess, "GetInvalidDigestStorageScratch()", "Phase 84 ResultDigestStateAccess does not yet expose inert scratch storage for invalid digest writes.");

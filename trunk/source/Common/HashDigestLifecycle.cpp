@@ -36,16 +36,16 @@ namespace HashEngineInternal
 				return true;
 			}
 
-			const ResultDigestMetadata *digestMetadata = NULL;
-			if (!TryGetResultDigestMetadataById(algorithmId, &digestMetadata) || digestMetadata == NULL)
+			ResultDigestMetadata digestMetadata;
+			if (!TryGetResultDigestMetadataById(algorithmId, &digestMetadata))
 			{
 				return true;
 			}
 
 			HashDigestResult digestResult;
 			digestResult.algorithmId = NormalizeHashAlgorithmId(algorithmId);
-			digestResult.stableName = GetResultDigestMetadataStableName(*digestMetadata);
-			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(*digestMetadata);
+			digestResult.stableName = GetResultDigestMetadataStableName(digestMetadata);
+			digestResult.displayLabel = GetResultDigestMetadataDisplayLabel(digestMetadata);
 			digestResult.value = digestValue;
 			result.digests.push_back(digestResult);
 			return true;

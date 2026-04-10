@@ -102,7 +102,7 @@ static inline bool TryGetHashAlgorithmIndex(ResultDigestType digestType, int *al
 	return true;
 }
 
-static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptor(ResultDigestType digestType)
+static inline HashAlgorithmDescriptor GetHashAlgorithmDescriptor(ResultDigestType digestType)
 {
 	int algorithmIndex = -1;
 	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
@@ -112,7 +112,7 @@ static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptor(ResultDi
 	return GetHashAlgorithmDescriptorAt(algorithmIndex);
 }
 
-static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)
+static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, HashAlgorithmDescriptor *algorithmDescriptor)
 {
 	int algorithmIndex = -1;
 	if (!TryGetHashAlgorithmIndex(digestType, &algorithmIndex))
@@ -122,7 +122,7 @@ static inline bool TryGetHashAlgorithmDescriptor(ResultDigestType digestType, co
 
 	if (algorithmDescriptor != NULL)
 	{
-		*algorithmDescriptor = &GetHashAlgorithmDescriptorAt(algorithmIndex);
+		*algorithmDescriptor = GetHashAlgorithmDescriptorAt(algorithmIndex);
 	}
 	return true;
 }

@@ -19,7 +19,7 @@ struct HashAlgorithmDescriptor
 
 struct HashAlgorithmDescriptorRegistry
 {
-	const HashAlgorithmDescriptor *descriptors;
+	std::vector<HashAlgorithmDescriptor> descriptors;
 	int count;
 };
 
@@ -175,30 +175,37 @@ static inline bool ResetHashAlgorithmDescriptorsToDefaultsForTesting()
 	return true;
 }
 
-static inline HashAlgorithmDescriptorRegistry GetHashAlgorithmDescriptorRegistry()
+static inline std::vector<HashAlgorithmDescriptor> GetHashAlgorithmDescriptorSnapshot()
 {
 	EnsureDefaultHashAlgorithmDescriptorsRegistered();
 	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
-	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
+	return GetMutableHashAlgorithmDescriptorStorage();
+}
+
+static inline HashAlgorithmDescriptorRegistry GetHashAlgorithmDescriptorRegistry()
+{
+	std::vector<HashAlgorithmDescriptor> descriptorStorage = GetHashAlgorithmDescriptorSnapshot();
 	HashAlgorithmDescriptorRegistry registryView =
 	{
-		descriptorStorage.empty() ? NULL : &descriptorStorage[0],
+		descriptorStorage,
 		static_cast<int>(descriptorStorage.size())
 	};
 	return registryView;
 }
 
-static inline const HashAlgorithmDescriptor *GetRegisteredHashAlgorithmDescriptors()
+static inline std::vector<HashAlgorithmDescriptor> GetRegisteredHashAlgorithmDescriptors()
 {
 	return GetHashAlgorithmDescriptorRegistry().descriptors;
 }
 
 static inline int GetRegisteredHashAlgorithmCount()
 {
-	return GetHashAlgorithmDescriptorRegistry().count;
+	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
+	return static_cast<int>(GetMutableHashAlgorithmDescriptorStorage().size());
 }
 
-static inline const HashAlgorithmDescriptor& GetHashAlgorithmDescriptorAt(int index)
+static inline HashAlgorithmDescriptor GetHashAlgorithmDescriptorAt(int index)
 {
 	EnsureDefaultHashAlgorithmDescriptorsRegistered();
 	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
@@ -250,9 +257,10 @@ static inline bool TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithm
 template<typename THashAlgorithmVisitor>
 static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
 {
-	for (int index = 0; index < GetRegisteredHashAlgorithmCount(); ++index)
+	std::vector<HashAlgorithmDescriptor> algorithmDescriptors = GetHashAlgorithmDescriptorSnapshot();
+	for (size_t index = 0; index < algorithmDescriptors.size(); ++index)
 	{
-		if (!visitor(index, GetHashAlgorithmDescriptorAt(index)))
+		if (!visitor(static_cast<int>(index), algorithmDescriptors[index]))
 		{
 			return false;
 		}
@@ -260,19 +268,32 @@ static inline bool VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)
 	return true;
 }
 
-static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)
+static inline bool TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, HashAlgorithmDescriptor *algorithmDescriptor)
 {
-	int algorithmIndex = -1;
-	if (!TryGetHashAlgorithmIndexById(algorithmId, &algorithmIndex))
+	HashAlgorithmId normalizedAlgorithmId = NormalizeHashAlgorithmId(algorithmId);
+	if (normalizedAlgorithmId.empty())
 	{
 		return false;
 	}
 
-	if (algorithmDescriptor != NULL)
+	EnsureDefaultHashAlgorithmDescriptorsRegistered();
+	std::lock_guard<std::mutex> lock(GetHashAlgorithmDescriptorRegistryMutex());
+	std::vector<HashAlgorithmDescriptor>& descriptorStorage = GetMutableHashAlgorithmDescriptorStorage();
+	for (size_t index = 0; index < descriptorStorage.size(); ++index)
 	{
-		*algorithmDescriptor = &GetHashAlgorithmDescriptorAt(algorithmIndex);
+		if (GetHashAlgorithmDescriptorId(descriptorStorage[index]) != normalizedAlgorithmId)
+		{
+			continue;
+		}
+
+		if (algorithmDescriptor != NULL)
+		{
+			*algorithmDescriptor = descriptorStorage[index];
+		}
+		return true;
 	}
-	return true;
+
+	return false;
 }
 
 static inline bool IsRegisteredHashAlgorithmId(const HashAlgorithmId& algorithmId)

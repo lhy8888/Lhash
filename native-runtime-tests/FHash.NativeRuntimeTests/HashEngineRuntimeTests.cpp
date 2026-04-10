@@ -1413,12 +1413,11 @@ namespace
 		NativeAssertEqual(baselineCount + 1, GetRegisteredHashAlgorithmCount(), "Descriptor/id-based custom algorithm registration should increase the registry count.");
 		NativeAssertTrue(IsRegisteredHashAlgorithmId(sunjwbase::strtotstr(std::string("BLAKE3"))), "Algorithm id lookups should be case-insensitive.");
 
-		const HashAlgorithmDescriptor *registeredDescriptor = NULL;
+		HashAlgorithmDescriptor registeredDescriptor = GetUnknownHashAlgorithmDescriptor();
 		NativeAssertTrue(TryGetHashAlgorithmDescriptorById(sunjwbase::strtotstr(std::string("blake3")), &registeredDescriptor), "Descriptor/id-based lookup should resolve custom algorithms.");
-		NativeAssertTrue(registeredDescriptor != NULL, "Descriptor/id lookup should expose the registered descriptor.");
 		NativeAssertEqual(
 			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("blake3"))),
-			GetHashAlgorithmDescriptorId(*registeredDescriptor),
+			GetHashAlgorithmDescriptorId(registeredDescriptor),
 			"Descriptor/id lookup should preserve custom algorithm identities.");
 		ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
 		NativeAssertTrue(!TryGetHashAlgorithmTypeById(sunjwbase::strtotstr(std::string("blake3")), &digestType), "Descriptor/id-only custom algorithms should not require legacy digest-type mappings.");

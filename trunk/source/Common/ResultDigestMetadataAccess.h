@@ -35,7 +35,7 @@ static inline bool TryGetResultDigestIndexById(const HashAlgorithmId& algorithmI
 	return TryGetHashAlgorithmIndexById(algorithmId, index);
 }
 
-static inline const ResultDigestMetadata& GetResultDigestMetadataAt(int index)
+static inline ResultDigestMetadata GetResultDigestMetadataAt(int index)
 {
 	return GetHashAlgorithmDescriptorAt(index);
 }
@@ -45,18 +45,18 @@ static inline HashAlgorithmId GetResultDigestIdAt(int index)
 	return GetResultDigestMetadataId(GetResultDigestMetadataAt(index));
 }
 
-static inline const ResultDigestMetadata& GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)
+static inline ResultDigestMetadata GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)
 {
-	const ResultDigestMetadata *digestMetadata = NULL;
-	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &digestMetadata) || digestMetadata == NULL)
+	ResultDigestMetadata digestMetadata = GetUnknownHashAlgorithmDescriptor();
+	if (!TryGetHashAlgorithmDescriptorById(algorithmId, &digestMetadata))
 	{
 		return GetUnknownHashAlgorithmDescriptor();
 	}
 
-	return *digestMetadata;
+	return digestMetadata;
 }
 
-static inline bool TryGetResultDigestMetadataById(const HashAlgorithmId& algorithmId, const ResultDigestMetadata **digestMetadata)
+static inline bool TryGetResultDigestMetadataById(const HashAlgorithmId& algorithmId, ResultDigestMetadata *digestMetadata)
 {
 	return TryGetHashAlgorithmDescriptorById(algorithmId, digestMetadata);
 }

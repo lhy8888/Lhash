@@ -88,6 +88,7 @@ public sealed class CommonSeamUnitTests
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetHashAlgorithmDescriptorSnapshot()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashAlgorithmDescriptorStorage()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
         Assert.Contains("std::lock_guard<std::mutex>", registryCore, StringComparison.Ordinal);
@@ -99,7 +100,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashAlgorithmId(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, const HashAlgorithmDescriptor **algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptorById(const HashAlgorithmId& algorithmId, HashAlgorithmDescriptor *algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("ResetHashAlgorithmDescriptorsToDefaultsForTesting()", registryCore, StringComparison.Ordinal);
         Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
@@ -108,10 +109,11 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("GetUnknownHashAlgorithmDescriptor()", registryCore, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryTypeCompat, StringComparison.Ordinal);
         Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);
-        Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, const HashAlgorithmDescriptor **algorithmDescriptor)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmDescriptor(ResultDigestType digestType, HashAlgorithmDescriptor *algorithmDescriptor)", registryTypeCompat, StringComparison.Ordinal);
         Assert.DoesNotContain("return algorithmDescriptors[0];", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("compatibilityValueField", registryCore, StringComparison.Ordinal);
         Assert.DoesNotContain("ResultDigestType type;", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("const HashAlgorithmDescriptor **algorithmDescriptor", registryCore, StringComparison.Ordinal);
     }
 
     [Fact]

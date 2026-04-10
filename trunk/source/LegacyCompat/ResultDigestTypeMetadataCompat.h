@@ -26,12 +26,12 @@ static inline ResultDigestType GetResultDigestTypeAt(int index)
 	return GetHashAlgorithmTypeAt(index);
 }
 
-static inline const ResultDigestMetadata& GetResultDigestMetadata(ResultDigestType digestType)
+static inline ResultDigestMetadata GetResultDigestMetadata(ResultDigestType digestType)
 {
 	return GetHashAlgorithmDescriptor(digestType);
 }
 
-static inline bool TryGetResultDigestMetadata(ResultDigestType digestType, const ResultDigestMetadata **digestMetadata)
+static inline bool TryGetResultDigestMetadata(ResultDigestType digestType, ResultDigestMetadata *digestMetadata)
 {
 	return TryGetHashAlgorithmDescriptor(digestType, digestMetadata);
 }
