@@ -26,11 +26,17 @@ The latest maintained release line introduces a complete architectural redesign 
 
 ## ✨ Features
 ⚡ Fast multi-threaded hashing engine
+
 📦 Portable single executable (no installation required)
+
 🖱️ Drag & drop support for files and directories
+
 📊 Real-time progress tracking
+
 📤 Easy export and copy of hash results
+
 🧩 Extensible algorithm framework
+
 
 ## Architecture
 
