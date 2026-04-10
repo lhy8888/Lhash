@@ -99,6 +99,8 @@ SHA3-512
 
 BLAKE2b-512
 
+BLAKE2s-256
+
 🚀 Non-Cryptographic (Fast Checksums)
 
 XXH3-64
