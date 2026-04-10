@@ -19,6 +19,23 @@ if (-not (Test-Path $sourceRoot)) {
     throw "OpenSSL vendor source for $openSslVersion was not found at $sourceRoot."
 }
 
+$requiredVendorDirectories = @(
+    'apps',
+    'demos',
+    'doc',
+    'external',
+    'fuzz',
+    'ms',
+    'ssl',
+    'test'
+)
+foreach ($requiredVendorDirectory in $requiredVendorDirectories) {
+    $requiredVendorDirectoryPath = Join-Path $sourceRoot $requiredVendorDirectory
+    if (-not (Test-Path $requiredVendorDirectoryPath)) {
+        throw "OpenSSL vendor source is incomplete. Missing required upstream directory: $requiredVendorDirectoryPath"
+    }
+}
+
 $requiredVendorFiles = @(
     'external\perl\MODULES.txt',
     'external\perl\Text-Template-1.56\lib\Text\Template.pm',

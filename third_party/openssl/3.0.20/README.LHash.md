@@ -6,14 +6,21 @@ LHash vendors the official OpenSSL 3 source snapshot from:
 
 Imported content:
 
-- Official source snapshot required to build a fixed-version `libcrypto`
-  vendor library for Windows
+- Full official OpenSSL 3.0.20 source snapshot is retained in-tree as the
+  fixed-version vendor baseline
 - Upstream `LICENSE.txt` (Apache License 2.0)
-- Upstream build metadata and provider sources used by EVP digest fetch
-- Upstream `external/perl` fallback subset (`MODULES.txt` and `Text::Template`)
-  required by OpenSSL `Configure`
-- Upstream `ms/applink.c` required by the Windows `install_dev` target used by
-  the local static vendor build
+- Upstream build metadata, provider sources, applications, demos, tests,
+  documentation, and auxiliary Windows/perl assets
+
+Retention policy:
+
+- LHash keeps the complete upstream vendor tree instead of trimming directories
+  out of the snapshot
+- This avoids future build drift when OpenSSL `Configure`, Windows
+  `install_dev`, or other build-time assumptions reach into directories that
+  are not part of the hot path today
+- The shipping product still builds a narrow static `libcrypto`, but the vendor
+  snapshot remains complete for auditability and reproducible upgrades
 
 LHash integration notes:
 
@@ -25,6 +32,8 @@ LHash integration notes:
   - `no-module`
   - `no-ssl`
   - `no-asm`
+- Keeping the full upstream snapshot does not mean these disabled product
+  surfaces are linked into LHash; they remain excluded by the build flags above
 - Runtime adapter layer lives in `trunk/source/Runtime/Hash/OpenSslEvpHashProvider.*`
 - OpenSSL-backed algorithm descriptors are exposed through the registry with
   `openssl-*` stable ids, so they can coexist with the legacy in-tree SHA2
