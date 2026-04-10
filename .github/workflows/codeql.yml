@@ -1,0 +1,50 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - future-winui-was2
+  pull_request:
+    branches:
+      - future-winui-was2
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze-csharp:
+    name: Analyze C# surface
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: none
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+
+# Note:
+# This initial workflow focuses on the managed C# surface so the repository gets
+# stable CodeQL coverage immediately. The native C/C++ surface can be added in a
+# later pass once its dedicated CodeQL build path is wired to the OpenSSL vendor
+# preparation already used by the main Windows build workflow.
