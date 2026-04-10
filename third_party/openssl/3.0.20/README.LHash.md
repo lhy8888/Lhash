@@ -12,6 +12,8 @@ Imported content:
 - Upstream build metadata and provider sources used by EVP digest fetch
 - Upstream `external/perl` fallback subset (`MODULES.txt` and `Text::Template`)
   required by OpenSSL `Configure`
+- Upstream `ms/applink.c` required by the Windows `install_dev` target used by
+  the local static vendor build
 
 LHash integration notes:
 

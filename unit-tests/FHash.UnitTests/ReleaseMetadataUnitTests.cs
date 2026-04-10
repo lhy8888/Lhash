@@ -179,6 +179,7 @@ public sealed class ReleaseMetadataUnitTests
         string vendorModules = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\external\perl\MODULES.txt");
         string textTemplate = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\external\perl\Text-Template-1.56\lib\Text\Template.pm");
         string textTemplatePreprocess = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm");
+        string appLink = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\ms\applink.c");
         string exceptionNote = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
 
@@ -195,15 +196,18 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("openssl-3.0.20", vendorScript, StringComparison.Ordinal);
         Assert.Contains("external\\perl\\MODULES.txt", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Text-Template-1.56\\lib\\Text\\Template.pm", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("ms\\applink.c", vendorScript, StringComparison.Ordinal);
 
         Assert.Contains("Upstream tag: openssl-3.0.20", vendorNote, StringComparison.Ordinal);
         Assert.Contains("5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", vendorNote, StringComparison.Ordinal);
         Assert.Contains("OpenSSL-backed algorithm descriptors", vendorNote, StringComparison.Ordinal);
         Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Text::Template", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("applink.c", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Text-Template-1.56/lib", vendorModules, StringComparison.Ordinal);
         Assert.Contains("package Text::Template;", textTemplate, StringComparison.Ordinal);
         Assert.Contains("package Text::Template::Preprocess;", textTemplatePreprocess, StringComparison.Ordinal);
+        Assert.Contains("#define APPLINK_MAX 22", appLink, StringComparison.Ordinal);
         Assert.Contains("OpenSSL Linking Exception", exceptionNote, StringComparison.Ordinal);
         Assert.Contains("GPL-2.0-only with an OpenSSL linking exception", readme, StringComparison.Ordinal);
     }

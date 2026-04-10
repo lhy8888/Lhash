@@ -22,7 +22,8 @@ if (-not (Test-Path $sourceRoot)) {
 $requiredVendorFiles = @(
     'external\perl\MODULES.txt',
     'external\perl\Text-Template-1.56\lib\Text\Template.pm',
-    'external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm'
+    'external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm',
+    'ms\applink.c'
 )
 foreach ($requiredVendorFile in $requiredVendorFiles) {
     $requiredVendorPath = Join-Path $sourceRoot $requiredVendorFile
