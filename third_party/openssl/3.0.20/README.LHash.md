@@ -27,11 +27,13 @@ LHash integration notes:
 - LHash builds a local static `libcrypto` with:
   - `no-shared`
   - `no-tests`
-  - `no-apps`
-  - `no-docs`
   - `no-module`
   - `no-ssl`
   - `no-asm`
+- OpenSSL 3.0.20 `Configure` does not accept `no-apps` or `no-docs`, so LHash
+  relies on `build_generated` + `build_libs` and only stages `include/` plus
+  `libcrypto.lib` instead of trying to suppress those trees with unsupported
+  options
 - Keeping the full upstream snapshot does not mean these disabled product
   surfaces are linked into LHash; they remain excluded by the build flags above
 - The local vendor build stages `include/` and `libcrypto.lib` manually after

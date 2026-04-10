@@ -209,6 +209,13 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'configure'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'generated-header build'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Invoke-OpenSslBuildStep -StepName 'libcrypto build'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("'no-shared'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("'no-tests'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("'no-module'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("'no-ssl'", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("'no-asm'", vendorScript, StringComparison.Ordinal);
+        Assert.DoesNotContain("'no-apps'", vendorScript, StringComparison.Ordinal);
+        Assert.DoesNotContain("'no-docs'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("Copy-Item -Path (Join-Path $buildRoot 'include\\*')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("install_dev", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'apps'", vendorScript, StringComparison.Ordinal);
@@ -223,6 +230,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Full official OpenSSL 3.0.20 source snapshot is retained in-tree", vendorNote, StringComparison.Ordinal);
         Assert.Contains("keeps the complete upstream vendor tree", vendorNote, StringComparison.Ordinal);
         Assert.Contains("stages `include/` and `libcrypto.lib` manually", vendorNote, StringComparison.Ordinal);
+        Assert.Contains("does not accept `no-apps` or `no-docs`", vendorNote, StringComparison.Ordinal);
         Assert.Contains("OpenSSL-backed algorithm descriptors", vendorNote, StringComparison.Ordinal);
         Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Keeping the full upstream snapshot does not mean these disabled product", vendorNote, StringComparison.Ordinal);

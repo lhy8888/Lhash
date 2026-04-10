@@ -234,8 +234,6 @@ try {
         'no-makedepend',
         'no-shared',
         'no-tests',
-        'no-apps',
-        'no-docs',
         'no-module',
         'no-ssl',
         'no-asm',
