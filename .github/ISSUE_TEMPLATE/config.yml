@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability reporting
+    url: https://github.com/lhy8888/Lhash/security
+    about: For vulnerabilities or suspected trust-boundary issues, please use the private security reporting path described in SECURITY.md.
+  - name: Release verification guide
+    url: https://github.com/lhy8888/Lhash/blob/future-winui-was2/docs/RELEASE_VERIFICATION.md
+    about: Check this guide before opening an issue about release checksums, manifests, SBOMs, or attestations.
+  - name: Documentation index
+    url: https://github.com/lhy8888/Lhash/blob/future-winui-was2/docs/README.md
+    about: Read the project’s security, threat-model, and supply-chain documents before filing review-related issues.
