@@ -1,0 +1,89 @@
+name: Bug report
+description: Report a reproducible bug in LHash
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        For security vulnerabilities or suspected trust-boundary issues, please do **not** use this template.
+        Follow the process in SECURITY.md instead.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is the bug?
+      placeholder: Briefly describe the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Open LHash
+        2. Drag a file into the window
+        3. Enable SHA-256
+        4. Click start
+        5. Observe the problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or release tag
+      description: Which version, tag, or commit are you using?
+      placeholder: v1.12.1
+
+  - type: input
+    id: platform
+    attributes:
+      label: Windows version and architecture
+      description: Example: Windows 11 24H2 x64
+      placeholder: Windows 11 x64
+
+  - type: textarea
+    id: input_type
+    attributes:
+      label: Input details
+      description: Describe the file type, path type, or scenario involved.
+      placeholder: Local file, directory batch, drag-and-drop, shell launch, etc.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or extra context
+      description: Paste any relevant logs or attach screenshots if they help explain the bug.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I confirmed this is not a security vulnerability report.
+          required: true
+        - label: I can reproduce the issue on the maintained line or a current release.
+          required: false
