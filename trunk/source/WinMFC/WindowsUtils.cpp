@@ -22,6 +22,10 @@ typedef HRESULT(__stdcall *LPFN_DllUnregisterServer)(void);
 namespace
 {
 	typedef BOOL(WINAPI *LPFN_SetDefaultDllDirectories)(DWORD directoryFlags);
+	bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)
+	{
+		return deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND;
+	}
 	LPFN_SetDefaultDllDirectories ResolveSetDefaultDllDirectories()
 	{
 		HMODULE kernel32Module = GetModuleHandle(_T("kernel32.dll"));
@@ -370,25 +374,25 @@ namespace WindowsUtils
 			lResShellEx != ERROR_SUCCESS)
 			return false;
 
-		LONG lResult = 1L;
+		bool deleteSucceeded = true;
 
 		// Try to delete context menu
 		if(lResShell == ERROR_SUCCESS)
 		{
-			lResult &= keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US);
-			lResult &= keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_ZH_CN);
+			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US));
+			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_ZH_CN));
 			keyShell.Close();
 		}
 
 		// Try to delete shell extension
 		if(lResShellEx == ERROR_SUCCESS)
 		{
-			lResult &= keyShellEx.RecurseDeleteKey(_T("LHashShellExt"));
-			lResult &= keyShellEx.RecurseDeleteKey(_T("fHashShellExt"));
+			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("LHashShellExt")));
+			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("fHashShellExt")));
 			keyShellEx.Close();
 		}
 
-		if(lResult != ERROR_SUCCESS)
+		if(!deleteSucceeded)
 			return false;
 		else
 			return true;

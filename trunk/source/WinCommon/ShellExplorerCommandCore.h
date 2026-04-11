@@ -91,7 +91,7 @@ static inline bool LaunchShellCommandLine(const sunjwbase::tstring& tstrExecPath
     PROCESS_INFORMATION pInfo = { 0 };
 
     BOOL bCreated = CreateProcess(tstrExecPath.c_str(), cmdLineBuffer.data(),
-        0, 0, TRUE,
+        0, 0, FALSE,
         NORMAL_PRIORITY_CLASS,
         0, 0, &sInfo, &pInfo);
 

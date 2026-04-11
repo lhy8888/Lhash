@@ -227,6 +227,8 @@ internal static partial class Program
             AssertContains(shellCore, "#include \"WinCommon/WinHandleGuard.h\"", "Shared shell-command core does not include the shared HANDLE RAII wrappers.");
             AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Shared shell-command core does not wrap thread handles after CreateProcess.");
             AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", "Shared shell-command core does not wrap process handles after CreateProcess.");
+            AssertContains(shellCore, "0, 0, FALSE,", "Shared shell-command core still allows inheritable handles when launching the target process.");
+            AssertDoesNotContain(shellCore, "0, 0, TRUE,", "Shared shell-command core regressed to inheriting parent handles.");
             AssertDoesNotContain(shellCore, "CloseHandle(pInfo.hThread);", "Shared shell-command core still closes thread handles manually.");
             AssertDoesNotContain(shellCore, "CloseHandle(pInfo.hProcess);", "Shared shell-command core still closes process handles manually.");
             AssertContains(shellCore, "if (pszExecName == NULL || pszPath == NULL || cchPath == 0)", "Shared shell-command core does not validate executable-path inputs.");
@@ -235,9 +237,16 @@ internal static partial class Program
             AssertContains(wuiShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "WinUI shell extension no longer routes detached process launch through the hardened shared helper.");
             AssertContains(uwpShell, "#include \"WinCommon/ShellExplorerCommandCore.h\"", "UWP shell extension does not consume the shared hardened shell-command core.");
             AssertContains(uwpShell, "LaunchShellCommandLine(tstrExecPath, tstrExecCmd);", "UWP shell extension no longer routes detached process launch through the hardened shared helper.");
+            AssertContains(legacyShell, "0, 0, FALSE,", "Legacy shell extension still allows inheritable handles when launching the target process.");
+            AssertDoesNotContain(legacyShell, "0, 0, TRUE,", "Legacy shell extension regressed to inheriting parent handles.");
             AssertContains(mfcDialogAndInput, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueFindHandle hFind", "WindowsUtils shell-extension registration helpers do not yet wrap FindFirstFile handles in RAII.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "WindowsUtils shell-extension registration helpers do not yet wrap module handles in RAII.");
+            AssertContains(windowsUtils, "bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", "WindowsUtils context-menu removal no longer uses explicit delete-result normalization.");
+            AssertContains(windowsUtils, "deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", "WindowsUtils context-menu removal no longer treats missing keys as acceptable cleanup.");
+            AssertContains(windowsUtils, "deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US));", "WindowsUtils context-menu removal no longer aggregates key deletion success explicitly.");
+            AssertDoesNotContain(windowsUtils, "lResult &= keyShell.RecurseDeleteKey", "WindowsUtils context-menu removal regressed to bitwise folding of Win32 error codes.");
+            AssertDoesNotContain(windowsUtils, "lResult &= keyShellEx.RecurseDeleteKey", "WindowsUtils shell-extension cleanup regressed to bitwise folding of Win32 error codes.");
             AssertDoesNotContain(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still release modules manually.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);

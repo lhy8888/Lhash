@@ -248,7 +248,7 @@ HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 	PROCESS_INFORMATION pInfo = {0};
 
 	BOOL bCreated = CreateProcess(tstrfHashPath.c_str(), pszCmd,
-		0, 0, TRUE,
+		0, 0, FALSE,
 		NORMAL_PRIORITY_CLASS,
 		0, 0, &sInfo, &pInfo);
 

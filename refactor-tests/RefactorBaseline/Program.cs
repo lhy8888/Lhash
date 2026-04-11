@@ -5739,7 +5739,13 @@ internal static class Program
 
             AssertContains(handleGuard, "typedef UniqueHandleBase<HANDLE, HandleCloseTraits> UniqueWinHandle;", "Phase 90 WinHandleGuard does not yet expose UniqueWinHandle.");
             AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Phase 90 shell-core launch path does not yet wrap the thread handle in RAII.");
+            AssertContains(shellCore, "0, 0, FALSE,", "Phase 90 shell-core launch path still inherits parent handles.");
+            AssertDoesNotContain(shellCore, "0, 0, TRUE,", "Phase 90 shell-core launch path regressed to inheriting parent handles.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "Phase 90 WindowsUtils does not yet wrap loaded modules in RAII.");
+            AssertContains(windowsUtils, "bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", "Phase 90 WindowsUtils does not yet normalize context-menu delete results explicitly.");
+            AssertContains(windowsUtils, "deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", "Phase 90 WindowsUtils does not yet treat missing context-menu keys as acceptable cleanup.");
+            AssertDoesNotContain(windowsUtils, "lResult &= keyShell.RecurseDeleteKey", "Phase 90 WindowsUtils regressed to folding Win32 delete error codes with bitwise operations.");
+            AssertDoesNotContain(windowsUtils, "lResult &= keyShellEx.RecurseDeleteKey", "Phase 90 WindowsUtils regressed to folding shell-extension delete error codes with bitwise operations.");
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "Phase 90 MD5 padding should now be treated as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "Phase 90 SHA1 transform still shares mutable static workspace across threads.");

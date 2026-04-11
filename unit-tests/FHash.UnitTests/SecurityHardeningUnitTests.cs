@@ -59,16 +59,26 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", shellCore, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", shellCore, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", shellCore, StringComparison.Ordinal);
+        Assert.Contains("0, 0, FALSE,", shellCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("0, 0, TRUE,", shellCore, StringComparison.Ordinal);
 
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle hProcfHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidfHash));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("0, 0, FALSE,", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("0, 0, TRUE,", legacyShell, StringComparison.Ordinal);
 
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueFindHandle hFind", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueModuleHandle hModule", windowsUtils, StringComparison.Ordinal);
         Assert.DoesNotContain("FreeLibrary(hModule);", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US));", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T(\"LHashShellExt\")));", windowsUtils, StringComparison.Ordinal);
+        Assert.DoesNotContain("lResult &= keyShell.RecurseDeleteKey", windowsUtils, StringComparison.Ordinal);
+        Assert.DoesNotContain("lResult &= keyShellEx.RecurseDeleteKey", windowsUtils, StringComparison.Ordinal);
     }
 
     [Fact]
