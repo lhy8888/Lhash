@@ -5,6 +5,28 @@ All notable LHash release-line changes are documented in this file.
 The historical upstream fHash release log is intentionally not duplicated here.
 This changelog tracks the maintained LHash release line that starts at `1.10.0`.
 
+## 1.12.1 - 2026-04-11
+
+Focused patch release for safety, compatibility, and runtime correctness after the OpenSSL 3 EVP expansion.
+
+### Safety and compatibility
+
+- hardened legacy shell-launch helpers so child processes no longer inherit parent handles by default
+- strengthened legacy DLL loading fallback paths so older-system compatibility no longer drops back to the weakest `LoadLibrary` behavior
+- fixed ARM64 detection in legacy Windows architecture checks used by shell-extension lookup
+- corrected context-menu removal result handling so registry-delete failures cannot be folded into false success states
+
+### Runtime correctness
+
+- completed the hash algorithm descriptor registry snapshot cleanup so descriptor enumeration no longer leaks shared live views across threads
+- fixed remaining registry initialization edge cases that could surface during native runtime tests
+- removed stale duplicated macro residue from the legacy `sha256.cpp` implementation
+
+### Delivery and CI
+
+- kept the maintained native desktop release path fast by reusing cached OpenSSL vendor outputs across routine builds
+- preserved WinUI preview availability without putting preview bridge jobs back onto every ordinary `push`
+
 ## 1.12.0 - 2026-04-10
 
 Introduced a fixed-version OpenSSL 3 EVP algorithm family alongside deeper runtime hardening and repository cleanup.
