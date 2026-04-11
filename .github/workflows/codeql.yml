@@ -1,14 +1,6 @@
 name: CodeQL
 
 on:
-  push:
-    branches:
-      - future-winui-was2
-  pull_request:
-    branches:
-      - future-winui-was2
-  schedule:
-    - cron: '17 3 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -44,7 +36,6 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
 # Note:
-# This initial workflow focuses on the managed C# surface so the repository gets
-# stable CodeQL coverage immediately. The native C/C++ surface can be added in a
-# later pass once its dedicated CodeQL build path is wired to the OpenSSL vendor
-# preparation already used by the main Windows build workflow.
+# CodeQL is temporarily restricted to manual execution while the repository's
+# mixed native and managed build surfaces are being aligned for more reliable
+# automated scanning. This avoids repeated noise on normal development pushes.
