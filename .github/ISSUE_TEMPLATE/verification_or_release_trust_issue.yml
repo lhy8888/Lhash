@@ -1,0 +1,84 @@
+name: Verification or release trust issue
+description: Report a release-verification, checksum, SBOM, attestation, or trust-review problem
+title: "verification: "
+labels:
+  - verification
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for issues such as:
+
+        - checksum mismatch on an official release asset
+        - missing or inconsistent release metadata
+        - SBOM or attestation confusion
+        - uncertainty about whether a release asset is official
+
+        For security vulnerabilities, do **not** use this template.
+        Follow SECURITY.md instead.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What verification or release-trust problem did you find?
+    validations:
+      required: true
+
+  - type: input
+    id: release_tag
+    attributes:
+      label: Release tag
+      description: Which release tag is affected?
+      placeholder: v1.12.1
+
+  - type: input
+    id: asset_name
+    attributes:
+      label: Asset name
+      description: Which asset is affected?
+      placeholder: LHash-legacy-x64-xxxxxxx.zip
+
+  - type: textarea
+    id: observed_issue
+    attributes:
+      label: What did you observe?
+      description: Describe the mismatch, missing metadata, or trust concern.
+      placeholder: The SHA-256 value did not match, the manifest was missing, the SBOM was absent, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_issue
+    attributes:
+      label: What did you expect?
+      description: What should have been present or consistent?
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification_steps
+    attributes:
+      label: Verification steps used
+      description: List the commands, tools, or checks you used.
+      placeholder: |
+        1. Downloaded asset from GitHub Releases
+        2. Ran Get-FileHash with SHA256
+        3. Compared with SHA256SUMS.txt
+        4. Reviewed RELEASE_MANIFEST.txt
+
+  - type: textarea
+    id: outputs
+    attributes:
+      label: Checksums, logs, or screenshots
+      description: Paste any relevant values, logs, or screenshots that support the report.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the asset from the official repository release page.
+          required: true
+        - label: I checked the current verification guide before filing this issue.
+          required: false
