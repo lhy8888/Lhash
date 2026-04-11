@@ -5742,10 +5742,15 @@ internal static class Program
             AssertContains(shellCore, "0, 0, FALSE,", "Phase 90 shell-core launch path still inherits parent handles.");
             AssertDoesNotContain(shellCore, "0, 0, TRUE,", "Phase 90 shell-core launch path regressed to inheriting parent handles.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "Phase 90 WindowsUtils does not yet wrap loaded modules in RAII.");
+            AssertContains(windowsUtils, "return LoadLibraryEx(pszDllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);", "Phase 90 WindowsUtils still falls back to bare LoadLibrary for shell-extension DLL loading.");
+            AssertDoesNotContain(windowsUtils, "return LoadLibrary(pszDllPath);", "Phase 90 WindowsUtils regressed to bare LoadLibrary for shell-extension DLL loading.");
             AssertContains(windowsUtils, "bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", "Phase 90 WindowsUtils does not yet normalize context-menu delete results explicitly.");
             AssertContains(windowsUtils, "deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", "Phase 90 WindowsUtils does not yet treat missing context-menu keys as acceptable cleanup.");
             AssertDoesNotContain(windowsUtils, "lResult &= keyShell.RecurseDeleteKey", "Phase 90 WindowsUtils regressed to folding Win32 delete error codes with bitwise operations.");
             AssertDoesNotContain(windowsUtils, "lResult &= keyShellEx.RecurseDeleteKey", "Phase 90 WindowsUtils regressed to folding shell-extension delete error codes with bitwise operations.");
+            AssertContains(windowsUtils, "GetNativeSystemInfo(&systemInfo);", "Phase 90 WindowsUtils does not yet use the native system architecture API for 64-bit detection.");
+            AssertContains(windowsUtils, "case PROCESSOR_ARCHITECTURE_ARM64:", "Phase 90 WindowsUtils does not yet treat ARM64 as a 64-bit Windows architecture.");
+            AssertDoesNotContain(windowsUtils, "QueryStringValue(lpszArchKeyName", "Phase 90 WindowsUtils regressed to registry-based processor architecture probing.");
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "Phase 90 MD5 padding should now be treated as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "Phase 90 SHA1 transform still shares mutable static workspace across threads.");

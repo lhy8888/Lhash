@@ -47,7 +47,7 @@ namespace
 			if (hModule != NULL || GetLastError() != ERROR_INVALID_PARAMETER)
 				return hModule;
 		}
-		return LoadLibrary(pszDllPath);
+		return LoadLibraryEx(pszDllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	}
 }
 namespace WindowsUtils
@@ -62,28 +62,18 @@ namespace WindowsUtils
 
 	BOOL IsWindows64()
 	{
-		CRegKey key;
-		LPCTSTR lpszEnvKeyName = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
-		LPCTSTR lpszArchKeyName = _T("PROCESSOR_ARCHITECTURE");
+		SYSTEM_INFO systemInfo = { 0 };
+		GetNativeSystemInfo(&systemInfo);
 
-		LONG lResEnv;
-
-		// 打开
-		lResEnv = key.Open(HKEY_LOCAL_MACHINE, lpszEnvKeyName, KEY_READ);
-
-		if(lResEnv != ERROR_SUCCESS)
-			return false;
-
-		TCHAR tszArch[100] = { L'0' };
-		ULONG nChars = 100;
-		key.QueryStringValue(lpszArchKeyName, tszArch, &nChars);
-		key.Close();
-
-		string strArch(tstrtostr(tszArch));
-		strArch = str_upper(strArch);
-		strArch = strtrim(strArch);
-
-		return (strArch == "AMD64");
+		switch(systemInfo.wProcessorArchitecture)
+		{
+		case PROCESSOR_ARCHITECTURE_AMD64:
+		case PROCESSOR_ARCHITECTURE_IA64:
+		case PROCESSOR_ARCHITECTURE_ARM64:
+			return TRUE;
+		default:
+			return FALSE;
+		}
 	}
 
 	BOOL IsLimitedProc()

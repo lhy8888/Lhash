@@ -73,12 +73,17 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("WinHandleGuard::UniqueFindHandle hFind", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueModuleHandle hModule", windowsUtils, StringComparison.Ordinal);
         Assert.DoesNotContain("FreeLibrary(hModule);", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("return LoadLibraryEx(pszDllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);", windowsUtils, StringComparison.Ordinal);
+        Assert.DoesNotContain("return LoadLibrary(pszDllPath);", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US));", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T(\"LHashShellExt\")));", windowsUtils, StringComparison.Ordinal);
         Assert.DoesNotContain("lResult &= keyShell.RecurseDeleteKey", windowsUtils, StringComparison.Ordinal);
         Assert.DoesNotContain("lResult &= keyShellEx.RecurseDeleteKey", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("GetNativeSystemInfo(&systemInfo);", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("case PROCESSOR_ARCHITECTURE_ARM64:", windowsUtils, StringComparison.Ordinal);
+        Assert.DoesNotContain("QueryStringValue(lpszArchKeyName", windowsUtils, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -242,11 +242,16 @@ internal static partial class Program
             AssertContains(mfcDialogAndInput, "DragQueryFile(hDropInfo, index, NULL, 0)", "MFC drag/drop path extraction no longer queries required buffer sizes.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueFindHandle hFind", "WindowsUtils shell-extension registration helpers do not yet wrap FindFirstFile handles in RAII.");
             AssertContains(windowsUtils, "WinHandleGuard::UniqueModuleHandle hModule", "WindowsUtils shell-extension registration helpers do not yet wrap module handles in RAII.");
+            AssertContains(windowsUtils, "return LoadLibraryEx(pszDllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);", "WindowsUtils still falls back to bare LoadLibrary for shell-extension DLL loading.");
+            AssertDoesNotContain(windowsUtils, "return LoadLibrary(pszDllPath);", "WindowsUtils regressed to a bare LoadLibrary fallback for shell-extension DLL loading.");
             AssertContains(windowsUtils, "bool IsAcceptableContextMenuDeleteResult(LONG deleteResult)", "WindowsUtils context-menu removal no longer uses explicit delete-result normalization.");
             AssertContains(windowsUtils, "deleteResult == ERROR_SUCCESS || deleteResult == ERROR_FILE_NOT_FOUND", "WindowsUtils context-menu removal no longer treats missing keys as acceptable cleanup.");
             AssertContains(windowsUtils, "deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShell.RecurseDeleteKey(CONTEXT_MENU_ITEM_EN_US));", "WindowsUtils context-menu removal no longer aggregates key deletion success explicitly.");
             AssertDoesNotContain(windowsUtils, "lResult &= keyShell.RecurseDeleteKey", "WindowsUtils context-menu removal regressed to bitwise folding of Win32 error codes.");
             AssertDoesNotContain(windowsUtils, "lResult &= keyShellEx.RecurseDeleteKey", "WindowsUtils shell-extension cleanup regressed to bitwise folding of Win32 error codes.");
+            AssertContains(windowsUtils, "GetNativeSystemInfo(&systemInfo);", "WindowsUtils no longer uses the native system architecture API for 64-bit detection.");
+            AssertContains(windowsUtils, "case PROCESSOR_ARCHITECTURE_ARM64:", "WindowsUtils no longer treats ARM64 as a 64-bit Windows architecture.");
+            AssertDoesNotContain(windowsUtils, "QueryStringValue(lpszArchKeyName", "WindowsUtils regressed to registry-based processor architecture probing.");
             AssertDoesNotContain(windowsUtils, "FreeLibrary(hModule);", "WindowsUtils shell-extension registration helpers still release modules manually.");
             AssertContains(windowsUtils, "SetClipboardData", "Clipboard helper no longer transfers ownership safely.");
         }, failures);
