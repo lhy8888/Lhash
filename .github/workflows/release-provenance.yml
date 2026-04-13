@@ -82,7 +82,7 @@ jobs:
             --clobber
 
       - name: Generate provenance attestation for release metadata bundle
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{ steps.prepare.outputs.bundle_path }}
