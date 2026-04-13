@@ -78,7 +78,7 @@ jobs:
             --clobber
 
       - name: Attest SBOM against the release bundle
-        uses: actions/attest-sbom@v2
+        uses: actions/attest-sbom@v4
         with:
           subject-path: ${{ steps.prepare.outputs.bundle_path }}
           sbom-path: release-assets/LHash-release.cyclonedx.json
