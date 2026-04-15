@@ -28,7 +28,7 @@ Please do **not** open a public issue for a suspected security vulnerability.
 Use one of these private channels instead:
 
 1. GitHub **Private Vulnerability Reporting** for this repository, when enabled
-2. Email: **ipholhy@me.com**
+2. Email: ** **
 
 When possible, include:
 
