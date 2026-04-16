@@ -273,6 +273,7 @@ internal static partial class Program
             string digestValueAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h");
             string md5 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\MD5.cpp");
             string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
+            string strhelper = ReadRepoFile(repoRoot, @"trunk\source\Common\strhelper.cpp");
             string uiBridgeHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -319,6 +320,14 @@ internal static partial class Program
             AssertDoesNotContain(sha1, "uint32_t ulFileSize", "SHA1 file hashing still relies on a 32-bit file-size accumulator.");
             AssertDoesNotContain(sha1, "ftell(fIn)", "SHA1 file hashing still uses ftell for total-size driven chunk planning.");
             AssertDoesNotContain(sha1, "fseek(fIn, 0, SEEK_END)", "SHA1 file hashing still seeks to the end of the file to precompute chunk counts.");
+            AssertContains(strhelper, "std::wstring_convert<std::codecvt_utf8<wchar_t>>", "POSIX string helpers no longer use explicit UTF-8 wide-string conversion.");
+            AssertContains(strhelper, "size_t iconvResult = iconv(cd, inleft > 0 ? &in : NULL, &inleft, &out, &outleft);", "POSIX string helpers no longer validate the iconv return value explicitly.");
+            AssertContains(strhelper, "if (errno == E2BIG)", "POSIX string helpers no longer resize iconv output buffers safely.");
+            AssertDoesNotContain(strhelper, "setlocale(LC_ALL", "POSIX string helpers still mutate the global process locale.");
+            AssertDoesNotContain(strhelper, "wcstombs(", "POSIX string helpers still rely on wcstombs-driven locale conversions.");
+            AssertDoesNotContain(strhelper, "mbstowcs(", "POSIX string helpers still rely on mbstowcs-driven locale conversions.");
+            AssertDoesNotContain(strhelper, "\"UTF-8\", \"ASCII\"", "POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
+            AssertDoesNotContain(strhelper, "\"ASCII\", \"UTF-8\"", "POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
             AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "MFC UI bridge no longer throttles progress dispatch.");
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "MFC UI bridge no longer gates total-progress posts through the throttling helper.");

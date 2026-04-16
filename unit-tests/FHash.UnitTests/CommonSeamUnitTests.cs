@@ -160,6 +160,21 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void PosixStringHelpers_AvoidGlobalLocaleAndAsciiBridgeFallbacks()
+    {
+        string strhelper = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\strhelper.cpp");
+
+        Assert.Contains("std::wstring_convert<std::codecvt_utf8<wchar_t>>", strhelper, StringComparison.Ordinal);
+        Assert.Contains("size_t iconvResult = iconv(cd, inleft > 0 ? &in : NULL, &inleft, &out, &outleft);", strhelper, StringComparison.Ordinal);
+        Assert.Contains("if (errno == E2BIG)", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("setlocale(LC_ALL", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("wcstombs(", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("mbstowcs(", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("return striconv(wstrtostr(wstr), \"UTF-8\", \"ASCII\");", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("return strtowstr(striconv(str, \"ASCII\", \"UTF-8\"));", strhelper, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");

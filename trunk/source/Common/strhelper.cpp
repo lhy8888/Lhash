@@ -21,11 +21,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <locale.h>
 #include <iconv.h>
 #include <errno.h>
 #include <iostream>
 #include <locale>
+#include <codecvt>
 #include <vector>
 #endif
 
@@ -64,37 +64,83 @@ namespace sunjwbase
 }
 
 #if defined (__APPLE__) || defined (__unix)
+namespace
+{
+	static std::string ConvertWideToUtf8(const std::wstring& input)
+	{
+		try
+		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+			return converter.to_bytes(input);
+		}
+		catch (const std::range_error&)
+		{
+			return std::string();
+		}
+	}
+
+	static std::wstring ConvertUtf8ToWide(const std::string& input)
+	{
+		try
+		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+			return converter.from_bytes(input);
+		}
+		catch (const std::range_error&)
+		{
+			return std::wstring();
+		}
+	}
+}
+
 std::string sunjwbase::striconv(const std::string& input,
 								const std::string& to_code,
 								const std::string& from_code)
 {
-	char* inptr = new char[input.size() + 1];
-	size_t inleft = input.size();
-	size_t outleft = inleft * 4 + 1; // should be large enough
-	char* outptr = new char[outleft];
-	bzero(outptr, outleft);
-
-	strcpy(inptr, input.c_str());
-
-	iconv_t cd; // conversion descriptor
-	if ((cd = iconv_open(to_code.c_str(), from_code.c_str())) == (iconv_t) (-1))
+	if (input.empty() || to_code == from_code)
 	{
-		iconv_close(cd); // failed clean
 		return input;
 	}
 
-	char* in = inptr;
-	char* out = outptr;
-	outleft = iconv(cd, &in, &inleft, &out, &outleft);
+	iconv_t cd = iconv_open(to_code.c_str(), from_code.c_str());
+	if (cd == (iconv_t)(-1))
+	{
+		return input;
+	}
+
+	std::vector<char> inputBuffer(input.begin(), input.end());
+	size_t inleft = inputBuffer.size();
+	char* in = inputBuffer.empty() ? NULL : inputBuffer.data();
+
+	size_t outputCapacity = inputBuffer.empty() ? 1 : inputBuffer.size() * 4 + 1;
+	std::vector<char> outputBuffer(outputCapacity, '\0');
+	char* out = outputBuffer.data();
+	size_t outleft = outputBuffer.size() - 1;
+
+	for (;;)
+	{
+		size_t iconvResult = iconv(cd, inleft > 0 ? &in : NULL, &inleft, &out, &outleft);
+		if (iconvResult != static_cast<size_t>(-1))
+		{
+			break;
+		}
+
+		if (errno == E2BIG)
+		{
+			size_t bytesWritten = static_cast<size_t>(out - outputBuffer.data());
+			outputCapacity *= 2;
+			outputBuffer.resize(outputCapacity, '\0');
+			out = outputBuffer.data() + bytesWritten;
+			outleft = outputBuffer.size() - bytesWritten - 1;
+			continue;
+		}
+
+		iconv_close(cd);
+		return input;
+	}
 
 	iconv_close(cd);
-
-	std::string strRet(outptr);
-
-	delete[] inptr;
-	delete[] outptr;
-
-	return strRet;
+	return std::string(outputBuffer.data(), static_cast<size_t>(out - outputBuffer.data()));
 }
 #endif
 
@@ -108,7 +154,7 @@ std::string sunjwbase::wstrtostrutf8(const std::wstring& wstr)
 	return _wstrtostr(wstr, CP_UTF8);
 #endif
 #if defined (__APPLE__) || defined (__unix)
-	return striconv(wstrtostr(wstr), "UTF-8", "ASCII");
+	return ConvertWideToUtf8(wstr);
 #endif
 }
 
@@ -124,7 +170,7 @@ std::wstring sunjwbase::strtowstrutf8(const std::string& str)
 	return _strtowstr(str, CP_UTF8);
 #endif
 #if defined (__APPLE__) || defined (__unix)
-	return strtowstr(striconv(str, "ASCII", "UTF-8"));
+	return ConvertUtf8ToWide(str);
 #endif
 }
 
@@ -135,16 +181,7 @@ std::string sunjwbase::wstrtostr(const std::wstring& wstr)
 	return _wstrtostr(wstr, CP_ACP);
 #endif
 #if defined (__APPLE__) || defined (__unix)
-	setlocale(LC_ALL, "zh_CN.UTF-8");
-	size_t num_chars = wcstombs(NULL, wstr.c_str(), 0);
-	char* char_buf = new char[num_chars + 1];
-	wcstombs(char_buf, wstr.c_str(), num_chars);
-	char_buf[num_chars] = '\0';
-	std::string str(char_buf);
-	delete[] char_buf;
-	setlocale(LC_ALL, "C");
-
-	return str;
+	return ConvertWideToUtf8(wstr);
 #endif
 }
 
@@ -155,16 +192,7 @@ std::wstring sunjwbase::strtowstr(const std::string& str)
 	return _strtowstr(str, CP_ACP);
 #endif
 #if defined (__APPLE__) || defined (__unix)
-	setlocale(LC_ALL, "zh_CN.UTF-8");
-	size_t num_chars = mbstowcs(NULL, str.c_str(), 0);
-	wchar_t* wct_buf = new wchar_t[num_chars + 1];
-	mbstowcs(wct_buf, str.c_str(), num_chars);
-	wct_buf[num_chars] = '\0';
-	std::wstring wstr(wct_buf, num_chars);
-	delete[] wct_buf;
-	setlocale(LC_ALL, "C");
-
-	return wstr;
+	return ConvertUtf8ToWide(str);
 #endif
 }
 

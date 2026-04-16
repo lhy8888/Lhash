@@ -118,6 +118,7 @@ public sealed class SecurityHardeningUnitTests
     {
         string md5 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\MD5.cpp");
         string sha1 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\SHA1.cpp");
+        string strhelper = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\strhelper.cpp");
         string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string nativeRuntimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -136,6 +137,14 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("uint32_t ulFileSize", sha1, StringComparison.Ordinal);
         Assert.DoesNotContain("ftell(fIn)", sha1, StringComparison.Ordinal);
         Assert.DoesNotContain("fseek(fIn, 0, SEEK_END)", sha1, StringComparison.Ordinal);
+        Assert.Contains("std::wstring_convert<std::codecvt_utf8<wchar_t>>", strhelper, StringComparison.Ordinal);
+        Assert.Contains("size_t iconvResult = iconv(cd, inleft > 0 ? &in : NULL, &inleft, &out, &outleft);", strhelper, StringComparison.Ordinal);
+        Assert.Contains("if (errno == E2BIG)", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("setlocale(LC_ALL", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("wcstombs(", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("mbstowcs(", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"UTF-8\", \"ASCII\"", strhelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"ASCII\", \"UTF-8\"", strhelper, StringComparison.Ordinal);
 
         Assert.Contains("struct ProgressDispatchState", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("ShouldPostProgressValue", uiBridgeHeader, StringComparison.Ordinal);

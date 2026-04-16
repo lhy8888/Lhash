@@ -5727,6 +5727,7 @@ internal static class Program
             string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
             string md5 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\MD5.cpp");
             string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
+            string strhelper = ReadRepoFile(repoRoot, @"trunk\source\Common\strhelper.cpp");
             string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string handleGuard = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\WinHandleGuard.h");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
@@ -5774,6 +5775,14 @@ internal static class Program
             AssertDoesNotContain(sha1, "uint32_t ulFileSize", "Phase 90 SHA1 file hashing still relies on a 32-bit total file-size accumulator.");
             AssertDoesNotContain(sha1, "ftell(fIn)", "Phase 90 SHA1 file hashing still uses ftell-driven chunk planning.");
             AssertDoesNotContain(sha1, "fseek(fIn, 0, SEEK_END)", "Phase 90 SHA1 file hashing still seeks to the end of the file to precompute chunk counts.");
+            AssertContains(strhelper, "std::wstring_convert<std::codecvt_utf8<wchar_t>>", "Phase 90 POSIX string helpers do not yet use explicit UTF-8 wide-string conversion.");
+            AssertContains(strhelper, "size_t iconvResult = iconv(cd, inleft > 0 ? &in : NULL, &inleft, &out, &outleft);", "Phase 90 POSIX string helpers do not yet validate iconv return values explicitly.");
+            AssertContains(strhelper, "if (errno == E2BIG)", "Phase 90 POSIX string helpers do not yet grow iconv output buffers safely.");
+            AssertDoesNotContain(strhelper, "setlocale(LC_ALL", "Phase 90 POSIX string helpers still mutate the global process locale.");
+            AssertDoesNotContain(strhelper, "wcstombs(", "Phase 90 POSIX string helpers still rely on wcstombs-driven locale conversions.");
+            AssertDoesNotContain(strhelper, "mbstowcs(", "Phase 90 POSIX string helpers still rely on mbstowcs-driven locale conversions.");
+            AssertDoesNotContain(strhelper, "\"UTF-8\", \"ASCII\"", "Phase 90 POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
+            AssertDoesNotContain(strhelper, "\"ASCII\", \"UTF-8\"", "Phase 90 POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "Phase 90 UI progress dispatch does not yet throttle total-progress updates.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "Phase 90 UI progress dispatch does not yet enforce the refresh interval.");
             AssertContains(runtimeTests, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Phase 90 native runtime tests do not yet cover concurrent digest consistency.");
