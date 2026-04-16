@@ -25,6 +25,27 @@ using namespace sunjwbase;
 
 #define GET_FD_FROM_POINTER(pointer) ((int *)(pointer))
 
+namespace
+{
+    static void CopyOpenErrorText(char *errorBuffer, const char *errorText)
+    {
+        if (errorBuffer != NULL)
+        {
+            strlcpy(errorBuffer, errorText, OsFile::ERR_MSG_BUFFER_LEN);
+        }
+    }
+
+    static bool IsOpenModeCreate(int posixFlag)
+    {
+        return (posixFlag & O_CREAT) != 0;
+    }
+
+    static bool IsRegularFile(const struct stat& st)
+    {
+        return S_ISREG(st.st_mode) != 0;
+    }
+}
+
 OsFile::OsFile(tstring filePath):
     _filePath(filePath),
     _osfileData(new int(-1)),
@@ -59,30 +80,49 @@ bool OsFile::open(void *flag, void *exception)
     int *fd = GET_FD_FROM_POINTER(_osfileData);
     *fd = -1;
 
-    int statRet = -1;
-    struct stat st;
-    if ((statRet = stat(strFilePath.c_str(), &st)) == 0 &&
-        (st.st_mode & S_IFREG))
+    int posixFlag = (int)(uint64_t)flag;
+    if (IsOpenModeCreate(posixFlag))
     {
-
-        int posixFlag = (int)(uint64_t)flag;
-
-        *fd = ::open(strFilePath.c_str(), posixFlag);
-
-        if (*fd == -1 && pFileExc != NULL)
-        {
-            strlcpy(pFileExc, "Cannot open this file.", OsFile::ERR_MSG_BUFFER_LEN);
-        }
-    }
-    else if (statRet == 0 && (st.st_mode & S_IFDIR))
-    {
-        if (pFileExc != NULL)
-            strlcpy(pFileExc, "Cannot open a directory.", OsFile::ERR_MSG_BUFFER_LEN);
+        *fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     }
     else
     {
-        if (pFileExc != NULL)
-            strlcpy(pFileExc, "File is missing.", OsFile::ERR_MSG_BUFFER_LEN);
+        *fd = ::open(strFilePath.c_str(), posixFlag);
+    }
+
+    if (*fd == -1)
+    {
+        if (errno == ENOENT)
+        {
+            CopyOpenErrorText(pFileExc, "File is missing.");
+        }
+        else if (errno == EISDIR)
+        {
+            CopyOpenErrorText(pFileExc, "Cannot open a directory.");
+        }
+        else
+        {
+            CopyOpenErrorText(pFileExc, "Cannot open this file.");
+        }
+
+        return false;
+    }
+
+    struct stat st;
+    if (fstat(*fd, &st) != 0)
+    {
+        CopyOpenErrorText(pFileExc, "Cannot inspect this file.");
+        ::close(*fd);
+        *fd = -1;
+        return false;
+    }
+
+    if (!IsRegularFile(st))
+    {
+        CopyOpenErrorText(pFileExc, S_ISDIR(st.st_mode) ? "Cannot open a directory." : "Cannot open this file.");
+        ::close(*fd);
+        *fd = -1;
+        return false;
     }
 
     return (*fd != -1);
@@ -194,24 +234,34 @@ uint64_t OsFile::seek(uint64_t offset, OsFileSeekFrom from)
         break;
     }
 
-    // Open first, we don't check here.
     int *fd = GET_FD_FROM_POINTER(_osfileData);
+    if (fd == NULL || *fd == -1)
+    {
+        return static_cast<uint64_t>(-1);
+    }
 
-    return ::lseek(*fd, offset, posixSeekFlag);
+    off_t seekResult = ::lseek(*fd, static_cast<off_t>(offset), posixSeekFlag);
+    return seekResult == static_cast<off_t>(-1) ? static_cast<uint64_t>(-1) : static_cast<uint64_t>(seekResult);
 }
 
 int64_t OsFile::read(void *readBuffer, uint32_t bytes)
 {
-    // Open first, we don't check here.
     int *fd = GET_FD_FROM_POINTER(_osfileData);
+    if (fd == NULL || *fd == -1)
+    {
+        return -1;
+    }
 
     return ::read(*fd, readBuffer, bytes);
 }
 
 int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
 {
-    // Open first, we don't check here.
     int *fd = GET_FD_FROM_POINTER(_osfileData);
+    if (fd == NULL || *fd == -1)
+    {
+        return -1;
+    }
 
     return ::write(*fd, writeBuffer, bytes);
 }

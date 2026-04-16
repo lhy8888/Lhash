@@ -5720,6 +5720,7 @@ internal static class Program
 
         Run("Phase 90 keeps defensive security hardening on reparse rejection, checked arithmetic, RAII handles, throttled UI, and native mitigations", () =>
         {
+            string osFilePosixDarwin = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFilePosixDarwin.cpp");
             string osFileWinApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
             string osFileWinUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
             string checkedArithmetic = ReadRepoFile(repoRoot, @"trunk\source\Common\CheckedArithmetic.h");
@@ -5738,6 +5739,13 @@ internal static class Program
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
 
+            AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "Phase 90 POSIX Darwin file handling does not yet branch on O_CREAT before opening files.");
+            AssertContains(osFilePosixDarwin, "*fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);", "Phase 90 POSIX Darwin file handling does not yet pass an explicit mode_t when O_CREAT is used.");
+            AssertContains(osFilePosixDarwin, "if (fstat(*fd, &st) != 0)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor with fstat.");
+            AssertContains(osFilePosixDarwin, "if (!IsRegularFile(st))", "Phase 90 POSIX Darwin file handling does not yet reject non-regular descriptors after open.");
+            AssertContains(osFilePosixDarwin, "if (fd == NULL || *fd == -1)", "Phase 90 POSIX Darwin file operations do not yet self-guard invalid file descriptors.");
+            AssertDoesNotContain(osFilePosixDarwin, "if ((statRet = stat(strFilePath.c_str(), &st)) == 0", "Phase 90 POSIX Darwin file handling regressed to a stat-before-open TOCTOU gate.");
+            AssertDoesNotContain(osFilePosixDarwin, "Open first, we don't check here.", "Phase 90 POSIX Darwin file operations regressed to unchecked library-boundary assumptions.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");
             AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Phase 90 Win32 file handling does not yet walk ancestor path segments for reparse-point checks.");
