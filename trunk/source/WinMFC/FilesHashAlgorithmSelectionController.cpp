@@ -62,7 +62,8 @@ void FilesHashAlgorithmSelectionController::ResetChecks()
 		CButton* checkBox = GetCheckBox(GetHashAlgorithmDescriptorId(algorithmDescriptor));
 		if (checkBox != NULL)
 		{
-			checkBox->SetCheck(BST_CHECKED);
+			checkBox->SetCheck(
+				IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor) ? BST_CHECKED : BST_UNCHECKED);
 		}
 
 		return true;

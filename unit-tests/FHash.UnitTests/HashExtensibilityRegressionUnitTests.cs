@@ -196,11 +196,11 @@ public sealed class HashExtensibilityRegressionUnitTests
         string licenseException = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
         string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
-        Assert.Contains("{ \"sha256\", \"SHA256\", true, true }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha512\", \"SHA512\", true, true }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha256\", \"SHA256 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha512\", \"SHA512 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-384\", \"SHA-384\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);

@@ -79,13 +79,15 @@ public sealed class CommonSeamUnitTests
         Assert.False(File.Exists(legacyRegistryShimPath));
         RepositoryTestContext.AssertContainsInOrder(
             registryCore,
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"md5\", \"MD5\", true, true });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha1\", \"SHA1\", true, true });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha256\", \"SHA256\", true, true });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha512\", \"SHA512\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"md5\", \"MD5 (Deprecated)\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha1\", \"SHA1 (Deprecated)\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha256\", \"SHA256 (Legacy)\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha512\", \"SHA512 (Legacy)\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-256\", \"BLAKE3-256\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-512\", \"BLAKE3-512\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
+        Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });", registryCore, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-512\", \"SHA-512\", true, true });", registryCore, StringComparison.Ordinal);
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
         Assert.Contains("GetHashAlgorithmDescriptorSnapshot()", registryCore, StringComparison.Ordinal);
@@ -297,6 +299,16 @@ public sealed class CommonSeamUnitTests
         Assert.DoesNotContain("SetCompatibilityResultDigest(result, digestType, digestValue);", access, StringComparison.Ordinal);
         Assert.DoesNotContain("ClearCompatibilityResultDigest(result, digestType);", access, StringComparison.Ordinal);
         Assert.DoesNotContain("GetMutableResultDigest(ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MfcAlgorithmSelection_ResetChecks_UsesRegistryDefaultEnablement()
+    {
+        string controller = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashAlgorithmSelectionController.cpp");
+
+        Assert.Contains("ResetThreadDataHashAlgorithms(*m_threadData);", controller, StringComparison.Ordinal);
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(algorithmDescriptor) ? BST_CHECKED : BST_UNCHECKED", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("checkBox->SetCheck(BST_CHECKED);", controller, StringComparison.Ordinal);
     }
 
     [Fact]

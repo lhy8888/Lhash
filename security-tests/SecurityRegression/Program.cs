@@ -294,6 +294,9 @@ internal static partial class Program
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Win32 file hashing no longer rejects reparse points with an explicit message.");
             AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Win32 file hashing no longer walks ancestor path segments when checking for reparse points.");
             AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Win32 file hashing no longer gates file open on the target policy.");
+            AssertContains(osFileWinApi, "FILE_FLAG_OPEN_REPARSE_POINT", "Win32 file hashing no longer opens the leaf object with reparse-point awareness.");
+            AssertContains(osFileWinApi, "GetFileInformationByHandleEx(", "Win32 file hashing no longer validates opened handle attributes.");
+            AssertContains(osFileWinApi, "GetFinalPathNameByHandle(", "Win32 file hashing no longer revalidates the resolved final path after open.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "UWP file hashing no longer walks ancestor path segments when checking for reparse points.");
             AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine metadata flow no longer relies on the opened file handle.");
@@ -476,11 +479,13 @@ internal static partial class Program
             string vendorNote = ReadRepoFile(repoRoot, @"third_party\openssl\3.0.20\README.LHash.md");
             string exceptionNote = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
 
-            AssertContains(registryCore, "{ \"sha256\", \"SHA256\", true, true }", "The legacy SHA256 descriptor is no longer preserved alongside the OpenSSL family.");
-            AssertContains(registryCore, "{ \"sha512\", \"SHA512\", true, true }", "The legacy SHA512 descriptor is no longer preserved alongside the OpenSSL family.");
-            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, false }", "The OpenSSL SHA-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "The deprecated MD5 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "The deprecated SHA1 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "The legacy SHA256 descriptor is no longer preserved as compatibility-only.");
+            AssertContains(registryCore, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "The legacy SHA512 descriptor is no longer preserved as compatibility-only.");
+            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "The OpenSSL SHA-256 descriptor variant is missing or not enabled by default.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "The OpenSSL SHA-384 descriptor variant is missing.");
-            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, false }", "The OpenSSL SHA-512 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "The OpenSSL SHA-512 descriptor variant is missing or not enabled by default.");
             AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "The OpenSSL SHA3-256 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", "The OpenSSL SHA3-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "The OpenSSL SHA3-512 descriptor variant is missing.");

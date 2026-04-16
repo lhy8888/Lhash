@@ -844,10 +844,10 @@ internal static class Program
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
             AssertContains(digestAccess, "GetResultDigestMetadataAt(int index)", "ResultDigestAccess does not yet expose the centralized digest metadata lookup helper introduced in phase 3.");
             AssertContains(digestAccess, "GetResultDigestMetadataSnapshot()", "ResultDigestAccess does not yet expose the centralized digest metadata snapshot helper introduced for stable traversal.");
-            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true, true }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map deprecated MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map deprecated SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map legacy SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map legacy SHA512.");
             AssertContains(digestAccess, "GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata type accessor.");
             AssertContains(digestAccess, "GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata label accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
@@ -2399,10 +2399,10 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "bool enabledByDefault;", "HashAlgorithmRegistry does not yet expose default-enabled metadata for registry descriptors.");
             AssertContains(hashAlgorithmRegistry, "GetRegisteredHashAlgorithmCount()", "HashAlgorithmRegistry does not yet expose the registry-count helper.");
             AssertContains(hashAlgorithmRegistry, "VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)", "HashAlgorithmRegistry does not yet expose the algorithm visitor seam.");
-            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true, true }", "HashAlgorithmRegistry does not yet register MD5.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true, true }", "HashAlgorithmRegistry does not yet register SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true, true }", "HashAlgorithmRegistry does not yet register SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512\", true, true }", "HashAlgorithmRegistry does not yet register SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "HashAlgorithmRegistry does not yet register deprecated MD5.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "HashAlgorithmRegistry does not yet register deprecated SHA1.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "HashAlgorithmRegistry does not yet register legacy SHA256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "HashAlgorithmRegistry does not yet register legacy SHA512.");
 
             AssertContains(digestAccess, "#include \"Domain/HashAlgorithmRegistryCore.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
@@ -5753,6 +5753,9 @@ internal static class Program
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");
             AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Phase 90 Win32 file handling does not yet walk ancestor path segments for reparse-point checks.");
             AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Phase 90 Win32 file handling does not gate CreateFile on the reparse-point policy.");
+            AssertContains(osFileWinApi, "FILE_FLAG_OPEN_REPARSE_POINT", "Phase 90 Win32 file handling does not yet open the leaf object with reparse-point awareness.");
+            AssertContains(osFileWinApi, "GetFileInformationByHandleEx(", "Phase 90 Win32 file handling does not yet validate opened handle attributes.");
+            AssertContains(osFileWinApi, "GetFinalPathNameByHandle(", "Phase 90 Win32 file handling does not yet revalidate the resolved final path after open.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "Phase 90 UWP file handling does not yet walk ancestor path segments for reparse-point checks.");
 
@@ -6122,11 +6125,13 @@ internal static class Program
             string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
             string licenseException = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
 
-            AssertContains(registryCore, "{ \"sha256\", \"SHA256\", true, true }", "Phase 98 no longer preserves the legacy SHA256 descriptor while the OpenSSL family coexists.");
-            AssertContains(registryCore, "{ \"sha512\", \"SHA512\", true, true }", "Phase 98 no longer preserves the legacy SHA512 descriptor while the OpenSSL family coexists.");
-            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, false }", "Phase 98 is missing the OpenSSL SHA-256 descriptor.");
+            AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated MD5 compatibility descriptor.");
+            AssertContains(registryCore, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated SHA1 compatibility descriptor.");
+            AssertContains(registryCore, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "Phase 98 no longer preserves the legacy SHA256 descriptor while the OpenSSL family coexists.");
+            AssertContains(registryCore, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "Phase 98 no longer preserves the legacy SHA512 descriptor while the OpenSSL family coexists.");
+            AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "Phase 98 is missing the OpenSSL SHA-256 descriptor or default enablement.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "Phase 98 is missing the OpenSSL SHA-384 descriptor.");
-            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, false }", "Phase 98 is missing the OpenSSL SHA-512 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "Phase 98 is missing the OpenSSL SHA-512 descriptor or default enablement.");
             AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "Phase 98 is missing the OpenSSL SHA3-256 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", "Phase 98 is missing the OpenSSL SHA3-384 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "Phase 98 is missing the OpenSSL SHA3-512 descriptor.");

@@ -9,6 +9,7 @@
 
 #include "OsFile.h"
 
+#include <vector>
 #include <Windows.h>
 #include <strsafe.h>
 
@@ -170,6 +171,106 @@ static bool TryRejectReparsePointPath(const tstring& filePath, TCHAR *errorBuffe
 	return true;
 }
 
+static tstring NormalizePathForHandleComparison(tstring filePath)
+{
+	for (size_t index = 0; index < filePath.length(); ++index)
+	{
+		if (filePath[index] == TEXT('/'))
+		{
+			filePath[index] = TEXT('\\');
+		}
+	}
+
+	if (filePath.length() >= 8 &&
+		filePath.compare(0, 8, TEXT("\\\\?\\UNC\\")) == 0)
+	{
+		filePath = TEXT("\\\\") + filePath.substr(8);
+	}
+	else if (filePath.length() >= 4 &&
+		filePath.compare(0, 4, TEXT("\\\\?\\")) == 0)
+	{
+		filePath = filePath.substr(4);
+	}
+
+	for (size_t index = 0; index < filePath.length(); ++index)
+	{
+		filePath[index] = static_cast<TCHAR>(_totlower(filePath[index]));
+	}
+
+	return filePath;
+}
+
+static bool TryGetNormalizedFinalPathFromHandle(HANDLE fileHandle, tstring *finalPath)
+{
+	if (fileHandle == NULL || fileHandle == INVALID_HANDLE_VALUE || finalPath == NULL)
+	{
+		return false;
+	}
+
+	DWORD requiredLength = GetFinalPathNameByHandle(
+		fileHandle,
+		NULL,
+		0,
+		FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+	if (requiredLength == 0)
+	{
+		return false;
+	}
+
+	std::vector<TCHAR> finalPathBuffer(requiredLength + 1, TEXT('\0'));
+	DWORD actualLength = GetFinalPathNameByHandle(
+		fileHandle,
+		finalPathBuffer.data(),
+		static_cast<DWORD>(finalPathBuffer.size()),
+		FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+	if (actualLength == 0 || actualLength >= finalPathBuffer.size())
+	{
+		return false;
+	}
+
+	*finalPath = NormalizePathForHandleComparison(tstring(finalPathBuffer.data(), actualLength));
+	return true;
+}
+
+static bool IsOpenedHandleReparsePoint(HANDLE fileHandle)
+{
+	FILE_ATTRIBUTE_TAG_INFO attributeTagInfo = { 0 };
+	if (!GetFileInformationByHandleEx(
+		fileHandle,
+		FileAttributeTagInfo,
+		&attributeTagInfo,
+		static_cast<DWORD>(sizeof(attributeTagInfo))))
+	{
+		return false;
+	}
+
+	return (attributeTagInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+}
+
+static bool ValidateOpenedHandleAgainstPathPolicy(HANDLE fileHandle, const tstring& expectedPath, TCHAR *errorBuffer)
+{
+	if (IsOpenedHandleReparsePoint(fileHandle))
+	{
+		CopyOpenErrorText(errorBuffer, TEXT("Refusing to hash a symbolic link, junction, mount point, or other reparse point."));
+		return false;
+	}
+
+	tstring normalizedFinalPath;
+	if (!TryGetNormalizedFinalPathFromHandle(fileHandle, &normalizedFinalPath))
+	{
+		return true;
+	}
+
+	tstring normalizedExpectedPath = NormalizePathForHandleComparison(expectedPath);
+	if (normalizedFinalPath != normalizedExpectedPath)
+	{
+		CopyOpenErrorText(errorBuffer, TEXT("Refusing to hash a path whose resolved handle no longer matches the validated path."));
+		return false;
+	}
+
+	return true;
+}
+
 OsFile::OsFile(tstring filePath):
 	_filePath(LongPathFix(filePath)),
 	_osfileData(NULL),
@@ -198,14 +299,15 @@ bool OsFile::open(void *flag, void *exception)
 {
 	CreateFileFlag* fileFlag = (CreateFileFlag*)flag;
 	TCHAR *pFileExc = (TCHAR *)exception;
+	_osfileData = NULL;
 	if (!isHashTargetAllowed(exception))
 	{
-		_osfileData = INVALID_HANDLE_VALUE;
 		return false;
 	}
 
+	HANDLE openedHandle = INVALID_HANDLE_VALUE;
 #if defined (FHASH_UWP_LIB)
-	_osfileData = CreateFileFromAppW(_filePath.c_str(), // file to open
+	openedHandle = CreateFileFromAppW(_filePath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
 		NULL, // default security
@@ -213,7 +315,7 @@ bool OsFile::open(void *flag, void *exception)
 		fileFlag->dwFlagsAndAttributes, // normal file
 		NULL); // no attr. template
 #else
-	_osfileData = CreateFile(_filePath.c_str(), // file to open
+	openedHandle = CreateFile(_filePath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
 		NULL, // default security
@@ -222,7 +324,7 @@ bool OsFile::open(void *flag, void *exception)
 		NULL); // no attr. template
 #endif
 
-	if (_osfileData == INVALID_HANDLE_VALUE)
+	if (openedHandle == INVALID_HANDLE_VALUE)
 	{
 		if (pFileExc != NULL)
 		{
@@ -253,8 +355,18 @@ bool OsFile::open(void *flag, void *exception)
 #endif
 		}
 	}
+	else
+	{
+		WinHandleGuard::UniqueWinHandle validatedHandle(openedHandle);
+		if (!ValidateOpenedHandleAgainstPathPolicy(validatedHandle.get(), _filePath, pFileExc))
+		{
+			return false;
+		}
 
-	return (_osfileData != INVALID_HANDLE_VALUE);
+		_osfileData = validatedHandle.release();
+	}
+
+	return (_osfileData != NULL);
 }
 
 bool OsFile::openRead(void *exception/* = NULL*/)
@@ -265,7 +377,7 @@ bool OsFile::openRead(void *exception/* = NULL*/)
 	fileFlag.dwDesiredAccess = GENERIC_READ;
 	fileFlag.dwShareMode = FILE_SHARE_READ;
 	fileFlag.dwCreationDisposition = OPEN_EXISTING;
-	fileFlag.dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
+	fileFlag.dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT;
 	ret = this->open((void *)&fileFlag, exception);
 
 	if (ret == true)
@@ -284,7 +396,7 @@ bool OsFile::openReadScan(void *exception/* = NULL*/)
 	fileFlag.dwDesiredAccess = GENERIC_READ;
 	fileFlag.dwShareMode = FILE_SHARE_READ;
 	fileFlag.dwCreationDisposition = OPEN_EXISTING;
-	fileFlag.dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
+	fileFlag.dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_OPEN_REPARSE_POINT;
 	ret = this->open((void*)&fileFlag, exception);
 
 	if (ret == true)

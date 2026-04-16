@@ -29,6 +29,9 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("HasReparsePointInPathHierarchy", winApi, StringComparison.Ordinal);
         Assert.Contains("PathSegmentHasReparsePoint", winApi, StringComparison.Ordinal);
         Assert.Contains("if (!isHashTargetAllowed(exception))", winApi, StringComparison.Ordinal);
+        Assert.Contains("FILE_FLAG_OPEN_REPARSE_POINT", winApi, StringComparison.Ordinal);
+        Assert.Contains("GetFileInformationByHandleEx(", winApi, StringComparison.Ordinal);
+        Assert.Contains("GetFinalPathNameByHandle(", winApi, StringComparison.Ordinal);
 
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winUwp, StringComparison.Ordinal);
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winUwp, StringComparison.Ordinal);
@@ -292,9 +295,9 @@ public sealed class SecurityHardeningUnitTests
         string vendorNote = RepositoryTestContext.ReadTextFile(@"third_party\openssl\3.0.20\README.LHash.md");
         string licenseException = RepositoryTestContext.ReadTextFile(@"LICENSE-OPENSSL-EXCEPTION.md");
 
-        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-384\", \"SHA-384\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
@@ -302,8 +305,10 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("{ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha256\", \"SHA256\", true, true }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha512\", \"SHA512\", true, true }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"md5\", \"MD5 (Deprecated)\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha256\", \"SHA256 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"sha512\", \"SHA512 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
 
         Assert.Contains("InitializeOpenSslSha256DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslSha384DigestContext", digestRegistry, StringComparison.Ordinal);
