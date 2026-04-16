@@ -188,9 +188,6 @@
     <ClInclude Include="source\Algorithms\SHA1.h">
       <Filter>算法</Filter>
     </ClInclude>
-    <ClInclude Include="source\Algorithms\sha256.h">
-      <Filter>算法</Filter>
-    </ClInclude>
     <ClInclude Include="source\OsUtils\OsFile.h">
       <Filter>OsUtils</Filter>
     </ClInclude>
@@ -211,9 +208,6 @@
     </ClInclude>
     <ClInclude Include="source\Common\Utils.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Algorithms\sha512.h">
-      <Filter>算法</Filter>
     </ClInclude>
     <ClInclude Include="source\Algorithms\endianness.h">
       <Filter>算法</Filter>

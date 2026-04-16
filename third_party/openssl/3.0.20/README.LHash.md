@@ -45,9 +45,8 @@ LHash integration notes:
   instead of only the outer PowerShell wrapper error
 - Runtime adapter layer lives in `trunk/source/Runtime/Hash/OpenSslEvpHashProvider.*`
 - OpenSSL-backed algorithm descriptors are exposed through the registry with
-  `openssl-*` stable ids, so they can coexist with the legacy in-tree SHA2
-  implementations.
+  `openssl-*` stable ids as the maintained SHA-2 / SHA-3 / BLAKE2 / SHAKE
+  implementation surface.
 - Current OpenSSL-backed descriptors include `SHA-256`, `SHA-384`, `SHA-512`,
   `SHA3-256`, `SHA3-384`, `SHA3-512`, `BLAKE2b-512`, `BLAKE2s-256`,
   `SHAKE128-256`, and `SHAKE256-512`.
-- LHash keeps the original legacy `sha256` / `sha512` ids and labels untouched.

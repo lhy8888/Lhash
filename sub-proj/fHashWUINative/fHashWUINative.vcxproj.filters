@@ -66,12 +66,6 @@
     <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h">
       <Filter>算法</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha256.h">
-      <Filter>算法</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h">
-      <Filter>算法</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\trunk\source\WinCommon\AdvTaskbar.h">
       <Filter>Common</Filter>
     </ClInclude>

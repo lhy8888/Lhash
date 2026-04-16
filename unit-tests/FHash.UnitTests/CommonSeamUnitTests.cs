@@ -81,8 +81,8 @@ public sealed class CommonSeamUnitTests
             registryCore,
             "RegisterHashAlgorithmDescriptorUnlocked({ \"md5\", \"MD5 (Deprecated)\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"sha1\", \"SHA1 (Deprecated)\", true, false });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha256\", \"SHA256 (Legacy)\", true, false });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"sha512\", \"SHA512 (Legacy)\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-512\", \"SHA-512\", true, true });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-256\", \"BLAKE3-256\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-512\", \"BLAKE3-512\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
@@ -135,9 +135,9 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void LegacySha256Source_DropsDuplicateExtractAndStringMacros()
+    public void ArchivedSha256Source_DropsDuplicateExtractAndStringMacros()
     {
-        string sha256Source = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\sha256.cpp");
+        string sha256Source = RepositoryTestContext.ReadUtf8File(@"archive\legacy-algorithms\trunk\source\Algorithms\sha256.cpp");
 
         Assert.DoesNotContain("mutils_word8", sha256Source, StringComparison.Ordinal);
         Assert.Equal(1, CountOccurrences(sha256Source, "#ifndef EXTRACT_UCHAR"));

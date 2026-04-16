@@ -105,14 +105,6 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 
 	RegisterHashAlgorithmDescriptorUnlocked({ "md5", "MD5 (Deprecated)", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "sha1", "SHA1 (Deprecated)", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "sha256", "SHA256 (Legacy)", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "sha512", "SHA512 (Legacy)", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-256", "BLAKE3-256", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-512", "BLAKE3-512", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-xof", "BLAKE3 XOF", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-64", "XXH3-64", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-128", "XXH3-128", true, false });
-	RegisterHashAlgorithmDescriptorUnlocked({ "crc32c", "CRC32C", true, false });
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-256", "SHA-256", true, true });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-384", "SHA-384", true, false });
@@ -125,6 +117,12 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-shake128-256", "SHAKE128-256", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-shake256-512", "SHAKE256-512", true, false });
 #endif
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-256", "BLAKE3-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-512", "BLAKE3-512", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "blake3-xof", "BLAKE3 XOF", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-64", "XXH3-64", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "xxh3-128", "XXH3-128", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "crc32c", "CRC32C", true, false });
 	GetHashAlgorithmDefaultsInitializedFlag() = true;
 }
 

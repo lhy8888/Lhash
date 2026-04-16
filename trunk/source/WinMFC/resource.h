@@ -43,8 +43,6 @@
 #define IDC_SYSLINK_SITE                1029
 #define IDC_CHECK_MD5                   1030
 #define IDC_CHECK_SHA1                  1031
-#define IDC_CHECK_SHA256                1032
-#define IDC_CHECK_SHA512                1033
 #define IDC_SETTINGS                    1034
 #define IDC_OPEN_FOLDER                 1035
 #define IDC_EXPORT                      1036

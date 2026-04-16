@@ -10,10 +10,10 @@ Scenarios:
 - `large-single-128m`: 1 file x 128 MiB
 
 Algorithm sets:
-- `sha256`
+- `openssl-sha-256`
 - `blake3-256`
-- `classic-4` (`md5`, `sha1`, `sha256`, `sha512`)
-- `hybrid-4` (`sha256`, `blake3-256`, `blake3-512`, `blake3-xof`)
+- `classic-4` (`md5`, `sha1`, `openssl-sha-256`, `openssl-sha-512`)
+- `hybrid-4` (`openssl-sha-256`, `blake3-256`, `blake3-512`, `blake3-xof`)
 
 Profiles:
 - `portable`: forces the vendored BLAKE3 C code onto the portable path by disabling SIMD translation units through `FHashBlake3SimdProfile=portable`
@@ -43,7 +43,7 @@ Each artifact contains:
 ## Decision rules
 
 Use the benchmark summary before changing shipping SIMD defaults:
-- If `blake3-256` and `hybrid-4` show a clear uplift on `large-single-128m` and `many-small-256x64k`, while `sha256` stays effectively flat, then that platform's BLAKE3 SIMD shipping path is justified.
+- If `blake3-256` and `hybrid-4` show a clear uplift on `large-single-128m` and `many-small-256x64k`, while `openssl-sha-256` stays effectively flat, then that platform's BLAKE3 SIMD shipping path is justified.
 - If gains are only visible on the large-file case and disappear on many-small-file workloads, prefer a narrower platform-specific enablement and keep broader paths off.
 - Do not use one platform's benchmark to justify another platform's SIMD changes. `x64`, `Win32`, and `ARM64` each need their own measurements.
 - If the delta is within expected runner noise, keep the portable path as the safer default and revisit only with stronger data.

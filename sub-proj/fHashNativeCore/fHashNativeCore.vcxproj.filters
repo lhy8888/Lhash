@@ -29,12 +29,6 @@
     <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp">
       <Filter>算法</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp">
-      <Filter>算法</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -176,12 +170,6 @@
       <Filter>算法</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h">
-      <Filter>算法</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha256.h">
-      <Filter>算法</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h">
       <Filter>算法</Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\Common\Global.h">

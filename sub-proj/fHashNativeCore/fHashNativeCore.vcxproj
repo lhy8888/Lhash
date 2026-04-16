@@ -250,8 +250,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp" />
     <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp" />
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha256.cpp" />
-    <ClCompile Include="..\..\trunk\source\Algorithms\sha512.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\CRC32CHashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp">
@@ -387,8 +385,6 @@
     <ClInclude Include="..\..\trunk\source\Algorithms\endianness.h" />
     <ClInclude Include="..\..\trunk\source\Algorithms\MD5.h" />
     <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h" />
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha256.h" />
-    <ClInclude Include="..\..\trunk\source\Algorithms\sha512.h" />
     <ClInclude Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.h" />
     <ClInclude Include="..\..\trunk\source\Runtime\Hash\CRC32CHashProvider.h" />
     <ClInclude Include="..\..\trunk\source\Runtime\Hash\XXHash3HashProvider.h" />

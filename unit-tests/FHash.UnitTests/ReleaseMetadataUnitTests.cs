@@ -253,7 +253,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("stages `include/` and `libcrypto.lib` manually", vendorNote, StringComparison.Ordinal);
         Assert.Contains("does not accept `no-apps` or `no-docs`", vendorNote, StringComparison.Ordinal);
         Assert.Contains("OpenSSL-backed algorithm descriptors", vendorNote, StringComparison.Ordinal);
-        Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Keeping the full upstream snapshot does not mean these disabled product", vendorNote, StringComparison.Ordinal);
         Assert.Contains("Text-Template-1.56/lib", vendorModules, StringComparison.Ordinal);
         Assert.Contains("package Text::Template;", textTemplate, StringComparison.Ordinal);

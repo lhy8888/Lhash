@@ -19,12 +19,18 @@ Archived on the current mainline cleanup pass:
 - `legacy-platforms/sub-proj/fHashUwpNative`
 - `legacy-platforms/sub-proj/fHashUwpShellExt`
 - `legacy-platforms/sub-proj/fHashWUIShellExt`
+- `legacy-algorithms/trunk/source/Algorithms/sha256.cpp`
+- `legacy-algorithms/trunk/source/Algorithms/sha256.h`
+- `legacy-algorithms/trunk/source/Algorithms/sha512.cpp`
+- `legacy-algorithms/trunk/source/Algorithms/sha512.h`
 
 These items were moved out of `trunk/` because:
 
 - the maintained `push` build chain only drives `trunk/fileshash15.sln`
 - preview WinUI/UWP jobs build direct project files rather than these legacy solution wrappers
 - the archived packaging scripts are not referenced by the active GitHub workflows
+- the legacy in-tree SHA256/SHA512 implementations were superseded by the
+  maintained OpenSSL SHA-256 / SHA-512 provider path
 
 The archive is intentionally conservative:
 

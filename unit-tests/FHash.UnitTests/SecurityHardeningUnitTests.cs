@@ -280,7 +280,7 @@ public sealed class SecurityHardeningUnitTests
     }
 
     [Fact]
-    public void OpenSslEvpIntegration_UsesOfficialVendorAndKeepsLegacySha2Distinct()
+    public void OpenSslEvpIntegration_UsesOfficialVendorAndDefinesTheOnlyActiveSha256AndSha512Variants()
     {
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string digestRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
@@ -307,8 +307,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"md5\", \"MD5 (Deprecated)\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha256\", \"SHA256 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha512\", \"SHA512 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
 
         Assert.Contains("InitializeOpenSslSha256DigestContext", digestRegistry, StringComparison.Ordinal);
         Assert.Contains("InitializeOpenSslSha384DigestContext", digestRegistry, StringComparison.Ordinal);
@@ -350,10 +348,10 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
         Assert.Contains("Upstream tag: openssl-3.0.20", vendorNote, StringComparison.Ordinal);
         Assert.Contains("OpenSSL-backed algorithm descriptors are exposed through the registry with", vendorNote, StringComparison.Ordinal);
-        Assert.Contains("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("legacy `sha256` / `sha512` ids and labels untouched", vendorNote, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", runtimeTests, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-sha-256\")", runtimeTests, StringComparison.Ordinal);

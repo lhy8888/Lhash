@@ -499,6 +499,13 @@ namespace
 		ConfigureThreadDataFiles(threadData, progressSink, filePaths, enabledAlgorithms, uppercaseDigest);
 	}
 
+	static void ConfigureThreadDataByAlgorithmIds(ThreadData& threadData, CapturingProgressSink& progressSink, const sunjwbase::tstring& filePath, const std::vector<HashAlgorithmId>& enabledAlgorithmIds, bool uppercaseDigest = false)
+	{
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, enabledAlgorithmIds, uppercaseDigest);
+	}
+
 		static HashExecutionContext CreateExecutionContext(CapturingProgressSink& progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
 		{
 			return HashExecutionContext(&progressSink, jobState, cancellationState);
@@ -600,12 +607,12 @@ namespace
 		CapturingProgressSink progressSink;
 		progressSink.EnableConsoleTrace("single-file");
 		ThreadData threadData;
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_MD5);
-		algorithms.push_back(RESULT_DIGEST_SHA1);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
-		algorithms.push_back(RESULT_DIGEST_SHA512);
-		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("md5"));
+		algorithmIds.push_back(CreateAlgorithmId("sha1"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-512"));
+		ConfigureThreadDataByAlgorithmIds(threadData, progressSink, filePath, algorithmIds);
 		std::cout << "TRACE_PHASE: single-file configured thread data" << std::endl;
 
 		int exitCode = RunHashThreadData(threadData);
@@ -621,8 +628,8 @@ namespace
 		NativeAssertEqual(static_cast<size_t>(4), result.digests.size(), "The runtime result should expose all requested digest values.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), FindDigestValue(result, RESULT_DIGEST_MD5), "The MD5 digest did not match the known vector for 'abc'.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("A9993E364706816ABA3E25717850C26C9CD0D89D")), FindDigestValue(result, RESULT_DIGEST_SHA1), "The SHA1 digest did not match the known vector for 'abc'.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), FindDigestValue(result, RESULT_DIGEST_SHA256), "The SHA256 digest did not match the known vector for 'abc'.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F")), FindDigestValue(result, RESULT_DIGEST_SHA512), "The SHA512 digest did not match the known vector for 'abc'.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-256")), "The OpenSSL SHA-256 digest did not match the known vector for 'abc'.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F")), FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-512")), "The OpenSSL SHA-512 digest did not match the known vector for 'abc'.");
 
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_PREPARING), "The runtime path should emit a preparing event.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_PREPARATION_FINISHED), "The runtime path should emit a preparation-finished event.");
@@ -640,13 +647,13 @@ namespace
 
 		CapturingProgressSink progressSink;
 		ThreadData threadData;
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_MD5);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("md5"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(abcPath);
 		filePaths.push_back(helloPath);
-		ConfigureThreadDataFiles(threadData, progressSink, filePaths, algorithms);
+		ConfigureThreadDataFilesByAlgorithmIds(threadData, progressSink, filePaths, algorithmIds);
 
 		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a multi-file request.");
@@ -660,8 +667,8 @@ namespace
 		NativeAssertTrue(helloResult != NULL, "The multi-file runtime path should preserve the second file result.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72")), FindDigestValue(*abcResult, RESULT_DIGEST_MD5), "The first file MD5 digest did not match the known vector.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("5D41402ABC4B2A76B9719D911017C592")), FindDigestValue(*helloResult, RESULT_DIGEST_MD5), "The second file MD5 digest did not match the known vector.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), FindDigestValue(*abcResult, RESULT_DIGEST_SHA256), "The first file SHA256 digest did not match the known vector.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824")), FindDigestValue(*helloResult, RESULT_DIGEST_SHA256), "The second file SHA256 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), FindDigestValueByAlgorithmId(*abcResult, CreateAlgorithmId("openssl-sha-256")), "The first file OpenSSL SHA-256 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824")), FindDigestValueByAlgorithmId(*helloResult, CreateAlgorithmId("openssl-sha-256")), "The second file OpenSSL SHA-256 digest did not match the known vector.");
 
 		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_STARTED), "The multi-file runtime path should emit one file-started event per input file.");
 		NativeAssertEqual(static_cast<size_t>(2), progressSink.CountEvents(PROGRESS_EVENT_FILE_META_READY), "The multi-file runtime path should emit one file-meta event per input file.");
@@ -677,25 +684,25 @@ namespace
 	static void HashThreadFunc_RespectsSelectedAlgorithms()
 	{
 		ScopedTempDirectory tempDirectory;
-		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("sha256-only.txt"), "abc");
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("sha-256-only.txt"), "abc");
 
 		CapturingProgressSink progressSink;
 		ThreadData threadData;
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_SHA256);
-		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+		ConfigureThreadDataByAlgorithmIds(threadData, progressSink, filePath, algorithmIds);
 
 		int exitCode = RunHashThreadData(threadData);
-		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a SHA256-only request.");
-		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "A SHA256-only request should still produce one file result.");
+		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an OpenSSL SHA-256-only request.");
+		NativeAssertEqual(static_cast<uint64_t>(1), GetThreadDataResultCount(threadData), "An OpenSSL SHA-256-only request should still produce one file result.");
 
 		const HashResult& result = GetThreadDataResults(threadData).front();
 		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Only the explicitly enabled algorithm should be emitted.");
 		NativeAssertEqual(
-			NormalizeHashAlgorithmId(GetHashAlgorithmId(RESULT_DIGEST_SHA256)),
+			CreateAlgorithmId("openssl-sha-256"),
 			ResolveDigestResultAlgorithmId(result.digests[0]),
-			"The only emitted digest should be SHA256.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The SHA256-only digest value did not match the known vector.");
+			"The only emitted digest should be OpenSSL SHA-256.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The OpenSSL SHA-256-only digest value did not match the known vector.");
 	}
 
 	static void HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector()
@@ -865,16 +872,14 @@ namespace
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_HASH_READY), "OpenSSL EVP hashing should emit a hash-ready event.");
 	}
 
-	static void RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2()
+	static void RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily()
 	{
 		ScopedTempDirectory tempDirectory;
-		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("openssl-coexist.txt"), "abc");
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("openssl-sha2-request.txt"), "abc");
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(filePath);
 
 		std::vector<HashAlgorithmId> algorithmIds;
-		algorithmIds.push_back(CreateAlgorithmId("sha256"));
-		algorithmIds.push_back(CreateAlgorithmId("sha512"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
 		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-512"));
 
@@ -885,19 +890,15 @@ namespace
 		HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
 
 		int exitCode = RunHashRequest(&executionContext, request);
-		NativeAssertEqual(0, exitCode, "Legacy SHA2 and OpenSSL SHA-2 variants should coexist in the same request.");
-		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Coexisting legacy/OpenSSL SHA2 variants should still emit one file result.");
+		NativeAssertEqual(0, exitCode, "OpenSSL SHA-2 variants should coexist in the same request.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Selecting multiple OpenSSL SHA-2 variants should still emit one file result.");
 
 		const HashResult& result = jobState.results.front();
-		NativeAssertEqual(static_cast<size_t>(4), result.digests.size(), "Legacy SHA2 and OpenSSL SHA-2 variants should all stay visible as separate digests.");
-		NativeAssertEqual(CreateAlgorithmId("sha256"), ResolveDigestResultAlgorithmId(result.digests[0]), "Legacy SHA256 should remain addressable through its original id.");
-		NativeAssertEqual(CreateAlgorithmId("sha512"), ResolveDigestResultAlgorithmId(result.digests[1]), "Legacy SHA512 should remain addressable through its original id.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-sha-256"), ResolveDigestResultAlgorithmId(result.digests[2]), "OpenSSL SHA-256 should stay distinct from legacy SHA256.");
-		NativeAssertEqual(CreateAlgorithmId("openssl-sha-512"), ResolveDigestResultAlgorithmId(result.digests[3]), "OpenSSL SHA-512 should stay distinct from legacy SHA512.");
-		NativeAssertEqual(GetOfficialOpenSslSha256Vector(), result.digests[0].value, "Legacy SHA256 should keep the expected vector when OpenSSL SHA-256 is also selected.");
-		NativeAssertEqual(GetOfficialOpenSslSha512Vector(), result.digests[1].value, "Legacy SHA512 should keep the expected vector when OpenSSL SHA-512 is also selected.");
-		NativeAssertEqual(GetOfficialOpenSslSha256Vector(), result.digests[2].value, "OpenSSL SHA-256 should match the expected vector.");
-		NativeAssertEqual(GetOfficialOpenSslSha512Vector(), result.digests[3].value, "OpenSSL SHA-512 should match the expected vector.");
+		NativeAssertEqual(static_cast<size_t>(2), result.digests.size(), "OpenSSL SHA-2 request should emit exactly the requested OpenSSL SHA-2 digests.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-sha-256"), ResolveDigestResultAlgorithmId(result.digests[0]), "OpenSSL SHA-256 should remain addressable through its OpenSSL id.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-sha-512"), ResolveDigestResultAlgorithmId(result.digests[1]), "OpenSSL SHA-512 should remain addressable through its OpenSSL id.");
+		NativeAssertEqual(GetOfficialOpenSslSha256Vector(), result.digests[0].value, "OpenSSL SHA-256 should match the expected vector.");
+		NativeAssertEqual(GetOfficialOpenSslSha512Vector(), result.digests[1].value, "OpenSSL SHA-512 should match the expected vector.");
 	}
 
 	static void RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered()
@@ -1277,16 +1278,16 @@ namespace
 		ScopedTempDirectory tempDirectory;
 		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("concurrency.txt"), std::string((kHashEngineBufferSize * 2) + 321, 'A'));
 
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_MD5);
-		algorithms.push_back(RESULT_DIGEST_SHA1);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("md5"));
+		algorithmIds.push_back(CreateAlgorithmId("sha1"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
 
 		auto runSingleRequest = [&]() -> HashResult
 		{
 			CapturingProgressSink progressSink;
 			ThreadData threadData;
-			ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+			ConfigureThreadDataByAlgorithmIds(threadData, progressSink, filePath, algorithmIds);
 
 			int exitCode = RunHashThreadData(threadData);
 			NativeAssertEqual(0, exitCode, "Concurrent runtime hashing should succeed for each isolated task.");
@@ -1297,7 +1298,7 @@ namespace
 		HashResult baselineResult = runSingleRequest();
 		sunjwbase::tstring expectedMd5 = FindDigestValue(baselineResult, RESULT_DIGEST_MD5);
 		sunjwbase::tstring expectedSha1 = FindDigestValue(baselineResult, RESULT_DIGEST_SHA1);
-		sunjwbase::tstring expectedSha256 = FindDigestValue(baselineResult, RESULT_DIGEST_SHA256);
+		sunjwbase::tstring expectedSha256 = FindDigestValueByAlgorithmId(baselineResult, CreateAlgorithmId("openssl-sha-256"));
 
 		const size_t concurrentRunCount = 8;
 		std::vector<std::future<HashResult>> pendingRuns;
@@ -1312,7 +1313,7 @@ namespace
 			HashResult concurrentResult = pendingRuns[runIndex].get();
 			NativeAssertEqual(expectedMd5, FindDigestValue(concurrentResult, RESULT_DIGEST_MD5), "Concurrent runtime hashing produced an inconsistent MD5 digest.");
 			NativeAssertEqual(expectedSha1, FindDigestValue(concurrentResult, RESULT_DIGEST_SHA1), "Concurrent runtime hashing produced an inconsistent SHA1 digest.");
-			NativeAssertEqual(expectedSha256, FindDigestValue(concurrentResult, RESULT_DIGEST_SHA256), "Concurrent runtime hashing produced an inconsistent SHA256 digest.");
+			NativeAssertEqual(expectedSha256, FindDigestValueByAlgorithmId(concurrentResult, CreateAlgorithmId("openssl-sha-256")), "Concurrent runtime hashing produced an inconsistent OpenSSL SHA-256 digest.");
 		}
 	}
 
@@ -1328,24 +1329,24 @@ namespace
 
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(filePath);
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_UNKNOWN);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
-		algorithms.push_back(static_cast<ResultDigestType>(9999));
-		HashRequest request = CreateRequest(filePaths, algorithms);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("unknown"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+		algorithmIds.push_back(CreateAlgorithmId("OPENSSL-SHA-256"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha2-256"));
+		HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
 
 		int exitCode = RunHashRequest(&executionContext, request);
 		NativeAssertEqual(0, exitCode, "RunHashRequest should ignore unknown/duplicate algorithms and still succeed.");
 		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Unknown/duplicate algorithms should not prevent result publication.");
 
 		const HashResult& result = jobState.results.front();
-		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Unknown/duplicate algorithms should collapse to one registered SHA256 digest.");
+		NativeAssertEqual(static_cast<size_t>(1), result.digests.size(), "Unknown/duplicate algorithms should collapse to one registered OpenSSL SHA-256 digest.");
 		NativeAssertEqual(
-			NormalizeHashAlgorithmId(GetHashAlgorithmId(RESULT_DIGEST_SHA256)),
+			CreateAlgorithmId("openssl-sha-256"),
 			ResolveDigestResultAlgorithmId(result.digests[0]),
-			"The emitted digest type should be SHA256 after request sanitization.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The sanitized SHA256 digest value should match the known vector.");
+			"The emitted digest type should be OpenSSL SHA-256 after request sanitization.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")), result.digests[0].value, "The sanitized OpenSSL SHA-256 digest value should match the known vector.");
 		NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "Sanitized requests should still emit exactly one hash-ready event.");
 	}
 
@@ -1426,8 +1427,8 @@ namespace
 	static void HashRequest_AlgorithmIdsDriveSelectionAndDeduplication()
 	{
 		HashRequest request;
-		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("SHA512")));
-		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha512")));
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("OPENSSL-SHA-512")));
+		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("openssl-sha-512")));
 		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
 		AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("unknown")));
 
@@ -1446,7 +1447,7 @@ namespace
 		});
 
 		NativeAssertEqual(static_cast<size_t>(2), algorithmIds.size(), "HashRequest should deduplicate descriptor/id algorithms while keeping compatibility algorithms.");
-		NativeAssertTrue(HasHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("sha512"))), "HashRequest should report selected algorithms by descriptor/id.");
+		NativeAssertTrue(HasHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("openssl-sha-512"))), "HashRequest should report selected algorithms by descriptor/id.");
 		NativeAssertTrue(HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5), "HashRequest should preserve digest-type compatibility selection.");
 		NativeAssertEqual(static_cast<size_t>(2), digestTypes.size(), "HashRequest digest iteration should resolve deduplicated descriptor/id selections.");
 	}
@@ -1545,9 +1546,9 @@ namespace
 	static void HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests()
 	{
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_MD5, NULL), "Known digests should support existence probes without an output descriptor.");
-		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA256, NULL), "Known digests should support existence probes without an output descriptor.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(CreateAlgorithmId("openssl-sha-256"), NULL), "Known OpenSSL SHA-256 digests should support existence probes without an output descriptor.");
 		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(GetHashAlgorithmId(RESULT_DIGEST_MD5), NULL), "Known descriptor ids should support existence probes without an output descriptor.");
-		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(GetHashAlgorithmId(RESULT_DIGEST_SHA256), NULL), "Known descriptor ids should support existence probes without an output descriptor.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(CreateAlgorithmId("openssl-sha-256"), NULL), "Known OpenSSL SHA-256 descriptor ids should support existence probes without an output descriptor.");
 		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_UNKNOWN, NULL), "Unknown digest probes should fail.");
 		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptor(static_cast<ResultDigestType>(9999), NULL), "Out-of-range digest probes should fail.");
 		NativeAssertTrue(!HashEngineInternal::TryGetHashDigestOperationDescriptorById(sunjwbase::strtotstr(std::string("unknown")), NULL), "Unknown descriptor-id probes should fail.");
@@ -1556,32 +1557,32 @@ namespace
 	static void HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport()
 	{
 		HashEngineInternal::HashDigestOperationDescriptor descriptor = {};
-		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptor(RESULT_DIGEST_SHA512, &descriptor), "Known SHA512 descriptors should resolve.");
+		NativeAssertTrue(HashEngineInternal::TryGetHashDigestOperationDescriptorById(CreateAlgorithmId("openssl-sha-512"), &descriptor), "Known OpenSSL SHA-512 descriptors should resolve.");
 		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorComplete(descriptor), "Resolved registry descriptors should be complete.");
-		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_SHA512), "Known SHA512 descriptors should be reported as supported.");
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(CreateAlgorithmId("openssl-sha-512")), "Known OpenSSL SHA-512 descriptors should be reported as supported.");
 
 		HashEngineInternal::HashDigestOperationDescriptor incompleteDescriptor = descriptor;
 		incompleteDescriptor.updateAction = NULL;
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorComplete(incompleteDescriptor), "Descriptors missing update actions should be rejected as incomplete.");
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupported(RESULT_DIGEST_UNKNOWN), "Unknown digest types should not be reported as supported.");
-		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(GetHashAlgorithmId(RESULT_DIGEST_SHA512)), "Known descriptor ids should be reported as supported.");
+		NativeAssertTrue(HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(CreateAlgorithmId("openssl-sha-512")), "Known descriptor ids should be reported as supported.");
 		NativeAssertTrue(!HashEngineInternal::IsHashDigestOperationDescriptorSupportedById(sunjwbase::strtotstr(std::string("unknown"))), "Unknown descriptor ids should not be reported as supported.");
 	}
 
 	static void HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms()
 	{
 		HashRequest request;
-		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA512);
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha-512"));
 		AppendHashRequestAlgorithm(request, RESULT_DIGEST_MD5);
-		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
-		AppendHashRequestAlgorithm(request, RESULT_DIGEST_SHA256);
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("openssl-sha-256"));
+		AppendHashRequestAlgorithmId(request, CreateAlgorithmId("OPENSSL-SHA-256"));
 		AppendHashRequestAlgorithm(request, RESULT_DIGEST_UNKNOWN);
 
 		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = HashEngineInternal::CreateDigestUpdateRequest(request);
 		NativeAssertEqual(static_cast<size_t>(3), digestUpdateRequest.operationDescriptors.size(), "Digest update planning should keep only requested registered algorithms without duplicates.");
 		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_MD5), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[0].algorithmId), "Digest update planning should preserve registry order for MD5.");
-		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_SHA256), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[1].algorithmId), "Digest update planning should preserve registry order for SHA256.");
-		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_SHA512), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[2].algorithmId), "Digest update planning should preserve registry order for SHA512.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-sha-256"), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[1].algorithmId), "Digest update planning should preserve registry order for OpenSSL SHA-256.");
+		NativeAssertEqual(CreateAlgorithmId("openssl-sha-512"), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[2].algorithmId), "Digest update planning should preserve registry order for OpenSSL SHA-512.");
 	}
 
 	static void HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency()
@@ -1696,12 +1697,12 @@ namespace
 
 		CapturingProgressSink progressSink;
 		ThreadData threadData;
-		std::vector<ResultDigestType> algorithms;
-		algorithms.push_back(RESULT_DIGEST_MD5);
-		algorithms.push_back(RESULT_DIGEST_SHA1);
-		algorithms.push_back(RESULT_DIGEST_SHA256);
-		algorithms.push_back(RESULT_DIGEST_SHA512);
-		ConfigureThreadData(threadData, progressSink, filePath, algorithms);
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("md5"));
+		algorithmIds.push_back(CreateAlgorithmId("sha1"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-512"));
+		ConfigureThreadDataByAlgorithmIds(threadData, progressSink, filePath, algorithmIds);
 
 		int exitCode = RunHashThreadData(threadData);
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for an empty file.");
@@ -1710,8 +1711,8 @@ namespace
 		NativeAssertEqual(static_cast<uint64_t>(0), result.meta.size, "The empty-file runtime path should report zero bytes.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("D41D8CD98F00B204E9800998ECF8427E")), FindDigestValue(result, RESULT_DIGEST_MD5), "The empty-file MD5 digest did not match the known vector.");
 		NativeAssertEqual(sunjwbase::strtotstr(std::string("DA39A3EE5E6B4B0D3255BFEF95601890AFD80709")), FindDigestValue(result, RESULT_DIGEST_SHA1), "The empty-file SHA1 digest did not match the known vector.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")), FindDigestValue(result, RESULT_DIGEST_SHA256), "The empty-file SHA256 digest did not match the known vector.");
-		NativeAssertEqual(sunjwbase::strtotstr(std::string("CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE47D0D13C5D85F2B0FF8318D2877EEC2F63B931BD47417A81A538327AF927DA3E")), FindDigestValue(result, RESULT_DIGEST_SHA512), "The empty-file SHA512 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")), FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-256")), "The empty-file OpenSSL SHA-256 digest did not match the known vector.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE47D0D13C5D85F2B0FF8318D2877EEC2F63B931BD47417A81A538327AF927DA3E")), FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-512")), "The empty-file OpenSSL SHA-512 digest did not match the known vector.");
 		NativeAssertEqual(progressSink.progressMax(), progressSink.GetLastValue(PROGRESS_EVENT_FILE_PROGRESS), "The empty-file runtime path should still complete file progress.");
 	}
 
@@ -1860,7 +1861,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
 	tests.push_back({ "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", &HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector });
-	tests.push_back({ "RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", &RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2 });
+		tests.push_back({ "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", &RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily });
 	tests.push_back({ "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered });
 	tests.push_back({ "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", &HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns });
 #endif

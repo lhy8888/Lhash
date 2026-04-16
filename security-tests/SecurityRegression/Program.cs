@@ -481,8 +481,6 @@ internal static partial class Program
 
             AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "The deprecated MD5 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "The deprecated SHA1 descriptor variant is missing.");
-            AssertContains(registryCore, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "The legacy SHA256 descriptor is no longer preserved as compatibility-only.");
-            AssertContains(registryCore, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "The legacy SHA512 descriptor is no longer preserved as compatibility-only.");
             AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "The OpenSSL SHA-256 descriptor variant is missing or not enabled by default.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "The OpenSSL SHA-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "The OpenSSL SHA-512 descriptor variant is missing or not enabled by default.");
@@ -519,7 +517,7 @@ internal static partial class Program
             AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE256-512 initialization hook.");
 
             AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", "The native runtime suite no longer covers the OpenSSL official-vector test.");
-            AssertContains(runtimeSource, "RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", "The native runtime suite no longer verifies that the OpenSSL SHA-2 variants coexist with the legacy SHA ids.");
+            AssertContains(runtimeSource, "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", "The native runtime suite no longer verifies that the OpenSSL SHA-2 variants stay distinct inside the OpenSSL family.");
             AssertContains(runtimeSource, "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "The native runtime suite no longer covers unknown OpenSSL algorithm ids.");
             AssertContains(runtimeSource, "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", "The native runtime suite no longer covers OpenSSL concurrent stability.");
             AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-sha3\")", "The OpenSSL runtime suite no longer exercises the unknown OpenSSL id path.");
@@ -544,7 +542,7 @@ internal static partial class Program
             AssertContains(workflow, "FHashOpenSslInstallRoot", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");
             AssertContains(vendorNote, "Upstream tag: openssl-3.0.20", "The vendored OpenSSL note no longer pins the upstream tag.");
             AssertContains(vendorNote, "5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", "The vendored OpenSSL note no longer pins the upstream commit.");
-            AssertContains(vendorNote, "legacy `sha256` / `sha512` ids and labels untouched", "The vendored OpenSSL note no longer documents the coexistence policy with legacy SHA ids.");
+            AssertDoesNotContain(vendorNote, "legacy `sha256` / `sha512` ids and labels untouched", "The vendored OpenSSL note still documents removed legacy SHA coexistence.");
             AssertContains(exceptionNote, "OpenSSL Linking Exception", "The repository no longer carries the OpenSSL linking exception note.");
         }, failures);
         Run("DLL search path hardening is present", () =>

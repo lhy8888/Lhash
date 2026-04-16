@@ -51,9 +51,6 @@
 
 #include "Algorithms/MD5.h"
 #include "Algorithms/SHA1.h"
-#include "Algorithms/sha256.h"
-#include "Algorithms/sha512.h"
-
 class ThreadPool;
 
 namespace HashEngineInternal
@@ -99,8 +96,6 @@ namespace HashEngineInternal
 		FileHashContexts()
 			: mdContext(),
 			sha1(),
-			sha256Ctx(),
-			sha512Ctx(),
 			blake3_256(),
 			blake3_512(),
 			blake3Xof(),
@@ -118,7 +113,6 @@ namespace HashEngineInternal
 			openSslShake128_256(),
 			openSslShake256_512()
 		{
-			std::memset(digestSHA512, 0, sizeof(digestSHA512));
 		}
 
 		~FileHashContexts()
@@ -140,8 +134,6 @@ namespace HashEngineInternal
 
 		MD5_CTX mdContext;
 		CSHA1 sha1;
-		SHA256_CTX sha256Ctx;
-		SHA512_CTX sha512Ctx;
 		blake3_hasher blake3_256;
 		blake3_hasher blake3_512;
 		blake3_hasher blake3Xof;
@@ -158,7 +150,6 @@ namespace HashEngineInternal
 		HashRuntime::OpenSslEvpHashContext openSslBlake2s_256;
 		HashRuntime::OpenSslEvpHashContext openSslShake128_256;
 		HashRuntime::OpenSslEvpHashContext openSslShake256_512;
-		uint8_t digestSHA512[SHA512_DIGEST_LENGTH];
 	};
 
 	typedef ResultDigestStorage FinalizedDigestBundle;

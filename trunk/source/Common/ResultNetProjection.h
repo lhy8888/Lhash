@@ -56,12 +56,12 @@ static inline void DispatchResultDigestValueById(const HashAlgorithmId& algorith
 		onSha1();
 		return;
 	}
-	if (IsResultDigestStableNameById(algorithmId, "sha256"))
+	if (IsResultDigestStableNameById(algorithmId, "openssl-sha-256"))
 	{
 		onSha256();
 		return;
 	}
-	if (IsResultDigestStableNameById(algorithmId, "sha512"))
+	if (IsResultDigestStableNameById(algorithmId, "openssl-sha-512"))
 	{
 		onSha512();
 		return;
@@ -82,12 +82,12 @@ static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDa
 		resultDataNet.SHA1 = digestValue;
 		return resultDataNet;
 	}
-	if (IsResultDigestStableNameById(algorithmId, "sha256"))
+	if (IsResultDigestStableNameById(algorithmId, "openssl-sha-256"))
 	{
 		resultDataNet.SHA256 = digestValue;
 		return resultDataNet;
 	}
-	if (IsResultDigestStableNameById(algorithmId, "sha512"))
+	if (IsResultDigestStableNameById(algorithmId, "openssl-sha-512"))
 	{
 		resultDataNet.SHA512 = digestValue;
 		return resultDataNet;

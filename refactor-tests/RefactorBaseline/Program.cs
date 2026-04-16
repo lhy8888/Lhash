@@ -355,9 +355,8 @@ internal static class Program
                     "struct FileHashContexts",
                     "MD5_CTX mdContext;",
                     "CSHA1 sha1;",
-                    "SHA256_CTX sha256Ctx;",
-                    "SHA512_CTX sha512Ctx;",
-                    "uint8_t digestSHA512[SHA512_DIGEST_LENGTH];"
+                    "HashRuntime::OpenSslEvpHashContext openSslSha256;",
+                    "HashRuntime::OpenSslEvpHashContext openSslSha512;"
                 ],
                 "HashEngine grouped file-hash context bundle no longer keeps the current algorithm contexts together.");
             AssertInOrder(engineImpl,
@@ -846,8 +845,8 @@ internal static class Program
             AssertContains(digestAccess, "GetResultDigestMetadataSnapshot()", "ResultDigestAccess does not yet expose the centralized digest metadata snapshot helper introduced for stable traversal.");
             AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map deprecated MD5.");
             AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map deprecated SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map legacy SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "HashAlgorithmRegistry metadata table does not yet map legacy SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "HashAlgorithmRegistry metadata table does not yet map OpenSSL SHA-256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "HashAlgorithmRegistry metadata table does not yet map OpenSSL SHA-512.");
             AssertContains(digestAccess, "GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata type accessor.");
             AssertContains(digestAccess, "GetResultDigestMetadataDisplayLabel(const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet expose the metadata label accessor.");
             AssertContains(digestAccess, "return GetHashAlgorithmTypeAt(index);", "ResultDigestAccess digest-order helper does not yet route through the registry type accessor.");
@@ -2233,8 +2232,8 @@ internal static class Program
             AssertContains(mfcSessionController, "m_hashAlgorithmSelectionController->ValidateSelection(noSelectionMessage);", "MFC session controller does not yet block zero-algorithm starts through the dedicated controller seam.");
             AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet include the MD5 checkbox.");
             AssertContains(mfcRc, "IDC_CHECK_SHA1", "MFC resources do not yet include the SHA1 checkbox.");
-            AssertContains(mfcRc, "IDC_CHECK_SHA256", "MFC resources do not yet include the SHA256 checkbox.");
-            AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet include the SHA512 checkbox.");
+            AssertDoesNotContain(mfcRc, "IDC_CHECK_SHA256", "MFC resources should no longer include the removed legacy SHA256 checkbox.");
+            AssertDoesNotContain(mfcRc, "IDC_CHECK_SHA512", "MFC resources should no longer include the removed legacy SHA512 checkbox.");
             AssertContains(mfcStringsBase, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC English strings do not yet include the algorithm-selection warning.");
             AssertContains(mfcStringsZh, "MAINDLG_SELECT_HASH_ALGORITHM", "MFC Chinese strings do not yet include the algorithm-selection warning.");
         }, failures);
@@ -2401,8 +2400,8 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "VisitRegisteredHashAlgorithms(THashAlgorithmVisitor visitor)", "HashAlgorithmRegistry does not yet expose the algorithm visitor seam.");
             AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "HashAlgorithmRegistry does not yet register deprecated MD5.");
             AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "HashAlgorithmRegistry does not yet register deprecated SHA1.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "HashAlgorithmRegistry does not yet register legacy SHA256.");
-            AssertContains(hashAlgorithmRegistry, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "HashAlgorithmRegistry does not yet register legacy SHA512.");
+            AssertContains(hashAlgorithmRegistry, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "HashAlgorithmRegistry does not yet register OpenSSL SHA-256.");
+            AssertContains(hashAlgorithmRegistry, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "HashAlgorithmRegistry does not yet register OpenSSL SHA-512.");
 
             AssertContains(digestAccess, "#include \"Domain/HashAlgorithmRegistryCore.h\"", "ResultDigestAccess does not yet layer on top of the hash-algorithm registry seam.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the new registry descriptor.");
@@ -2680,7 +2679,7 @@ internal static class Program
             AssertDoesNotContain(dlgCpp, "DDX_Control(pDX, IDC_CHECK_SHA512, m_chkSha512);", "FilesHashDlg.cpp still binds the fixed SHA512 checkbox after phase 17.");
 
             AssertContains(mfcRc, "IDC_CHECK_MD5", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
-            AssertContains(mfcRc, "IDC_CHECK_SHA512", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
+            AssertContains(mfcRc, "IDC_CHECK_SHA1", "MFC resources do not yet provide the legacy checkbox anchors required by the phase 17 dynamic controller.");
         }, failures);
 
         Run("Phase 18 splits ThreadData access into dedicated execution, input, and result seams", () =>
@@ -4845,8 +4844,8 @@ internal static class Program
             AssertContains(hashDigestOperationRegistryHeader, "bool TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 69 HashDigestOperationRegistry.h does not yet expose descriptor/id operation lookup.");
             AssertContains(hashDigestOperationRegistry, "MD5Final(&hashContexts.mdContext);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve MD5 finalization.");
             AssertContains(hashDigestOperationRegistry, "hashContexts.sha1.Final();", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA1 finalization.");
-            AssertContains(hashDigestOperationRegistry, "sha256_final(&hashContexts.sha256Ctx);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA256 finalization.");
-            AssertContains(hashDigestOperationRegistry, "SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA512 finalization.");
+            AssertContains(hashDigestOperationRegistry, "FinalizeOpenSslSha256DigestContext", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA-256 finalization through the OpenSSL provider.");
+            AssertContains(hashDigestOperationRegistry, "FinalizeOpenSslSha512DigestContext", "Phase 69 HashDigestOperationRegistry.cpp does not yet preserve SHA-512 finalization through the OpenSSL provider.");
 
             AssertContains(hashEngineResult, "uint64_t PrepareFileMetaResult(", "Phase 69 HashEngineResult.cpp should keep owning file metadata projection.");
             AssertDoesNotContain(hashEngineResult, "void InitializeFileHashing(", "Phase 69 HashEngineResult.cpp should no longer own hash-context initialization.");
@@ -4913,8 +4912,8 @@ internal static class Program
             AssertContains(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve standard MD5 init.");
             AssertDoesNotContain(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestOperationRegistry.cpp still routes standard MD5 through the seeded init signature.");
             AssertContains(hashDigestOperationRegistry, "hashContexts->sha1.Reset();", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA1 init.");
-            AssertContains(hashDigestOperationRegistry, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA256 init.");
-            AssertContains(hashDigestOperationRegistry, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA512 init.");
+            AssertContains(hashDigestOperationRegistry, "InitializeOpenSslSha256DigestContext", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA-256 init through the OpenSSL provider.");
+            AssertContains(hashDigestOperationRegistry, "InitializeOpenSslSha512DigestContext", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA-512 init through the OpenSSL provider.");
 
             AssertContainsAny(hashDigestLifecycle,
                 [
@@ -5464,7 +5463,7 @@ internal static class Program
             AssertContains(hashDigestOperationRegistryHeader, "TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", "Phase 83 HashDigestOperationRegistry.h does not yet expose descriptor/id lookup.");
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 83 HashDigestOperationRegistry.cpp does not yet centralize operation descriptors behind dedicated storage.");
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptorUnlocked({", "Phase 83 HashDigestOperationRegistry.cpp does not yet register default operation descriptors through the registration seam.");
-            AssertContains(hashDigestOperationRegistry, "UpdateSHA256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA256 update delegation.");
+            AssertContains(hashDigestOperationRegistry, "UpdateOpenSslSha256DigestContext", "Phase 83 HashDigestOperationRegistry.cpp does not yet expose SHA-256 update delegation through the OpenSSL provider.");
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestOperationRegistry.h\"", "Phase 83 HashEngineInternal.h does not yet consume HashDigestOperationRegistry.");
 
             AssertContains(hashJobExecutionPlan, "executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", "Phase 83 HashJobExecutionPlan.cpp does not yet consume request-driven digest update plans.");
@@ -5978,7 +5977,7 @@ internal static class Program
             AssertContains(benchmarkSource, "small-single-64k", "Phase 94 native benchmarks do not yet cover the small-file scenario.");
             AssertContains(benchmarkSource, "many-small-256x64k", "Phase 94 native benchmarks do not yet cover the many-file scenario.");
             AssertContains(benchmarkSource, "large-single-128m", "Phase 94 native benchmarks do not yet cover the large-file scenario.");
-            AssertContains(benchmarkSource, "\"sha256\"", "Phase 94 native benchmarks do not yet cover a single-algorithm SHA-256 control.");
+            AssertContains(benchmarkSource, "\"openssl-sha-256\"", "Phase 94 native benchmarks do not yet cover a single-algorithm SHA-256 control.");
             AssertContains(benchmarkSource, "\"blake3-256\"", "Phase 94 native benchmarks do not yet cover a single-algorithm BLAKE3 control.");
             AssertContains(benchmarkSource, "\"classic-4\"", "Phase 94 native benchmarks do not yet cover the legacy multi-algorithm combination.");
             AssertContains(benchmarkSource, "\"hybrid-4\"", "Phase 94 native benchmarks do not yet cover a mixed BLAKE3 multi-algorithm combination.");
@@ -6108,7 +6107,7 @@ internal static class Program
             AssertContains(releaseMetadataTests, "NativeProjects_AndResourceChain_Are_Migrating_To_Utf8", "Phase 97 unit coverage does not yet gate the UTF-8 migration seams.");
         }, failures);
 
-        Run("Phase 98 adds a fixed-version OpenSSL EVP family without disturbing the legacy SHA ids", () =>
+        Run("Phase 98 adds a fixed-version OpenSSL EVP family as the only active SHA-256/SHA-512 path", () =>
         {
             string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
@@ -6127,8 +6126,8 @@ internal static class Program
 
             AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated MD5 compatibility descriptor.");
             AssertContains(registryCore, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated SHA1 compatibility descriptor.");
-            AssertContains(registryCore, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "Phase 98 no longer preserves the legacy SHA256 descriptor while the OpenSSL family coexists.");
-            AssertContains(registryCore, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "Phase 98 no longer preserves the legacy SHA512 descriptor while the OpenSSL family coexists.");
+            AssertDoesNotContain(registryCore, "{ \"sha256\", \"SHA256 (Legacy)\", true, false }", "Phase 98 should have fully removed the legacy SHA256 descriptor.");
+            AssertDoesNotContain(registryCore, "{ \"sha512\", \"SHA512 (Legacy)\", true, false }", "Phase 98 should have fully removed the legacy SHA512 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "Phase 98 is missing the OpenSSL SHA-256 descriptor or default enablement.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "Phase 98 is missing the OpenSSL SHA-384 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "Phase 98 is missing the OpenSSL SHA-512 descriptor or default enablement.");
@@ -6173,7 +6172,7 @@ internal static class Program
             AssertContains(changelog, "OpenSSL 3 EVP", "Phase 98 changelog no longer records the OpenSSL EVP family.");
             AssertContains(changelogZh, "OpenSSL 3 EVP", "Phase 98 Chinese changelog no longer records the OpenSSL EVP family.");
             AssertContains(releaseMetadataTests, "OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild", "Phase 98 release metadata coverage no longer guards the OpenSSL vendor pipeline.");
-            AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndKeepsLegacyShaIdsUntouched", "Phase 98 extensibility coverage no longer guards the OpenSSL coexistence seam.");
+            AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndOwnsTheOnlyActiveSha256AndSha512Ids", "Phase 98 extensibility coverage no longer guards the OpenSSL-only SHA-256/SHA-512 seam.");
         }, failures);
 
         if (failures.Count > 0)

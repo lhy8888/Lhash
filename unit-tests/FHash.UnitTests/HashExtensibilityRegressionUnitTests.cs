@@ -183,7 +183,7 @@ public sealed class HashExtensibilityRegressionUnitTests
     }
 
     [Fact]
-    public void OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndKeepsLegacyShaIdsUntouched()
+    public void OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndOwnsTheOnlyActiveSha256AndSha512Ids()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string digestRegistry = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
@@ -196,8 +196,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         string licenseException = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
         string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
-        Assert.Contains("{ \"sha256\", \"SHA256 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"sha512\", \"SHA512 (Legacy)\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-384\", \"SHA-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, true }", registryCore, StringComparison.Ordinal);
@@ -251,7 +249,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", nativeRuntimeSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", nativeRuntimeSource, StringComparison.Ordinal);
         Assert.Contains("CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED", nativeRuntimeSource, StringComparison.Ordinal);

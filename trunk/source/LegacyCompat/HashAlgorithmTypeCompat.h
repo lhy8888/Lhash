@@ -17,12 +17,6 @@ static inline bool TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgori
 	case RESULT_DIGEST_SHA1:
 		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha1")));
 		break;
-	case RESULT_DIGEST_SHA256:
-		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha256")));
-		break;
-	case RESULT_DIGEST_SHA512:
-		resolvedAlgorithmId = NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string("sha512")));
-		break;
 	case RESULT_DIGEST_UNKNOWN:
 	default:
 		return false;
@@ -52,9 +46,7 @@ static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmI
 	static const LegacyHashAlgorithmTypeMapping legacyMappings[] =
 	{
 		{ RESULT_DIGEST_MD5, "md5" },
-		{ RESULT_DIGEST_SHA1, "sha1" },
-		{ RESULT_DIGEST_SHA256, "sha256" },
-		{ RESULT_DIGEST_SHA512, "sha512" }
+		{ RESULT_DIGEST_SHA1, "sha1" }
 	};
 
 	for (int mappingIndex = 0; mappingIndex < static_cast<int>(sizeof(legacyMappings) / sizeof(legacyMappings[0])); ++mappingIndex)

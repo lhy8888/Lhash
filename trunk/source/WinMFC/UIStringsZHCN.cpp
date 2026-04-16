@@ -82,7 +82,7 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_TITLE")] = _T("算法支持:");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("默认推荐: SHA-256、SHA-512");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("其他安全算法: SHA-384、SHA3-256、SHA3-384、SHA3-512、BLAKE2b-512、BLAKE2s-256、SHAKE128-256、SHAKE256-512");
-	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_VENDOR")] = _T("兼容用途: MD5（已弃用）、SHA1（已弃用）、SHA256（旧实现）、SHA512（旧实现），以及 BLAKE3 / XXH3 / CRC32C。");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_VENDOR")] = _T("兼容用途: MD5（已弃用）、SHA1（已弃用），以及 BLAKE3 / XXH3 / CRC32C。");
 	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY_TITLE")] = _T("安全与运行时:");
 	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY")] = _T("已接入签名发布链、DLL 搜索路径加固、重解析点防护、UTF-8 构建链迁移，并预留 OpenSSL vendor 能力。");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHTDETAIL")] = _T("详细授权信息见开发者网站。");

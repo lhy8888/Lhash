@@ -49,10 +49,10 @@ namespace
 
 	static const HashAlgorithmSetDefinition kHashAlgorithmSets[] =
 	{
-		{ "sha256", "SHA-256", { "sha256", NULL, NULL, NULL }, 1 },
+		{ "openssl-sha-256", "SHA-256", { "openssl-sha-256", NULL, NULL, NULL }, 1 },
 		{ "blake3-256", "BLAKE3-256", { "blake3-256", NULL, NULL, NULL }, 1 },
-		{ "classic-4", "MD5+SHA1+SHA256+SHA512", { "md5", "sha1", "sha256", "sha512" }, 4 },
-		{ "hybrid-4", "SHA256+BLAKE3-256+BLAKE3-512+BLAKE3-XOF", { "sha256", "blake3-256", "blake3-512", "blake3-xof" }, 4 }
+		{ "classic-4", "MD5+SHA1+SHA-256+SHA-512", { "md5", "sha1", "openssl-sha-256", "openssl-sha-512" }, 4 },
+		{ "hybrid-4", "SHA-256+BLAKE3-256+BLAKE3-512+BLAKE3-XOF", { "openssl-sha-256", "blake3-256", "blake3-512", "blake3-xof" }, 4 }
 	};
 
 	static const BenchmarkScenarioDefinition kBenchmarkScenarios[] =

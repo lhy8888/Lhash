@@ -26,18 +26,6 @@ namespace HashEngineInternal
 		return algorithmId;
 	}
 
-	static const HashAlgorithmId& GetSha256AlgorithmId()
-	{
-		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("sha256");
-		return algorithmId;
-	}
-
-	static const HashAlgorithmId& GetSha512AlgorithmId()
-	{
-		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("sha512");
-		return algorithmId;
-	}
-
 	static const HashAlgorithmId& GetBlake3_256AlgorithmId()
 	{
 		static const HashAlgorithmId algorithmId = CreateKnownAlgorithmId("blake3-256");
@@ -154,16 +142,6 @@ namespace HashEngineInternal
 		hashContexts->sha1.Reset();
 	}
 
-	static void InitializeSHA256DigestContext(FileHashContexts *hashContexts)
-	{
-		sha256_init(&hashContexts->sha256Ctx);
-	}
-
-	static void InitializeSHA512DigestContext(FileHashContexts *hashContexts)
-	{
-		SHA512_Init(&hashContexts->sha512Ctx);
-	}
-
 	static void InitializeBLAKE3_256DigestContext(FileHashContexts *hashContexts)
 	{
 		HashRuntime::InitializeBlake3Hasher(&hashContexts->blake3_256);
@@ -262,16 +240,6 @@ namespace HashEngineInternal
 	static void UpdateSHA1DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
 	{
 		hashContexts.sha1.Update(data, dataLen);
-	}
-
-	static void UpdateSHA256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
-	{
-		sha256_update(&hashContexts.sha256Ctx, data, dataLen);
-	}
-
-	static void UpdateSHA512DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
-	{
-		SHA512_Update(&hashContexts.sha512Ctx, data, dataLen);
 	}
 
 	static void UpdateBLAKE3_256DigestContext(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
@@ -406,32 +374,6 @@ namespace HashEngineInternal
 		hashContexts.sha1.Final();
 		hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
 		SetDigestStorageValueById(digestBundle, GetSha1AlgorithmId(), sunjwbase::strtotstr(string(strSHA1)));
-	}
-
-	static void FinalizeSHA256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
-	{
-		string strSHA256;
-		sha256_final(&hashContexts.sha256Ctx);
-		sha256_digest(&hashContexts.sha256Ctx, &strSHA256);
-		SetDigestStorageValueById(digestBundle, GetSha256AlgorithmId(), sunjwbase::strtotstr(strSHA256));
-	}
-
-	static void FinalizeSHA512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
-	{
-		string strSHA512;
-		SHA512_Final(hashContexts.digestSHA512, &hashContexts.sha512Ctx);
-		strSHA512.clear();
-		for (int digestIndex = 0; digestIndex < SHA512_DIGEST_LENGTH; ++digestIndex)
-		{
-			char hexByte[8] = { 0 };
-#if defined (_WIN32)
-			sprintf_s(hexByte, 8, "%02X", hashContexts.digestSHA512[digestIndex]);
-#else
-			snprintf(hexByte, 8, "%02X", hashContexts.digestSHA512[digestIndex]);
-#endif
-			strSHA512.append(hexByte);
-		}
-		SetDigestStorageValueById(digestBundle, GetSha512AlgorithmId(), sunjwbase::strtotstr(strSHA512));
 	}
 
 	static void FinalizeBLAKE3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
@@ -649,18 +591,6 @@ namespace HashEngineInternal
 			InitializeSHA1DigestContext,
 			UpdateSHA1DigestContext,
 			FinalizeSHA1DigestContext
-		});
-		RegisterHashDigestOperationDescriptorUnlocked({
-			GetSha256AlgorithmId(),
-			InitializeSHA256DigestContext,
-			UpdateSHA256DigestContext,
-			FinalizeSHA256DigestContext
-		});
-		RegisterHashDigestOperationDescriptorUnlocked({
-			GetSha512AlgorithmId(),
-			InitializeSHA512DigestContext,
-			UpdateSHA512DigestContext,
-			FinalizeSHA512DigestContext
 		});
 		RegisterHashDigestOperationDescriptorUnlocked({
 			GetBlake3_256AlgorithmId(),

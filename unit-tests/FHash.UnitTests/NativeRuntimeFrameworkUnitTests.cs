@@ -46,7 +46,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslSha2VariantsCanCoexistWithLegacySha2", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);

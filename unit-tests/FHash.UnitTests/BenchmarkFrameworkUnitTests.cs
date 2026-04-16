@@ -46,7 +46,7 @@ public sealed class BenchmarkFrameworkUnitTests
         Assert.Contains("small-single-64k", benchmarkSource, StringComparison.Ordinal);
         Assert.Contains("many-small-256x64k", benchmarkSource, StringComparison.Ordinal);
         Assert.Contains("large-single-128m", benchmarkSource, StringComparison.Ordinal);
-        Assert.Contains("\"sha256\"", benchmarkSource, StringComparison.Ordinal);
+        Assert.Contains("\"openssl-sha-256\"", benchmarkSource, StringComparison.Ordinal);
         Assert.Contains("\"blake3-256\"", benchmarkSource, StringComparison.Ordinal);
         Assert.Contains("\"classic-4\"", benchmarkSource, StringComparison.Ordinal);
         Assert.Contains("\"hybrid-4\"", benchmarkSource, StringComparison.Ordinal);
