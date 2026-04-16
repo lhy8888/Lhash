@@ -386,6 +386,8 @@ jobs:
           $publishLogPath = Join-Path $artifactRoot 'publish-winui-x64.log'
           $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
+          $env:FHashOpenSslInstallRoot = $openSslRoot
+          $env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot
           New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
           if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'

@@ -183,6 +183,8 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("$env:FHashOpenSslInstallRoot = $openSslRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);

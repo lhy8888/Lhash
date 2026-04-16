@@ -6112,9 +6112,11 @@ internal static class Program
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
-            AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
-            AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
-            AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
+        AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
+        AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
+        AssertContains(workflow, "$env:FHashOpenSslInstallRoot = $openSslRoot", "Phase 98 Windows build workflow does not yet export the OpenSSL install root into the WinUI preview environment.");
+        AssertContains(workflow, "$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", "Phase 98 Windows build workflow does not yet export the shared OpenSSL vendor root into the WinUI preview environment.");
+        AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
             AssertContains(readme, "SHA-384", "Phase 98 README no longer documents the OpenSSL SHA-384 family.");
