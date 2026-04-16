@@ -425,7 +425,7 @@ public sealed class CommonSeamUnitTests
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
         string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
         string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string previewWorkflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\winui-preview-build.yml");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
@@ -461,7 +461,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", clrBridgeProject, StringComparison.Ordinal);
 
         RepositoryTestContext.AssertContainsInOrder(
-            workflow,
+            previewWorkflow,
             "build-winui-bridge-x64:",
             "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
             "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",

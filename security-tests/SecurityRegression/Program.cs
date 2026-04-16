@@ -17,6 +17,7 @@ internal static partial class Program
         Run("LHash branding, package metadata, and logo assets are consistent", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string winUiPreviewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
             string mfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
             string mfcZhStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp");
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
@@ -54,7 +55,9 @@ internal static partial class Program
             AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
             AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");
             AssertContains(workflow, "LHash-legacy-x64", "CI workflow no longer packages the lightweight native desktop artifact.");
-            AssertContains(workflow, "LHash-winui-preview-x64", "CI workflow no longer keeps the WinUI build available as a preview artifact.");
+            AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "The main Windows build workflow should no longer compile the WinUI preview path on routine runs.");
+            AssertContains(winUiPreviewWorkflow, "LHash-winui-preview-x64", "The dedicated WinUI preview workflow no longer keeps the WinUI preview artifact available.");
+            AssertContains(winUiPreviewWorkflow, "build-winui-bridge-x64:", "The dedicated WinUI preview workflow no longer exposes the WinUI preview bridge build job.");
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
 

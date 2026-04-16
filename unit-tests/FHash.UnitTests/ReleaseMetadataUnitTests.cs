@@ -66,6 +66,7 @@ public sealed class ReleaseMetadataUnitTests
     public void Workflow_AndSigningScript_SupportOptionalAuthenticodeSigning()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string previewWorkflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\winui-preview-build.yml");
         string signingScript = RepositoryTestContext.ReadUtf8File(@"trunk\sign_legacy_exe.ps1");
         string signingGuide = RepositoryTestContext.ReadUtf8File(@"CODE_SIGNING.md");
         string signingPolicy = RepositoryTestContext.ReadUtf8File(@"CODE_SIGNING_POLICY.md");
@@ -73,15 +74,20 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("LHASH_SIGN_PFX_BASE64", workflow, StringComparison.Ordinal);
         Assert.Contains("LHASH_SIGN_PFX_PASSWORD", workflow, StringComparison.Ordinal);
         Assert.Contains("Sign legacy Windows app with PFX certificate (optional)", workflow, StringComparison.Ordinal);
-        Assert.Contains("Sign WinUI desktop app (optional)", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_SIGN_PFX_BASE64", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("LHASH_SIGN_PFX_PASSWORD", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("Sign WinUI desktop app (optional)", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("trunk/sign_legacy_exe.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("trunk/sign_legacy_exe.ps1", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("Get-AuthenticodeSignature", workflow, StringComparison.Ordinal);
+        Assert.Contains("Get-AuthenticodeSignature", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("SignPath Foundation", signingGuide, StringComparison.Ordinal);
         Assert.Contains("Apply for a free SignPath.io subscription", signingGuide, StringComparison.Ordinal);
         Assert.Contains("Publisher unknown", signingGuide, StringComparison.Ordinal);
         Assert.Contains("Code Signing Policy", signingPolicy, StringComparison.Ordinal);
         Assert.Contains("repository owner and release maintainer", signingPolicy, StringComparison.Ordinal);
         Assert.DoesNotContain("LHASH_TRUSTED_SIGNING_", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_TRUSTED_SIGNING_", previewWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Azure Trusted Signing", signingGuide, StringComparison.Ordinal);
 
         Assert.Contains("param(", signingScript, StringComparison.Ordinal);
@@ -165,6 +171,7 @@ public sealed class ReleaseMetadataUnitTests
     public void OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string previewWorkflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\winui-preview-build.yml");
         string vendorTargets = RepositoryTestContext.ReadUtf8File(@"NativeOpenSslVendor.targets");
         string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
         string uwpBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
@@ -183,11 +190,15 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
-        Assert.Contains("$env:FHashOpenSslInstallRoot = $openSslRoot", workflow, StringComparison.Ordinal);
-        Assert.Contains("$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("workflow_dispatch:", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("build-winui-bridge-x64:", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("$env:FHashOpenSslInstallRoot = $openSslRoot", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", previewWorkflow, StringComparison.Ordinal);
+        Assert.Contains("LHash-winui-preview-x64", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
         Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
         Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);

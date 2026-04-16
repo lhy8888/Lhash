@@ -1,0 +1,209 @@
+name: WinUI Preview Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-winui-bridge-x64:
+    runs-on: windows-2022
+    env:
+      LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
+      LHASH_SIGN_PFX_PASSWORD: ${{ secrets.LHASH_SIGN_PFX_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Restore cached OpenSSL vendor x64
+        uses: actions/cache@v4
+        with:
+          path: artifacts/openssl-vendor-x64
+          key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Prepare OpenSSL vendor x64
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
+
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-x64.log for details."
+          }
+
+      - name: Build and publish WinUI desktop app
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $coreLogPath = Join-Path $artifactRoot 'build-native-core-x64.log'
+          $nativeLogPath = Join-Path $artifactRoot 'build-winui-native-x64.log'
+          $bridgeLogPath = Join-Path $artifactRoot 'build-winui-bridge-x64.log'
+          $publishLogPath = Join-Path $artifactRoot 'publish-winui-x64.log'
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
+          $env:FHashOpenSslInstallRoot = $openSslRoot
+          $env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot
+          New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
+          }
+
+          & msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+            Tee-Object -FilePath $coreLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashNativeCore. See artifacts/build-native-core-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+            Tee-Object -FilePath $nativeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashWUINative. See artifacts/build-winui-native-x64.log for details."
+          }
+
+          & msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+            Tee-Object -FilePath $bridgeLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while building fHashClrBridge. See artifacts/build-winui-bridge-x64.log for details."
+          }
+
+          & msbuild trunk/source/WinUI/fHashWUI.csproj /restore /m /t:Publish /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:RuntimeIdentifier=win-x64 /p:PublishProfile=win10-x64 \"/p:PublishDir=$publishRoot\\\\\" 2>&1 |
+            Tee-Object -FilePath $publishLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed while publishing the WinUI desktop app. See artifacts/publish-winui-x64.log for details."
+          }
+
+          $publishedExe = Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if (-not $publishedExe) {
+            throw 'WinUI publish completed, but LHash.exe was not found in the publish output.'
+          }
+
+      - name: Sign WinUI desktop app (optional)
+        if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $pfxPath = Join-Path $artifactRoot 'winui-signing-cert.pfx'
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $exePath = (Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction Stop | Select-Object -First 1).FullName
+
+          [System.IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:LHASH_SIGN_PFX_BASE64))
+          try {
+            & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
+            if ($LASTEXITCODE -ne 0) {
+              throw "WinUI signing script failed with exit code $LASTEXITCODE."
+            }
+          }
+          finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
+      - name: Package WinUI desktop x64 build
+        if: always()
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          $publishRoot = Join-Path $artifactRoot 'winui-desktop-publish'
+          $bundleRoot = Join-Path $artifactRoot ("winui-x64-$shortSha")
+          New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
+
+          $publishedExe = Get-ChildItem -Path $publishRoot -Filter 'LHash.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($publishedExe) {
+            Copy-Item (Join-Path $publishRoot '*') -Destination $bundleRoot -Recurse -Force -ErrorAction Stop
+
+            $packagedExe = Join-Path $bundleRoot 'LHash.exe'
+            $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
+            $signature = Get-AuthenticodeSignature $packagedExe
+            $signatureSubject = ''
+            $signatureThumbprint = ''
+            if ($signature.SignerCertificate) {
+              $signatureSubject = $signature.SignerCertificate.Subject
+              $signatureThumbprint = $signature.SignerCertificate.Thumbprint
+            }
+            $readme = @"
+          LHash WinUI desktop preview x64 build
+
+          Commit:
+          - $env:GITHUB_SHA
+
+          Files:
+          - LHash.exe: unpackaged WinUI desktop preview application
+          - SHA256.txt: executable checksum
+          - BUILD_INFO.txt: build metadata
+
+          Usage:
+          - Extract the zip and run LHash.exe.
+          - This package is a preview build and is not the default public release line.
+          - 'Publisher unknown' is removed only after the executable is Authenticode-signed with a publicly trusted code-signing identity such as Artifact Signing Public Trust or a trusted CA-issued certificate.
+          - Shell extension packaging is intentionally skipped in CI.
+          "@
+
+            $buildInfo = @"
+          commit=$env:GITHUB_SHA
+          short_sha=$shortSha
+          frontend=winui-preview
+          source_project=trunk/source/WinUI/fHashWUI.csproj
+          packaged_exe=LHash.exe
+          sha256=$exeHash
+          signature_status=$($signature.Status)
+          signature_subject=$signatureSubject
+          signature_thumbprint=$signatureThumbprint
+          "@
+
+            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
+            Set-Content -Path (Join-Path $bundleRoot 'BUILD_INFO.txt') -Value $buildInfo -Encoding ASCII
+          }
+          else {
+            $readme = @"
+          LHash WinUI desktop preview x64 build
+
+          The WinUI desktop preview executable was not produced in this CI run.
+          See publish-winui-x64.log in the artifact root for the full MSBuild output.
+          "@
+          }
+
+          Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
+
+          if ($publishedExe) {
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-winui-preview-x64-$shortSha.zip") -Force
+          }
+
+      - name: Upload WinUI desktop artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LHash-winui-preview-x64
+          path: |
+            artifacts/build-openssl-vendor-x64.log
+            artifacts/openssl-vendor-x64/*.log
+            artifacts/build-native-core-x64.log
+            artifacts/build-winui-native-x64.log
+            artifacts/build-winui-bridge-x64.log
+            artifacts/publish-winui-x64.log
+            artifacts/LHash-winui-preview-x64-*.zip
+          if-no-files-found: warn

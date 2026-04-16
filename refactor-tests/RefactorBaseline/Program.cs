@@ -3409,7 +3409,7 @@ internal static class Program
         {
             string winUiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
             string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-            string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
 
             AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming fHashNativeCore.");
             AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\SHA1.cpp", "Phase 32 WinUI native project still recompiles SHA1 instead of consuming fHashNativeCore.");
@@ -3432,7 +3432,7 @@ internal static class Program
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
 
             AssertInOrder(
-                workflow,
+                previewWorkflow,
                 [
                     "build-winui-bridge-x64:",
                     "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
@@ -3837,6 +3837,7 @@ internal static class Program
         Run("Phase 47 introduces a native C++ runtime test project and caches the vendored OpenSSL package for parallel native builds", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
             string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeRuntimeMain = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestMain.cpp");
@@ -6074,6 +6075,7 @@ internal static class Program
             string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
             string uwpBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
+            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
             string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
@@ -6112,10 +6114,13 @@ internal static class Program
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
-        AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
-        AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
-        AssertContains(workflow, "$env:FHashOpenSslInstallRoot = $openSslRoot", "Phase 98 Windows build workflow does not yet export the OpenSSL install root into the WinUI preview environment.");
-        AssertContains(workflow, "$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", "Phase 98 Windows build workflow does not yet export the shared OpenSSL vendor root into the WinUI preview environment.");
+            AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
+            AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
+            AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
+            AssertContains(previewWorkflow, "workflow_dispatch:", "Phase 98 dedicated WinUI preview workflow should stay manual-only.");
+            AssertContains(previewWorkflow, "$env:FHashOpenSslInstallRoot = $openSslRoot", "Phase 98 WinUI preview workflow does not yet export the OpenSSL install root into the WinUI preview environment.");
+            AssertContains(previewWorkflow, "$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", "Phase 98 WinUI preview workflow does not yet export the shared OpenSSL vendor root into the WinUI preview environment.");
+            AssertContains(previewWorkflow, "LHash-winui-preview-x64", "Phase 98 WinUI preview workflow no longer publishes the preview artifact.");
         AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
