@@ -127,30 +127,32 @@ void CSHA1::Update(unsigned char* data, unsigned int len)
 // Hash in file contents
 bool CSHA1::HashFile(char *szFileName)
 {
-	uint32_t ulFileSize = 0, ulRest = 0, ulBlocks = 0;
-	uint32_t i = 0;
 	unsigned char uData[MAX_FILE_READ_BUFFER];
+	size_t bytesRead = 0;
 	FILE *fIn = NULL;
 
 	if((fIn = fopen(szFileName, "rb")) == NULL) return(false);
 
-	fseek(fIn, 0, SEEK_END);
-	ulFileSize = ftell(fIn);
-	fseek(fIn, 0, SEEK_SET);
-
-	ulRest = ulFileSize % MAX_FILE_READ_BUFFER;
-	ulBlocks = ulFileSize / MAX_FILE_READ_BUFFER;
-
-	for(i = 0; i < ulBlocks; i++)
+	for(;;)
 	{
-		fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);
-		Update(uData, MAX_FILE_READ_BUFFER);
-	}
+		bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);
 
-	if(ulRest != 0)
-	{
-		fread(uData, 1, ulRest, fIn);
-		Update(uData, ulRest);
+		if(bytesRead > 0)
+		{
+			Update(uData, static_cast<unsigned int>(bytesRead));
+		}
+
+		if(bytesRead < MAX_FILE_READ_BUFFER)
+		{
+			if(ferror(fIn) != 0)
+			{
+				fclose(fIn);
+				fIn = NULL;
+				return(false);
+			}
+
+			break;
+		}
 	}
 
 	fclose(fIn);

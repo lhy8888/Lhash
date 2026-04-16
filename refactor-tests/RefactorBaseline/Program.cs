@@ -5767,6 +5767,13 @@ internal static class Program
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "Phase 90 MD5 padding should now be treated as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "Phase 90 SHA1 transform still shares mutable static workspace across threads.");
+            AssertContains(sha1, "size_t bytesRead = 0;", "Phase 90 SHA1 file hashing does not yet stream chunk lengths through size_t reads.");
+            AssertContains(sha1, "bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);", "Phase 90 SHA1 file hashing still does not read chunk sizes directly from fread.");
+            AssertContains(sha1, "Update(uData, static_cast<unsigned int>(bytesRead));", "Phase 90 SHA1 file hashing does not yet hash the exact number of bytes actually read.");
+            AssertContains(sha1, "if(ferror(fIn) != 0)", "Phase 90 SHA1 file hashing does not yet check fread failures explicitly.");
+            AssertDoesNotContain(sha1, "uint32_t ulFileSize", "Phase 90 SHA1 file hashing still relies on a 32-bit total file-size accumulator.");
+            AssertDoesNotContain(sha1, "ftell(fIn)", "Phase 90 SHA1 file hashing still uses ftell-driven chunk planning.");
+            AssertDoesNotContain(sha1, "fseek(fIn, 0, SEEK_END)", "Phase 90 SHA1 file hashing still seeks to the end of the file to precompute chunk counts.");
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "Phase 90 UI progress dispatch does not yet throttle total-progress updates.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "Phase 90 UI progress dispatch does not yet enforce the refresh interval.");
             AssertContains(runtimeTests, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Phase 90 native runtime tests do not yet cover concurrent digest consistency.");

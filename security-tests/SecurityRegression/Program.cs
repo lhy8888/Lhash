@@ -312,6 +312,13 @@ internal static partial class Program
             AssertDoesNotContain(md5, "void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", "Standard MD5 initialization still exposes the seeded legacy footgun.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "SHA1 still shares mutable static workspace across concurrent runs.");
             AssertContains(sha1, "unsigned char workspace[64];", "SHA1 no longer uses stack-local transform workspace.");
+            AssertContains(sha1, "size_t bytesRead = 0;", "SHA1 file hashing no longer tracks streamed chunk lengths with size_t.");
+            AssertContains(sha1, "bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);", "SHA1 file hashing no longer streams file data through fread chunk reads.");
+            AssertContains(sha1, "Update(uData, static_cast<unsigned int>(bytesRead));", "SHA1 file hashing no longer hashes the exact number of bytes actually read.");
+            AssertContains(sha1, "if(ferror(fIn) != 0)", "SHA1 file hashing no longer checks fread failures explicitly.");
+            AssertDoesNotContain(sha1, "uint32_t ulFileSize", "SHA1 file hashing still relies on a 32-bit file-size accumulator.");
+            AssertDoesNotContain(sha1, "ftell(fIn)", "SHA1 file hashing still uses ftell for total-size driven chunk planning.");
+            AssertDoesNotContain(sha1, "fseek(fIn, 0, SEEK_END)", "SHA1 file hashing still seeks to the end of the file to precompute chunk counts.");
             AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "MFC UI bridge no longer throttles progress dispatch.");
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "MFC UI bridge no longer gates total-progress posts through the throttling helper.");

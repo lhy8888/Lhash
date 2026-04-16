@@ -129,6 +129,13 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned char workspace[64];", sha1, StringComparison.Ordinal);
         Assert.Contains("unsigned char workspace[64];", sha1, StringComparison.Ordinal);
+        Assert.Contains("size_t bytesRead = 0;", sha1, StringComparison.Ordinal);
+        Assert.Contains("bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);", sha1, StringComparison.Ordinal);
+        Assert.Contains("Update(uData, static_cast<unsigned int>(bytesRead));", sha1, StringComparison.Ordinal);
+        Assert.Contains("if(ferror(fIn) != 0)", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("uint32_t ulFileSize", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("ftell(fIn)", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("fseek(fIn, 0, SEEK_END)", sha1, StringComparison.Ordinal);
 
         Assert.Contains("struct ProgressDispatchState", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("ShouldPostProgressValue", uiBridgeHeader, StringComparison.Ordinal);
