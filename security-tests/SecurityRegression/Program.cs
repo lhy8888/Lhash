@@ -307,6 +307,9 @@ internal static partial class Program
             AssertDoesNotContain(digestStateAccess, "GetInvalidDigestStorageScratch()", "Digest storage access still relies on a shared invalid-digest scratch string.");
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "MD5 padding is no longer held as immutable shared algorithm state.");
+            AssertContains(md5, "void MD5Init (MD5_CTX *mdContext)", "Standard MD5 initialization no longer stays separate from legacy seeded behavior.");
+            AssertContains(md5, "void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", "Legacy seeded MD5 initialization is no longer explicitly named as legacy-only.");
+            AssertDoesNotContain(md5, "void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", "Standard MD5 initialization still exposes the seeded legacy footgun.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "SHA1 still shares mutable static workspace across concurrent runs.");
             AssertContains(sha1, "unsigned char workspace[64];", "SHA1 no longer uses stack-local transform workspace.");
             AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");

@@ -143,6 +143,23 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void LegacyMd5Source_SeparatesStandardInit_FromSeededLegacyVariant()
+    {
+        string md5Header = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\MD5.h");
+        string md5Source = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\MD5.cpp");
+
+        Assert.Contains("void MD5Init (MD5_CTX *mdContext);", md5Header, StringComparison.Ordinal);
+        Assert.Contains("void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber);", md5Header, StringComparison.Ordinal);
+        Assert.DoesNotContain("void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber = 0);", md5Header, StringComparison.Ordinal);
+        Assert.Contains("void MD5Init (MD5_CTX *mdContext)", md5Source, StringComparison.Ordinal);
+        Assert.Contains("void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5Source, StringComparison.Ordinal);
+        Assert.Contains("MD5Init(mdContext);", md5Source, StringComparison.Ordinal);
+        Assert.DoesNotContain("void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5Source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Added support for randomizing initialization constants", md5Header, StringComparison.Ordinal);
+        Assert.DoesNotContain("Added support for randomizing initialization constants", md5Source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");

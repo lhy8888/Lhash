@@ -146,7 +146,7 @@ namespace HashEngineInternal
 
 	static void InitializeMD5DigestContext(FileHashContexts *hashContexts)
 	{
-		MD5Init(&hashContexts->mdContext, 0);
+		MD5Init(&hashContexts->mdContext);
 	}
 
 	static void InitializeSHA1DigestContext(FileHashContexts *hashContexts)

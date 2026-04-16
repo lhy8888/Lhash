@@ -3,7 +3,7 @@
  ** MD5.h                                                            **
  **                                                                  **
  ** - Style modified by Tony Ray, January 2001                       **
- **   Added support for randomizing initialization constants         **
+ **   Added a legacy seeded initialization variant                   **
  ** - Style modified by Dominik Reichl, September 2002               **
  **   Optimized code                                                 **
  **                                                                  **
@@ -68,7 +68,8 @@ typedef struct {
 
 static void Transform (UINT4 *buf, UINT4 *in);
 
-void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber = 0);
+void MD5Init (MD5_CTX *mdContext);
+void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber);
 void MD5Update (MD5_CTX *mdContext, const unsigned char *inBuf, unsigned int inLen);
 void MD5Final (MD5_CTX *mdContext);
 

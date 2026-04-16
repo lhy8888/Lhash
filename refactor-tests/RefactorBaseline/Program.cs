@@ -4910,7 +4910,8 @@ internal static class Program
                     "TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)"
                 ],
                 "Phase 70 HashDigestContextOps.cpp does not yet route context operations through operation-registry lookup.");
-            AssertContains(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve MD5 init.");
+            AssertContains(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve standard MD5 init.");
+            AssertDoesNotContain(hashDigestOperationRegistry, "MD5Init(&hashContexts->mdContext, 0);", "Phase 70 HashDigestOperationRegistry.cpp still routes standard MD5 through the seeded init signature.");
             AssertContains(hashDigestOperationRegistry, "hashContexts->sha1.Reset();", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA1 init.");
             AssertContains(hashDigestOperationRegistry, "sha256_init(&hashContexts->sha256Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA256 init.");
             AssertContains(hashDigestOperationRegistry, "SHA512_Init(&hashContexts->sha512Ctx);", "Phase 70 HashDigestOperationRegistry.cpp does not yet preserve SHA512 init.");

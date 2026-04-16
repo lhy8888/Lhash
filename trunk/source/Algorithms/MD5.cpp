@@ -6,7 +6,7 @@
  **                                                                  **
  ** - Style modified by SUN Junwen, October 2007.                    **
  ** - Style modified by Tony Ray, January 2001                       **
- **   Added support for randomizing initialization constants         **
+ **   Added a legacy seeded initialization variant                   **
  ** - Style modified by Dominik Reichl, September 2002               **
  **   Optimized code                                                 **
  **                                                                  **
@@ -182,11 +182,22 @@ static void Transform (UINT4 *buf, UINT4 *in)
   buf[3] += d;
 }
 
-void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)
+void MD5Init (MD5_CTX *mdContext)
 {
   mdContext->i[0] = mdContext->i[1] = (UINT4)0;
 
   /* Load magic initialization constants */
+  mdContext->buf[0] = (UINT4)0x67452301;
+  mdContext->buf[1] = (UINT4)0xefcdab89;
+  mdContext->buf[2] = (UINT4)0x98badcfe;
+  mdContext->buf[3] = (UINT4)0x10325476;
+}
+
+void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)
+{
+  MD5Init(mdContext);
+
+  /* Preserve the historical seeded variant under an explicit legacy name. */
   mdContext->buf[0] = (UINT4)0x67452301 + pseudoRandomNumber * 11;
   mdContext->buf[1] = (UINT4)0xefcdab89 + pseudoRandomNumber * 71;
   mdContext->buf[2] = (UINT4)0x98badcfe + pseudoRandomNumber * 37;

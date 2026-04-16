@@ -124,6 +124,9 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("static const unsigned char PADDING[64]", md5, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned char PADDING[64]", md5, StringComparison.Ordinal);
+        Assert.Contains("void MD5Init (MD5_CTX *mdContext)", md5, StringComparison.Ordinal);
+        Assert.Contains("void MD5InitSeededLegacy (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5, StringComparison.Ordinal);
+        Assert.DoesNotContain("void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned char workspace[64];", sha1, StringComparison.Ordinal);
         Assert.Contains("unsigned char workspace[64];", sha1, StringComparison.Ordinal);
 
