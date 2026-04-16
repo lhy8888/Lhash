@@ -25,9 +25,9 @@ static inline const sunjwbase::tstring& GetDigestStorageValue(const ResultDigest
 	return GetDigestStorageValueById(digestStorage, GetHashAlgorithmId(digestType));
 }
 
-static inline sunjwbase::tstring& GetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)
+static inline bool TryGetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, sunjwbase::tstring **digestValue)
 {
-	return GetMutableDigestStorageValueById(digestStorage, GetHashAlgorithmId(digestType));
+	return TryGetMutableDigestStorageValueById(digestStorage, GetHashAlgorithmId(digestType), digestValue);
 }
 
 static inline bool HasDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)
@@ -50,9 +50,9 @@ static inline const sunjwbase::tstring& GetStoredResultDigest(const ResultData& 
 	return GetStoredResultDigestById(result, GetHashAlgorithmId(digestType));
 }
 
-static inline sunjwbase::tstring& GetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType)
+static inline bool TryGetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)
 {
-	return GetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType));
+	return TryGetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType), digestValue);
 }
 
 static inline bool HasStoredResultDigest(const ResultData& result, ResultDigestType digestType)

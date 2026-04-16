@@ -20,13 +20,6 @@ static inline bool TryResolveDigestStorageIndexById(const HashAlgorithmId& algor
 	return true;
 }
 
-static inline sunjwbase::tstring& GetInvalidDigestStorageScratch()
-{
-	static sunjwbase::tstring invalidDigestStorageScratch;
-	invalidDigestStorageScratch.clear();
-	return invalidDigestStorageScratch;
-}
-
 static inline void EnsureDigestStorageSize(ResultDigestStorage& digestStorage)
 {
 	size_t digestCount = static_cast<size_t>(GetResultDigestCount());
@@ -52,16 +45,26 @@ static inline const sunjwbase::tstring& GetDigestStorageValueById(const ResultDi
 	return digestStorage.values[digestIndex];
 }
 
-static inline sunjwbase::tstring& GetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
+static inline bool TryGetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)
 {
 	size_t digestIndex = 0;
 	if (!TryResolveDigestStorageIndexById(algorithmId, &digestIndex))
 	{
-		return GetInvalidDigestStorageScratch();
+		if (digestValue != NULL)
+		{
+			*digestValue = NULL;
+		}
+
+		return false;
 	}
 
 	EnsureDigestStorageSize(digestStorage);
-	return digestStorage.values[digestIndex];
+	if (digestValue != NULL)
+	{
+		*digestValue = &digestStorage.values[digestIndex];
+	}
+
+	return true;
 }
 
 static inline bool HasDigestStorageValueById(const ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)
@@ -118,9 +121,9 @@ static inline const sunjwbase::tstring& GetStoredResultDigestById(const ResultDa
 	return GetDigestStorageValueById(GetResultDigestStorage(result), algorithmId);
 }
 
-static inline sunjwbase::tstring& GetMutableStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+static inline bool TryGetMutableStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)
 {
-	return GetMutableDigestStorageValueById(GetMutableResultDigestStorage(result), algorithmId);
+	return TryGetMutableDigestStorageValueById(GetMutableResultDigestStorage(result), algorithmId, digestValue);
 }
 
 static inline bool HasStoredResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)

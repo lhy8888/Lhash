@@ -613,7 +613,7 @@ internal static class Program
             AssertContains(digestAccess, "GetResultDigestTypeAt(int index)", "ResultDigestAccess is missing the neutral digest order helper.");
             AssertContains(digestAccess, "GetResultDigestLabel(ResultDigestType digestType)", "ResultDigestAccess is missing the neutral digest label helper.");
             AssertContains(digestAccess, "GetResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess is missing the neutral digest getter.");
-            AssertContains(digestAccess, "GetMutableResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess is missing the mutable digest getter.");
+            AssertContains(digestAccess, "TryGetMutableResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)", "ResultDigestAccess is missing the explicit mutable digest lookup helper.");
             AssertContains(digestAccess, "SetResultDigest(ResultData& result, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess is missing the neutral digest setter.");
             AssertContains(digestAccess, "ResultContainsDigest(const ResultData& result, const sunjwbase::tstring& digestText)", "ResultDigestAccess is missing the neutral digest search helper.");
             AssertContainsAny(digestAccess,
@@ -732,7 +732,7 @@ internal static class Program
             AssertDoesNotContain(digestAccess, "GetCompatibilityResultDigest(const ResultData& result, ResultDigestType digestType)", "Digest access still exposes the removed compatibility getter after the algorithm-domain cleanup.");
             AssertDoesNotContain(digestAccess, "GetMutableCompatibilityResultDigest(ResultData& result, ResultDigestType digestType)", "Digest access still exposes the removed mutable compatibility getter after the algorithm-domain cleanup.");
             AssertContains(digestAccess, "return GetStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet route digest reads through the registry-sized stored-digest path.");
-            AssertContains(digestAccess, "return GetMutableStoredResultDigest(result, digestType);", "ResultDigestAccess does not yet expose mutable access through the internal digest storage in phase 3.");
+            AssertContains(digestAccess, "return TryGetMutableStoredResultDigest(result, digestType, digestValue);", "ResultDigestAccess does not yet expose explicit mutable access through the internal digest storage in phase 3.");
             AssertDoesNotContain(digestAccess, "GetMutableCompatibilityResultDigest(result, digestType) = digestValue;", "Digest writes still mirror back into removed compatibility fields.");
 
             AssertContainsAny(engineImpl,
@@ -797,7 +797,7 @@ internal static class Program
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
 
             AssertContains(digestAccess, "GetStoredResultDigest(const ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the const stored-digest helper introduced in phase 3.");
-            AssertContains(digestAccess, "GetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the mutable stored-digest helper introduced in phase 3.");
+            AssertContains(digestAccess, "TryGetMutableStoredResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)", "ResultDigestAccess does not yet expose the mutable stored-digest helper introduced in phase 3.");
             AssertContainsAny(digestAccess,
                 [
                     "return GetDigestStorageValue(GetResultDigestStorage(result), digestType);",
@@ -805,7 +805,7 @@ internal static class Program
                 ],
                 "ResultDigestAccess stored-digest helpers do not yet route into the dedicated internal digest storage struct.");
             AssertContains(digestAccess, "return GetStoredResultDigest(result, digestType);", "ResultDigestAccess getter does not yet read through the stored-digest helper.");
-            AssertContains(digestAccess, "return GetMutableStoredResultDigest(result, digestType);", "ResultDigestAccess mutable getter does not yet route through the stored-digest helper.");
+            AssertContains(digestAccess, "return TryGetMutableStoredResultDigest(result, digestType, digestValue);", "ResultDigestAccess mutable getter does not yet route through the stored-digest helper.");
             AssertContainsAny(digestAccess,
                 [
                     "ClearDigestStorageValue(GetMutableResultDigestStorage(result), digestType);",
@@ -975,12 +975,13 @@ internal static class Program
             string engineImpl = ReadHashEngineImplementation(repoRoot);
 
             AssertContains(digestAccess, "GetDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage getter seam.");
-            AssertContains(digestAccess, "GetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable mutable digest-storage seam.");
+            AssertContains(digestAccess, "TryGetMutableDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, sunjwbase::tstring **digestValue)", "ResultDigestAccess does not yet expose the reusable mutable digest-storage seam.");
             AssertContains(digestAccess, "HasDigestStorageValue(const ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage presence seam.");
             AssertContains(digestAccess, "SetDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType, const sunjwbase::tstring& digestValue)", "ResultDigestAccess does not yet expose the reusable digest-storage write seam.");
             AssertContains(digestAccess, "ClearDigestStorageValue(ResultDigestStorage& digestStorage, ResultDigestType digestType)", "ResultDigestAccess does not yet expose the reusable digest-storage clear seam.");
             AssertContains(digestAccess, "EnsureDigestStorageSize(digestStorage);", "ResultDigestAccess reusable digest-storage seam does not yet size storage from the registry before mutation.");
             AssertContains(digestAccess, "return digestStorage.values[digestIndex];", "ResultDigestAccess reusable digest-storage seam does not yet route through the centralized digest index.");
+            AssertDoesNotContain(digestAccess, "GetInvalidDigestStorageScratch()", "ResultDigestAccess still relies on invalid digest scratch storage instead of explicit failure handling.");
             AssertContainsAny(digestAccess,
                 [
                     "return GetDigestStorageValue(GetResultDigestStorage(result), digestType);",
@@ -989,8 +990,8 @@ internal static class Program
                 "ResultDigestAccess stored-digest getter does not yet reuse the neutral digest-storage seam.");
             AssertContainsAny(digestAccess,
                 [
-                    "return GetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType);",
-                    "return GetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType));"
+                    "return TryGetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType, digestValue);",
+                    "return TryGetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType), digestValue);"
                 ],
                 "ResultDigestAccess mutable stored-digest getter does not yet reuse the neutral digest-storage seam.");
             AssertContainsAny(digestAccess,
@@ -1050,8 +1051,8 @@ internal static class Program
                 "ResultDigestAccess stored-digest getter does not yet route through the result-digest-storage helper.");
             AssertContainsAny(digestAccess,
                 [
-                    "return GetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType);",
-                    "return GetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType));"
+                    "return TryGetMutableDigestStorageValue(GetMutableResultDigestStorage(result), digestType, digestValue);",
+                    "return TryGetMutableStoredResultDigestById(result, GetHashAlgorithmId(digestType), digestValue);"
                 ],
                 "ResultDigestAccess mutable stored-digest getter does not yet route through the result-digest-storage helper.");
             AssertContainsAny(digestAccess,
@@ -3302,6 +3303,12 @@ internal static class Program
                     "SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)"
                 ],
                 "Phase 29 value seam does not yet own digest writes.");
+            AssertContainsAny(digestValueAccess,
+                [
+                    "TryGetMutableResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)",
+                    "TryGetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)"
+                ],
+                "Phase 29 value seam does not yet own explicit mutable digest lookup.");
             AssertContains(digestValueAccess, "ResetResultDigests(ResultData& result)", "Phase 29 value seam does not yet own digest resets.");
 
             AssertContains(resultAccess, "#include \"Common/ResultDigestValueAccess.h\"", "ResultDataAccess does not yet consume the phase 29 digest value seam.");
@@ -5510,7 +5517,8 @@ internal static class Program
         AssertContains(digestMetadataAccess, "TryGetResultDigestMetadata(ResultDigestType digestType, ResultDigestMetadata *digestMetadata)", "Phase 84 ResultDigestMetadataAccess does not yet expose safe digest-metadata lookup.");
 
             AssertContains(digestStateAccess, "TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", "Phase 84 ResultDigestStateAccess does not yet expose safe digest-storage index resolution.");
-            AssertContains(digestStateAccess, "GetInvalidDigestStorageScratch()", "Phase 84 ResultDigestStateAccess does not yet expose inert scratch storage for invalid digest writes.");
+            AssertContains(digestStateAccess, "TryGetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", "Phase 84 ResultDigestStateAccess does not yet expose explicit mutable digest-storage failure handling.");
+            AssertDoesNotContain(digestStateAccess, "GetInvalidDigestStorageScratch()", "Phase 84 ResultDigestStateAccess still exposes inert scratch storage for invalid digest writes.");
             AssertContainsAny(digestStateAccess,
                 [
                     "if (!TryResolveDigestStorageIndex(digestType, &digestIndex))",

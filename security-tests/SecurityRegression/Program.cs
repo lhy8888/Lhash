@@ -269,6 +269,8 @@ internal static partial class Program
             string executionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
             string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
             string digestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
+            string digestStateAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestStateAccess.h");
+            string digestValueAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h");
             string md5 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\MD5.cpp");
             string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
             string uiBridgeHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
@@ -300,6 +302,9 @@ internal static partial class Program
             AssertContains(threadAccess, "ReplaceSizedValueUInt64", "Legacy ThreadData replacement accounting no longer uses checked arithmetic.");
             AssertContains(progressTracker, "CalculateBoundedProgressValue", "Progress tracking no longer uses bounded progress calculations.");
             AssertContains(digestQueue, "SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1)", "Digest queue sizing no longer uses saturating chunk arithmetic.");
+            AssertContains(digestStateAccess, "TryGetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", "Digest storage access no longer exposes explicit mutable failure handling.");
+            AssertContains(digestValueAccess, "TryGetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", "Digest value access no longer exposes explicit mutable failure handling.");
+            AssertDoesNotContain(digestStateAccess, "GetInvalidDigestStorageScratch()", "Digest storage access still relies on a shared invalid-digest scratch string.");
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "MD5 padding is no longer held as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "SHA1 still shares mutable static workspace across concurrent runs.");

@@ -199,7 +199,10 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("GetDigestStorageValueById(const ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("TryResolveDigestStorageIndexById(const HashAlgorithmId& algorithmId, size_t *digestIndex)", access, StringComparison.Ordinal);
         Assert.Contains("TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)", typeCompat, StringComparison.Ordinal);
-        Assert.Contains("GetInvalidDigestStorageScratch()", access, StringComparison.Ordinal);
+        Assert.Contains("TryGetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", access, StringComparison.Ordinal);
+        Assert.Contains("TryGetMutableStoredResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetInvalidDigestStorageScratch()", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetMutableDigestStorageValueById(ResultDigestStorage& digestStorage, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("EnsureDigestStorageSize(ResultDigestStorage& digestStorage)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestState(const ResultData& result)", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestStorage(const ResultData& result)", access, StringComparison.Ordinal);
@@ -216,6 +219,8 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("return GetStoredResultDigestById(result, algorithmId);", access, StringComparison.Ordinal);
+        Assert.Contains("TryGetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)", access, StringComparison.Ordinal);
+        Assert.Contains("TryGetMutableResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)", typeCompat, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", access, StringComparison.Ordinal);
         Assert.Contains("HasAnyResultDigests(const ResultData& result)", access, StringComparison.Ordinal);
         Assert.Contains("SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)", access, StringComparison.Ordinal);
@@ -223,6 +228,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("ResetResultDigests(ResultData& result)", access, StringComparison.Ordinal);
         Assert.DoesNotContain("SetCompatibilityResultDigest(result, digestType, digestValue);", access, StringComparison.Ordinal);
         Assert.DoesNotContain("ClearCompatibilityResultDigest(result, digestType);", access, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetMutableResultDigest(ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
     }
 
     [Fact]

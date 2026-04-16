@@ -8,9 +8,9 @@ static inline const sunjwbase::tstring& GetResultDigestById(const ResultData& re
 	return GetStoredResultDigestById(result, algorithmId);
 }
 
-static inline sunjwbase::tstring& GetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId)
+static inline bool TryGetMutableResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, sunjwbase::tstring **digestValue)
 {
-	return GetMutableStoredResultDigestById(result, algorithmId);
+	return TryGetMutableStoredResultDigestById(result, algorithmId, digestValue);
 }
 
 static inline bool HasResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)

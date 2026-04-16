@@ -9,9 +9,9 @@ static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result
 	return GetStoredResultDigest(result, digestType);
 }
 
-static inline sunjwbase::tstring& GetMutableResultDigest(ResultData& result, ResultDigestType digestType)
+static inline bool TryGetMutableResultDigest(ResultData& result, ResultDigestType digestType, sunjwbase::tstring **digestValue)
 {
-	return GetMutableStoredResultDigest(result, digestType);
+	return TryGetMutableStoredResultDigest(result, digestType, digestValue);
 }
 
 static inline bool HasResultDigest(const ResultData& result, ResultDigestType digestType)
