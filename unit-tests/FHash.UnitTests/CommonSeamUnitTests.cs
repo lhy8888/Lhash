@@ -178,6 +178,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("typedef HashAlgorithmDescriptor ResultDigestMetadata;", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestCount()", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataAt(int index)", access, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataSnapshot()", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestIds(TResultDigestIdVisitor visitor)", access, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigests(TResultDigestVisitor visitor)", typeCompat, StringComparison.Ordinal);

@@ -40,6 +40,11 @@ static inline ResultDigestMetadata GetResultDigestMetadataAt(int index)
 	return GetHashAlgorithmDescriptorAt(index);
 }
 
+static inline std::vector<ResultDigestMetadata> GetResultDigestMetadataSnapshot()
+{
+	return GetRegisteredHashAlgorithmDescriptors();
+}
+
 static inline HashAlgorithmId GetResultDigestIdAt(int index)
 {
 	return GetResultDigestMetadataId(GetResultDigestMetadataAt(index));
@@ -69,9 +74,10 @@ static inline sunjwbase::tstring GetResultDigestLabel(const ResultDigestMetadata
 template<typename TResultDigestMetadataVisitor>
 static inline bool VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)
 {
-	for (int index = 0; index < GetResultDigestCount(); ++index)
+	std::vector<ResultDigestMetadata> digestMetadataSnapshot = GetResultDigestMetadataSnapshot();
+	for (size_t index = 0; index < digestMetadataSnapshot.size(); ++index)
 	{
-		if (!visitor(index, GetResultDigestMetadataAt(index)))
+		if (!visitor(static_cast<int>(index), digestMetadataSnapshot[index]))
 		{
 			return false;
 		}

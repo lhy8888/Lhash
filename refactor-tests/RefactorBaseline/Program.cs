@@ -843,6 +843,7 @@ internal static class Program
             AssertContains(hashAlgorithmRegistry, "struct HashAlgorithmDescriptor", "HashAlgorithmRegistry does not yet expose the centralized algorithm metadata struct introduced in phase 11.");
             AssertContains(digestAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "ResultDigestAccess does not yet bridge digest metadata onto the centralized algorithm descriptor.");
             AssertContains(digestAccess, "GetResultDigestMetadataAt(int index)", "ResultDigestAccess does not yet expose the centralized digest metadata lookup helper introduced in phase 3.");
+            AssertContains(digestAccess, "GetResultDigestMetadataSnapshot()", "ResultDigestAccess does not yet expose the centralized digest metadata snapshot helper introduced for stable traversal.");
             AssertContains(hashAlgorithmRegistry, "{ \"md5\", \"MD5\", true, true }", "HashAlgorithmRegistry metadata table does not yet map MD5.");
             AssertContains(hashAlgorithmRegistry, "{ \"sha1\", \"SHA1\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA1.");
             AssertContains(hashAlgorithmRegistry, "{ \"sha256\", \"SHA256\", true, true }", "HashAlgorithmRegistry metadata table does not yet map SHA256.");
@@ -921,7 +922,8 @@ internal static class Program
 
             AssertContains(digestAccess, "template<typename TResultDigestMetadataVisitor>", "ResultDigestAccess does not yet expose the metadata-visitor template introduced in phase 3.");
             AssertContains(digestAccess, "VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", "ResultDigestAccess does not yet expose the centralized metadata visitor helper.");
-            AssertContains(digestAccess, "visitor(index, GetResultDigestMetadataAt(index))", "ResultDigestAccess metadata visitor helper does not yet route through the centralized metadata lookup helper.");
+            AssertContains(digestAccess, "std::vector<ResultDigestMetadata> digestMetadataSnapshot = GetResultDigestMetadataSnapshot();", "ResultDigestAccess metadata visitor helper does not yet bind traversal to a stable digest metadata snapshot.");
+            AssertContains(digestAccess, "visitor(static_cast<int>(index), digestMetadataSnapshot[index])", "ResultDigestAccess metadata visitor helper does not yet route through the centralized digest metadata snapshot.");
             AssertContains(digestAccess, "VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)", "ResultDigestAccess does not yet route metadata iteration through the centralized metadata visitor helper.");
             AssertContains(digestAccess, "ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);", "ResultDigestAccess digest visitor does not yet route through the metadata visitor helper.");
             AssertContains(digestAccess, "return GetHashAlgorithmIndex(digestType);", "ResultDigestAccess digest-index helper does not yet route through the centralized registry seam.");
@@ -3266,6 +3268,7 @@ internal static class Program
             AssertContains(digestMetadataAccess, "typedef HashAlgorithmDescriptor ResultDigestMetadata;", "Phase 29 metadata seam does not yet bridge digest metadata onto the hash-algorithm descriptor.");
             AssertContains(digestMetadataAccess, "GetResultDigestCount()", "Phase 29 metadata seam does not yet own digest-count reads.");
             AssertContains(digestMetadataAccess, "GetResultDigestMetadataAt(int index)", "Phase 29 metadata seam does not yet own metadata lookup.");
+            AssertContains(digestMetadataAccess, "GetResultDigestMetadataSnapshot()", "Phase 29 metadata seam does not yet expose stable snapshot reads for digest metadata.");
             AssertContains(digestMetadataAccess, "VisitResultDigestMetadata(TResultDigestMetadataVisitor visitor)", "Phase 29 metadata seam does not yet own metadata iteration.");
             AssertContainsAny(digestMetadataAccess,
                 [

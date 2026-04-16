@@ -53,6 +53,7 @@ public sealed class HashExtensibilityRegressionUnitTests
 
         Assert.Contains("GetResultDigestCount()", digestMetadataAccess, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestMetadataById(const HashAlgorithmId& algorithmId)", digestMetadataAccess, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataSnapshot()", digestMetadataAccess, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestIds(TResultDigestIdVisitor visitor)", digestMetadataAccess, StringComparison.Ordinal);
         Assert.Contains("SetResultDigestById(ResultData& result, const HashAlgorithmId& algorithmId, const sunjwbase::tstring& digestValue)", digestValueAccess, StringComparison.Ordinal);
         Assert.Contains("VisitResultDigestMetadataValues(const ResultData& result, TResultDigestMetadataValueVisitor visitor)", digestValueAccess, StringComparison.Ordinal);
