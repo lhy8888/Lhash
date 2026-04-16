@@ -173,6 +173,35 @@ static bool TryRejectReparsePointPath(const tstring& filePath, TCHAR *errorBuffe
 
 static tstring NormalizePathForHandleComparison(tstring filePath)
 {
+	DWORD fullPathLength = GetFullPathName(filePath.c_str(), 0, NULL, NULL);
+	if (fullPathLength != 0)
+	{
+		std::vector<TCHAR> fullPathBuffer(fullPathLength + 1, TEXT('\0'));
+		DWORD copiedLength = GetFullPathName(
+			filePath.c_str(),
+			static_cast<DWORD>(fullPathBuffer.size()),
+			fullPathBuffer.data(),
+			NULL);
+		if (copiedLength != 0 && copiedLength < fullPathBuffer.size())
+		{
+			filePath.assign(fullPathBuffer.data(), copiedLength);
+		}
+	}
+
+	DWORD longPathLength = GetLongPathName(filePath.c_str(), NULL, 0);
+	if (longPathLength != 0)
+	{
+		std::vector<TCHAR> longPathBuffer(longPathLength + 1, TEXT('\0'));
+		DWORD copiedLength = GetLongPathName(
+			filePath.c_str(),
+			longPathBuffer.data(),
+			static_cast<DWORD>(longPathBuffer.size()));
+		if (copiedLength != 0 && copiedLength < longPathBuffer.size())
+		{
+			filePath.assign(longPathBuffer.data(), copiedLength);
+		}
+	}
+
 	for (size_t index = 0; index < filePath.length(); ++index)
 	{
 		if (filePath[index] == TEXT('/'))
