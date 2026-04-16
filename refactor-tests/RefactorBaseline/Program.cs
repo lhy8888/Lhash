@@ -5741,10 +5741,13 @@ internal static class Program
 
             AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "Phase 90 POSIX Darwin file handling does not yet branch on O_CREAT before opening files.");
             AssertContains(osFilePosixDarwin, "*fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);", "Phase 90 POSIX Darwin file handling does not yet pass an explicit mode_t when O_CREAT is used.");
+            AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "Phase 90 POSIX Darwin metadata reads do not yet centralize on the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fstat(*fd, &st) != 0)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor with fstat.");
             AssertContains(osFilePosixDarwin, "if (!IsRegularFile(st))", "Phase 90 POSIX Darwin file handling does not yet reject non-regular descriptors after open.");
+            AssertContains(osFilePosixDarwin, "if (TryGetCurrentFileStatus(fd, strFilePath, &st))", "Phase 90 POSIX Darwin metadata reads do not yet reuse the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fd == NULL || *fd == -1)", "Phase 90 POSIX Darwin file operations do not yet self-guard invalid file descriptors.");
             AssertDoesNotContain(osFilePosixDarwin, "if ((statRet = stat(strFilePath.c_str(), &st)) == 0", "Phase 90 POSIX Darwin file handling regressed to a stat-before-open TOCTOU gate.");
+            AssertDoesNotContain(osFilePosixDarwin, "if (stat(strFilePath.c_str(), &st) == 0)", "Phase 90 POSIX Darwin metadata reads regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "Open first, we don't check here.", "Phase 90 POSIX Darwin file operations regressed to unchecked library-boundary assumptions.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");

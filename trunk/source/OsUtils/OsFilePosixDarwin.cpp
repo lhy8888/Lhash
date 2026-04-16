@@ -44,6 +44,29 @@ namespace
     {
         return S_ISREG(st.st_mode) != 0;
     }
+
+    static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)
+    {
+        if (fileStatus == NULL)
+        {
+            return false;
+        }
+
+        if (fd != NULL && *fd != -1)
+        {
+            return fstat(*fd, fileStatus) == 0;
+        }
+
+        int temporaryFd = ::open(filePath.c_str(), O_RDONLY);
+        if (temporaryFd == -1)
+        {
+            return false;
+        }
+
+        bool statusRead = fstat(temporaryFd, fileStatus) == 0;
+        ::close(temporaryFd);
+        return statusRead;
+    }
 }
 
 OsFile::OsFile(tstring filePath):
@@ -170,9 +193,10 @@ int64_t OsFile::getLength()
 {
     int64_t retLength = 0;
     string strFilePath = tstrtostr(_filePath);
+    int *fd = GET_FD_FROM_POINTER(_osfileData);
 
     struct stat st;
-    if (stat(strFilePath.c_str(), &st) == 0)
+    if (TryGetCurrentFileStatus(fd, strFilePath, &st))
     {
         retLength = st.st_size;
     }
@@ -182,12 +206,18 @@ int64_t OsFile::getLength()
 
 bool OsFile::getModifiedTime(void *modifiedTime)
 {
+    if (modifiedTime == NULL)
+    {
+        return false;
+    }
+
     struct timespec *darwinfileModTime = (struct timespec *)modifiedTime;
 
     string strFilePath = tstrtostr(_filePath);
+    int *fd = GET_FD_FROM_POINTER(_osfileData);
 
     struct stat st;
-    if (stat(strFilePath.c_str(), &st) == 0)
+    if (TryGetCurrentFileStatus(fd, strFilePath, &st))
     {
         *darwinfileModTime = st.st_mtimespec;
 

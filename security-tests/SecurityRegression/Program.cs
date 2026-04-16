@@ -282,10 +282,13 @@ internal static partial class Program
             AssertContains(osFileHeader, "bool isHashTargetAllowed(void *exception = NULL);", "OsFile no longer exposes the hash-target policy hook.");
             AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "POSIX Darwin file handling no longer branches on O_CREAT before opening files.");
             AssertContains(osFilePosixDarwin, "*fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);", "POSIX Darwin file handling no longer passes an explicit mode_t when O_CREAT is used.");
+            AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "POSIX Darwin metadata reads no longer centralize on the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fstat(*fd, &st) != 0)", "POSIX Darwin file handling no longer validates the opened file descriptor with fstat.");
             AssertContains(osFilePosixDarwin, "if (!IsRegularFile(st))", "POSIX Darwin file handling no longer rejects non-regular file descriptors after open.");
+            AssertContains(osFilePosixDarwin, "if (TryGetCurrentFileStatus(fd, strFilePath, &st))", "POSIX Darwin metadata reads no longer reuse the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fd == NULL || *fd == -1)", "POSIX Darwin file operations no longer self-guard invalid file descriptors.");
             AssertDoesNotContain(osFilePosixDarwin, "if ((statRet = stat(strFilePath.c_str(), &st)) == 0", "POSIX Darwin file handling regressed to a stat-before-open TOCTOU gate.");
+            AssertDoesNotContain(osFilePosixDarwin, "if (stat(strFilePath.c_str(), &st) == 0)", "POSIX Darwin metadata reads regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "Open first, we don't check here.", "POSIX Darwin file operations regressed to unchecked library-boundary assumptions.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Win32 file hashing no longer checks for reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Win32 file hashing no longer rejects reparse points with an explicit message.");

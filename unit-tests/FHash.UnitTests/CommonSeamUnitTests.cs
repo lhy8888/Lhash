@@ -160,6 +160,42 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void LegacySeededMd5Init_IsNotUsedByNormalSourcePaths()
+    {
+        string[] candidateFiles = Directory.GetFiles(RepositoryTestContext.RepoRoot, "*.*", SearchOption.AllDirectories)
+            .Where(path =>
+                (path.EndsWith(".h", StringComparison.OrdinalIgnoreCase) ||
+                 path.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) ||
+                 path.EndsWith(".c", StringComparison.OrdinalIgnoreCase) ||
+                 path.EndsWith(".cc", StringComparison.OrdinalIgnoreCase) ||
+                 path.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
+                !path.Contains(@"\unit-tests\", StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains(@"\security-tests\", StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains(@"\refactor-tests\", StringComparison.OrdinalIgnoreCase) &&
+                !path.Contains(@"\archive\", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        List<string> invalidCallSites = [];
+        foreach (string candidate in candidateFiles)
+        {
+            string relativePath = Path.GetRelativePath(RepositoryTestContext.RepoRoot, candidate).Replace('/', '\\');
+            if (relativePath.Equals(@"trunk\source\Algorithms\MD5.h", StringComparison.OrdinalIgnoreCase) ||
+                relativePath.Equals(@"trunk\source\Algorithms\MD5.cpp", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string contents = RepositoryTestContext.ReadTextFile(relativePath);
+            if (contents.Contains("MD5InitSeededLegacy(", StringComparison.Ordinal))
+            {
+                invalidCallSites.Add(relativePath);
+            }
+        }
+
+        Assert.Empty(invalidCallSites);
+    }
+
+    [Fact]
     public void PosixStringHelpers_AvoidGlobalLocaleAndAsciiBridgeFallbacks()
     {
         string strhelper = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\strhelper.cpp");
