@@ -86,25 +86,13 @@ jobs:
 
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-x64
           key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
-      - name: Add MSBuild to PATH
-        shell: powershell
-        run: |
-          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if (-not (Test-Path $vswhere)) {
-            throw 'Unable to locate vswhere.exe on the runner.'
-          }
-
-          $msbuildPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-          if ([string]::IsNullOrWhiteSpace($msbuildPath)) {
-            throw 'Unable to locate MSBuild.exe on the runner.'
-          }
-
-          Split-Path -Parent $msbuildPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build OpenSSL vendor x64 once
         shell: powershell
@@ -142,20 +130,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Add MSBuild to PATH
-        shell: powershell
-        run: |
-          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if (-not (Test-Path $vswhere)) {
-            throw 'Unable to locate vswhere.exe on the runner.'
-          }
-
-          $msbuildPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-          if ([string]::IsNullOrWhiteSpace($msbuildPath)) {
-            throw 'Unable to locate MSBuild.exe on the runner.'
-          }
-
-          Split-Path -Parent $msbuildPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
         uses: actions/download-artifact@v8
@@ -219,20 +195,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Add MSBuild to PATH
-        shell: powershell
-        run: |
-          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if (-not (Test-Path $vswhere)) {
-            throw 'Unable to locate vswhere.exe on the runner.'
-          }
-
-          $msbuildPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-          if ([string]::IsNullOrWhiteSpace($msbuildPath)) {
-            throw 'Unable to locate MSBuild.exe on the runner.'
-          }
-
-          Split-Path -Parent $msbuildPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
         uses: actions/download-artifact@v8

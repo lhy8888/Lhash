@@ -3919,7 +3919,7 @@ internal static class Program
             AssertContains(workflow, @"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 47 workflow does not yet define the shared OpenSSL vendor preparation job.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 47 workflow does not yet restore the shared OpenSSL vendor cache.");
-            AssertContains(workflow, "actions/cache@v5", "Phase 47 workflow does not yet cache the shared OpenSSL vendor build.");
+            AssertContains(workflow, "actions/cache@v4", "Phase 47 workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
@@ -6203,7 +6203,7 @@ internal static class Program
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
-            AssertContains(workflow, "actions/cache@v5", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
+            AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
