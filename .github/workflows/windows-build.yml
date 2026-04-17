@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload unit test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-unit-tests
           path: |
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload OpenSSL vendor x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-openssl-vendor-x64
           path: |
@@ -134,7 +134,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: FHash-openssl-vendor-x64
           path: artifacts
@@ -171,7 +171,7 @@ jobs:
 
       - name: Upload native runtime test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FHash-native-runtime-tests
           path: |
@@ -199,7 +199,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: FHash-openssl-vendor-x64
           path: artifacts
@@ -335,7 +335,7 @@ jobs:
 
       - name: Upload legacy x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LHash-legacy-x64
           path: |
@@ -354,7 +354,7 @@ jobs:
 
     steps:
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: LHash-legacy-*
           path: release-assets
@@ -395,7 +395,7 @@ jobs:
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
       - name: Upload release rehearsal artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LHash-release-rehearsal
           path: |
