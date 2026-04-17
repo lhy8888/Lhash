@@ -123,8 +123,6 @@ Together, those make the project more useful as a trusted verification tool inst
 
 - MD5
 - SHA-1
-- SHA-256
-- SHA-512
 
 ### Modern high-performance hashes
 
