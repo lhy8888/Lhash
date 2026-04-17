@@ -109,7 +109,7 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-256", "SHA-256", true, true });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-384", "SHA-384", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-512", "SHA-512", true, true });
-	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-256", "SHA3-256", true, false });
+	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-256", "SHA3-256", true, true });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-384", "SHA3-384", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha3-512", "SHA3-512", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-blake2b-512", "BLAKE2b-512", true, false });

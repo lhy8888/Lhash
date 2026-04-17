@@ -85,7 +85,7 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("ABOUTDLG_INFO_SUBTITLE")] = _T("Modern native hashing utility with hardened runtime and portable release packaging.");
 	m_stringsMap[_T("ABOUTDLG_INFO_RIGHT")] = _T("Copyright (C) 2026- LHY.");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_TITLE")] = _T("Algorithms:");
-	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("Recommended defaults: SHA-256, SHA-512");
+	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_CORE")] = _T("Recommended defaults: SHA-256, SHA-512, SHA3-256");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_EXTENDED")] = _T("Additional secure: SHA-384, SHA3-256, SHA3-384, SHA3-512, BLAKE2b-512, BLAKE2s-256, SHAKE128-256, SHAKE256-512");
 	m_stringsMap[_T("ABOUTDLG_INFO_ALGORITHMS_VENDOR")] = _T("Compatibility only: MD5 (deprecated), SHA1 (deprecated), plus BLAKE3 / XXH3 / CRC32C.");
 	m_stringsMap[_T("ABOUTDLG_INFO_SECURITY_TITLE")] = _T("Security and Runtime:");

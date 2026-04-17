@@ -28,7 +28,83 @@ const UINT SETTINGS_COMMAND_CLEAR = 61000;
 const UINT SETTINGS_COMMAND_ABOUT = 61001;
 const UINT SETTINGS_COMMAND_UPPERCASE = 61002;
 const UINT SETTINGS_COMMAND_CONTEXT = 61003;
-const UINT SETTINGS_COMMAND_ALGORITHM_BASE = 61100;
+const UINT SETTINGS_COMMAND_ALGORITHMS = 61004;
+
+class CAlgorithmSelectionDialog : public CDialog
+{
+public:
+	CAlgorithmSelectionDialog(
+		FilesHashAlgorithmSelectionController& selectionController,
+		LPCTSTR title,
+		CWnd* pParentWnd)
+		: CDialog(IDD_ALGORITHM_DIALOG, pParentWnd),
+		m_selectionController(selectionController),
+		m_title(title)
+	{
+	}
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX)
+	{
+		CDialog::DoDataExchange(pDX);
+		DDX_Control(pDX, IDC_LIST_ALGORITHMS, m_algorithmList);
+	}
+
+	virtual BOOL OnInitDialog()
+	{
+		CDialog::OnInitDialog();
+		SetWindowText(m_title);
+
+		CWnd* okButton = GetDlgItem(IDOK);
+		if (okButton != NULL)
+		{
+			okButton->SetWindowText(GetStringByKey(BUTTON_OK));
+		}
+
+		CWnd* cancelButton = GetDlgItem(IDCANCEL);
+		if (cancelButton != NULL)
+		{
+			cancelButton->SetWindowText(GetStringByKey(BUTTON_CANCEL));
+		}
+
+		VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
+		{
+			UNREFERENCED_PARAMETER(index);
+			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
+			int itemIndex = m_algorithmList.AddString(GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor).c_str());
+			if (itemIndex == LB_ERR || itemIndex == LB_ERRSPACE)
+			{
+				return false;
+			}
+
+			m_algorithmIds.push_back(algorithmId);
+			m_algorithmList.SetCheck(itemIndex, m_selectionController.IsAlgorithmEnabled(algorithmId) ? 1 : 0);
+			return true;
+		});
+
+		return TRUE;
+	}
+
+	virtual void OnOK()
+	{
+		const int itemCount = m_algorithmList.GetCount();
+		const int syncedCount = min(itemCount, static_cast<int>(m_algorithmIds.size()));
+		for (int itemIndex = 0; itemIndex < syncedCount; ++itemIndex)
+		{
+			m_selectionController.SetAlgorithmEnabled(
+				m_algorithmIds[static_cast<size_t>(itemIndex)],
+				m_algorithmList.GetCheck(itemIndex) ? TRUE : FALSE);
+		}
+
+		CDialog::OnOK();
+	}
+
+private:
+	FilesHashAlgorithmSelectionController& m_selectionController;
+	CString m_title;
+	CCheckListBox m_algorithmList;
+	std::vector<HashAlgorithmId> m_algorithmIds;
+};
 }
 
 #ifdef _DEBUG
@@ -371,18 +447,7 @@ void CFilesHashDlg::ShowSettingsMenu()
 	menuSettings.AppendMenu(MF_STRING, SETTINGS_COMMAND_CLEAR, GetStringByKey(MAINDLG_SETTINGS_CLEAR));
 	menuSettings.AppendMenu(MF_SEPARATOR);
 	menuSettings.AppendMenu((m_chkUppercase.GetCheck() ? MF_CHECKED : MF_UNCHECKED) | MF_STRING, SETTINGS_COMMAND_UPPERCASE, GetStringByKey(MAINDLG_UPPER_HASH));
-
-	CMenu menuAlgorithms;
-	menuAlgorithms.CreatePopupMenu();
-	VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)
-	{
-		UINT commandId = SETTINGS_COMMAND_ALGORITHM_BASE + static_cast<UINT>(index);
-		UINT commandFlags = MF_STRING | (m_hashAlgorithmSelectionController.IsAlgorithmEnabled(GetHashAlgorithmDescriptorId(algorithmDescriptor)) ? MF_CHECKED : MF_UNCHECKED);
-		menuAlgorithms.AppendMenu(commandFlags, commandId, GetHashAlgorithmDescriptorDisplayLabel(algorithmDescriptor).c_str());
-		return true;
-	});
-	menuSettings.AppendMenu(MF_POPUP, reinterpret_cast<UINT_PTR>(menuAlgorithms.GetSafeHmenu()), GetStringByKey(MAINDLG_SETTINGS_ALGORITHMS));
-	menuAlgorithms.Detach();
+	menuSettings.AppendMenu(MF_STRING, SETTINGS_COMMAND_ALGORITHMS, GetStringByKey(MAINDLG_SETTINGS_ALGORITHMS));
 
 	CString contextText;
 	m_btnContext.GetWindowText(contextText);
@@ -399,6 +464,15 @@ void CFilesHashDlg::ShowSettingsMenu()
 	m_btnSettings.GetWindowRect(&buttonRect);
 	UINT commandId = menuSettings.TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, buttonRect.left, buttonRect.bottom + 2, this);
 	HandleSettingsCommand(commandId);
+}
+
+void CFilesHashDlg::ShowAlgorithmSelectionDialog()
+{
+	CAlgorithmSelectionDialog algorithmDialog(
+		m_hashAlgorithmSelectionController,
+		GetStringByKey(MAINDLG_SETTINGS_ALGORITHMS),
+		this);
+	algorithmDialog.DoModal();
 }
 
 void CFilesHashDlg::HandleSettingsCommand(UINT commandId)
@@ -418,6 +492,11 @@ void CFilesHashDlg::HandleSettingsCommand(UINT commandId)
 		OnBnClickedUpperHash();
 		return;
 	}
+	if (commandId == SETTINGS_COMMAND_ALGORITHMS)
+	{
+		ShowAlgorithmSelectionDialog();
+		return;
+	}
 	if (commandId == SETTINGS_COMMAND_CONTEXT)
 	{
 		OnBnClickedContext();
@@ -427,17 +506,6 @@ void CFilesHashDlg::HandleSettingsCommand(UINT commandId)
 	{
 		OnBnClickedAbout();
 		return;
-	}
-	if (commandId >= SETTINGS_COMMAND_ALGORITHM_BASE)
-	{
-		int algorithmIndex = static_cast<int>(commandId - SETTINGS_COMMAND_ALGORITHM_BASE);
-		if (algorithmIndex >= 0 && algorithmIndex < GetRegisteredHashAlgorithmCount())
-		{
-			const HashAlgorithmDescriptor& algorithmDescriptor = GetHashAlgorithmDescriptorAt(algorithmIndex);
-			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(algorithmDescriptor);
-			BOOL enabled = m_hashAlgorithmSelectionController.IsAlgorithmEnabled(algorithmId);
-			m_hashAlgorithmSelectionController.SetAlgorithmEnabled(algorithmId, !enabled);
-		}
 	}
 }
 

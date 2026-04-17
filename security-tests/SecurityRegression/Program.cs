@@ -195,6 +195,10 @@ internal static partial class Program
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
             AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer constrained to the compact six-row viewport.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"算法选择\");", "Legacy settings menu no longer labels algorithm controls as 算法选择 in Simplified Chinese.");
+            AssertContains(dialogContent, "ShowAlgorithmSelectionDialog();", "Legacy settings flow no longer routes algorithm selection through a dedicated toggle dialog.");
+            AssertContains(dialogContent, "CAlgorithmSelectionDialog", "Legacy settings flow no longer defines a dedicated toggle dialog for algorithm selection.");
+            AssertContains(dialogResource, "IDD_ALGORITHM_DIALOG DIALOGEX", "Legacy MFC resources no longer include the dedicated algorithm selection dialog.");
+            AssertContains(dialogResource, "LISTBOX         IDC_LIST_ALGORITHMS", "Legacy MFC algorithm selection dialog no longer exposes a checklist listbox.");
             AssertContains(hyperEditHashHeader, "afx_msg void OnDropFiles(HDROP hDropInfo);", "HyperEditHash is missing the drop forwarding declaration.");
             AssertContains(hyperEditHashSource, "ON_WM_DROPFILES()", "HyperEditHash no longer subscribes to WM_DROPFILES.");
             AssertContains(hyperEditHashSource, "parentWnd->SendMessage(WM_DROPFILES, reinterpret_cast<WPARAM>(hDropInfo), 0);", "Dropped files over the enlarged result area are no longer forwarded to the main dialog.");
@@ -491,7 +495,7 @@ internal static partial class Program
             AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "The OpenSSL SHA-256 descriptor variant is missing or not enabled by default.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "The OpenSSL SHA-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "The OpenSSL SHA-512 descriptor variant is missing or not enabled by default.");
-            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "The OpenSSL SHA3-256 descriptor variant is missing.");
+            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, true }", "The OpenSSL SHA3-256 descriptor variant is missing or not enabled by default.");
             AssertContains(registryCore, "{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", "The OpenSSL SHA3-384 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "The OpenSSL SHA3-512 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", "The OpenSSL BLAKE2b-512 descriptor variant is missing.");

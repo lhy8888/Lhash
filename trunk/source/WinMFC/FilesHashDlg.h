@@ -101,5 +101,6 @@ protected:
 	BOOL m_bLimited;
 
 	void ShowSettingsMenu();
+	void ShowAlgorithmSelectionDialog();
 	void HandleSettingsCommand(UINT commandId);
 };

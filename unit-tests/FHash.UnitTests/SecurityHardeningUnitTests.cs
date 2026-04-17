@@ -302,7 +302,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("{ \"openssl-sha-256\", \"SHA-256\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-384\", \"SHA-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha-512\", \"SHA-512\", true, true }", registryCore, StringComparison.Ordinal);
-        Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", registryCore, StringComparison.Ordinal);
+        Assert.Contains("{ \"openssl-sha3-256\", \"SHA3-256\", true, true }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", registryCore, StringComparison.Ordinal);
         Assert.Contains("{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", registryCore, StringComparison.Ordinal);

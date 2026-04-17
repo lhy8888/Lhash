@@ -6153,7 +6153,7 @@ internal static class Program
             AssertContains(registryCore, "{ \"openssl-sha-256\", \"SHA-256\", true, true }", "Phase 98 is missing the OpenSSL SHA-256 descriptor or default enablement.");
             AssertContains(registryCore, "{ \"openssl-sha-384\", \"SHA-384\", true, false }", "Phase 98 is missing the OpenSSL SHA-384 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha-512\", \"SHA-512\", true, true }", "Phase 98 is missing the OpenSSL SHA-512 descriptor or default enablement.");
-            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, false }", "Phase 98 is missing the OpenSSL SHA3-256 descriptor.");
+            AssertContains(registryCore, "{ \"openssl-sha3-256\", \"SHA3-256\", true, true }", "Phase 98 is missing the OpenSSL SHA3-256 descriptor or default enablement.");
             AssertContains(registryCore, "{ \"openssl-sha3-384\", \"SHA3-384\", true, false }", "Phase 98 is missing the OpenSSL SHA3-384 descriptor.");
             AssertContains(registryCore, "{ \"openssl-sha3-512\", \"SHA3-512\", true, false }", "Phase 98 is missing the OpenSSL SHA3-512 descriptor.");
             AssertContains(registryCore, "{ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false }", "Phase 98 is missing the OpenSSL BLAKE2b-512 descriptor.");
