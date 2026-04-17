@@ -12,7 +12,7 @@ namespace HashEngineInternal
 
 	typedef void (*HashDigestInitializeAction)(FileHashContexts *hashContexts);
 	typedef void (*HashDigestUpdateAction)(FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen);
-	typedef void (*HashDigestFinalizeAction)(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);
+	typedef bool (*HashDigestFinalizeAction)(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);
 
 	struct HashDigestOperationDescriptor
 	{

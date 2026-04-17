@@ -329,9 +329,16 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("OSSL_DIGEST_PARAM_SIZE", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("OSSL_PARAM_construct_size_t", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestUpdate", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("if (hashContext.updateFailed)", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("hashContext.updateFailed = true;", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestFinal_ex", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("ConfigureOpenSslEvpFailureInjection", providerImplementation, StringComparison.Ordinal);
         Assert.DoesNotContain("static EVP_MD_CTX", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("updateFailed(false)", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("bool updateFailed;", providerHeader, StringComparison.Ordinal);
+        Assert.Contains("struct OpenSslEvpHashFinalizeResult", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHA_384_OUTPUT_BYTES = 48", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHA3_384_OUTPUT_BYTES = 48", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
@@ -358,6 +365,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", runtimeTests, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-sha-256\")", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-blake2b-512\")", runtimeTests, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"openssl-blake2s-256\")", runtimeTests, StringComparison.Ordinal);

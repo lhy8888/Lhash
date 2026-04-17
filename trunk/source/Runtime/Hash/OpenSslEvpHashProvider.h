@@ -20,7 +20,8 @@ namespace HashRuntime
 			: mdContext(NULL),
 			mdImplementation(NULL),
 			xofMode(false),
-			digestOutputBytes(0)
+			digestOutputBytes(0),
+			updateFailed(false)
 		{
 		}
 
@@ -28,6 +29,19 @@ namespace HashRuntime
 		EVP_MD *mdImplementation;
 		bool xofMode;
 		size_t digestOutputBytes;
+		bool updateFailed;
+	};
+
+	struct OpenSslEvpHashFinalizeResult
+	{
+		OpenSslEvpHashFinalizeResult()
+			: success(false),
+			digest()
+		{
+		}
+
+		bool success;
+		sunjwbase::tstring digest;
 	};
 
 	static const size_t OPENSSL_SHA_256_OUTPUT_BYTES = 32;
@@ -49,8 +63,10 @@ namespace HashRuntime
 		size_t digestOutputBytes);
 
 	void UpdateOpenSslEvpHashContext(OpenSslEvpHashContext& hashContext, const unsigned char *data, size_t dataLen);
-	sunjwbase::tstring FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes);
+	OpenSslEvpHashFinalizeResult FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes);
 	void CleanupOpenSslEvpHashContext(OpenSslEvpHashContext *hashContext);
+	void ConfigureOpenSslEvpFailureInjection(size_t failDigestUpdateCall, bool failFinalize);
+	void ResetOpenSslEvpFailureInjection();
 }
 
 #endif

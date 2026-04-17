@@ -50,6 +50,8 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", testSource, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
@@ -93,6 +95,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("CreateAlgorithmId(\"openssl-sha3\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"xxh3\")", testSource, StringComparison.Ordinal);
         Assert.Contains("CreateAlgorithmId(\"crc32c-64\")", testSource, StringComparison.Ordinal);
+        Assert.Contains("ScopedOpenSslEvpFailureInjection", testSource, StringComparison.Ordinal);
         Assert.Contains("CountDigestMatchingHashResults(results, digestQuery)", testSource, StringComparison.Ordinal);
         Assert.Contains("VisitPathAndDigestMatchingHashResults", testSource, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> *stopRequestedFlag_", testSource, StringComparison.Ordinal);

@@ -52,12 +52,20 @@ namespace HashEngineInternal
 		});
 	}
 
-	void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		bool finalizedAllDigests = true;
 		VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)
 		{
-			FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);
-			return true;
+			if (FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle, errorText))
+			{
+				return true;
+			}
+
+			finalizedAllDigests = false;
+			return false;
 		});
+
+		return finalizedAllDigests;
 	}
 }

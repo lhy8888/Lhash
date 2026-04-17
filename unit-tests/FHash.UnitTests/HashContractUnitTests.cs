@@ -391,21 +391,21 @@ public sealed class HashContractUnitTests
         Assert.Contains("UpdateDigestContextsSequential(digestUpdateRequest", digestSinglePass, StringComparison.Ordinal);
         Assert.Contains("struct FileHashContexts;", digestLifecycleHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);", digestLifecycleHeader, StringComparison.Ordinal);
-        Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", digestLifecycleHeader, StringComparison.Ordinal);
         Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", digestLifecycle, StringComparison.Ordinal);
-        Assert.Contains("void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", digestLifecycle, StringComparison.Ordinal);
         Assert.True(
             digestContextOpsHeader.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", StringComparison.Ordinal) ||
             digestContextOpsHeader.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);", StringComparison.Ordinal));
         Assert.True(
-            digestContextOpsHeader.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);", StringComparison.Ordinal) ||
-            digestContextOpsHeader.Contains("void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);", StringComparison.Ordinal));
+            digestContextOpsHeader.Contains("bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", StringComparison.Ordinal) ||
+            digestContextOpsHeader.Contains("bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", StringComparison.Ordinal));
         Assert.True(
             digestContextOps.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", StringComparison.Ordinal) ||
             digestContextOps.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId)", StringComparison.Ordinal));
         Assert.True(
-            digestContextOps.Contains("void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)", StringComparison.Ordinal) ||
-            digestContextOps.Contains("void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)", StringComparison.Ordinal));
+            digestContextOps.Contains("bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", StringComparison.Ordinal));
         Assert.True(
             digestContextOps.Contains("TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", StringComparison.Ordinal) ||
             digestContextOps.Contains("TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)", StringComparison.Ordinal));
@@ -416,6 +416,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
         Assert.Contains("bool IsHashDigestOperationRegistryConsistent();", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("typedef bool (*HashDigestFinalizeAction)(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
         Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)", digestOperationTypeCompat, StringComparison.Ordinal);
         Assert.Contains("IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)", digestOperationTypeCompat, StringComparison.Ordinal);
         Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
@@ -424,7 +425,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))", digestOperationRegistry, StringComparison.Ordinal);
         Assert.Contains("VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("InitializeHashDigestContextById(hashContexts, algorithmId);", digestLifecycle, StringComparison.Ordinal);
-        Assert.Contains("FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle, errorText)", digestLifecycle, StringComparison.Ordinal);
         Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
         Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
@@ -625,7 +626,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileCalculatedProgressEvent());", successfulFileCompletionWorkflow, StringComparison.Ordinal);
-        Assert.Contains("FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, finalizeErrorText);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("PopulateDigestResult(request, result, executionState.digestBundle);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);", errorResultWorkflowHeader, StringComparison.Ordinal);

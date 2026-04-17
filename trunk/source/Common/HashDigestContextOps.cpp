@@ -20,19 +20,19 @@ namespace HashEngineInternal
 		operationDescriptor.initializeAction(hashContexts);
 	}
 
-	void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)
+	bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
 		HashDigestOperationDescriptor operationDescriptor = {};
 		if (!TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor))
 		{
-			return;
+			return false;
 		}
 
 		if (operationDescriptor.finalizeAction == NULL)
 		{
-			return;
+			return false;
 		}
 
-		operationDescriptor.finalizeAction(hashContexts, digestBundle);
+		return operationDescriptor.finalizeAction(hashContexts, digestBundle, errorText);
 	}
 }

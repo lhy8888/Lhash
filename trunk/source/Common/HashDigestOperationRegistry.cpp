@@ -322,8 +322,9 @@ namespace HashEngineInternal
 		HashRuntime::UpdateOpenSslEvpHashContext(hashContexts.openSslShake256_512, data, static_cast<size_t>(dataLen));
 	}
 
-	static void FinalizeMD5DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeMD5DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		char chHashBuff[1024] = { 0 };
 		MD5Final(&hashContexts.mdContext);
 #if defined (_WIN32)
@@ -366,142 +367,212 @@ namespace HashEngineInternal
 			hashContexts.mdContext.digest[15]);
 #endif
 		SetDigestStorageValueById(digestBundle, GetMd5AlgorithmId(), sunjwbase::strtotstr(string(chHashBuff)));
+		return true;
 	}
 
-	static void FinalizeSHA1DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeSHA1DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		char strSHA1[256] = { 0 };
 		hashContexts.sha1.Final();
 		hashContexts.sha1.ReportHash(strSHA1, CSHA1::REPORT_HEX);
 		SetDigestStorageValueById(digestBundle, GetSha1AlgorithmId(), sunjwbase::strtotstr(string(strSHA1)));
+		return true;
 	}
 
-	static void FinalizeBLAKE3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeBLAKE3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetBlake3_256AlgorithmId(),
 			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3_256, HashRuntime::BLAKE3_256_OUTPUT_BYTES));
+		return true;
 	}
 
-	static void FinalizeBLAKE3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeBLAKE3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetBlake3_512AlgorithmId(),
 			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3_512, HashRuntime::BLAKE3_512_OUTPUT_BYTES));
+		return true;
 	}
 
-	static void FinalizeBLAKE3XofDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeBLAKE3XofDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetBlake3XofAlgorithmId(),
 			HashRuntime::FinalizeBlake3HasherHex(hashContexts.blake3Xof, HashRuntime::BLAKE3_XOF_OUTPUT_BYTES));
+		return true;
 	}
 
-	static void FinalizeXXH3_64DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeXXH3_64DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetXXH3_64AlgorithmId(),
 			HashRuntime::FinalizeXXH3_64HasherHex(hashContexts.xxh3_64));
+		return true;
 	}
 
-	static void FinalizeXXH3_128DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeXXH3_128DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetXXH3_128AlgorithmId(),
 			HashRuntime::FinalizeXXH3_128HasherHex(hashContexts.xxh3_128));
+		return true;
 	}
 
-	static void FinalizeCRC32CDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeCRC32CDigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		(void)errorText;
 		SetDigestStorageValueById(
 			digestBundle,
 			GetCRC32CAlgorithmId(),
 			HashRuntime::FinalizeCRC32CHasherHex(hashContexts.crc32c));
+		return true;
 	}
 
-	static void FinalizeOpenSslSha256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static sunjwbase::tstring CreateOpenSslDigestFailureText(const HashAlgorithmId& algorithmId)
 	{
-		SetDigestStorageValueById(
+		ResultDigestMetadata digestMetadata;
+		if (TryGetResultDigestMetadataById(algorithmId, &digestMetadata))
+		{
+			return GetResultDigestMetadataDisplayLabel(digestMetadata) + _T(" digest computation failed.");
+		}
+
+		return sunjwbase::strtotstr(std::string("OpenSSL digest computation failed."));
+	}
+
+	static bool FinalizeOpenSslDigestContext(
+		ResultDigestStorage& digestBundle,
+		const HashAlgorithmId& algorithmId,
+		HashRuntime::OpenSslEvpHashContext& hashContext,
+		size_t outputBytes,
+		sunjwbase::tstring *errorText)
+	{
+		HashRuntime::OpenSslEvpHashFinalizeResult finalizeResult =
+			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContext, outputBytes);
+		if (!finalizeResult.success)
+		{
+			ClearDigestStorageValueById(digestBundle, algorithmId);
+			if (errorText != NULL)
+			{
+				*errorText = CreateOpenSslDigestFailureText(algorithmId);
+			}
+
+			return false;
+		}
+
+		SetDigestStorageValueById(digestBundle, algorithmId, finalizeResult.digest);
+		return true;
+	}
+
+	static bool FinalizeOpenSslSha256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
+	{
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha256AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha256, HashRuntime::OPENSSL_SHA_256_OUTPUT_BYTES));
+			hashContexts.openSslSha256,
+			HashRuntime::OPENSSL_SHA_256_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslSha384DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslSha384DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha384AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha384, HashRuntime::OPENSSL_SHA_384_OUTPUT_BYTES));
+			hashContexts.openSslSha384,
+			HashRuntime::OPENSSL_SHA_384_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslSha512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslSha512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha512AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha512, HashRuntime::OPENSSL_SHA_512_OUTPUT_BYTES));
+			hashContexts.openSslSha512,
+			HashRuntime::OPENSSL_SHA_512_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslSha3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslSha3_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha3_256AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_256, HashRuntime::OPENSSL_SHA3_256_OUTPUT_BYTES));
+			hashContexts.openSslSha3_256,
+			HashRuntime::OPENSSL_SHA3_256_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslSha3_384DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslSha3_384DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha3_384AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_384, HashRuntime::OPENSSL_SHA3_384_OUTPUT_BYTES));
+			hashContexts.openSslSha3_384,
+			HashRuntime::OPENSSL_SHA3_384_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslSha3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslSha3_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslSha3_512AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslSha3_512, HashRuntime::OPENSSL_SHA3_512_OUTPUT_BYTES));
+			hashContexts.openSslSha3_512,
+			HashRuntime::OPENSSL_SHA3_512_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslBlake2b_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslBlake2b_512AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2b_512, HashRuntime::OPENSSL_BLAKE2B_512_OUTPUT_BYTES));
+			hashContexts.openSslBlake2b_512,
+			HashRuntime::OPENSSL_BLAKE2B_512_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslBlake2s_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslBlake2s_256AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslBlake2s_256, HashRuntime::OPENSSL_BLAKE2S_256_OUTPUT_BYTES));
+			hashContexts.openSslBlake2s_256,
+			HashRuntime::OPENSSL_BLAKE2S_256_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslShake128_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslShake128_256DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslShake128_256AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslShake128_256, HashRuntime::OPENSSL_SHAKE128_256_OUTPUT_BYTES));
+			hashContexts.openSslShake128_256,
+			HashRuntime::OPENSSL_SHAKE128_256_OUTPUT_BYTES,
+			errorText);
 	}
 
-	static void FinalizeOpenSslShake256_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)
+	static bool FinalizeOpenSslShake256_512DigestContext(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
-		SetDigestStorageValueById(
+		return FinalizeOpenSslDigestContext(
 			digestBundle,
 			GetOpenSslShake256_512AlgorithmId(),
-			HashRuntime::FinalizeOpenSslEvpHashContextHex(hashContexts.openSslShake256_512, HashRuntime::OPENSSL_SHAKE256_512_OUTPUT_BYTES));
+			hashContexts.openSslShake256_512,
+			HashRuntime::OPENSSL_SHAKE256_512_OUTPUT_BYTES,
+			errorText);
 	}
 
 	static std::vector<HashDigestOperationDescriptor>& GetMutableHashDigestOperationDescriptorStorage()

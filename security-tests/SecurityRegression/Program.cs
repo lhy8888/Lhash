@@ -499,14 +499,21 @@ internal static partial class Program
             AssertContains(registryCore, "{ \"openssl-shake128-256\", \"SHAKE128-256\", true, false }", "The OpenSSL SHAKE128-256 descriptor variant is missing.");
             AssertContains(registryCore, "{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", "The OpenSSL SHAKE256-512 descriptor variant is missing.");
 
-            AssertContains(providerImplementation, "EVP_MD_fetch", "The OpenSSL provider no longer fetches digest implementations through EVP.");
-            AssertContains(providerImplementation, "EVP_DigestInit_ex2", "The OpenSSL provider no longer initializes digest contexts through EVP.");
-            AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "The OpenSSL provider no longer configures truncated digest output through OSSL params.");
-            AssertContains(providerImplementation, "EVP_DigestUpdate", "The OpenSSL provider no longer updates digest contexts through EVP.");
-            AssertContains(providerImplementation, "EVP_DigestFinal_ex", "The OpenSSL provider no longer finalizes fixed-size digests through EVP.");
-            AssertContains(providerImplementation, "EVP_DigestFinalXOF", "The OpenSSL provider no longer finalizes XOF digests through EVP.");
-            AssertDoesNotContain(providerImplementation, "static EVP_MD_CTX", "The OpenSSL provider unexpectedly reintroduced a shared mutable EVP context.");
-            AssertContains(providerHeader, "OPENSSL_SHA_384_OUTPUT_BYTES = 48", "The OpenSSL provider header no longer exposes the SHA-384 output profile.");
+        AssertContains(providerImplementation, "EVP_MD_fetch", "The OpenSSL provider no longer fetches digest implementations through EVP.");
+        AssertContains(providerImplementation, "EVP_DigestInit_ex2", "The OpenSSL provider no longer initializes digest contexts through EVP.");
+        AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "The OpenSSL provider no longer configures truncated digest output through OSSL params.");
+        AssertContains(providerImplementation, "EVP_DigestUpdate", "The OpenSSL provider no longer updates digest contexts through EVP.");
+        AssertContains(providerImplementation, "EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1", "The OpenSSL provider no longer treats EVP_DigestUpdate failure as a sticky error.");
+        AssertContains(providerImplementation, "if (hashContext.updateFailed)", "The OpenSSL provider no longer short-circuits follow-up updates after an EVP failure.");
+        AssertContains(providerImplementation, "hashContext.updateFailed = true;", "The OpenSSL provider no longer records EVP update failures.");
+        AssertContains(providerImplementation, "EVP_DigestFinal_ex", "The OpenSSL provider no longer finalizes fixed-size digests through EVP.");
+        AssertContains(providerImplementation, "EVP_DigestFinalXOF", "The OpenSSL provider no longer finalizes XOF digests through EVP.");
+        AssertContains(providerImplementation, "ConfigureOpenSslEvpFailureInjection", "The OpenSSL provider no longer exposes failure injection hooks for runtime error-path coverage.");
+        AssertDoesNotContain(providerImplementation, "static EVP_MD_CTX", "The OpenSSL provider unexpectedly reintroduced a shared mutable EVP context.");
+        AssertContains(providerHeader, "updateFailed(false)", "The OpenSSL provider header no longer resets the sticky update failure flag during context construction.");
+        AssertContains(providerHeader, "bool updateFailed;", "The OpenSSL provider header no longer tracks sticky EVP update failures.");
+        AssertContains(providerHeader, "struct OpenSslEvpHashFinalizeResult", "The OpenSSL provider header no longer exposes explicit finalize success/failure semantics.");
+        AssertContains(providerHeader, "OPENSSL_SHA_384_OUTPUT_BYTES = 48", "The OpenSSL provider header no longer exposes the SHA-384 output profile.");
             AssertContains(providerHeader, "OPENSSL_SHA3_384_OUTPUT_BYTES = 48", "The OpenSSL provider header no longer exposes the SHA3-384 output profile.");
             AssertContains(providerHeader, "OPENSSL_BLAKE2B_512_OUTPUT_BYTES = 64", "The OpenSSL provider header no longer exposes the BLAKE2b-512 output profile.");
             AssertContains(providerHeader, "OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32", "The OpenSSL provider header no longer exposes the BLAKE2s-256 output profile.");
@@ -523,11 +530,13 @@ internal static partial class Program
             AssertContains(digestRegistry, "InitializeOpenSslShake128_256DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE128-256 initialization hook.");
             AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "The digest registry no longer exposes the OpenSSL SHAKE256-512 initialization hook.");
 
-            AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", "The native runtime suite no longer covers the OpenSSL official-vector test.");
-            AssertContains(runtimeSource, "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", "The native runtime suite no longer verifies that the OpenSSL SHA-2 variants stay distinct inside the OpenSSL family.");
-            AssertContains(runtimeSource, "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "The native runtime suite no longer covers unknown OpenSSL algorithm ids.");
-            AssertContains(runtimeSource, "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", "The native runtime suite no longer covers OpenSSL concurrent stability.");
-            AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-sha3\")", "The OpenSSL runtime suite no longer exercises the unknown OpenSSL id path.");
+        AssertContains(runtimeSource, "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", "The native runtime suite no longer covers the OpenSSL official-vector test.");
+        AssertContains(runtimeSource, "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", "The native runtime suite no longer verifies that the OpenSSL SHA-2 variants stay distinct inside the OpenSSL family.");
+        AssertContains(runtimeSource, "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", "The native runtime suite no longer covers unknown OpenSSL algorithm ids.");
+        AssertContains(runtimeSource, "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", "The native runtime suite no longer covers OpenSSL concurrent stability.");
+        AssertContains(runtimeSource, "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", "The native runtime suite no longer covers OpenSSL EVP update-failure propagation.");
+        AssertContains(runtimeSource, "RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", "The native runtime suite no longer covers OpenSSL EVP finalize-failure propagation.");
+        AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-sha3\")", "The OpenSSL runtime suite no longer exercises the unknown OpenSSL id path.");
             AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-blake2b-512\")", "The OpenSSL runtime suite no longer covers the BLAKE2b-512 variant path.");
             AssertContains(runtimeSource, "CreateAlgorithmId(\"openssl-blake2s-256\")", "The OpenSSL runtime suite no longer covers the BLAKE2s-256 variant path.");
             AssertContains(runtimeSource, "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED", "The OpenSSL runtime suite no longer carries the SHA-384 known vector.");

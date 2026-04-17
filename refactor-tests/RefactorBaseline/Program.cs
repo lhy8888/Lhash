@@ -334,9 +334,9 @@ internal static class Program
                 [
                     "CompleteSuccessfulFileHashing(",
                     "observer->onProgressEvent(CreateFileCalculatedProgressEvent());",
+                    "fileAttemptState.osFile->close();",
                     "FinalizeDigestStrings(",
                     "UpdateWholeProgressAfterFile(",
-                    "fileAttemptState.osFile->close();",
                     "PopulateDigestResult(",
                     "EmitHashResult("
                 ],
@@ -2136,7 +2136,7 @@ internal static class Program
                     "VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)"
                 ],
                 "HashEngine does not yet route digest initialization/finalization/publication through the HashRequest algorithm seam.");
-            AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
+            AssertContains(engineImpl, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", "HashEngine does not yet finalize digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "PopulateDigestResult(request, result, executionState.digestBundle);", "HashEngine does not yet publish digests through the request-scoped algorithm-selection seam.");
             AssertContains(engineImpl, "VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", "HashEngine does not yet route digest updates through operation-descriptor iteration seams.");
             AssertContains(engineImpl, "if (!result.digests.empty())", "HashEngine does not yet suppress hash-result publication when no algorithms are enabled.");
@@ -2346,7 +2346,7 @@ internal static class Program
 
             AssertContains(engineResult, "uint64_t PrepareFileMetaResult(", "HashEngineResult.cpp does not yet own the file-metadata helper.");
             AssertDoesNotContain(engineResult, "void InitializeFileHashing(", "HashEngineResult.cpp still owns file-hashing initialization after lifecycle extraction.");
-            AssertDoesNotContain(engineResult, "void FinalizeDigestStrings(", "HashEngineResult.cpp still owns digest finalization after lifecycle extraction.");
+            AssertDoesNotContain(engineResult, "FinalizeDigestStrings(", "HashEngineResult.cpp still owns digest finalization after lifecycle extraction.");
             AssertContains(resultPublisher, "void CompleteSuccessfulFileHashing(", "HashResultPublisher.cpp does not yet own successful-file completion.");
             AssertContains(resultPublisher, "void CompleteFileAttempt(", "HashResultPublisher.cpp does not yet own file-attempt completion.");
             AssertContains(fileRunner, "bool RunFileHashAttempt(", "HashFileRunner.cpp does not yet own the single-file execution seam.");
@@ -4805,10 +4805,10 @@ internal static class Program
                 ],
                 "Phase 69 HashDigestLifecycle.h does not yet expose finalized digest setters.");
             AssertContains(hashDigestLifecycleHeader, "void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle);", "Phase 69 HashDigestLifecycle.h does not yet expose digest projection.");
-            AssertContains(hashDigestLifecycleHeader, "void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle);", "Phase 69 HashDigestLifecycle.h does not yet expose digest finalization.");
+            AssertContains(hashDigestLifecycleHeader, "bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", "Phase 69 HashDigestLifecycle.h does not yet expose digest finalization.");
 
             AssertContains(hashDigestLifecycle, "void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", "Phase 69 HashDigestLifecycle.cpp does not yet own hash-context initialization.");
-            AssertContains(hashDigestLifecycle, "void FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest finalization.");
+            AssertContains(hashDigestLifecycle, "bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest finalization.");
             AssertContains(hashDigestLifecycle, "void PopulateDigestResult(const HashRequest& request, HashResult& result, const ResultDigestStorage& digestBundle)", "Phase 69 HashDigestLifecycle.cpp does not yet own digest projection.");
             AssertContainsAny(hashDigestLifecycle,
                 [
@@ -4818,8 +4818,8 @@ internal static class Program
                 "Phase 69 HashDigestLifecycle.cpp does not yet delegate initialization through hash-digest context seams.");
             AssertContainsAny(hashDigestLifecycle,
                 [
-                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);",
-                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);"
+                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle, errorText)",
+                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle, errorText)"
                 ],
                 "Phase 69 HashDigestLifecycle.cpp does not yet delegate finalization through hash-digest context seams.");
             AssertContainsAny(hashDigestContextOpsHeader,
@@ -4830,8 +4830,8 @@ internal static class Program
                 "Phase 69 HashDigestContextOps.h does not yet expose digest-context initialization.");
             AssertContainsAny(hashDigestContextOpsHeader,
                 [
-                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
-                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                    "bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);",
+                    "bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);"
                 ],
                 "Phase 69 HashDigestContextOps.h does not yet expose digest-context finalization.");
             AssertContainsAny(hashDigestContextOps,
@@ -4842,8 +4842,8 @@ internal static class Program
                 "Phase 69 HashDigestContextOps.cpp does not yet own digest-context initialization.");
             AssertContainsAny(hashDigestContextOps,
                 [
-                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle)",
-                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle)"
+                    "bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)",
+                    "bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)"
                 ],
                 "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
@@ -4861,9 +4861,9 @@ internal static class Program
 
             AssertContains(hashEngineResult, "uint64_t PrepareFileMetaResult(", "Phase 69 HashEngineResult.cpp should keep owning file metadata projection.");
             AssertDoesNotContain(hashEngineResult, "void InitializeFileHashing(", "Phase 69 HashEngineResult.cpp should no longer own hash-context initialization.");
-            AssertDoesNotContain(hashEngineResult, "void FinalizeDigestStrings(", "Phase 69 HashEngineResult.cpp should no longer own digest finalization.");
+            AssertDoesNotContain(hashEngineResult, "FinalizeDigestStrings(", "Phase 69 HashEngineResult.cpp should no longer own digest finalization.");
 
-            AssertContains(string.Join("\r\n", hashResultPublisher, hashSuccessfulFileCompletionWorkflow), "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 69 result publication flow does not yet consume digest finalization through lifecycle seams.");
+            AssertContains(string.Join("\r\n", hashResultPublisher, hashSuccessfulFileCompletionWorkflow), "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", "Phase 69 result publication flow does not yet consume digest finalization through lifecycle seams.");
             AssertContains(string.Join("\r\n", hashResultPublisher, hashSuccessfulFileCompletionWorkflow), "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 69 result publication flow does not yet consume digest projection through lifecycle seams.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestLifecycle.h\"", "Phase 69 HashEngineInternal.h does not yet consume HashDigestLifecycle.");
@@ -4910,8 +4910,8 @@ internal static class Program
                 "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm initialization.");
             AssertContainsAny(hashDigestContextOpsHeader,
                 [
-                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
-                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                    "bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);",
+                    "bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);"
                 ],
                 "Phase 70 HashDigestContextOps.h does not yet expose per-algorithm finalization.");
 
@@ -4935,8 +4935,8 @@ internal static class Program
                 "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm initialization seams.");
             AssertContainsAny(hashDigestLifecycle,
                 [
-                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle);",
-                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle);"
+                    "FinalizeHashDigestContext(hashContexts, digestType, digestBundle, errorText)",
+                    "FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle, errorText)"
                 ],
                 "Phase 70 HashDigestLifecycle.cpp does not yet consume per-algorithm finalization seams.");
             AssertDoesNotContain(hashDigestLifecycle, "switch (digestType)", "Phase 70 HashDigestLifecycle.cpp should no longer own algorithm-specific branching.");
@@ -5262,7 +5262,8 @@ internal static class Program
             AssertContains(hashSuccessfulFileCompletionWorkflow, "void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet own whole-progress publication.");
             AssertContains(hashSuccessfulFileCompletionWorkflow, "void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet own successful-file completion workflow.");
             AssertContains(hashSuccessfulFileCompletionWorkflow, "observer->onProgressEvent(CreateFileCalculatedProgressEvent());", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve file-calculated publication.");
-            AssertContains(hashSuccessfulFileCompletionWorkflow, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve digest finalization.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve digest finalization.");
+            AssertContains(hashSuccessfulFileCompletionWorkflow, "EmitErrorMessageResult(executionContext, result, finalizeErrorText);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet surface digest-finalization failures.");
             AssertContains(hashSuccessfulFileCompletionWorkflow, "UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve whole-progress dispatch.");
             AssertContains(hashSuccessfulFileCompletionWorkflow, "executionState.fileAttemptState.osFile->close();", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve file-close sequencing.");
             AssertContains(hashSuccessfulFileCompletionWorkflow, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 79 HashSuccessfulFileCompletionWorkflow.cpp does not yet preserve digest projection.");
@@ -5271,7 +5272,7 @@ internal static class Program
             AssertContains(hashResultPublisher, "PublishWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", "Phase 79 HashResultPublisher.cpp does not yet delegate whole-progress publication.");
             AssertContains(hashResultPublisher, "ExecuteSuccessfulFileHashingWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", "Phase 79 HashResultPublisher.cpp does not yet delegate successful-file completion workflow.");
             AssertDoesNotContain(hashResultPublisher, "observer->onProgressEvent(CreateFileCalculatedProgressEvent());", "Phase 79 HashResultPublisher.cpp should no longer inline file-calculated publication.");
-            AssertDoesNotContain(hashResultPublisher, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);", "Phase 79 HashResultPublisher.cpp should no longer inline digest finalization.");
+            AssertDoesNotContain(hashResultPublisher, "FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", "Phase 79 HashResultPublisher.cpp should no longer inline digest finalization.");
             AssertDoesNotContain(hashResultPublisher, "PopulateDigestResult(request, result, executionState.digestBundle);", "Phase 79 HashResultPublisher.cpp should no longer inline digest projection.");
             AssertContains(hashEngineInternal, "#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", "Phase 79 HashEngineInternal.h does not yet consume HashSuccessfulFileCompletionWorkflow.");
 
@@ -5454,8 +5455,8 @@ internal static class Program
                 "Phase 83 HashDigestContextOps.h no longer exposes digest-context initialization seam.");
             AssertContainsAny(hashDigestContextOpsHeader,
                 [
-                    "void FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle);",
-                    "void FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle);"
+                    "bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);",
+                    "bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);"
                 ],
                 "Phase 83 HashDigestContextOps.h no longer exposes digest-context finalization seam.");
             AssertContainsAny(hashDigestContextOps,
@@ -6140,6 +6141,7 @@ internal static class Program
             string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
             string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\ReleaseMetadataUnitTests.cs");
             string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string nativeRuntimeFrameworkTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string licenseException = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
 
             AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated MD5 compatibility descriptor.");
@@ -6163,8 +6165,10 @@ internal static class Program
             AssertContains(digestRegistry, "InitializeOpenSslBlake2s_256DigestContext", "Phase 98 is missing the OpenSSL BLAKE2s-256 digest registration hook.");
             AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "Phase 98 is missing the OpenSSL SHAKE256-512 digest registration hook.");
             AssertContains(providerImplementation, "EVP_MD_fetch", "Phase 98 OpenSSL provider no longer uses EVP fetch semantics.");
+            AssertContains(providerImplementation, "EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1", "Phase 98 OpenSSL provider does not yet treat EVP_DigestUpdate failure as a sticky error.");
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
             AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "Phase 98 OpenSSL provider no longer configures truncated digest output through OSSL params.");
+            AssertContains(providerImplementation, "ConfigureOpenSslEvpFailureInjection", "Phase 98 OpenSSL provider does not yet expose failure injection hooks for runtime error-path coverage.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
             AssertContains(clrBridgeProject, @"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", "Phase 98 CLR bridge does not yet define explicit OpenSSL bridge-link dependencies.");
             AssertContains(clrBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 CLR bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
@@ -6191,6 +6195,8 @@ internal static class Program
             AssertContains(changelogZh, "OpenSSL 3 EVP", "Phase 98 Chinese changelog no longer records the OpenSSL EVP family.");
             AssertContains(releaseMetadataTests, "OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild", "Phase 98 release metadata coverage no longer guards the OpenSSL vendor pipeline.");
             AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndOwnsTheOnlyActiveSha256AndSha512Ids", "Phase 98 extensibility coverage no longer guards the OpenSSL-only SHA-256/SHA-512 seam.");
+            AssertContains(nativeRuntimeFrameworkTests, "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", "Phase 98 runtime coverage no longer guards OpenSSL EVP update-failure propagation.");
+            AssertContains(nativeRuntimeFrameworkTests, "RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", "Phase 98 runtime coverage no longer guards OpenSSL EVP finalize-failure propagation.");
         }, failures);
 
         if (failures.Count > 0)

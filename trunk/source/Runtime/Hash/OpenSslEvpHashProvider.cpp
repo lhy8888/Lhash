@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,39 @@
 
 namespace
 {
+	struct OpenSslEvpFailureInjectionState
+	{
+		OpenSslEvpFailureInjectionState()
+			: updateCallCount(0),
+			failDigestUpdateCall(0),
+			failFinalize(false)
+		{
+		}
+
+		std::atomic<size_t> updateCallCount;
+		std::atomic<size_t> failDigestUpdateCall;
+		std::atomic<bool> failFinalize;
+	};
+
+	static OpenSslEvpFailureInjectionState& GetOpenSslEvpFailureInjectionState()
+	{
+		static OpenSslEvpFailureInjectionState failureInjectionState;
+		return failureInjectionState;
+	}
+
+	static bool ShouldInjectDigestUpdateFailure()
+	{
+		OpenSslEvpFailureInjectionState& failureInjectionState = GetOpenSslEvpFailureInjectionState();
+		size_t failDigestUpdateCall = failureInjectionState.failDigestUpdateCall.load();
+		if (failDigestUpdateCall == 0)
+		{
+			return false;
+		}
+
+		size_t updateCallIndex = failureInjectionState.updateCallCount.fetch_add(1) + 1;
+		return updateCallIndex == failDigestUpdateCall;
+	}
+
 	static char RenderUppercaseHexNibble(unsigned char nibble)
 	{
 		static const char kHexDigits[] = "0123456789ABCDEF";
@@ -109,12 +143,21 @@ namespace HashRuntime
 	void UpdateOpenSslEvpHashContext(OpenSslEvpHashContext& hashContext, const unsigned char *data, size_t dataLen)
 	{
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
+		if (hashContext.updateFailed)
+		{
+			return;
+		}
+
 		if (hashContext.mdContext == NULL || data == NULL || dataLen == 0)
 		{
 			return;
 		}
 
-		EVP_DigestUpdate(hashContext.mdContext, data, dataLen);
+		if (ShouldInjectDigestUpdateFailure() ||
+			EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1)
+		{
+			hashContext.updateFailed = true;
+		}
 #else
 		(void)hashContext;
 		(void)data;
@@ -122,22 +165,28 @@ namespace HashRuntime
 #endif
 	}
 
-	sunjwbase::tstring FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes)
+	OpenSslEvpHashFinalizeResult FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes)
 	{
+		OpenSslEvpHashFinalizeResult finalizeResult;
 #if !defined(FHASH_WITH_OPENSSL3_VENDOR)
 		(void)hashContext;
 		(void)outputBytes;
-		return sunjwbase::tstring();
+		return finalizeResult;
 #else
-		if (hashContext.mdContext == NULL || hashContext.mdImplementation == NULL || outputBytes == 0)
+		if (hashContext.updateFailed || hashContext.mdContext == NULL || hashContext.mdImplementation == NULL || outputBytes == 0)
 		{
-			return sunjwbase::tstring();
+			CleanupOpenSslEvpHashContext(&hashContext);
+			return finalizeResult;
 		}
 
 		std::vector<unsigned char> outputBuffer(outputBytes);
 		bool finalizeSucceeded = false;
 
-		if (hashContext.xofMode)
+		if (GetOpenSslEvpFailureInjectionState().failFinalize.load())
+		{
+			finalizeSucceeded = false;
+		}
+		else if (hashContext.xofMode)
 		{
 			finalizeSucceeded = EVP_DigestFinalXOF(hashContext.mdContext, &outputBuffer[0], outputBuffer.size()) == 1;
 		}
@@ -151,10 +200,12 @@ namespace HashRuntime
 		CleanupOpenSslEvpHashContext(&hashContext);
 		if (!finalizeSucceeded)
 		{
-			return sunjwbase::tstring();
+			return finalizeResult;
 		}
 
-		return sunjwbase::strtotstr(RenderUppercaseHexString(outputBuffer));
+		finalizeResult.success = true;
+		finalizeResult.digest = sunjwbase::strtotstr(RenderUppercaseHexString(outputBuffer));
+		return finalizeResult;
 #endif
 	}
 
@@ -180,8 +231,22 @@ namespace HashRuntime
 
 		hashContext->xofMode = false;
 		hashContext->digestOutputBytes = 0;
+		hashContext->updateFailed = false;
 #else
 		(void)hashContext;
 #endif
+	}
+
+	void ConfigureOpenSslEvpFailureInjection(size_t failDigestUpdateCall, bool failFinalize)
+	{
+		OpenSslEvpFailureInjectionState& failureInjectionState = GetOpenSslEvpFailureInjectionState();
+		failureInjectionState.updateCallCount.store(0);
+		failureInjectionState.failDigestUpdateCall.store(failDigestUpdateCall);
+		failureInjectionState.failFinalize.store(failFinalize);
+	}
+
+	void ResetOpenSslEvpFailureInjection()
+	{
+		ConfigureOpenSslEvpFailureInjection(0, false);
 	}
 }

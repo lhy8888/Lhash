@@ -27,6 +27,7 @@
 #include "LegacyCompat/HashRequestTypeCompat.h"
 #include "LegacyCompat/ResultDigestTypeValueCompat.h"
 #include "LegacyCompat/ThreadDataAccess.h"
+#include "Runtime/Hash/OpenSslEvpHashProvider.h"
 #include "WinCommon/WinHandleGuard.h"
 
 namespace
@@ -44,6 +45,20 @@ namespace
 		~ScopedHashAlgorithmRegistryReset()
 		{
 			ResetHashAlgorithmDescriptorsToDefaultsForTesting();
+		}
+	};
+
+	class ScopedOpenSslEvpFailureInjection
+	{
+	public:
+		ScopedOpenSslEvpFailureInjection(size_t failDigestUpdateCall, bool failFinalize)
+		{
+			HashRuntime::ConfigureOpenSslEvpFailureInjection(failDigestUpdateCall, failFinalize);
+		}
+
+		~ScopedOpenSslEvpFailureInjection()
+		{
+			HashRuntime::ResetOpenSslEvpFailureInjection();
 		}
 	};
 
@@ -1085,6 +1100,68 @@ namespace
 			}
 		}
 	}
+
+	static void RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError()
+	{
+		ScopedTempDirectory tempDirectory;
+		ScopedOpenSslEvpFailureInjection scopedFailureInjection(2, false);
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("openssl-update-failure.bin"), std::string((kHashEngineBufferSize * 2) + 17, 'U'));
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+		HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "OpenSSL EVP update failure should surface as an explicit file error without aborting the batch.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "OpenSSL EVP update failure should still emit one file result.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(RESULT_ERROR, result.state, "OpenSSL EVP update failure should emit RESULT_ERROR.");
+		NativeAssertEqual(filePath, result.path, "The OpenSSL EVP update failure result should preserve the file path.");
+		NativeAssertNotEmpty(result.error, "OpenSSL EVP update failure should preserve an explicit error message.");
+		NativeAssertTrue(result.error.find(_T("SHA-256")) != sunjwbase::tstring::npos, "OpenSSL EVP update failure should identify the failed digest algorithm.");
+		NativeAssertEqual(static_cast<size_t>(0), result.digests.size(), "OpenSSL EVP update failure should not emit digest values.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_FAILED), "OpenSSL EVP update failure should emit a file-failed event.");
+		NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "OpenSSL EVP update failure should not emit a file-hash-ready event.");
+	}
+
+	static void RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError()
+	{
+		ScopedTempDirectory tempDirectory;
+		ScopedOpenSslEvpFailureInjection scopedFailureInjection(0, true);
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("openssl-finalize-failure.txt"), "abc");
+		std::vector<sunjwbase::tstring> filePaths;
+		filePaths.push_back(filePath);
+
+		std::vector<HashAlgorithmId> algorithmIds;
+		algorithmIds.push_back(CreateAlgorithmId("openssl-sha-512"));
+
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+		HashRequest request = CreateRequestByAlgorithmIds(filePaths, algorithmIds);
+
+		int exitCode = RunHashRequest(&executionContext, request);
+		NativeAssertEqual(0, exitCode, "OpenSSL EVP finalize failure should surface as an explicit file error without aborting the batch.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "OpenSSL EVP finalize failure should still emit one file result.");
+
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(RESULT_ERROR, result.state, "OpenSSL EVP finalize failure should emit RESULT_ERROR.");
+		NativeAssertEqual(filePath, result.path, "The OpenSSL EVP finalize failure result should preserve the file path.");
+		NativeAssertNotEmpty(result.error, "OpenSSL EVP finalize failure should preserve an explicit error message.");
+		NativeAssertTrue(result.error.find(_T("SHA-512")) != sunjwbase::tstring::npos, "OpenSSL EVP finalize failure should identify the failed digest algorithm.");
+		NativeAssertEqual(static_cast<size_t>(0), result.digests.size(), "OpenSSL EVP finalize failure should not emit digest values.");
+		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_FILE_FAILED), "OpenSSL EVP finalize failure should emit a file-failed event.");
+		NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "OpenSSL EVP finalize failure should not emit a file-hash-ready event.");
+	}
 #endif
 
 	static void RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants()
@@ -1960,6 +2037,8 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 		tests.push_back({ "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", &RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily });
 	tests.push_back({ "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered });
 	tests.push_back({ "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", &HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns });
+	tests.push_back({ "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", &RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError });
+	tests.push_back({ "RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", &RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError });
 #endif
 	tests.push_back({ "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector });
 	tests.push_back({ "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", &HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector });

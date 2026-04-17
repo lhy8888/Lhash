@@ -31,10 +31,20 @@ namespace HashEngineInternal
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
 
-		FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle);
-		UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);
-
 		executionState.fileAttemptState.osFile->close();
+		sunjwbase::tstring finalizeErrorText;
+		if (!FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText))
+		{
+			if (finalizeErrorText.empty())
+			{
+				finalizeErrorText = sunjwbase::strtotstr(std::string("Failed to finalize a digest while hashing."));
+			}
+
+			EmitErrorMessageResult(executionContext, result, finalizeErrorText);
+			return;
+		}
+
+		UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);
 
 		PopulateDigestResult(request, result, executionState.digestBundle);
 		if (!result.digests.empty())
