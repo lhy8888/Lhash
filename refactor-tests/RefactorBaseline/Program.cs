@@ -3366,6 +3366,9 @@ internal static class Program
             AssertContains(hashRequest, "struct HashRequest", "Phase 31 does not yet define a stable HashRequest contract.");
             AssertContains(hashRequest, "TStrVector files;", "Phase 31 HashRequest does not yet own file inputs.");
             AssertContains(hashRequest, "std::vector<HashAlgorithmId> algorithmIds;", "Phase 31 HashRequest does not yet own descriptor/id-based algorithm selection.");
+            AssertContains(hashRequest, "assert(fileIndex < request.files.size());", "Phase 31 HashRequest file access does not yet assert checked file-index bounds.");
+            AssertContains(hashRequest, "return request.files.at(fileIndex);", "Phase 31 HashRequest file access does not yet use checked indexing.");
+            AssertDoesNotContain(hashRequest, "return request.files[fileIndex];", "Phase 31 HashRequest file access still uses unchecked operator[] indexing.");
             AssertDoesNotContain(hashRequest, "std::vector<ResultDigestType> algorithms;", "Phase 31 HashRequest still keeps the legacy digest-type algorithm list after descriptor/id promotion.");
             AssertContains(hashRequest, "bool uppercaseDigest;", "Phase 31 HashRequest does not yet own uppercase output preference.");
             AssertContains(hashRequest, "HashRequestDigestExecutionPolicy digestExecutionPolicy;", "Phase 31 HashRequest does not yet expose runtime digest execution policy.");

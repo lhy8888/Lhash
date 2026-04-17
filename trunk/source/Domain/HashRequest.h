@@ -2,6 +2,7 @@
 #define _DOMAIN_HASH_REQUEST_H_
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 #include "Common/Global.h"
@@ -101,7 +102,8 @@ static inline size_t GetHashRequestFileCount(const HashRequest& request)
 
 static inline const sunjwbase::tstring& GetHashRequestFileAt(const HashRequest& request, size_t fileIndex)
 {
-	return request.files[fileIndex];
+	assert(fileIndex < request.files.size());
+	return request.files.at(fileIndex);
 }
 
 template<typename THashRequestFileVisitor>

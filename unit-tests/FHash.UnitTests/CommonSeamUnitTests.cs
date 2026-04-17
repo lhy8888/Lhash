@@ -589,6 +589,16 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void HashRequest_FileAccess_UsesCheckedIndexing()
+    {
+        string hashRequest = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashRequest.h");
+
+        Assert.Contains("assert(fileIndex < request.files.size());", hashRequest, StringComparison.Ordinal);
+        Assert.Contains("return request.files.at(fileIndex);", hashRequest, StringComparison.Ordinal);
+        Assert.DoesNotContain("return request.files[fileIndex];", hashRequest, StringComparison.Ordinal);
+    }
+
     private static int CountOccurrences(string content, string needle)
     {
         int count = 0;
