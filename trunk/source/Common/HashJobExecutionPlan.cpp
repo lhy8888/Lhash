@@ -8,7 +8,7 @@ namespace HashEngineInternal
 	{
 		executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);
 		executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);
-		executionPlan->digestBufferPlan = CreateHashDigestBufferPlan(request, executionPlan->digestExecutionMode);
+		executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();
 		executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);
 		executionPlan->preparationPlan = CreateHashPreparationPlan(request);
 		executionPlan->schedulerPlan = CreateHashSchedulerPlan(request, executionPlan->digestExecutionMode);

@@ -1,12 +1,15 @@
 #include "..\..\trunk\source\stdafx.h"
 
 #include <future>
+#include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <vector>
 
 #include "NativeTestHarness.h"
 
+#include "Algorithms/MD5.h"
+#include "Algorithms/SHA1.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
 #include "Common/HashDigestOperationRegistry.h"
 #include "Common/HashDigestUpdater.h"
@@ -599,6 +602,50 @@ namespace
 		return NULL;
 	}
 
+	static sunjwbase::tstring ConvertDigestBytesToUpperHex(const unsigned char *digestBytes, size_t digestLength)
+	{
+		std::ostringstream stream;
+		stream << std::uppercase << std::hex << std::setfill('0');
+		for (size_t index = 0; index < digestLength; ++index)
+		{
+			stream << std::setw(2) << static_cast<unsigned int>(digestBytes[index]);
+		}
+
+		return sunjwbase::strtotstr(stream.str());
+	}
+
+	static sunjwbase::tstring ComputeMd5Hex(const std::string& input)
+	{
+		MD5_CTX md5Context;
+		MD5Init(&md5Context);
+		if (!input.empty())
+		{
+			MD5Update(
+				&md5Context,
+				reinterpret_cast<const unsigned char *>(input.data()),
+				static_cast<unsigned int>(input.size()));
+		}
+		MD5Final(&md5Context);
+		return ConvertDigestBytesToUpperHex(md5Context.digest, sizeof(md5Context.digest));
+	}
+
+	static sunjwbase::tstring ComputeSha1Hex(const std::string& input)
+	{
+		CSHA1 sha1;
+		sha1.Reset();
+		if (!input.empty())
+		{
+			sha1.Update(
+				reinterpret_cast<unsigned char *>(const_cast<char *>(input.data())),
+				static_cast<unsigned int>(input.size()));
+		}
+		sha1.Final();
+
+		char report[41] = { 0 };
+		sha1.ReportHash(report, CSHA1::REPORT_HEX);
+		return sunjwbase::strtotstr(std::string(report));
+	}
+
 	static void HashThreadFunc_ComputesExpectedDigestsForSingleFile()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -679,6 +726,53 @@ namespace
 		NativeAssertTrue(progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARING) < progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARATION_FINISHED), "Preparing should happen before preparation-finished.");
 		NativeAssertTrue(progressSink.GetFirstEventIndex(PROGRESS_EVENT_JOB_PREPARATION_FINISHED) < progressSink.GetFirstEventIndex(PROGRESS_EVENT_FILE_STARTED), "Preparation should finish before file-started events.");
 		NativeAssertTrue(progressSink.HasEvent(PROGRESS_EVENT_JOB_COMPLETED), "The multi-file runtime path should emit a completed event.");
+	}
+
+	static void HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors()
+	{
+		struct Md5TestCase
+		{
+			const char *input;
+			const char *expectedHex;
+		};
+
+		const Md5TestCase md5Cases[] = {
+			{ "", "D41D8CD98F00B204E9800998ECF8427E" },
+			{ "a", "0CC175B9C0F1B6A831C399E269772661" },
+			{ "abc", "900150983CD24FB0D6963F7D28E17F72" },
+			{ "message digest", "F96B697D7CB7938D525A2F31AAF161D0" },
+			{ "abcdefghijklmnopqrstuvwxyz", "C3FCD3D76192E4007DFB496CCA67E13B" },
+			{ "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "D174AB98D277D9F5A5611C2C9F419D9F" }
+		};
+
+		for (size_t caseIndex = 0; caseIndex < _countof(md5Cases); ++caseIndex)
+		{
+			NativeAssertEqual(
+				sunjwbase::strtotstr(std::string(md5Cases[caseIndex].expectedHex)),
+				ComputeMd5Hex(md5Cases[caseIndex].input),
+				"Legacy MD5 no longer matches the RFC 1321 known-answer vector.");
+		}
+
+		struct Sha1TestCase
+		{
+			const char *input;
+			const char *expectedHex;
+		};
+
+		const Sha1TestCase sha1Cases[] = {
+			{ "", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709" },
+			{ "abc", "A9993E364706816ABA3E25717850C26C9CD0D89D" },
+			{ "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "84983E441C3BD26EBAAE4AA1F95129E5E54670F1" },
+			{ "The quick brown fox jumps over the lazy dog", "2FD4E1C67A2D28FCED849EE1BB76E7391B93EB12" }
+		};
+
+		for (size_t caseIndex = 0; caseIndex < _countof(sha1Cases); ++caseIndex)
+		{
+			NativeAssertEqual(
+				sunjwbase::strtotstr(std::string(sha1Cases[caseIndex].expectedHex)),
+				ComputeSha1Hex(sha1Cases[caseIndex].input),
+				"Legacy SHA-1 no longer matches the standard known-answer vector.");
+		}
 	}
 
 	static void HashThreadFunc_RespectsSelectedAlgorithms()
@@ -1859,6 +1953,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 {
 	tests.push_back({ "HashThreadFunc_ComputesExpectedDigestsForSingleFile", &HashThreadFunc_ComputesExpectedDigestsForSingleFile });
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
+	tests.push_back({ "HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", &HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 #if defined(FHASH_WITH_OPENSSL3_VENDOR)
 	tests.push_back({ "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", &HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector });

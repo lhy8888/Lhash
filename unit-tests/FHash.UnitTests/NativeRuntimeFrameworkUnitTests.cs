@@ -40,6 +40,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("class CapturingProgressSink : public HashProgressSink", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForSingleFile", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_RespectsSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", testSource, StringComparison.Ordinal);

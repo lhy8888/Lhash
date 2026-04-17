@@ -21,26 +21,73 @@ using namespace sunjwbase;
 
 // HANDLE == void *
 
-static tstring LongPathFix(const tstring& tstrPath)
-{
-	tstring tstrFixPath;
-	size_t pathLen = tstrPath.size();
-	if (pathLen < MAX_PATH - 12)
-		return tstrPath;
+static const size_t kWindowsMaxExtendedPath = 32767;
+static void CopyOpenErrorText(TCHAR *errorBuffer, const tstring& errorText);
 
-	if (tstrPath[0] == TEXT('\\') && tstrPath[1] == TEXT('\\'))
+static bool HasExtendedPathPrefix(const tstring& tstrPath)
+{
+	return tstrPath.length() >= 4 &&
+		tstrPath[0] == TEXT('\\') &&
+		tstrPath[1] == TEXT('\\') &&
+		tstrPath[2] == TEXT('?') &&
+		tstrPath[3] == TEXT('\\');
+}
+
+static bool IsUncPath(const tstring& tstrPath)
+{
+	return tstrPath.length() >= 2 &&
+		tstrPath[0] == TEXT('\\') &&
+		tstrPath[1] == TEXT('\\') &&
+		!HasExtendedPathPrefix(tstrPath);
+}
+
+static bool TryLongPathFix(const tstring& tstrPath, tstring *fixedPath, TCHAR *errorBuffer)
+{
+	if (fixedPath == NULL)
 	{
-		if (tstrPath[2] == TEXT('?')) // Already formatted
-			return tstrPath;
-		tstrFixPath = TEXT("\\\\?\\UNC\\");
-		tstrFixPath += (tstrPath.c_str() + 2);
+		return false;
+	}
+
+	if (HasExtendedPathPrefix(tstrPath))
+	{
+		if (tstrPath.length() > kWindowsMaxExtendedPath)
+		{
+			SetLastError(ERROR_FILENAME_EXCED_RANGE);
+			CopyOpenErrorText(errorBuffer, TEXT("Path exceeds the Windows extended-path limit (32767 characters)."));
+			fixedPath->clear();
+			return false;
+		}
+
+		*fixedPath = tstrPath;
+		return true;
+	}
+
+	if (tstrPath.size() < MAX_PATH - 12)
+	{
+		*fixedPath = tstrPath;
+		return true;
+	}
+
+	size_t prefixLength = IsUncPath(tstrPath) ? 8u : 4u;
+	if (tstrPath.size() + prefixLength > kWindowsMaxExtendedPath)
+	{
+		SetLastError(ERROR_FILENAME_EXCED_RANGE);
+		CopyOpenErrorText(errorBuffer, TEXT("Path exceeds the Windows extended-path limit (32767 characters) after prefixing."));
+		fixedPath->clear();
+		return false;
+	}
+
+	fixedPath->assign(IsUncPath(tstrPath) ? TEXT("\\\\?\\UNC\\") : TEXT("\\\\?\\"));
+	if (IsUncPath(tstrPath))
+	{
+		*fixedPath += (tstrPath.c_str() + 2);
 	}
 	else
 	{
-		tstrFixPath = TEXT("\\\\?\\");
-		tstrFixPath += tstrPath;
+		*fixedPath += tstrPath;
 	}
-	return tstrFixPath;
+
+	return true;
 }
 
 struct CreateFileFlag
@@ -301,7 +348,7 @@ static bool ValidateOpenedHandleAgainstPathPolicy(HANDLE fileHandle, const tstri
 }
 
 OsFile::OsFile(tstring filePath):
-	_filePath(LongPathFix(filePath)),
+	_filePath(filePath),
 	_osfileData(NULL),
 	_fileStatus(CLOSED)
 {
@@ -321,7 +368,13 @@ OsFile::~OsFile()
 
 bool OsFile::isHashTargetAllowed(void *exception)
 {
-	return !TryRejectReparsePointPath(_filePath, (TCHAR *)exception);
+	tstring fixedPath;
+	if (!TryLongPathFix(_filePath, &fixedPath, (TCHAR *)exception))
+	{
+		return false;
+	}
+
+	return !TryRejectReparsePointPath(fixedPath, (TCHAR *)exception);
 }
 
 bool OsFile::open(void *flag, void *exception)
@@ -329,14 +382,19 @@ bool OsFile::open(void *flag, void *exception)
 	CreateFileFlag* fileFlag = (CreateFileFlag*)flag;
 	TCHAR *pFileExc = (TCHAR *)exception;
 	_osfileData = NULL;
-	if (!isHashTargetAllowed(exception))
+	tstring fixedPath;
+	if (!TryLongPathFix(_filePath, &fixedPath, pFileExc))
+	{
+		return false;
+	}
+	if (TryRejectReparsePointPath(fixedPath, pFileExc))
 	{
 		return false;
 	}
 
 	HANDLE openedHandle = INVALID_HANDLE_VALUE;
 #if defined (FHASH_UWP_LIB)
-	openedHandle = CreateFileFromAppW(_filePath.c_str(), // file to open
+	openedHandle = CreateFileFromAppW(fixedPath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
 		NULL, // default security
@@ -344,7 +402,7 @@ bool OsFile::open(void *flag, void *exception)
 		fileFlag->dwFlagsAndAttributes, // normal file
 		NULL); // no attr. template
 #else
-	openedHandle = CreateFile(_filePath.c_str(), // file to open
+	openedHandle = CreateFile(fixedPath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
 		NULL, // default security
@@ -387,7 +445,7 @@ bool OsFile::open(void *flag, void *exception)
 	else
 	{
 		WinHandleGuard::UniqueWinHandle validatedHandle(openedHandle);
-		if (!ValidateOpenedHandleAgainstPathPolicy(validatedHandle.get(), _filePath, pFileExc))
+		if (!ValidateOpenedHandleAgainstPathPolicy(validatedHandle.get(), fixedPath, pFileExc))
 		{
 			return false;
 		}

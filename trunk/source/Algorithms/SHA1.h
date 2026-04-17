@@ -63,7 +63,6 @@ public:
 	void Reset();
 
 	void Update(unsigned char* data, unsigned int len);
-	bool HashFile(char *szFileName);
 
 	void Final();
 	void ReportHash(char *szReport, unsigned char uReportType = REPORT_HEX);

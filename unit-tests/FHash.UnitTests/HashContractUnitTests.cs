@@ -443,10 +443,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("return HASH_DIGEST_EXECUTION_MODE_PARALLEL;", digestExecutionMode, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestBufferPlan", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("unsigned int preferredBufferLength;", digestBufferPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("static constexpr unsigned int kDefaultHashBufferLength = 1u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", digestBufferPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", digestBufferPlan, StringComparison.Ordinal);
-        Assert.Contains("digestBufferPlan.preferredBufferLength = 1048576;", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("digestBufferPlan.preferredBufferLength = kDefaultHashBufferLength;", digestBufferPlan, StringComparison.Ordinal);
         Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan)", digestBufferPlan, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestQueuePlan", digestQueuePlanHeader, StringComparison.Ordinal);
         Assert.Contains("size_t maxBufferedChunkCount;", digestQueuePlanHeader, StringComparison.Ordinal);
@@ -470,7 +471,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("const HashSchedulerPlan& GetHashJobSchedulerPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);", jobExecutionPlan, StringComparison.Ordinal);
-        Assert.Contains("executionPlan->digestBufferPlan = CreateHashDigestBufferPlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->preparationPlan = CreateHashPreparationPlan(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->schedulerPlan = CreateHashSchedulerPlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);

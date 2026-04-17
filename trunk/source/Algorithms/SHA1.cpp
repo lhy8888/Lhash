@@ -124,43 +124,6 @@ void CSHA1::Update(unsigned char* data, unsigned int len)
 	memcpy(&m_buffer[j], &data[i], len - i);
 }
 
-// Hash in file contents
-bool CSHA1::HashFile(char *szFileName)
-{
-	unsigned char uData[MAX_FILE_READ_BUFFER];
-	size_t bytesRead = 0;
-	FILE *fIn = NULL;
-
-	if((fIn = fopen(szFileName, "rb")) == NULL) return(false);
-
-	for(;;)
-	{
-		bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);
-
-		if(bytesRead > 0)
-		{
-			Update(uData, static_cast<unsigned int>(bytesRead));
-		}
-
-		if(bytesRead < MAX_FILE_READ_BUFFER)
-		{
-			if(ferror(fIn) != 0)
-			{
-				fclose(fIn);
-				fIn = NULL;
-				return(false);
-			}
-
-			break;
-		}
-	}
-
-	fclose(fIn);
-	fIn = NULL;
-
-	return(true);
-}
-
 void CSHA1::Final()
 {
 	uint32_t i = 0, j = 0;

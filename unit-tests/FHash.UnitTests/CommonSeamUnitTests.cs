@@ -200,6 +200,35 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void LegacySha1FileHashHelper_IsRemoved_FromActiveSource()
+    {
+        string sha1Header = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\SHA1.h");
+        string sha1Source = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\SHA1.cpp");
+
+        Assert.DoesNotContain("HashFile(", sha1Header, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashFile(", sha1Source, StringComparison.Ordinal);
+        Assert.DoesNotContain("fopen(", sha1Source, StringComparison.Ordinal);
+        Assert.DoesNotContain("fread(", sha1Source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ferror(", sha1Source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashDigestBufferPlan_UsesExplicitDefaultFactory_AndNamedConstant()
+    {
+        string digestBufferPlanHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestBufferPlan.h");
+        string digestBufferPlan = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestBufferPlan.cpp");
+        string jobExecutionPlan = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashJobExecutionPlan.cpp");
+
+        Assert.Contains("kDefaultHashBufferLength = 1u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("digestBufferPlan.preferredBufferLength = kDefaultHashBufferLength;", digestBufferPlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("1048576", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();", jobExecutionPlan, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void PosixStringHelpers_AvoidGlobalLocaleAndAsciiBridgeFallbacks()
     {
         string strhelper = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\strhelper.cpp");

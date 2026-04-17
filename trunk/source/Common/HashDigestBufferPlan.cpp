@@ -4,13 +4,10 @@
 
 namespace HashEngineInternal
 {
-	HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)
+	HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()
 	{
-		(void)request;
-		(void)digestExecutionMode;
-
 		HashDigestBufferPlan digestBufferPlan = { 0 };
-		digestBufferPlan.preferredBufferLength = 1048576; // 2^20
+		digestBufferPlan.preferredBufferLength = kDefaultHashBufferLength;
 		return digestBufferPlan;
 	}
 
@@ -18,7 +15,7 @@ namespace HashEngineInternal
 	{
 		if (digestBufferPlan.preferredBufferLength == 0)
 		{
-			return 1048576; // 2^20
+			return kDefaultHashBufferLength;
 		}
 
 		return digestBufferPlan.preferredBufferLength;

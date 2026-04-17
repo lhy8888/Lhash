@@ -4649,15 +4649,16 @@ internal static class Program
 
             AssertContains(hashDigestBufferPlanHeader, "struct HashDigestBufferPlan", "Phase 66 HashDigestBufferPlan.h does not yet expose digest buffer planning state.");
             AssertContains(hashDigestBufferPlanHeader, "unsigned int preferredBufferLength;", "Phase 66 HashDigestBufferPlan.h does not yet expose preferred digest buffer length.");
-            AssertContains(hashDigestBufferPlanHeader, "HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", "Phase 66 HashDigestBufferPlan.h does not yet expose digest-buffer plan initialization.");
+            AssertContains(hashDigestBufferPlanHeader, "kDefaultHashBufferLength = 1u * 1024u * 1024u;", "Phase 66 HashDigestBufferPlan.h does not yet expose the named default digest-buffer size.");
+            AssertContains(hashDigestBufferPlanHeader, "HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", "Phase 66 HashDigestBufferPlan.h does not yet expose the default digest-buffer plan factory.");
             AssertContains(hashDigestBufferPlanHeader, "unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", "Phase 66 HashDigestBufferPlan.h does not yet expose digest-buffer plan querying.");
-            AssertContains(hashDigestBufferPlan, "HashDigestBufferPlan CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", "Phase 66 HashDigestBufferPlan.cpp does not yet own digest-buffer plan initialization.");
-            AssertContains(hashDigestBufferPlan, "digestBufferPlan.preferredBufferLength = 1048576;", "Phase 66 HashDigestBufferPlan.cpp does not yet preserve the baseline preferred digest-buffer size.");
+            AssertContains(hashDigestBufferPlan, "HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", "Phase 66 HashDigestBufferPlan.cpp does not yet own the default digest-buffer plan initialization.");
+            AssertContains(hashDigestBufferPlan, "digestBufferPlan.preferredBufferLength = kDefaultHashBufferLength;", "Phase 66 HashDigestBufferPlan.cpp does not yet preserve the baseline preferred digest-buffer size through the named constant.");
             AssertContains(hashDigestBufferPlan, "unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan)", "Phase 66 HashDigestBufferPlan.cpp does not yet own digest-buffer plan querying.");
 
             AssertContains(hashJobExecutionPlanHeader, "HashDigestBufferPlan digestBufferPlan;", "Phase 66 HashJobExecutionPlan.h does not yet carry digest-buffer planning state.");
             AssertContains(hashJobExecutionPlanHeader, "const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan);", "Phase 66 HashJobExecutionPlan.h does not yet expose digest-buffer plan access.");
-            AssertContains(hashJobExecutionPlan, "executionPlan->digestBufferPlan = CreateHashDigestBufferPlan(request, executionPlan->digestExecutionMode);", "Phase 66 HashJobExecutionPlan.cpp does not yet initialize digest-buffer planning.");
+            AssertContains(hashJobExecutionPlan, "executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();", "Phase 66 HashJobExecutionPlan.cpp does not yet initialize digest-buffer planning through the explicit default factory.");
             AssertContains(hashJobExecutionPlan, "const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan)", "Phase 66 HashJobExecutionPlan.cpp does not yet own digest-buffer plan retrieval.");
             AssertContains(hashJobExecutionPlan, "return executionPlan.digestBufferPlan;", "Phase 66 HashJobExecutionPlan.cpp does not yet return planned digest-buffer controls.");
 
@@ -5764,10 +5765,13 @@ internal static class Program
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");
             AssertContains(osFileWinApi, "HasReparsePointInPathHierarchy", "Phase 90 Win32 file handling does not yet walk ancestor path segments for reparse-point checks.");
-            AssertContains(osFileWinApi, "if (!isHashTargetAllowed(exception))", "Phase 90 Win32 file handling does not gate CreateFile on the reparse-point policy.");
+            AssertContains(osFileWinApi, "if (!TryLongPathFix(_filePath, &fixedPath, pFileExc))", "Phase 90 Win32 file handling does not canonicalize long paths before opening files.");
+            AssertContains(osFileWinApi, "if (TryRejectReparsePointPath(fixedPath, pFileExc))", "Phase 90 Win32 file handling does not reject reparse-point paths after long-path canonicalization.");
             AssertContains(osFileWinApi, "FILE_FLAG_OPEN_REPARSE_POINT", "Phase 90 Win32 file handling does not yet open the leaf object with reparse-point awareness.");
             AssertContains(osFileWinApi, "GetFileInformationByHandleEx(", "Phase 90 Win32 file handling does not yet validate opened handle attributes.");
             AssertContains(osFileWinApi, "GetFinalPathNameByHandle(", "Phase 90 Win32 file handling does not yet revalidate the resolved final path after open.");
+            AssertContains(osFileWinApi, "kWindowsMaxExtendedPath = 32767", "Phase 90 Win32 file handling does not yet bound extended paths to the Windows 32767-character limit.");
+            AssertContains(osFileWinApi, "ERROR_FILENAME_EXCED_RANGE", "Phase 90 Win32 file handling does not yet report explicit extended-path overflow errors.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "Phase 90 UWP file handling does not yet walk ancestor path segments for reparse-point checks.");
 
@@ -5794,10 +5798,11 @@ internal static class Program
 
             AssertContains(md5, "static const unsigned char PADDING[64]", "Phase 90 MD5 padding should now be treated as immutable shared algorithm state.");
             AssertDoesNotContain(sha1, "static unsigned char workspace[64];", "Phase 90 SHA1 transform still shares mutable static workspace across threads.");
-            AssertContains(sha1, "size_t bytesRead = 0;", "Phase 90 SHA1 file hashing does not yet stream chunk lengths through size_t reads.");
-            AssertContains(sha1, "bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);", "Phase 90 SHA1 file hashing still does not read chunk sizes directly from fread.");
-            AssertContains(sha1, "Update(uData, static_cast<unsigned int>(bytesRead));", "Phase 90 SHA1 file hashing does not yet hash the exact number of bytes actually read.");
-            AssertContains(sha1, "if(ferror(fIn) != 0)", "Phase 90 SHA1 file hashing does not yet check fread failures explicitly.");
+            AssertDoesNotContain(sha1, "HashFile(", "Phase 90 SHA1 still keeps the legacy direct file-hashing helper instead of relying on the shared OsFile pipeline.");
+            AssertDoesNotContain(sha1, "fopen(", "Phase 90 SHA1 still opens files directly with stdio.");
+            AssertDoesNotContain(sha1, "fread(", "Phase 90 SHA1 still reads files directly with stdio.");
+            AssertDoesNotContain(sha1, "ferror(", "Phase 90 SHA1 still owns stdio error handling.");
+            AssertDoesNotContain(sha1, "ferror(", "Phase 90 SHA1 still owns stdio read-failure handling instead of relying on the shared file pipeline.");
             AssertDoesNotContain(sha1, "uint32_t ulFileSize", "Phase 90 SHA1 file hashing still relies on a 32-bit total file-size accumulator.");
             AssertDoesNotContain(sha1, "ftell(fIn)", "Phase 90 SHA1 file hashing still uses ftell-driven chunk planning.");
             AssertDoesNotContain(sha1, "fseek(fIn, 0, SEEK_END)", "Phase 90 SHA1 file hashing still seeks to the end of the file to precompute chunk counts.");

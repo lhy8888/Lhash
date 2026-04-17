@@ -28,10 +28,13 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winApi, StringComparison.Ordinal);
         Assert.Contains("HasReparsePointInPathHierarchy", winApi, StringComparison.Ordinal);
         Assert.Contains("PathSegmentHasReparsePoint", winApi, StringComparison.Ordinal);
-        Assert.Contains("if (!isHashTargetAllowed(exception))", winApi, StringComparison.Ordinal);
+        Assert.Contains("if (!TryLongPathFix(_filePath, &fixedPath, pFileExc))", winApi, StringComparison.Ordinal);
+        Assert.Contains("if (TryRejectReparsePointPath(fixedPath, pFileExc))", winApi, StringComparison.Ordinal);
         Assert.Contains("FILE_FLAG_OPEN_REPARSE_POINT", winApi, StringComparison.Ordinal);
         Assert.Contains("GetFileInformationByHandleEx(", winApi, StringComparison.Ordinal);
         Assert.Contains("GetFinalPathNameByHandle(", winApi, StringComparison.Ordinal);
+        Assert.Contains("kWindowsMaxExtendedPath = 32767", winApi, StringComparison.Ordinal);
+        Assert.Contains("ERROR_FILENAME_EXCED_RANGE", winApi, StringComparison.Ordinal);
 
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winUwp, StringComparison.Ordinal);
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winUwp, StringComparison.Ordinal);
@@ -145,10 +148,10 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("void MD5Init (MD5_CTX *mdContext, uint32_t pseudoRandomNumber)", md5, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned char workspace[64];", sha1, StringComparison.Ordinal);
         Assert.Contains("unsigned char workspace[64];", sha1, StringComparison.Ordinal);
-        Assert.Contains("size_t bytesRead = 0;", sha1, StringComparison.Ordinal);
-        Assert.Contains("bytesRead = fread(uData, 1, MAX_FILE_READ_BUFFER, fIn);", sha1, StringComparison.Ordinal);
-        Assert.Contains("Update(uData, static_cast<unsigned int>(bytesRead));", sha1, StringComparison.Ordinal);
-        Assert.Contains("if(ferror(fIn) != 0)", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashFile(", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("fopen(", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("fread(", sha1, StringComparison.Ordinal);
+        Assert.DoesNotContain("ferror(", sha1, StringComparison.Ordinal);
         Assert.DoesNotContain("uint32_t ulFileSize", sha1, StringComparison.Ordinal);
         Assert.DoesNotContain("ftell(fIn)", sha1, StringComparison.Ordinal);
         Assert.DoesNotContain("fseek(fIn, 0, SEEK_END)", sha1, StringComparison.Ordinal);
@@ -168,6 +171,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("PostThreadInfoMessage(WP_PROG_WHOLE, value);", uiBridge, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("std::async(std::launch::async, runSingleRequest)", nativeRuntimeTests, StringComparison.Ordinal);
     }
 
