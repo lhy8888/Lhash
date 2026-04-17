@@ -47,6 +47,11 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("&Settings");
 	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("Clear Results");
 	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithm Selection");
+	m_stringsMap[_T("MAINDLG_SETTINGS_HINT")] = _T("Select one or more algorithms, then click OK.");
+	m_stringsMap[_T("MAINDLG_SETTINGS_SELECT_ALL")] = _T("Select All");
+	m_stringsMap[_T("MAINDLG_SETTINGS_DEFAULTS")] = _T("Defaults");
+	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR_ALL")] = _T("Clear");
+	m_stringsMap[_T("MAINDLG_SETTINGS_MORE")] = _T("More...");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("Select a folder to hash");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("No regular files were found in the selected folder.");
 	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED")] = _T("The selected file set exceeds the per-session limit of %Iu files. Please split it into smaller batches.");
