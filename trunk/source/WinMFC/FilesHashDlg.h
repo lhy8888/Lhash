@@ -100,6 +100,7 @@ protected:
 	ThreadData m_thrdData;
 	BOOL m_bLimited;
 
+	void RefreshAlgorithmButtonText();
 	void ShowSettingsMenu();
 	void ShowAlgorithmSelectionDialog();
 	void HandleSettingsCommand(UINT commandId);
