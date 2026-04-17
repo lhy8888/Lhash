@@ -36,21 +36,10 @@ protected:
 		SetDlgItemText(IDC_SETTINGS_MORE,GetStringByKey(MAINDLG_SETTINGS_MORE));
 		SetDlgItemText(IDOK,GetStringByKey(BUTTON_OK));
 		SetDlgItemText(IDCANCEL,GetStringByKey(BUTTON_CANCEL));
-		VisitRegisteredHashAlgorithms([&](int index,const HashAlgorithmDescriptor& d){
-			UNREFERENCED_PARAMETER(index);
-			HashAlgorithmId id=GetHashAlgorithmDescriptorId(d);
-			int item=m_algorithmList.AddString(GetHashAlgorithmDescriptorDisplayLabel(d).c_str());
-			if(item==LB_ERR||item==LB_ERRSPACE)return false;
-			m_algorithmIds.push_back(id);
-			m_defaultEnabled.push_back(IsHashAlgorithmDescriptorEnabledByDefault(d)?TRUE:FALSE);
-			m_algorithmList.SetCheck(item,m_selectionController.IsAlgorithmEnabled(id)?1:0);
-			return true;});
+		VisitRegisteredHashAlgorithms([&](int index,const HashAlgorithmDescriptor& d){UNREFERENCED_PARAMETER(index);HashAlgorithmId id=GetHashAlgorithmDescriptorId(d);int item=m_algorithmList.AddString(GetHashAlgorithmDescriptorDisplayLabel(d).c_str());if(item==LB_ERR||item==LB_ERRSPACE)return false;m_algorithmIds.push_back(id);m_defaultEnabled.push_back(IsHashAlgorithmDescriptorEnabledByDefault(d)?TRUE:FALSE);m_algorithmList.SetCheck(item,m_selectionController.IsAlgorithmEnabled(id)?1:0);return true;});
 		PositionNearAnchor();
 		return TRUE;}
-	virtual void OnOK(){
-		int count=min(m_algorithmList.GetCount(),(int)m_algorithmIds.size());
-		for(int i=0;i<count;++i)m_selectionController.SetAlgorithmEnabled(m_algorithmIds[(size_t)i],m_algorithmList.GetCheck(i)?TRUE:FALSE);
-		CDialog::OnOK();}
+	virtual void OnOK(){int count=min(m_algorithmList.GetCount(),(int)m_algorithmIds.size());for(int i=0;i<count;++i)m_selectionController.SetAlgorithmEnabled(m_algorithmIds[(size_t)i],m_algorithmList.GetCheck(i)?TRUE:FALSE);CDialog::OnOK();}
 	afx_msg void OnBnClickedSelectAll(){ApplyCheckState(TRUE);} 
 	afx_msg void OnBnClickedDefaults(){int count=min(m_algorithmList.GetCount(),(int)m_defaultEnabled.size());for(int i=0;i<count;++i)m_algorithmList.SetCheck(i,m_defaultEnabled[(size_t)i]?1:0);} 
 	afx_msg void OnBnClickedClearAll(){ApplyCheckState(FALSE);} 
@@ -64,14 +53,7 @@ private:
 	std::vector<BOOL> m_defaultEnabled;
 	bool m_openMoreMenu=false;
 	void ApplyCheckState(BOOL checked){for(int i=0;i<m_algorithmList.GetCount();++i)m_algorithmList.SetCheck(i,checked?1:0);} 
-	void PositionNearAnchor(){
-		CRect w;GetWindowRect(&w);RECT wa={0};::SystemParametersInfo(SPI_GETWORKAREA,0,&wa,0);
-		int x=m_anchorRect.left,y=m_anchorRect.bottom+2;
-		if(x+w.Width()>wa.right)x=wa.right-w.Width();
-		if(x<wa.left)x=wa.left;
-		if(y+w.Height()>wa.bottom)y=m_anchorRect.top-w.Height()-2;
-		if(y<wa.top)y=wa.top;
-		SetWindowPos(NULL,x,y,0,0,SWP_NOZORDER|SWP_NOSIZE|SWP_NOACTIVATE);}
+	void PositionNearAnchor(){CRect w;GetWindowRect(&w);RECT wa={0};::SystemParametersInfo(SPI_GETWORKAREA,0,&wa,0);int x=m_anchorRect.left,y=m_anchorRect.bottom+2;if(x+w.Width()>wa.right)x=wa.right-w.Width();if(x<wa.left)x=wa.left;if(y+w.Height()>wa.bottom)y=m_anchorRect.top-w.Height()-2;if(y<wa.top)y=wa.top;SetWindowPos(NULL,x,y,0,0,SWP_NOZORDER|SWP_NOSIZE|SWP_NOACTIVATE);} 
 };
 BEGIN_MESSAGE_MAP(CAlgorithmSelectionDialog,CDialog)
 	ON_BN_CLICKED(IDC_SETTINGS_SELECT_ALL,&CAlgorithmSelectionDialog::OnBnClickedSelectAll)
@@ -111,14 +93,8 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg,CDialog)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_COPYHASH,&CFilesHashDlg::OnUpdateHypereditmenuCopyhash)
 	ON_WM_COPYDATA()
 END_MESSAGE_MAP()
-BOOL CFilesHashDlg::OnInitDialog(){
-	CDialog::OnInitDialog();SetIcon(m_hIcon,TRUE);SetIcon(m_hIcon,FALSE);m_bLimited=WindowsUtils::IsLimitedProc();
-	m_hashInitializationController.InitializeDialog(&m_thrdData,&m_mainMtx,this,&m_progWhole,&m_editMain,&m_btnOpen,&m_btnExit,&m_btnClr,&m_btnFind,&m_chkUppercase,&m_btnContext,&m_uiBridgeMFC,&m_hashAlgorithmSelectionController,&m_hashCommandController,&m_hashMessageController,&m_hashInputController,&m_hashSearchController,&m_hashSessionController,&m_hashLifecycleController,&m_hashContextMenuController,&m_hashProgressController,&m_hashResultViewController,m_bLimited,theApp.m_lpCmdLine,GetStringByKey(MAINDLG_CLEAR),GetStringByKey(MAINDLG_UPPER_HASH),GetStringByKey(MAINDLG_TIME_TITLE),GetStringByKey(MAINDLG_OPEN),GetStringByKey(MAINDLG_VERIFY),GetStringByKey(MAINDLG_EXIT),GetStringByKey(MAINDLG_ABOUT),GetStringByKey(MAINDLG_ADD_CONTEXT_MENU),GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU),GetStringByKey(MAINDLG_STOP),GetStringByKey(MAINDLG_INITINFO));
-	m_hashSessionController.AttachSupplementalControls(&m_btnOpenFolder,&m_btnSettings);
-	m_hashProgressController.AttachTaskControls(&m_taskList,&m_statusOverview);
-	m_hashProgressController.InitializeTaskList(GetStringByKey(MAINDLG_TASK_FILE),GetStringByKey(MAINDLG_TASK_ALGORITHM),GetStringByKey(MAINDLG_TASK_STATUS),GetStringByKey(MAINDLG_TASK_PROGRESS));
-	m_hashProgressController.ResetTaskSession();
-	m_btnOpenFolder.SetWindowText(GetStringByKey(MAINDLG_OPEN_FOLDER));m_btnCopy.SetWindowText(GetStringByKey(MAINDLG_COPY));m_btnExport.SetWindowText(GetStringByKey(MAINDLG_EXPORT));m_btnSettings.SetWindowText(GetStringByKey(MAINDLG_SETTINGS));m_btnFind.ShowWindow(SW_SHOW);m_btnFind.EnableWindow(TRUE);m_btnClr.ShowWindow(SW_HIDE);m_btnExit.ShowWindow(SW_HIDE);m_btnContext.ShowWindow(SW_HIDE);m_chkUppercase.ShowWindow(SW_HIDE);return TRUE;}
+BOOL CFilesHashDlg::OnInitDialog(){CDialog::OnInitDialog();SetIcon(m_hIcon,TRUE);SetIcon(m_hIcon,FALSE);m_bLimited=WindowsUtils::IsLimitedProc();m_hashInitializationController.InitializeDialog(&m_thrdData,&m_mainMtx,this,&m_progWhole,&m_editMain,&m_btnOpen,&m_btnExit,&m_btnClr,&m_btnFind,&m_chkUppercase,&m_btnContext,&m_uiBridgeMFC,&m_hashAlgorithmSelectionController,&m_hashCommandController,&m_hashMessageController,&m_hashInputController,&m_hashSearchController,&m_hashSessionController,&m_hashLifecycleController,&m_hashContextMenuController,&m_hashProgressController,&m_hashResultViewController,m_bLimited,theApp.m_lpCmdLine,GetStringByKey(MAINDLG_CLEAR),GetStringByKey(MAINDLG_UPPER_HASH),GetStringByKey(MAINDLG_TIME_TITLE),GetStringByKey(MAINDLG_OPEN),GetStringByKey(MAINDLG_VERIFY),GetStringByKey(MAINDLG_EXIT),GetStringByKey(MAINDLG_ABOUT),GetStringByKey(MAINDLG_ADD_CONTEXT_MENU),GetStringByKey(MAINDLG_REMOVE_CONTEXT_MENU),GetStringByKey(MAINDLG_STOP),GetStringByKey(MAINDLG_INITINFO));m_hashSessionController.AttachSupplementalControls(&m_btnOpenFolder,&m_btnSettings);m_hashProgressController.AttachTaskControls(&m_taskList,&m_statusOverview);m_hashProgressController.InitializeTaskList(GetStringByKey(MAINDLG_TASK_FILE),GetStringByKey(MAINDLG_TASK_ALGORITHM),GetStringByKey(MAINDLG_TASK_STATUS),GetStringByKey(MAINDLG_TASK_PROGRESS));m_hashProgressController.ResetTaskSession();m_btnOpenFolder.SetWindowText(GetStringByKey(MAINDLG_OPEN_FOLDER));m_btnCopy.SetWindowText(GetStringByKey(MAINDLG_COPY));m_btnExport.SetWindowText(GetStringByKey(MAINDLG_EXPORT));RefreshAlgorithmButtonText();m_btnFind.ShowWindow(SW_SHOW);m_btnFind.EnableWindow(TRUE);m_btnClr.ShowWindow(SW_HIDE);m_btnExit.ShowWindow(SW_HIDE);m_btnContext.ShowWindow(SW_HIDE);m_chkUppercase.ShowWindow(SW_HIDE);return TRUE;}
+void CFilesHashDlg::RefreshAlgorithmButtonText(){int enabledCount=0;VisitRegisteredHashAlgorithms([&](int index,const HashAlgorithmDescriptor& d){UNREFERENCED_PARAMETER(index);if(m_hashAlgorithmSelectionController.IsAlgorithmEnabled(GetHashAlgorithmDescriptorId(d)))++enabledCount;return true;});CString text;CString base=GetStringByKey(MAINDLG_ALGORITHMS_BUTTON);text.Format(_T("%s (%d)"),(LPCTSTR)base,enabledCount);m_btnSettings.SetWindowText(text);} 
 void CFilesHashDlg::OnPaint(){if(m_hashMessageController.HandlePaint(m_hIcon))return;CDialog::OnPaint();}
 HCURSOR CFilesHashDlg::OnQueryDragIcon(){return m_hashMessageController.GetDragCursor(m_hIcon);} 
 void CFilesHashDlg::OnDropFiles(HDROP hDropInfo){m_hashMessageController.HandleDropFiles(hDropInfo,GetStringByKey(MAINDLG_CLEAR),GetStringByKey(SECOND_STRING),GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM),GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED),GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT),GetStringByKey(MAINDLG_FILES_LIMIT_TRUNCATED),GetStringByKey(MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED),GetStringByKey(MAINDLG_FILES_LOAD_ERROR));}
@@ -144,5 +120,5 @@ void CFilesHashDlg::OnInitMenuPopup(CMenu *pPopupMenu,UINT nIndex,BOOL bSysMenu)
 void CFilesHashDlg::OnHypereditmenuCopyhash(){m_hashMessageController.HandleCopyHash();}
 void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI){m_hashMessageController.UpdateCopyHashMenuText(pCmdUI,GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));}
 void CFilesHashDlg::ShowSettingsMenu(){CMenu menuSettings;menuSettings.CreatePopupMenu();menuSettings.AppendMenu(MF_STRING,SETTINGS_COMMAND_CLEAR,GetStringByKey(MAINDLG_SETTINGS_CLEAR));menuSettings.AppendMenu(MF_SEPARATOR);menuSettings.AppendMenu((m_chkUppercase.GetCheck()?MF_CHECKED:MF_UNCHECKED)|MF_STRING,SETTINGS_COMMAND_UPPERCASE,GetStringByKey(MAINDLG_UPPER_HASH));CString contextText;m_btnContext.GetWindowText(contextText);if(!contextText.IsEmpty()){menuSettings.AppendMenu(MF_SEPARATOR);menuSettings.AppendMenu(MF_STRING,SETTINGS_COMMAND_CONTEXT,contextText);}menuSettings.AppendMenu(MF_SEPARATOR);menuSettings.AppendMenu(MF_STRING,SETTINGS_COMMAND_ABOUT,GetStringByKey(MAINDLG_ABOUT));CRect buttonRect;m_btnSettings.GetWindowRect(&buttonRect);UINT commandId=menuSettings.TrackPopupMenu(TPM_RETURNCMD|TPM_LEFTALIGN|TPM_TOPALIGN,buttonRect.left,buttonRect.bottom+2,this);HandleSettingsCommand(commandId);} 
-void CFilesHashDlg::ShowAlgorithmSelectionDialog(){CRect buttonRect;m_btnSettings.GetWindowRect(&buttonRect);CAlgorithmSelectionDialog dlg(m_hashAlgorithmSelectionController,buttonRect,this);dlg.DoModal();if(dlg.ShouldOpenMoreMenu())ShowSettingsMenu();}
+void CFilesHashDlg::ShowAlgorithmSelectionDialog(){CRect buttonRect;m_btnSettings.GetWindowRect(&buttonRect);CAlgorithmSelectionDialog dlg(m_hashAlgorithmSelectionController,buttonRect,this);dlg.DoModal();RefreshAlgorithmButtonText();if(dlg.ShouldOpenMoreMenu())ShowSettingsMenu();}
 void CFilesHashDlg::HandleSettingsCommand(UINT commandId){if(commandId==0)return;if(commandId==SETTINGS_COMMAND_CLEAR){OnBnClickedClean();return;}if(commandId==SETTINGS_COMMAND_UPPERCASE){OnBnClickedUpperHash();return;}if(commandId==SETTINGS_COMMAND_CONTEXT){OnBnClickedContext();return;}if(commandId==SETTINGS_COMMAND_ABOUT){OnBnClickedAbout();return;}}
