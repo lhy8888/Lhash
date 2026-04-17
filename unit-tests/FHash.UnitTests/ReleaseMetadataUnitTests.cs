@@ -3,19 +3,19 @@ namespace FHash.UnitTests;
 public sealed class ReleaseMetadataUnitTests
 {
     [Fact]
-    public void LegacyVersion_IsUpdatedTo_1_12_1_0_AndAboutDialogDisplays_1_12_1()
+    public void LegacyVersion_IsUpdatedTo_1_12_2_0_AndAboutDialogDisplays_1_12_2()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,1,0", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.1.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,2,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.2.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (fHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_1_0()
+    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_2_0()
     {
         string[] files =
         {
@@ -27,7 +27,7 @@ public sealed class ReleaseMetadataUnitTests
         foreach (string relativePath in files)
         {
             string content = RepositoryTestContext.ReadTextFile(relativePath);
-            Assert.Contains("1.12.1.0", content, StringComparison.Ordinal);
+            Assert.Contains("1.12.2.0", content, StringComparison.Ordinal);
         }
     }
 

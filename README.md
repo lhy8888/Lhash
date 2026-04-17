@@ -21,7 +21,7 @@ The maintained release line turns LHash from a traditional hash utility into a *
 
 ## Current release line
 
-- Current release: [`v1.12.1`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.1)
+- Current release: [`v1.12.2`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.2)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Main branch: `future-winui-was2`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
