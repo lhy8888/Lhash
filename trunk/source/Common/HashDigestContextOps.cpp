@@ -22,6 +22,17 @@ namespace HashEngineInternal
 
 	bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)
 	{
+		HashAlgorithmDescriptor algorithmDescriptor = {};
+		if (!TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor))
+		{
+			return false;
+		}
+
+		if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))
+		{
+			return true;
+		}
+
 		HashDigestOperationDescriptor operationDescriptor = {};
 		if (!TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor))
 		{

@@ -4846,6 +4846,8 @@ internal static class Program
                     "bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)"
                 ],
                 "Phase 69 HashDigestContextOps.cpp does not yet own digest-context finalization.");
+            AssertContains(hashDigestContextOps, "TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor)", "Phase 69 HashDigestContextOps.cpp does not yet resolve descriptor metadata before finalization.");
+            AssertContains(hashDigestContextOps, "!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor)", "Phase 69 HashDigestContextOps.cpp does not yet skip descriptor-only algorithms during finalization.");
             AssertContains(hashDigestOperationRegistryHeader, "struct HashDigestOperationDescriptor", "Phase 69 HashDigestOperationRegistry.h does not yet expose digest operation descriptors.");
             AssertContainsAny(hashDigestOperationRegistryHeader,
                 [

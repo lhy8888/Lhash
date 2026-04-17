@@ -137,6 +137,16 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void DigestContextFinalization_SkipsDescriptorOnlyAlgorithms()
+    {
+        string hashDigestContextOps = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestContextOps.cpp");
+
+        Assert.Contains("TryGetHashAlgorithmDescriptorById(algorithmId, &algorithmDescriptor)", hashDigestContextOps, StringComparison.Ordinal);
+        Assert.Contains("!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor)", hashDigestContextOps, StringComparison.Ordinal);
+        Assert.Contains("return true;", hashDigestContextOps, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ArchivedSha256Source_DropsDuplicateExtractAndStringMacros()
     {
         string sha256Source = RepositoryTestContext.ReadUtf8File(@"archive\legacy-algorithms\trunk\source\Algorithms\sha256.cpp");
