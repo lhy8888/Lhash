@@ -13,7 +13,7 @@ namespace HashEngineInternal
 	static void YieldHashThread()
 	{
 #if defined (_WIN32)
-		Sleep(3);
+		SwitchToThread();
 #else
 		sched_yield();
 #endif

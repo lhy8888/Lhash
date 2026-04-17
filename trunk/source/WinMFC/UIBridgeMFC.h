@@ -69,6 +69,10 @@ public:
 
 	virtual void handleFileCalculatedEvent();
 	virtual void handleFileFinishedEvent();
+	void MarkMainTextRefreshHandled()
+	{
+		InterlockedExchange(&m_refreshPending, 0);
+	}
 
 	static void AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit);
 	static void AppendTextLineToHyperEdit(const sunjwbase::tstring& text,
@@ -144,9 +148,12 @@ private:
 		::PostMessage(m_hWnd, WM_THREAD_INFO, wParam, lParam);
 	}
 
-	void RefreshMainHyperEdit()
+	void RequestRefreshMainText()
 	{
-		PostThreadInfoMessage(WP_REFRESH_TEXT);
+		if (InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0)
+		{
+			PostThreadInfoMessage(WP_REFRESH_TEXT);
+		}
 	}
 
 	void PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
@@ -165,7 +172,7 @@ private:
 
 		if (refreshAfterUpdate)
 		{
-			RefreshMainHyperEdit();
+			RequestRefreshMainText();
 		}
 	}
 
@@ -203,6 +210,7 @@ private:
 	ProgressDispatchState m_fileProgressDispatchState;
 	ProgressDispatchState m_totalProgressDispatchState;
 	sunjwbase::tstring m_currentTaskPath;
+	LONG m_refreshPending;
 };
 
 #endif

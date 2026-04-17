@@ -45,7 +45,7 @@ private:
 	static sunjwbase::tstring BuildDisplayName(const sunjwbase::tstring& fullPath);
 	static CString BuildProgressText(int progress);
 	int FindTaskRowIndex(const sunjwbase::tstring& fullPath) const;
-	void RefreshTaskRow(int rowIndex);
+	void RefreshTaskRow(int rowIndex, bool ensureVisible = false);
 	void RefreshAllTaskRows();
 	void UpdateSummaryText();
 	void CloseTaskbarList();

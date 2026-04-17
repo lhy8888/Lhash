@@ -113,6 +113,7 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 	}
 
 	int rowIndex = FindTaskRowIndex(taskUpdate.path);
+	bool ensureVisible = false;
 	if (rowIndex < 0)
 	{
 		TaskRowState taskRowState;
@@ -124,6 +125,7 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 		taskRowState.progress = taskUpdate.progress;
 		m_taskRows.push_back(taskRowState);
 		rowIndex = static_cast<int>(m_taskRows.size() - 1);
+		ensureVisible = true;
 	}
 	else
 	{
@@ -137,7 +139,12 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 		taskRowState.progress = taskUpdate.progress;
 	}
 
-	RefreshTaskRow(rowIndex);
+	if (taskUpdate.state == FILES_HASH_TASK_COMPLETED || taskUpdate.state == FILES_HASH_TASK_FAILED)
+	{
+		ensureVisible = true;
+	}
+
+	RefreshTaskRow(rowIndex, ensureVisible);
 	UpdateSummaryText();
 }
 
@@ -257,7 +264,7 @@ int FilesHashProgressController::FindTaskRowIndex(const sunjwbase::tstring& full
 	return -1;
 }
 
-void FilesHashProgressController::RefreshTaskRow(int rowIndex)
+void FilesHashProgressController::RefreshTaskRow(int rowIndex, bool ensureVisible /*= false*/)
 {
 	if (m_taskListCtrl == NULL || !::IsWindow(m_taskListCtrl->GetSafeHwnd()) || rowIndex < 0 || rowIndex >= static_cast<int>(m_taskRows.size()))
 	{
@@ -277,7 +284,10 @@ void FilesHashProgressController::RefreshTaskRow(int rowIndex)
 	m_taskListCtrl->SetItemText(rowIndex, 1, taskRowState.algorithms.c_str());
 	m_taskListCtrl->SetItemText(rowIndex, 2, taskRowState.status.c_str());
 	m_taskListCtrl->SetItemText(rowIndex, 3, BuildProgressText(taskRowState.progress));
-	m_taskListCtrl->EnsureVisible(rowIndex, FALSE);
+	if (ensureVisible)
+	{
+		m_taskListCtrl->EnsureVisible(rowIndex, FALSE);
+	}
 }
 
 void FilesHashProgressController::RefreshAllTaskRows()

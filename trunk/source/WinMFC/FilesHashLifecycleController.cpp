@@ -133,6 +133,10 @@ LRESULT FilesHashLifecycleController::HandleThreadMessage(WPARAM wParam, LPARAM 
 		}
 		break;
 	case WP_REFRESH_TEXT:
+		if (m_uiBridgeMFC != NULL && *m_uiBridgeMFC != NULL)
+		{
+			(*m_uiBridgeMFC)->MarkMainTextRefreshHandled();
+		}
 		if (m_hashResultViewController != NULL)
 		{
 			m_hashResultViewController->RefreshMainText();

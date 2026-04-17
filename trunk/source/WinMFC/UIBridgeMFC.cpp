@@ -26,7 +26,7 @@ namespace
 UIBridgeMFC::UIBridgeMFC(HWND hWnd,
 						 OsMutex *mainMtx,
 						 CHyperEditHash *hyperEdit)
-:m_hWnd(hWnd), m_mainMtx(mainMtx), m_mainHyperEdit(hyperEdit)
+:m_hWnd(hWnd), m_mainMtx(mainMtx), m_mainHyperEdit(hyperEdit), m_refreshPending(0)
 {
 }
 

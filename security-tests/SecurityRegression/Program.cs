@@ -504,6 +504,7 @@ internal static partial class Program
             AssertContains(registryCore, "{ \"openssl-shake256-512\", \"SHAKE256-512\", true, false }", "The OpenSSL SHAKE256-512 descriptor variant is missing.");
 
         AssertContains(providerImplementation, "EVP_MD_fetch", "The OpenSSL provider no longer fetches digest implementations through EVP.");
+        AssertContains(providerImplementation, "GetCachedDigestImplementation", "The OpenSSL provider no longer caches fetched digest implementations across file contexts.");
         AssertContains(providerImplementation, "EVP_DigestInit_ex2", "The OpenSSL provider no longer initializes digest contexts through EVP.");
         AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "The OpenSSL provider no longer configures truncated digest output through OSSL params.");
         AssertContains(providerImplementation, "EVP_DigestUpdate", "The OpenSSL provider no longer updates digest contexts through EVP.");
@@ -590,7 +591,9 @@ internal static partial class Program
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashCommandController.cpp"), "tstrtostrutf8(exportText)", "Legacy export no longer converts visible hash output to UTF-8.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp"), "m_mainEdit->GetWindowText(currentText);", "Legacy export no longer falls back to the visible result text.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "taskRowState.state == FILES_HASH_TASK_PENDING ||", "Legacy task list no longer keeps older completed rows stable while updating current rows.");
-            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", "Legacy task list no longer keeps the active row visible inside the compact viewport.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "RefreshTaskRow(rowIndex, ensureVisible);", "Legacy task list no longer routes row refresh through the explicit ensure-visible flag.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "if (ensureVisible)", "Legacy task list no longer gates row auto-scrolling behind an explicit ensure-visible check.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", "Legacy task list no longer performs the final ensure-visible scroll when explicitly requested.");
         }, failures);
         Run("Native compiler and linker mitigations are imported consistently", () =>
         {

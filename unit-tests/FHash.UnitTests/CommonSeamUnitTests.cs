@@ -239,6 +239,35 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void HashPerformanceHotPaths_UseLightweightYieldSnapshotRefreshAndCachedDigestDefinitions()
+    {
+        string fileAttemptWorkflow = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
+        string preScanSizeProbe = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
+        string bridgeHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string lifecycleController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
+        string progressController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.cpp");
+        string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+
+        Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
+
+        Assert.Contains("GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("#if defined (_WIN32)", preScanSizeProbe, StringComparison.Ordinal);
+
+        Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", bridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("MarkMainTextRefreshHandled();", lifecycleController, StringComparison.Ordinal);
+
+        Assert.Contains("RefreshTaskRow(rowIndex, ensureVisible);", progressController, StringComparison.Ordinal);
+        Assert.Contains("if (ensureVisible)", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", progressController, StringComparison.Ordinal);
+
+        Assert.Contains("GetCachedDigestImplementation", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("digestImplementationCache.digestImplementations", providerImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_MD_free(digestImplementation);", providerImplementation, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void PosixStringHelpers_AvoidGlobalLocaleAndAsciiBridgeFallbacks()
     {
         string strhelper = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\strhelper.cpp");

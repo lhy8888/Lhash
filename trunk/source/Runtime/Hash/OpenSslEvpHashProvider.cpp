@@ -1,7 +1,9 @@
 #include "stdafx.h"
 
 #include <atomic>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Runtime/Hash/OpenSslEvpHashProvider.h"
@@ -66,6 +68,55 @@ namespace
 
 		return renderedHex;
 	}
+
+#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+	struct OpenSslDigestImplementationCache
+	{
+		std::mutex mutex;
+		std::unordered_map<std::string, EVP_MD*> digestImplementations;
+
+		~OpenSslDigestImplementationCache()
+		{
+			for (std::unordered_map<std::string, EVP_MD*>::iterator itr = digestImplementations.begin();
+				itr != digestImplementations.end();
+				++itr)
+			{
+				EVP_MD_free(itr->second);
+			}
+		}
+	};
+
+	static OpenSslDigestImplementationCache& GetOpenSslDigestImplementationCache()
+	{
+		static OpenSslDigestImplementationCache digestImplementationCache;
+		return digestImplementationCache;
+	}
+
+	static EVP_MD* GetCachedDigestImplementation(const char *algorithmName)
+	{
+		if (algorithmName == NULL || algorithmName[0] == '\0')
+		{
+			return NULL;
+		}
+
+		OpenSslDigestImplementationCache& digestImplementationCache = GetOpenSslDigestImplementationCache();
+		std::lock_guard<std::mutex> lock(digestImplementationCache.mutex);
+		std::unordered_map<std::string, EVP_MD*>::iterator cachedDigest =
+			digestImplementationCache.digestImplementations.find(algorithmName);
+		if (cachedDigest != digestImplementationCache.digestImplementations.end())
+		{
+			return cachedDigest->second;
+		}
+
+		EVP_MD *digestImplementation = EVP_MD_fetch(NULL, algorithmName, NULL);
+		if (digestImplementation != NULL)
+		{
+			digestImplementationCache.digestImplementations[algorithmName] = digestImplementation;
+		}
+
+		return digestImplementation;
+	}
+#endif
 }
 
 namespace HashRuntime
@@ -99,7 +150,7 @@ namespace HashRuntime
 				continue;
 			}
 
-			EVP_MD *digestImplementation = EVP_MD_fetch(NULL, algorithmName, NULL);
+			EVP_MD *digestImplementation = GetCachedDigestImplementation(algorithmName);
 			if (digestImplementation == NULL)
 			{
 				continue;
@@ -108,7 +159,6 @@ namespace HashRuntime
 			EVP_MD_CTX *mdContext = EVP_MD_CTX_new();
 			if (mdContext == NULL)
 			{
-				EVP_MD_free(digestImplementation);
 				continue;
 			}
 
@@ -125,7 +175,6 @@ namespace HashRuntime
 			if (EVP_DigestInit_ex2(mdContext, digestImplementation, resolvedDigestParams) != 1)
 			{
 				EVP_MD_CTX_free(mdContext);
-				EVP_MD_free(digestImplementation);
 				continue;
 			}
 
@@ -223,11 +272,7 @@ namespace HashRuntime
 			hashContext->mdContext = NULL;
 		}
 
-		if (hashContext->mdImplementation != NULL)
-		{
-			EVP_MD_free(hashContext->mdImplementation);
-			hashContext->mdImplementation = NULL;
-		}
+		hashContext->mdImplementation = NULL;
 
 		hashContext->xofMode = false;
 		hashContext->digestOutputBytes = 0;

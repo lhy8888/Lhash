@@ -1167,7 +1167,8 @@ internal static class Program
             AssertContains(engineImpl, "result.path = path;", "HashEngine does not yet route result path writes through the HashResult contract.");
             AssertContains(engineImpl, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine does not yet route modified-date writes through the HashResult contract.");
             AssertContains(engineImpl, "result.meta.size = fsize;", "HashEngine does not yet route size writes through the HashResult contract.");
-            AssertContains(engineImpl, "result.meta.version = tstrFileVersion;", "HashEngine does not yet route version writes through the HashResult contract.");
+            AssertContains(engineImpl, "result.meta.version.clear();", "HashEngine does not yet clear eager file-version metadata from the hot path.");
+            AssertDoesNotContain(engineImpl, "tstrFileVersion = ResolveHashFileVersion(osFile, path);", "HashEngine still resolves file versions synchronously inside the hot metadata path.");
             AssertContains(engineImpl, "result.error = errorText;", "HashEngine does not yet route error writes through the HashResult contract.");
             AssertContains(engineImpl, "*resultPath = result.path.c_str();", "HashEngine does not yet route file-attempt path binding through the HashResult contract.");
         }, failures);
@@ -1273,13 +1274,14 @@ internal static class Program
             AssertContains(bridgeMfcHeader, "template<typename TAppendAction>", "UIBridgeMFC does not yet expose the templated main-hyperedit refresh helper.");
             AssertContains(bridgeMfcHeader, "void PostThreadInfoMessage(WPARAM wParam, LPARAM lParam = 0)", "UIBridgeMFC does not yet expose the centralized thread-info post-message helper.");
             AssertContains(bridgeMfcHeader, "::PostMessage(m_hWnd, WM_THREAD_INFO, wParam, lParam);", "UIBridgeMFC thread-info post-message helper does not yet wrap the shared WM_THREAD_INFO dispatch.");
-            AssertContains(bridgeMfcHeader, "void RefreshMainHyperEdit()", "UIBridgeMFC does not yet expose the dedicated main-hyperedit refresh-message helper.");
+            AssertContains(bridgeMfcHeader, "void RequestRefreshMainText()", "UIBridgeMFC does not yet expose the coalesced main-hyperedit refresh helper.");
             AssertContains(bridgeMfcHeader, "PostThreadInfoMessage(WP_REFRESH_TEXT);", "UIBridgeMFC main-hyperedit refresh-message helper does not yet route refresh notifications through the centralized thread-info seam.");
+            AssertContains(bridgeMfcHeader, "InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", "UIBridgeMFC main-text refresh helper does not yet coalesce duplicate refresh requests.");
             AssertContains(bridgeMfcHeader, "void UpdateMainHyperEdit(TAppendAction appendAction, bool refreshAfterUpdate = false)", "UIBridgeMFC does not yet expose the generalized main-hyperedit update helper.");
             AssertContains(bridgeMfcHeader, "void AppendToMainHyperEditAndRefresh(TAppendAction appendAction)", "UIBridgeMFC does not yet expose the dedicated main-hyperedit refresh helper.");
             AssertContains(bridgeMfcHeader, "appendAction(m_mainHyperEdit);", "UIBridgeMFC main-hyperedit refresh helper does not yet forward the hyper-edit instance through the callback.");
             AssertContains(bridgeMfcHeader, "UpdateMainHyperEdit(appendAction, true);", "UIBridgeMFC main-hyperedit refresh helper does not yet compose through the generalized update helper.");
-            AssertContains(bridgeMfcHeader, "RefreshMainHyperEdit();", "UIBridgeMFC main-hyperedit refresh helper does not yet centralize refresh notifications through the dedicated refresh-message helper.");
+            AssertContains(bridgeMfcHeader, "RequestRefreshMainText();", "UIBridgeMFC main-hyperedit refresh helper does not yet centralize refresh notifications through the dedicated refresh-message helper.");
             AssertContains(bridgeMfcHeader, "struct MainHyperEditSnapshot", "UIBridgeMFC does not yet expose the preparing-state hyperedit snapshot structure.");
             AssertContains(bridgeMfcHeader, "static MainHyperEditSnapshot CaptureHyperEditSnapshot(CHyperEditHash *hyperEdit);", "UIBridgeMFC does not yet expose the hyperedit snapshot capture helper.");
             AssertContains(bridgeMfcHeader, "static void RestoreHyperEditSnapshot(const MainHyperEditSnapshot& snapshot,", "UIBridgeMFC does not yet expose the hyperedit snapshot restore helper.");
@@ -4418,8 +4420,8 @@ internal static class Program
             AssertContains(hashFileVersionResolver, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", "Phase 61 HashFileVersionResolver.cpp does not yet own file-version resolution.");
             AssertContains(hashFileVersionResolver, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve WinUI/UWP file-version probing.");
             AssertContains(hashFileVersionResolver, "return WindowsComm::GetExeFileVersion((TCHAR *)path);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve desktop file-version probing.");
-            AssertContains(hashEngineResult, "tstrFileVersion = ResolveHashFileVersion(osFile, path);", "Phase 61 HashEngineResult.cpp does not yet delegate file-version resolution.");
-            AssertContains(hashEngineResult, "result.meta.version = tstrFileVersion;", "Phase 61 HashEngineResult.cpp does not yet keep result-version projection after delegation.");
+            AssertContains(hashEngineResult, "result.meta.version.clear();", "Phase 61 HashEngineResult.cpp does not yet clear eager version metadata from the hot hashing path.");
+            AssertDoesNotContain(hashEngineResult, "ResolveHashFileVersion(osFile, path);", "Phase 61 HashEngineResult.cpp still performs synchronous file-version probing inside the hot metadata path.");
             AssertDoesNotContain(hashEngineResult, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashEngineResult.cpp should stop carrying WinUI/UWP file-version probing details.");
             AssertDoesNotContain(hashEngineResult, "WindowsComm::GetExeFileVersion((TCHAR *)path);", "Phase 61 HashEngineResult.cpp should stop carrying desktop file-version probing details.");
 
@@ -6167,6 +6169,7 @@ internal static class Program
             AssertContains(digestRegistry, "InitializeOpenSslBlake2s_256DigestContext", "Phase 98 is missing the OpenSSL BLAKE2s-256 digest registration hook.");
             AssertContains(digestRegistry, "InitializeOpenSslShake256_512DigestContext", "Phase 98 is missing the OpenSSL SHAKE256-512 digest registration hook.");
             AssertContains(providerImplementation, "EVP_MD_fetch", "Phase 98 OpenSSL provider no longer uses EVP fetch semantics.");
+            AssertContains(providerImplementation, "GetCachedDigestImplementation", "Phase 98 OpenSSL provider no longer caches EVP digest definitions across file contexts.");
             AssertContains(providerImplementation, "EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1", "Phase 98 OpenSSL provider does not yet treat EVP_DigestUpdate failure as a sticky error.");
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
             AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "Phase 98 OpenSSL provider no longer configures truncated digest output through OSSL params.");

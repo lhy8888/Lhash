@@ -590,7 +590,8 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
         Assert.DoesNotContain("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
         Assert.DoesNotContain("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
-        Assert.Contains("tstrFileVersion = ResolveHashFileVersion(osFile, path);", result, StringComparison.Ordinal);
+        Assert.Contains("result.meta.version.clear();", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResolveHashFileVersion(osFile, path);", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void CompleteSuccessfulFileHashing(", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void CompleteOpenedFileAttempt(", result, StringComparison.Ordinal);
         Assert.DoesNotContain("void EmitHashResult(", result, StringComparison.Ordinal);

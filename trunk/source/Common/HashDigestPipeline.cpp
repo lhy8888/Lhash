@@ -12,7 +12,7 @@ namespace HashEngineInternal
 		unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);
 
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
-			isSizeCaled, fSizes, fileIndex, executionState->fileAttemptState.fileVersion);
+			isSizeCaled, fSizes, fileIndex);
 		uint64_t times = CalculateFileChunkIterations(fsize, preferredBufferLength);
 		(void)times;
 

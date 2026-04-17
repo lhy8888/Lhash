@@ -185,7 +185,7 @@ namespace HashEngineInternal
 	HashResult& BeginFileHashAttempt(HashExecutionContext *executionContext, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);
 
 	uint64_t PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result,
-		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, sunjwbase::tstring& tstrFileVersion);
+		sunjwbase::OsFile& osFile, const TCHAR *path, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex);
 }
 
 #endif

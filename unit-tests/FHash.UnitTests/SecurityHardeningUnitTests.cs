@@ -137,6 +137,7 @@ public sealed class SecurityHardeningUnitTests
         string md5 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\MD5.cpp");
         string sha1 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\SHA1.cpp");
         string strhelper = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\strhelper.cpp");
+        string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string nativeRuntimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -166,9 +167,13 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("struct ProgressDispatchState", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("ShouldPostProgressValue", uiBridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", uiBridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("kUiProgressDispatchIntervalMs = 80", uiBridge, StringComparison.Ordinal);
         Assert.Contains("ShouldPostProgressValue(m_totalProgressDispatchState, value)", uiBridge, StringComparison.Ordinal);
         Assert.Contains("PostThreadInfoMessage(WP_PROG_WHOLE, value);", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", nativeRuntimeTests, StringComparison.Ordinal);
@@ -325,6 +330,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("SetDigestStorageValueById(", digestRegistry, StringComparison.Ordinal);
 
         Assert.Contains("EVP_MD_fetch", providerImplementation, StringComparison.Ordinal);
+        Assert.Contains("GetCachedDigestImplementation", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestInit_ex2", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("OSSL_DIGEST_PARAM_SIZE", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("OSSL_PARAM_construct_size_t", providerImplementation, StringComparison.Ordinal);
