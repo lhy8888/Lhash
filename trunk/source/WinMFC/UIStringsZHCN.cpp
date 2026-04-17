@@ -47,6 +47,11 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("设置(&S)");
 	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("清空结果");
 	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("算法选择");
+	m_stringsMap[_T("MAINDLG_SETTINGS_HINT")] = _T("选择一个或多个算法，然后点击确定。");
+	m_stringsMap[_T("MAINDLG_SETTINGS_SELECT_ALL")] = _T("全选");
+	m_stringsMap[_T("MAINDLG_SETTINGS_DEFAULTS")] = _T("默认");
+	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR_ALL")] = _T("清空");
+	m_stringsMap[_T("MAINDLG_SETTINGS_MORE")] = _T("更多...");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("选择需要计算的文件夹");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("所选文件夹中没有可计算的普通文件。");
 	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED")] = _T("所选文件数量超过单次处理上限（%Iu 个），请分批处理。");
