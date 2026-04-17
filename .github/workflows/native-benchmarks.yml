@@ -28,8 +28,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Add MSBuild to PATH
+        shell: powershell
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (-not (Test-Path $vswhere)) {
+            throw 'Unable to locate vswhere.exe on the runner.'
+          }
+
+          $msbuildPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($msbuildPath)) {
+            throw 'Unable to locate MSBuild.exe on the runner.'
+          }
+
+          Split-Path -Parent $msbuildPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Capture benchmark machine info
         shell: powershell

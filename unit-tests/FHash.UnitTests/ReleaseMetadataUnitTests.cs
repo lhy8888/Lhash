@@ -200,7 +200,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("LHash-winui-preview-x64", previewWorkflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/cache@v5", workflow, StringComparison.Ordinal);
         Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
