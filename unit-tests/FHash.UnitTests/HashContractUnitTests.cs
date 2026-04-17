@@ -723,6 +723,12 @@ public sealed class HashContractUnitTests
         Assert.Contains("if (cchver == 0)", windowsComm, StringComparison.Ordinal);
         Assert.Contains("std::vector<BYTE> pver(cchver, 0);", windowsComm, StringComparison.Ordinal);
         Assert.Contains("uLen < sizeof(VS_FIXEDFILEINFO)", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("bool IsWindowsVistaOrGreater()", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("TryGetRealWindowsVersion(&osvi)", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetWindowsVersion(OSVERSIONINFOEX& osvi, BOOL& bOsVersionInfoEx)", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetVersionEx(", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductOptions", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("Q246009", windowsComm, StringComparison.Ordinal);
         Assert.DoesNotContain("BYTE *pver = new BYTE[cchver];", windowsComm, StringComparison.Ordinal);
 
         Assert.Contains("enum class FileLoadResult", inputHeader, StringComparison.Ordinal);

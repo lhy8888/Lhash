@@ -11,7 +11,7 @@ namespace WindowsComm
 {
 	sunjwbase::tstring GetExeFileVersion(TCHAR* path);
 
-	BOOL GetWindowsVersion(OSVERSIONINFOEX& osvi, BOOL& bOsVersionInfoEx);
+	bool IsWindowsVistaOrGreater();
 	sunjwbase::tstring GetWindowsInfo();
 }
 

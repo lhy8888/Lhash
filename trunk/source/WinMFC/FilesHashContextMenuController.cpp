@@ -91,10 +91,7 @@ BOOL FilesHashContextMenuController::HandleButtonClick(BOOL limited,
 
 BOOL FilesHashContextMenuController::TryElevateLimitedProcess() const
 {
-	OSVERSIONINFOEX osvi;
-	BOOL bOsVersionInfoEx;
-	if (WindowsComm::GetWindowsVersion(osvi, bOsVersionInfoEx) &&
-		osvi.dwMajorVersion >= 6)
+	if (WindowsComm::IsWindowsVistaOrGreater())
 	{
 		if (WindowsUtils::ElevateProcess())
 		{

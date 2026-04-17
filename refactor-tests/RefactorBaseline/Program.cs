@@ -2915,7 +2915,7 @@ internal static class Program
             AssertContains(contextController, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash", "Phase 22 context controller does not yet keep the pre-add cleanup path.");
             AssertContains(contextController, "WindowsUtils::AddContextMenu()", "Phase 22 context controller does not yet own context-menu creation.");
             AssertContains(contextController, "WindowsUtils::RemoveContextMenu()", "Phase 22 context controller does not yet own context-menu removal.");
-            AssertContains(contextController, "WindowsComm::GetWindowsVersion(osvi, bOsVersionInfoEx)", "Phase 22 context controller does not yet gate elevation by Windows version.");
+            AssertContains(contextController, "WindowsComm::IsWindowsVistaOrGreater()", "Phase 22 context controller does not yet gate elevation through the modern Windows-version helper.");
 
             AssertContains(dlgHeader, "#include \"FilesHashContextMenuController.h\"", "FilesHashDlg.h does not yet consume the phase 22 context controller.");
             AssertContains(dlgHeader, "FilesHashContextMenuController m_hashContextMenuController;", "FilesHashDlg.h does not yet keep the phase 22 context controller.");

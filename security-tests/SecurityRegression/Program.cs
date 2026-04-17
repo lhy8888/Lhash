@@ -646,8 +646,7 @@ internal static partial class Program
             string controller = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashContextMenuController.cpp");
 
             AssertContains(dialog, "m_hashContextMenuController.HandleButtonClick(", "WinMFC dialog no longer routes context-menu clicks through the dedicated controller.");
-            AssertContains(controller, "WindowsComm::GetWindowsVersion(osvi, bOsVersionInfoEx)", "WinMFC context-menu controller no longer gates elevation by Windows version.");
-            AssertContains(controller, "osvi.dwMajorVersion >= 6", "WinMFC context-menu controller no longer restricts elevation to Vista-or-newer Windows versions.");
+            AssertContains(controller, "WindowsComm::IsWindowsVistaOrGreater()", "WinMFC context-menu controller no longer gates elevation by the modern Windows-version helper.");
             AssertContains(controller, "WindowsUtils::ElevateProcess()", "WinMFC context-menu controller no longer uses the hardened elevation helper.");
             AssertContains(controller, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash", "WinMFC context-menu controller no longer performs the defensive pre-add cleanup.");
             AssertContains(controller, "WindowsUtils::AddContextMenu()", "WinMFC context-menu controller no longer uses the shared context-menu add helper.");
