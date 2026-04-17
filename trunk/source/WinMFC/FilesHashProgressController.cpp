@@ -112,8 +112,64 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 		return;
 	}
 
-	int rowIndex = FindTaskRowIndex(taskUpdate.path);
 	bool ensureVisible = false;
+	int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
+	RefreshTaskRow(rowIndex, ensureVisible);
+	UpdateSummaryText();
+}
+
+void FilesHashProgressController::ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates)
+{
+	if (taskUpdates.empty())
+	{
+		return;
+	}
+
+	bool canBatchRedraw = m_taskListCtrl != NULL && ::IsWindow(m_taskListCtrl->GetSafeHwnd());
+	if (canBatchRedraw)
+	{
+		m_taskListCtrl->SetRedraw(FALSE);
+	}
+
+	int ensureVisibleRowIndex = -1;
+	for (size_t updateIndex = 0; updateIndex < taskUpdates.size(); ++updateIndex)
+	{
+		const FilesHashTaskUpdate& taskUpdate = taskUpdates[updateIndex];
+		if (taskUpdate.path.empty())
+		{
+			continue;
+		}
+
+		bool ensureVisible = false;
+		int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
+		RefreshTaskRow(rowIndex, false);
+		if (ensureVisible)
+		{
+			ensureVisibleRowIndex = rowIndex;
+		}
+	}
+
+	if (canBatchRedraw)
+	{
+		m_taskListCtrl->SetRedraw(TRUE);
+		if (ensureVisibleRowIndex >= 0)
+		{
+			m_taskListCtrl->EnsureVisible(ensureVisibleRowIndex, FALSE);
+		}
+		m_taskListCtrl->Invalidate(FALSE);
+	}
+
+	UpdateSummaryText();
+}
+
+int FilesHashProgressController::ApplyTaskUpdateToState(const FilesHashTaskUpdate& taskUpdate, bool *ensureVisible)
+{
+	if (ensureVisible != NULL)
+	{
+		*ensureVisible = false;
+	}
+
+	int rowIndex = FindTaskRowIndex(taskUpdate.path);
 	if (rowIndex < 0)
 	{
 		TaskRowState taskRowState;
@@ -125,7 +181,10 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 		taskRowState.progress = taskUpdate.progress;
 		m_taskRows.push_back(taskRowState);
 		rowIndex = static_cast<int>(m_taskRows.size() - 1);
-		ensureVisible = true;
+		if (ensureVisible != NULL)
+		{
+			*ensureVisible = true;
+		}
 	}
 	else
 	{
@@ -141,11 +200,13 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 
 	if (taskUpdate.state == FILES_HASH_TASK_COMPLETED || taskUpdate.state == FILES_HASH_TASK_FAILED)
 	{
-		ensureVisible = true;
+		if (ensureVisible != NULL)
+		{
+			*ensureVisible = true;
+		}
 	}
 
-	RefreshTaskRow(rowIndex, ensureVisible);
-	UpdateSummaryText();
+	return rowIndex;
 }
 
 void FilesHashProgressController::PrepareAdvTaskbar()

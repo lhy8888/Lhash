@@ -3,6 +3,9 @@
 
 #include "Adapters/UiBridge/HashEngineBridge.h"
 
+#include <map>
+#include <mutex>
+#include <vector>
 #include <Windows.h>
 
 #include "Common/strhelper.h"
@@ -73,6 +76,11 @@ public:
 	{
 		InterlockedExchange(&m_refreshPending, 0);
 	}
+	void MarkTaskUpdatesHandled()
+	{
+		InterlockedExchange(&m_taskUpdatePending, 0);
+	}
+	void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);
 
 	static void AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit);
 	static void AppendTextLineToHyperEdit(const sunjwbase::tstring& text,
@@ -155,6 +163,13 @@ private:
 			PostThreadInfoMessage(WP_REFRESH_TEXT);
 		}
 	}
+	void RequestTaskUpdateFlush()
+	{
+		if (InterlockedCompareExchange(&m_taskUpdatePending, 1, 0) == 0)
+		{
+			PostThreadInfoMessage(WP_TASK_UPDATE);
+		}
+	}
 
 	void PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
 	static sunjwbase::tstring BuildAlgorithmSummary(const HashResult& result);
@@ -211,6 +226,10 @@ private:
 	ProgressDispatchState m_totalProgressDispatchState;
 	sunjwbase::tstring m_currentTaskPath;
 	LONG m_refreshPending;
+	LONG m_taskUpdatePending;
+	std::mutex m_taskUpdateMutex;
+	std::vector<FilesHashTaskUpdate> m_pendingTaskUpdates;
+	std::map<sunjwbase::tstring, size_t> m_pendingTaskUpdateIndices;
 };
 
 #endif

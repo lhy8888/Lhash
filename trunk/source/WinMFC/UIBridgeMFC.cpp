@@ -26,7 +26,7 @@ namespace
 UIBridgeMFC::UIBridgeMFC(HWND hWnd,
 						 OsMutex *mainMtx,
 						 CHyperEditHash *hyperEdit)
-:m_hWnd(hWnd), m_mainMtx(mainMtx), m_mainHyperEdit(hyperEdit), m_refreshPending(0)
+:m_hWnd(hWnd), m_mainMtx(mainMtx), m_mainHyperEdit(hyperEdit), m_refreshPending(0), m_taskUpdatePending(0)
 {
 }
 
@@ -204,8 +204,41 @@ void UIBridgeMFC::handleFileFinishedEvent()
 
 void UIBridgeMFC::PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate)
 {
-	FilesHashTaskUpdate* taskUpdateCopy = new FilesHashTaskUpdate(taskUpdate);
-	PostThreadInfoMessage(WP_TASK_UPDATE, reinterpret_cast<LPARAM>(taskUpdateCopy));
+	if (taskUpdate.path.empty())
+	{
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(m_taskUpdateMutex);
+	std::map<tstring, size_t>::iterator pendingTaskIndex = m_pendingTaskUpdateIndices.find(taskUpdate.path);
+	if (pendingTaskIndex != m_pendingTaskUpdateIndices.end())
+	{
+		FilesHashTaskUpdate& pendingTaskUpdate = m_pendingTaskUpdates[pendingTaskIndex->second];
+		if (!taskUpdate.algorithms.empty())
+		{
+			pendingTaskUpdate.algorithms = taskUpdate.algorithms;
+		}
+		if (!taskUpdate.status.empty())
+		{
+			pendingTaskUpdate.status = taskUpdate.status;
+		}
+		pendingTaskUpdate.state = taskUpdate.state;
+		pendingTaskUpdate.progress = taskUpdate.progress;
+	}
+	else
+	{
+		m_pendingTaskUpdateIndices[taskUpdate.path] = m_pendingTaskUpdates.size();
+		m_pendingTaskUpdates.push_back(taskUpdate);
+	}
+
+	RequestTaskUpdateFlush();
+}
+
+void UIBridgeMFC::DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates)
+{
+	std::lock_guard<std::mutex> lock(m_taskUpdateMutex);
+	taskUpdates.swap(m_pendingTaskUpdates);
+	m_pendingTaskUpdateIndices.clear();
 }
 
 sunjwbase::tstring UIBridgeMFC::BuildAlgorithmSummary(const HashResult& result)

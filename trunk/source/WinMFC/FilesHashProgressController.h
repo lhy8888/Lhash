@@ -24,6 +24,7 @@ public:
 	void BeginTaskSession(const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary);
 	void ResetTaskSession();
 	void ApplyTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
+	void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);
 	void PrepareAdvTaskbar();
 	void StartTiming(LPCTSTR secondText);
 	void AdvanceTimeTick(LPCTSTR secondText);
@@ -45,6 +46,7 @@ private:
 	static sunjwbase::tstring BuildDisplayName(const sunjwbase::tstring& fullPath);
 	static CString BuildProgressText(int progress);
 	int FindTaskRowIndex(const sunjwbase::tstring& fullPath) const;
+	int ApplyTaskUpdateToState(const FilesHashTaskUpdate& taskUpdate, bool *ensureVisible);
 	void RefreshTaskRow(int rowIndex, bool ensureVisible = false);
 	void RefreshAllTaskRows();
 	void UpdateSummaryText();

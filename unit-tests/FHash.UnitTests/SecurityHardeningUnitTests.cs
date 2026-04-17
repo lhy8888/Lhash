@@ -140,6 +140,8 @@ public sealed class SecurityHardeningUnitTests
         string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string filesHashDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashDlg.cpp");
+        string progressController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashProgressController.cpp");
         string nativeRuntimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
         Assert.Contains("static const unsigned char PADDING[64]", md5, StringComparison.Ordinal);
@@ -169,9 +171,16 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("ShouldPostProgressValue", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", uiBridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("InterlockedCompareExchange(&m_taskUpdatePending, 1, 0) == 0", uiBridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates)", uiBridgeHeader, StringComparison.Ordinal);
         Assert.Contains("kUiProgressDispatchIntervalMs = 80", uiBridge, StringComparison.Ordinal);
         Assert.Contains("ShouldPostProgressValue(m_totalProgressDispatchState, value)", uiBridge, StringComparison.Ordinal);
         Assert.Contains("PostThreadInfoMessage(WP_PROG_WHOLE, value);", uiBridge, StringComparison.Ordinal);
+        Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("taskUpdates.swap(m_pendingTaskUpdates);", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", filesHashDialog, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
         Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
 

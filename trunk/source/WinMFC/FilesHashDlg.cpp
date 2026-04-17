@@ -408,11 +408,12 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == WP_TASK_UPDATE)
 	{
-		FilesHashTaskUpdate* taskUpdate = reinterpret_cast<FilesHashTaskUpdate*>(lParam);
-		if (taskUpdate != NULL)
+		if (m_uiBridgeMFC != NULL)
 		{
-			m_hashProgressController.ApplyTaskUpdate(*taskUpdate);
-			delete taskUpdate;
+			m_uiBridgeMFC->MarkTaskUpdatesHandled();
+			std::vector<FilesHashTaskUpdate> taskUpdates;
+			m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);
+			m_hashProgressController.ApplyTaskUpdates(taskUpdates);
 		}
 		return 0;
 	}

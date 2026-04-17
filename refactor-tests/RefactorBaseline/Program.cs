@@ -1277,6 +1277,8 @@ internal static class Program
             AssertContains(bridgeMfcHeader, "void RequestRefreshMainText()", "UIBridgeMFC does not yet expose the coalesced main-hyperedit refresh helper.");
             AssertContains(bridgeMfcHeader, "PostThreadInfoMessage(WP_REFRESH_TEXT);", "UIBridgeMFC main-hyperedit refresh-message helper does not yet route refresh notifications through the centralized thread-info seam.");
             AssertContains(bridgeMfcHeader, "InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", "UIBridgeMFC main-text refresh helper does not yet coalesce duplicate refresh requests.");
+            AssertContains(bridgeMfcHeader, "InterlockedCompareExchange(&m_taskUpdatePending, 1, 0) == 0", "UIBridgeMFC task-update helper does not yet coalesce duplicate task flush requests.");
+            AssertContains(bridgeMfcHeader, "void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);", "UIBridgeMFC does not yet expose the pending-task drain helper.");
             AssertContains(bridgeMfcHeader, "void UpdateMainHyperEdit(TAppendAction appendAction, bool refreshAfterUpdate = false)", "UIBridgeMFC does not yet expose the generalized main-hyperedit update helper.");
             AssertContains(bridgeMfcHeader, "void AppendToMainHyperEditAndRefresh(TAppendAction appendAction)", "UIBridgeMFC does not yet expose the dedicated main-hyperedit refresh helper.");
             AssertContains(bridgeMfcHeader, "appendAction(m_mainHyperEdit);", "UIBridgeMFC main-hyperedit refresh helper does not yet forward the hyper-edit instance through the callback.");
@@ -1292,6 +1294,9 @@ internal static class Program
             AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);", "UIBridgeMFC does not yet route file-meta rendering through the dedicated refresh helper.");
             AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercaseDigest);", "UIBridgeMFC does not yet route file-hash rendering through the dedicated refresh helper.");
             AssertContains(bridgeMfc, "AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_ERROR, false);", "UIBridgeMFC does not yet route file-error rendering through the dedicated refresh helper.");
+            AssertContains(bridgeMfc, "m_pendingTaskUpdates.push_back(taskUpdate);", "UIBridgeMFC no longer queues merged task updates before posting the flush message.");
+            AssertContains(bridgeMfc, "taskUpdates.swap(m_pendingTaskUpdates);", "UIBridgeMFC no longer drains pending task updates in a single batch.");
+            AssertDoesNotContain(bridgeMfc, "new FilesHashTaskUpdate(taskUpdate)", "UIBridgeMFC unexpectedly reintroduced per-message heap allocations for task updates.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_WORKING);", "UIBridgeMFC does not yet route preparing-state notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_STOPPED);", "UIBridgeMFC does not yet route stop notifications through the thread-info helper.");
             AssertContains(bridgeMfc, "PostThreadInfoMessage(WP_FINISHED);", "UIBridgeMFC does not yet route finish notifications through the thread-info helper.");
@@ -2956,6 +2961,7 @@ internal static class Program
             AssertContains(progressControllerHeader, "void FinishTiming(ULONGLONG totalSize);", "Phase 23 progress controller is missing the finish-speed seam.");
             AssertContains(progressControllerHeader, "void ResetAfterStop();", "Phase 23 progress controller is missing the stop-reset seam.");
             AssertContains(progressControllerHeader, "void SetWholeProgress(UINT pos);", "Phase 23 progress controller is missing the grouped whole-progress seam.");
+            AssertContains(progressControllerHeader, "void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);", "Phase 23 progress controller is missing the batched task-update seam.");
 
             AssertContains(progressController, "CoCreateInstance(", "Phase 23 progress controller does not yet own taskbar setup.");
             AssertContains(progressController, "IID_ITaskbarList3", "Phase 23 progress controller does not yet own the taskbar interface binding.");
@@ -2964,6 +2970,9 @@ internal static class Program
             AssertContains(progressController, "m_taskbarList->SetProgressValue(", "Phase 23 progress controller does not yet own taskbar progress updates.");
             AssertContains(progressController, "UpdateSummaryText();", "Phase 23 progress controller does not yet centralize status-summary refreshes.");
             AssertContains(progressController, "m_statusOverviewCtrl->SetWindowText(summary);", "Phase 23 progress controller does not yet centralize status summary rendering.");
+            AssertContains(progressController, "m_taskListCtrl->SetRedraw(FALSE);", "Phase 23 progress controller does not yet suspend redraws during batched task updates.");
+            AssertContains(progressController, "m_taskListCtrl->SetRedraw(TRUE);", "Phase 23 progress controller does not yet resume redraws after batched task updates.");
+            AssertContains(progressController, "int ensureVisibleRowIndex = -1;", "Phase 23 progress controller does not yet track the final visible row during batched updates.");
 
             AssertContains(dlgHeader, "#include \"FilesHashProgressController.h\"", "FilesHashDlg.h does not yet consume the phase 23 progress controller.");
             AssertContains(dlgHeader, "FilesHashProgressController m_hashProgressController;", "FilesHashDlg.h does not yet keep the phase 23 progress controller.");
@@ -2976,6 +2985,8 @@ internal static class Program
             AssertDoesNotContain(dlgHeader, "void CalcSpeed(ULONGLONG tsize);", "FilesHashDlg.h still declares the old inline speed helper after phase 23.");
 
             AssertContains(dlgCppAndInitialization, "hashProgressController->Initialize(parentWnd, progressCtrl);", "FilesHashDlg.cpp does not yet initialize the phase 23 progress controller.");
+            AssertContains(dlgCpp, "m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);", "FilesHashDlg.cpp does not yet drain batched task updates from the bridge.");
+            AssertContains(dlgCpp, "m_hashProgressController.ApplyTaskUpdates(taskUpdates);", "FilesHashDlg.cpp does not yet route batched task updates through the progress controller.");
             AssertContains(lifecycleController, "m_hashProgressController->PrepareAdvTaskbar();", "FilesHashDlg.cpp does not yet route taskbar prep through the phase 23 progress controller.");
             AssertContains(lifecycleController, "m_hashProgressController->StartTiming(secondText);", "FilesHashDlg.cpp does not yet route timer startup through the phase 23 progress controller.");
             AssertContains(lifecycleController, "m_hashProgressController->AdvanceTimeTick(secondText);", "FilesHashDlg.cpp does not yet route timer ticks through the phase 23 progress controller.");

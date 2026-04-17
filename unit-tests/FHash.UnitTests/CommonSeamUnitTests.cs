@@ -244,8 +244,11 @@ public sealed class CommonSeamUnitTests
         string fileAttemptWorkflow = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string preScanSizeProbe = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
         string bridgeHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string bridgeImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
+        string dialog = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashDlg.cpp");
         string lifecycleController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
         string progressController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.cpp");
+        string progressControllerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
 
         Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
@@ -256,8 +259,20 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", bridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("InterlockedCompareExchange(&m_taskUpdatePending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
+        Assert.Contains("void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("MarkMainTextRefreshHandled();", lifecycleController, StringComparison.Ordinal);
+        Assert.Contains("m_pendingTaskUpdates.push_back(taskUpdate);", bridgeImplementation, StringComparison.Ordinal);
+        Assert.Contains("m_pendingTaskUpdateIndices[taskUpdate.path] = m_pendingTaskUpdates.size();", bridgeImplementation, StringComparison.Ordinal);
+        Assert.Contains("taskUpdates.swap(m_pendingTaskUpdates);", bridgeImplementation, StringComparison.Ordinal);
+        Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", bridgeImplementation, StringComparison.Ordinal);
+        Assert.Contains("m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
+        Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
 
+        Assert.Contains("void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);", progressControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("int ensureVisibleRowIndex = -1;", progressController, StringComparison.Ordinal);
         Assert.Contains("RefreshTaskRow(rowIndex, ensureVisible);", progressController, StringComparison.Ordinal);
         Assert.Contains("if (ensureVisible)", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", progressController, StringComparison.Ordinal);
