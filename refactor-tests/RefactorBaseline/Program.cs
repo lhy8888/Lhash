@@ -5580,6 +5580,8 @@ internal static class Program
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor registration through a dedicated seam.");
             AssertContains(hashDigestOperationRegistry, "EnsureDefaultHashDigestOperationDescriptorsRegistered()", "Phase 86 HashDigestOperationRegistry.cpp does not yet bootstrap defaults through registration.");
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptorUnlocked({", "Phase 86 HashDigestOperationRegistry.cpp does not yet materialize default descriptors through registration.");
+            AssertContains(hashDigestOperationRegistry, "BuildRegistryOrderedHashDigestOperationDescriptorSnapshot(", "Phase 86 HashDigestOperationRegistry.cpp does not yet rebuild descriptor snapshots in algorithm-registry order.");
+            AssertContains(hashDigestOperationRegistry, "GetRegisteredHashAlgorithmDescriptors()", "Phase 86 HashDigestOperationRegistry.cpp does not yet derive descriptor snapshots from the algorithm registry seam.");
             AssertDoesNotContain(hashDigestOperationRegistry, "static const HashDigestOperationDescriptor operationDescriptors[]", "Phase 86 HashDigestOperationRegistry.cpp still hardcodes a fixed operation-descriptor table.");
 
             AssertContains(nativeRuntimeSource, "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", "Phase 86 native runtime tests do not yet cover descriptor snapshot generation.");

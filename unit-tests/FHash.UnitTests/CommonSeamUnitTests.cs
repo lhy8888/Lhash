@@ -132,6 +132,8 @@ public sealed class CommonSeamUnitTests
             "RegisterHashDigestOperationDescriptorUnlocked(const HashDigestOperationDescriptor& operationDescriptor)\r\n\t{\r\n\t\tHashAlgorithmId normalizedAlgorithmId = ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptor);\r\n\t\tif (normalizedAlgorithmId.empty())\r\n\t\t{\r\n\t\t\treturn false;\r\n\t\t}\r\n\r\n\t\tstd::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());",
             digestRegistry,
             StringComparison.Ordinal);
+        Assert.Contains("BuildRegistryOrderedHashDigestOperationDescriptorSnapshot(", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetRegisteredHashAlgorithmDescriptors()", digestRegistry, StringComparison.Ordinal);
     }
 
     [Fact]

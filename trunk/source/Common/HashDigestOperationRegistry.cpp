@@ -516,6 +516,31 @@ namespace HashEngineInternal
 		return snapshotStorage;
 	}
 
+	static std::vector<HashDigestOperationDescriptor> BuildRegistryOrderedHashDigestOperationDescriptorSnapshot(
+		const std::vector<HashDigestOperationDescriptor>& operationDescriptors)
+	{
+		std::vector<HashDigestOperationDescriptor> orderedDescriptors;
+		std::vector<HashAlgorithmDescriptor> registeredAlgorithms = GetRegisteredHashAlgorithmDescriptors();
+		orderedDescriptors.reserve(operationDescriptors.size());
+
+		for (size_t algorithmIndex = 0; algorithmIndex < registeredAlgorithms.size(); ++algorithmIndex)
+		{
+			HashAlgorithmId algorithmId = GetHashAlgorithmDescriptorId(registeredAlgorithms[algorithmIndex]);
+			for (size_t descriptorIndex = 0; descriptorIndex < operationDescriptors.size(); ++descriptorIndex)
+			{
+				if (ResolveHashDigestOperationDescriptorAlgorithmId(operationDescriptors[descriptorIndex]) != algorithmId)
+				{
+					continue;
+				}
+
+				orderedDescriptors.push_back(operationDescriptors[descriptorIndex]);
+				break;
+			}
+		}
+
+		return orderedDescriptors;
+	}
+
 	static std::mutex& GetHashDigestOperationRegistryMutex()
 	{
 		static std::mutex registryMutex;
@@ -706,7 +731,7 @@ namespace HashEngineInternal
 	{
 		EnsureDefaultHashDigestOperationDescriptorsRegistered();
 		std::lock_guard<std::mutex> lock(GetHashDigestOperationRegistryMutex());
-		return GetMutableHashDigestOperationDescriptorStorage();
+		return BuildRegistryOrderedHashDigestOperationDescriptorSnapshot(GetMutableHashDigestOperationDescriptorStorage());
 	}
 
 	const HashDigestOperationDescriptor *GetHashDigestOperationDescriptors(int *descriptorCount)
