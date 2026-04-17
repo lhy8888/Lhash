@@ -1449,7 +1449,8 @@ namespace
 		NativeAssertEqual(static_cast<size_t>(2), algorithmIds.size(), "HashRequest should deduplicate descriptor/id algorithms while keeping compatibility algorithms.");
 		NativeAssertTrue(HasHashRequestAlgorithmId(request, sunjwbase::strtotstr(std::string("openssl-sha-512"))), "HashRequest should report selected algorithms by descriptor/id.");
 		NativeAssertTrue(HasHashRequestAlgorithm(request, RESULT_DIGEST_MD5), "HashRequest should preserve digest-type compatibility selection.");
-		NativeAssertEqual(static_cast<size_t>(2), digestTypes.size(), "HashRequest digest iteration should resolve deduplicated descriptor/id selections.");
+		NativeAssertEqual(static_cast<size_t>(1), digestTypes.size(), "HashRequest digest-type iteration should only surface the remaining legacy-compatible digest ids.");
+		NativeAssertEqual(RESULT_DIGEST_MD5, digestTypes[0], "HashRequest digest-type iteration should keep MD5 as the only compatibility digest in this request.");
 	}
 
 	static void HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes()
