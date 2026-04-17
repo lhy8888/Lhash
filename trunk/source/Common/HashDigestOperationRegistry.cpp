@@ -516,6 +516,8 @@ namespace HashEngineInternal
 		return snapshotStorage;
 	}
 
+	static HashAlgorithmId ResolveHashDigestOperationDescriptorAlgorithmId(const HashDigestOperationDescriptor& operationDescriptor);
+
 	static std::vector<HashDigestOperationDescriptor> BuildRegistryOrderedHashDigestOperationDescriptorSnapshot(
 		const std::vector<HashDigestOperationDescriptor>& operationDescriptors)
 	{
