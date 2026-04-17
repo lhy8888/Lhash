@@ -181,11 +181,30 @@ HCURSOR CFilesHashDlg::OnQueryDragIcon()
 
 void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 {
-	m_hashMessageController.HandleDropFiles(hDropInfo, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
+	m_hashMessageController.HandleDropFiles(
+		hDropInfo,
+		GetStringByKey(MAINDLG_CLEAR),
+		GetStringByKey(SECOND_STRING),
+		GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT),
+		GetStringByKey(MAINDLG_FILES_LIMIT_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LOAD_ERROR));
 }
 BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
-	if (m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM)))
+	if (m_hashMessageController.HandleCopyData(
+		pWnd,
+		pCopyDataStruct,
+		GetStringByKey(MAINDLG_CLEAR),
+		GetStringByKey(SECOND_STRING),
+		GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT),
+		GetStringByKey(MAINDLG_FILES_LIMIT_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LOAD_ERROR)))
 	{
 		return TRUE;
 	}
@@ -206,7 +225,16 @@ void CFilesHashDlg::OnBnClickedOpen()
 	CString filter;
 	filter = GetStringByKey(FILE_STRING);
 	filter.Append(_T("(*.*)|*.*|"));
-	m_hashCommandController.HandleOpenButtonClick(filter, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
+	m_hashCommandController.HandleOpenButtonClick(
+		filter,
+		GetStringByKey(MAINDLG_CLEAR),
+		GetStringByKey(SECOND_STRING),
+		GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT),
+		GetStringByKey(MAINDLG_FILES_LIMIT_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LOAD_ERROR));
 }
 void CFilesHashDlg::OnBnClickedExit()
 {
@@ -230,7 +258,12 @@ void CFilesHashDlg::OnBnClickedOpenFolder()
 		GetStringByKey(MAINDLG_EMPTY_FOLDER),
 		GetStringByKey(MAINDLG_CLEAR),
 		GetStringByKey(SECOND_STRING),
-		GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
+		GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT),
+		GetStringByKey(MAINDLG_FILES_LIMIT_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED),
+		GetStringByKey(MAINDLG_FILES_LOAD_ERROR));
 }
 
 void CFilesHashDlg::OnBnClickedFind()

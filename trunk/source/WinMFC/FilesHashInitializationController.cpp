@@ -120,7 +120,7 @@ void FilesHashInitializationController::InitializeDialog(
 	hashSearchController->Initialize(threadData, mainEdit, btnClr, btnFind, btnOpen, chkUppercase);
 	hashSessionController->Initialize(threadData, parentWnd, mainEdit, btnOpen, btnClr, btnFind, btnContext, chkUppercase, hashAlgorithmSelectionController);
 	hashLifecycleController->Initialize(threadData, parentWnd, btnClr, uiBridgeMFC, hashSearchController, hashSessionController, hashProgressController, hashResultViewController);
-	hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashProgressController, hashResultViewController);
+	hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashMessageController, hashProgressController, hashResultViewController);
 	hashMessageController->Initialize(threadData, parentWnd, hashInputController, hashLifecycleController, hashResultViewController);
 	hashContextMenuController->Initialize(btnContext, parentWnd->GetDlgItem(IDC_STATIC_ADDRESULT));
 	hashProgressController->Initialize(parentWnd, progressCtrl);

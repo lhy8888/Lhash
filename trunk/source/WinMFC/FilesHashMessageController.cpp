@@ -125,22 +125,99 @@ HCURSOR FilesHashMessageController::GetDragCursor(HICON icon) const
 	return static_cast<HCURSOR>(icon);
 }
 
-void FilesHashMessageController::HandleDropFiles(HDROP hDropInfo, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const
+bool FilesHashMessageController::DispatchFileLoadOutcome(
+	const FileLoadOutcome& outcome,
+	LPCTSTR clearButtonText,
+	LPCTSTR secondText,
+	LPCTSTR noSelectionMessage,
+	LPCTSTR overLimitMessage,
+	LPCTSTR overLimitWithCountMessage,
+	LPCTSTR truncatedMessage,
+	LPCTSTR maybeTruncatedMessage,
+	LPCTSTR errorMessage) const
+{
+	if (m_hashLifecycleController == NULL || m_parentWnd == NULL)
+	{
+		return false;
+	}
+
+	CString message;
+	switch (outcome.result)
+	{
+	case FileLoadResult::Success:
+		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+		return true;
+
+	case FileLoadResult::SuccessPossiblyTruncated:
+		message.Format(maybeTruncatedMessage, outcome.limit);
+		AfxMessageBox(message, MB_OK | MB_ICONWARNING);
+		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+		return true;
+
+	case FileLoadResult::SuccessWithTruncation:
+		message.Format(truncatedMessage, outcome.loadedCount, outcome.limit);
+		AfxMessageBox(message, MB_OK | MB_ICONWARNING);
+		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+		return true;
+
+	case FileLoadResult::RejectedOverLimit:
+		if (outcome.hasRequestedCount)
+		{
+			message.Format(overLimitWithCountMessage, outcome.requestedCount, outcome.limit);
+		}
+		else
+		{
+			message.Format(overLimitMessage, outcome.limit);
+		}
+		AfxMessageBox(message, MB_OK | MB_ICONWARNING);
+		return false;
+
+	case FileLoadResult::Error:
+		AfxMessageBox(errorMessage, MB_OK | MB_ICONERROR);
+		return false;
+
+	case FileLoadResult::Empty:
+	default:
+		return false;
+	}
+}
+
+void FilesHashMessageController::HandleDropFiles(
+	HDROP hDropInfo,
+	LPCTSTR clearButtonText,
+	LPCTSTR secondText,
+	LPCTSTR noSelectionMessage,
+	LPCTSTR overLimitMessage,
+	LPCTSTR overLimitWithCountMessage,
+	LPCTSTR truncatedMessage,
+	LPCTSTR maybeTruncatedMessage,
+	LPCTSTR errorMessage) const
 {
 	if (m_threadData == NULL || m_parentWnd == NULL || m_hashInputController == NULL || m_hashLifecycleController == NULL)
 	{
+		DragFinish(hDropInfo);
 		return;
 	}
 
 	if (!IsThreadDataWorking(*m_threadData))
 	{
 		m_parentWnd->DragAcceptFiles(FALSE);
-		BOOL hasPendingFiles = m_hashInputController->LoadDroppedFiles(hDropInfo);
+		FileLoadOutcome outcome = m_hashInputController->LoadDroppedFiles(hDropInfo);
 		m_parentWnd->DragAcceptFiles(TRUE);
-		if (hasPendingFiles)
-		{
-			m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
-		}
+		DispatchFileLoadOutcome(
+			outcome,
+			clearButtonText,
+			secondText,
+			noSelectionMessage,
+			overLimitMessage,
+			overLimitWithCountMessage,
+			truncatedMessage,
+			maybeTruncatedMessage,
+			errorMessage);
+	}
+	else
+	{
+		DragFinish(hDropInfo);
 	}
 }
 
@@ -169,7 +246,17 @@ bool FilesHashMessageController::IsTrustedCopyDataSender(const CWnd* pSenderWnd)
 	return false;
 }
 
-BOOL FilesHashMessageController::HandleCopyData(const CWnd* pSenderWnd, const COPYDATASTRUCT* pCopyDataStruct, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const
+BOOL FilesHashMessageController::HandleCopyData(
+	const CWnd* pSenderWnd,
+	const COPYDATASTRUCT* pCopyDataStruct,
+	LPCTSTR clearButtonText,
+	LPCTSTR secondText,
+	LPCTSTR noSelectionMessage,
+	LPCTSTR overLimitMessage,
+	LPCTSTR overLimitWithCountMessage,
+	LPCTSTR truncatedMessage,
+	LPCTSTR maybeTruncatedMessage,
+	LPCTSTR errorMessage) const
 {
 	if (pCopyDataStruct == NULL || m_threadData == NULL || m_parentWnd == NULL || m_hashInputController == NULL || m_hashLifecycleController == NULL)
 	{
@@ -178,11 +265,26 @@ BOOL FilesHashMessageController::HandleCopyData(const CWnd* pSenderWnd, const CO
 
 	if (pCopyDataStruct->dwData == 0 &&
 		IsTrustedCopyDataSender(pSenderWnd) &&
-		!IsThreadDataWorking(*m_threadData) &&
-		m_hashInputController->LoadCopyDataFiles(pCopyDataStruct))
+		!IsThreadDataWorking(*m_threadData))
 	{
-		m_parentWnd->SetForegroundWindow();
-		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+		FileLoadOutcome outcome = m_hashInputController->LoadCopyDataFiles(pCopyDataStruct);
+		if (outcome.result == FileLoadResult::Success ||
+			outcome.result == FileLoadResult::SuccessPossiblyTruncated ||
+			outcome.result == FileLoadResult::SuccessWithTruncation)
+		{
+			m_parentWnd->SetForegroundWindow();
+		}
+
+		DispatchFileLoadOutcome(
+			outcome,
+			clearButtonText,
+			secondText,
+			noSelectionMessage,
+			overLimitMessage,
+			overLimitWithCountMessage,
+			truncatedMessage,
+			maybeTruncatedMessage,
+			errorMessage);
 		return TRUE;
 	}
 

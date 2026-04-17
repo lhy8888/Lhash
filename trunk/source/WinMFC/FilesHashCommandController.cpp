@@ -8,6 +8,7 @@
 #include "LegacyCompat/ThreadDataExecutionAccess.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
+#include "FilesHashMessageController.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 #include "FilesHashSearchController.h"
@@ -24,22 +25,42 @@ FilesHashCommandController::FilesHashCommandController()
 	m_hashSearchController(NULL),
 	m_hashSessionController(NULL),
 	m_hashLifecycleController(NULL),
+	m_hashMessageController(NULL),
 	m_hashProgressController(NULL),
 	m_hashResultViewController(NULL)
 {
 }
 
-void FilesHashCommandController::HandleOpenFolderButtonClick(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage)
+void FilesHashCommandController::HandleOpenFolderButtonClick(
+	LPCTSTR folderDialogTitle,
+	LPCTSTR emptyFolderMessage,
+	LPCTSTR clearButtonText,
+	LPCTSTR secondText,
+	LPCTSTR noSelectionMessage,
+	LPCTSTR overLimitMessage,
+	LPCTSTR overLimitWithCountMessage,
+	LPCTSTR truncatedMessage,
+	LPCTSTR maybeTruncatedMessage,
+	LPCTSTR errorMessage)
 {
-	if (m_threadData == NULL || m_hashLifecycleController == NULL || IsThreadDataWorking(*m_threadData))
+	if (m_threadData == NULL || m_hashLifecycleController == NULL || m_hashMessageController == NULL || IsThreadDataWorking(*m_threadData))
 	{
 		return;
 	}
 
-	if (m_hashInputController != NULL &&
-		m_hashInputController->LoadFolderDialogSelection(folderDialogTitle, emptyFolderMessage))
+	if (m_hashInputController != NULL)
 	{
-		m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+		FileLoadOutcome outcome = m_hashInputController->LoadFolderDialogSelection(folderDialogTitle, emptyFolderMessage);
+		m_hashMessageController->DispatchFileLoadOutcome(
+			outcome,
+			clearButtonText,
+			secondText,
+			noSelectionMessage,
+			overLimitMessage,
+			overLimitWithCountMessage,
+			truncatedMessage,
+			maybeTruncatedMessage,
+			errorMessage);
 	}
 }
 
@@ -51,6 +72,7 @@ void FilesHashCommandController::Initialize(
 	FilesHashSearchController* hashSearchController,
 	FilesHashSessionController* hashSessionController,
 	FilesHashLifecycleController* hashLifecycleController,
+	FilesHashMessageController* hashMessageController,
 	FilesHashProgressController* hashProgressController,
 	FilesHashResultViewController* hashResultViewController)
 {
@@ -61,22 +83,42 @@ void FilesHashCommandController::Initialize(
 	m_hashSearchController = hashSearchController;
 	m_hashSessionController = hashSessionController;
 	m_hashLifecycleController = hashLifecycleController;
+	m_hashMessageController = hashMessageController;
 	m_hashProgressController = hashProgressController;
 	m_hashResultViewController = hashResultViewController;
 }
 
-void FilesHashCommandController::HandleOpenButtonClick(LPCTSTR fileFilter, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage)
+void FilesHashCommandController::HandleOpenButtonClick(
+	LPCTSTR fileFilter,
+	LPCTSTR clearButtonText,
+	LPCTSTR secondText,
+	LPCTSTR noSelectionMessage,
+	LPCTSTR overLimitMessage,
+	LPCTSTR overLimitWithCountMessage,
+	LPCTSTR truncatedMessage,
+	LPCTSTR maybeTruncatedMessage,
+	LPCTSTR errorMessage)
 {
-	if (m_threadData == NULL || m_hashLifecycleController == NULL)
+	if (m_threadData == NULL || m_hashLifecycleController == NULL || m_hashMessageController == NULL)
 	{
 		return;
 	}
 
 	if (!IsThreadDataWorking(*m_threadData))
 	{
-		if (m_hashInputController != NULL && m_hashInputController->LoadOpenFileDialogSelection(fileFilter))
+		if (m_hashInputController != NULL)
 		{
-			m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);
+			FileLoadOutcome outcome = m_hashInputController->LoadOpenFileDialogSelection(fileFilter);
+			m_hashMessageController->DispatchFileLoadOutcome(
+				outcome,
+				clearButtonText,
+				secondText,
+				noSelectionMessage,
+				overLimitMessage,
+				overLimitWithCountMessage,
+				truncatedMessage,
+				maybeTruncatedMessage,
+				errorMessage);
 		}
 	}
 	else if (m_hashSessionController != NULL)

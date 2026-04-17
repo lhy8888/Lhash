@@ -2798,9 +2798,12 @@ internal static class Program
             string dlgCppAndCommandAndMessage = string.Join(Environment.NewLine, dlgCpp, commandController, messageController);
 
             AssertContains(inputControllerHeader, "void LoadCommandLineFiles(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line ingestion seam.");
-            AssertContains(inputControllerHeader, "BOOL LoadOpenFileDialogSelection(LPCTSTR fileFilter);", "Phase 20 input controller is missing the open-dialog ingestion seam.");
-            AssertContains(inputControllerHeader, "BOOL LoadDroppedFiles(HDROP hDropInfo);", "Phase 20 input controller is missing the drag-drop ingestion seam.");
-            AssertContains(inputControllerHeader, "BOOL LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct);", "Phase 20 input controller is missing the WM_COPYDATA ingestion seam.");
+            AssertContains(inputControllerHeader, "enum class FileLoadResult", "Phase 20 input controller is missing the unified file-load result enum.");
+            AssertContains(inputControllerHeader, "struct FileLoadOutcome", "Phase 20 input controller is missing the structured file-load outcome.");
+            AssertContains(inputControllerHeader, "struct FolderScanOutcome", "Phase 20 input controller is missing the folder-scan outcome seam.");
+            AssertContains(inputControllerHeader, "FileLoadOutcome LoadOpenFileDialogSelection(LPCTSTR fileFilter);", "Phase 20 input controller is missing the open-dialog ingestion seam.");
+            AssertContains(inputControllerHeader, "FileLoadOutcome LoadDroppedFiles(HDROP hDropInfo);", "Phase 20 input controller is missing the drag-drop ingestion seam.");
+            AssertContains(inputControllerHeader, "FileLoadOutcome LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct);", "Phase 20 input controller is missing the WM_COPYDATA ingestion seam.");
             AssertContains(inputControllerHeader, "static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);", "Phase 20 input controller is missing the command-line parser seam.");
             AssertContains(inputControllerHeader, "void ClearFilePaths();", "Phase 20 input controller is missing the grouped input-reset helper.");
 
@@ -2811,6 +2814,8 @@ internal static class Program
             AssertContains(inputController, "ReplaceThreadDataInputFiles(*m_threadData, parameters);", "Phase 20 input controller does not yet route command-line replacement through ThreadData input access.");
             AssertContains(inputController, "AppendThreadDataInputFile(*m_threadData, dlgOpen.GetNextPathName(pos).GetString());", "Phase 20 input controller does not yet route file-dialog appends through ThreadData input access.");
             AssertContains(inputController, "ReplaceTrimmedThreadDataInputFiles(*m_threadData, parameters);", "Phase 20 input controller does not yet route WM_COPYDATA replacement through ThreadData input access.");
+            AssertContains(inputController, "kMaxHashFilesPerSession", "Phase 20 input controller does not yet use the unified per-session file limit constant.");
+            AssertContains(inputController, "FileLoadResult::RejectedOverLimit", "Phase 20 input controller does not yet expose explicit over-limit outcomes.");
 
             AssertContains(dlgHeader, "#include \"FilesHashInputController.h\"", "FilesHashDlg.h does not yet consume the phase 20 input controller.");
             AssertContains(dlgHeader, "FilesHashInputController m_hashInputController;", "FilesHashDlg.h does not yet keep the phase 20 input controller.");
@@ -2822,6 +2827,7 @@ internal static class Program
             AssertContains(dlgCppAndCommandAndMessage, "m_hashInputController->LoadDroppedFiles(hDropInfo);", "FilesHashDlg.cpp does not yet route drag-drop ingestion through the phase 20 input controller.");
             AssertContains(dlgCppAndCommandAndMessage, "m_hashInputController->LoadCopyDataFiles(pCopyDataStruct)", "FilesHashDlg.cpp does not yet route WM_COPYDATA ingestion through the phase 20 input controller.");
             AssertContains(dlgCppAndCommand, "m_hashInputController->LoadOpenFileDialogSelection(fileFilter)", "FilesHashDlg.cpp does not yet route open-dialog ingestion through the phase 20 input controller.");
+            AssertContains(dlgCppAndCommandAndMessage, "DispatchFileLoadOutcome(", "FilesHashDlg.cpp does not yet route structured file-load outcomes through the shared dispatcher.");
             AssertDoesNotContain(dlgCpp, "TStrVector CFilesHashDlg::ParseFilesCmdLine(", "FilesHashDlg.cpp still keeps the old inline command-line parser after phase 20.");
             AssertDoesNotContain(dlgCpp, "void CFilesHashDlg::ClearFilePaths()", "FilesHashDlg.cpp still keeps the old inline input-reset helper after phase 20.");
             AssertDoesNotContain(dlgCpp, "IsValidCopyDataString(pCopyDataStruct)", "FilesHashDlg.cpp still keeps inline WM_COPYDATA validation after phase 20.");
@@ -3150,7 +3156,7 @@ internal static class Program
             string dlgCppAndInitialization = dlgCpp + Environment.NewLine + initializationController;
 
             AssertContains(commandControllerHeader, "class FilesHashCommandController", "Phase 27 command controller header is missing the controller type.");
-            AssertContains(commandControllerHeader, "void HandleOpenButtonClick(LPCTSTR fileFilter, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);", "Phase 27 command controller is missing the open-button seam.");
+            AssertContains(commandControllerHeader, "void HandleOpenButtonClick(", "Phase 27 command controller is missing the open-button seam.");
             AssertContains(commandControllerHeader, "void HandleExitButtonClick() const;", "Phase 27 command controller is missing the exit-button seam.");
             AssertContains(commandControllerHeader, "void HandleAboutButtonClick() const;", "Phase 27 command controller is missing the about-button seam.");
             AssertContains(commandControllerHeader, "void HandleCleanButtonClick(LPCTSTR clearButtonText, LPCTSTR clearVerifyButtonText);", "Phase 27 command controller is missing the clean-button seam.");
@@ -3160,18 +3166,19 @@ internal static class Program
             AssertContains(commandController, "#include \"FindDlg.h\"", "Phase 27 command controller does not yet own the Find dialog include.");
             AssertContains(commandController, "#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", "Phase 27 command controller does not yet consume the execution seam.");
             AssertContains(commandController, "m_hashInputController->LoadOpenFileDialogSelection(fileFilter)", "Phase 27 command controller does not yet own open-dialog file loading.");
-            AssertContains(commandController, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "Phase 27 command controller does not yet own open-button hash starts.");
+            AssertContains(commandController, "m_hashMessageController->DispatchFileLoadOutcome(", "Phase 27 command controller does not yet route file-load outcomes through the shared dispatcher.");
             AssertContains(commandController, "m_hashSessionController->StopWorkingThread();", "Phase 27 command controller does not yet own open-button stop behavior.");
             AssertContains(commandController, "m_hashResultViewController->ClearResults(*m_threadData);", "Phase 27 command controller does not yet own clear-results dispatch.");
             AssertContains(commandController, "ClearProgressLabels();", "Phase 27 command controller does not yet own grouped progress-label clearing.");
             AssertContains(commandController, "m_hashSearchController->BeginSearch(CString(), findDialog.GetFindHash(), clearVerifyButtonText)", "Phase 27 command controller does not yet own find-dialog dispatch.");
             AssertContains(commandController, "m_parentWnd->PostMessage(WM_CLOSE);", "Phase 27 command controller does not yet own exit-button close dispatch.");
+            AssertContains(commandControllerHeader, "FilesHashMessageController* hashMessageController,", "Phase 27 command controller is missing the shared message-controller dependency.");
 
             AssertContains(dlgHeader, "#include \"FilesHashCommandController.h\"", "FilesHashDlg.h does not yet consume the phase 27 command controller.");
             AssertContains(dlgHeader, "FilesHashCommandController m_hashCommandController;", "FilesHashDlg.h does not yet keep the phase 27 command controller.");
 
-            AssertContains(dlgCppAndInitialization, "hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashProgressController, hashResultViewController);", "FilesHashDlg.cpp does not yet initialize the phase 27 command controller.");
-            AssertContains(dlgCpp, "m_hashCommandController.HandleOpenButtonClick(filter, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route open-button handling through the phase 27 command controller.");
+            AssertContains(dlgCppAndInitialization, "hashCommandController->Initialize(threadData, parentWnd, btnClr, hashInputController, hashSearchController, hashSessionController, hashLifecycleController, hashMessageController, hashProgressController, hashResultViewController);", "FilesHashDlg.cpp does not yet initialize the phase 27 command controller.");
+            AssertContains(dlgCpp, "m_hashCommandController.HandleOpenButtonClick(", "FilesHashDlg.cpp does not yet route open-button handling through the phase 27 command controller.");
             AssertContains(dlgCpp, "m_hashCommandController.HandleExitButtonClick();", "FilesHashDlg.cpp does not yet route exit-button handling through the phase 27 command controller.");
             AssertContains(dlgCpp, "m_hashCommandController.HandleAboutButtonClick();", "FilesHashDlg.cpp does not yet route about-button handling through the phase 27 command controller.");
             AssertContains(dlgCpp, "m_hashCommandController.HandleCleanButtonClick(GetStringByKey(MAINDLG_CLEAR), GetStringByKey(MAINDLG_CLEAR_VERIFY));", "FilesHashDlg.cpp does not yet route clean-button handling through the phase 27 command controller.");
@@ -3204,8 +3211,9 @@ internal static class Program
             AssertContains(messageControllerHeader, "class FilesHashMessageController", "Phase 28 message controller header is missing the controller type.");
             AssertContains(messageControllerHeader, "BOOL HandlePaint(HICON icon) const;", "Phase 28 message controller is missing the paint seam.");
             AssertContains(messageControllerHeader, "HCURSOR GetDragCursor(HICON icon) const;", "Phase 28 message controller is missing the drag-cursor seam.");
-            AssertContains(messageControllerHeader, "void HandleDropFiles(HDROP hDropInfo, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the drop-files seam.");
-            AssertContains(messageControllerHeader, "BOOL HandleCopyData(const CWnd* pSenderWnd, const COPYDATASTRUCT* pCopyDataStruct, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage) const;", "Phase 28 message controller is missing the copy-data seam.");
+            AssertContains(messageControllerHeader, "bool DispatchFileLoadOutcome(", "Phase 28 message controller is missing the shared file-load dispatch seam.");
+            AssertContains(messageControllerHeader, "void HandleDropFiles(", "Phase 28 message controller is missing the drop-files seam.");
+            AssertContains(messageControllerHeader, "BOOL HandleCopyData(", "Phase 28 message controller is missing the copy-data seam.");
             AssertContains(messageControllerHeader, "LRESULT HandleCustomMessage(WPARAM wParam) const;", "Phase 28 message controller is missing the custom-message seam.");
             AssertContains(messageControllerHeader, "void HandleInitMenuPopup(CMenu* pPopupMenu) const;", "Phase 28 message controller is missing the popup-menu seam.");
             AssertContains(messageControllerHeader, "void HandleCopyHash() const;", "Phase 28 message controller is missing the copy-hash seam.");
@@ -3218,7 +3226,7 @@ internal static class Program
             AssertContains(messageController, "m_hashInputController->LoadDroppedFiles(hDropInfo);", "Phase 28 message controller does not yet own drag-drop ingestion.");
             AssertContains(messageController, "m_parentWnd->SetForegroundWindow();", "Phase 28 message controller does not yet own foreground promotion for WM_COPYDATA.");
             AssertContains(messageController, "m_hashInputController->LoadCopyDataFiles(pCopyDataStruct)", "Phase 28 message controller does not yet own WM_COPYDATA ingestion.");
-            AssertContains(messageController, "m_hashLifecycleController->StartHashing(clearButtonText, secondText, noSelectionMessage);", "Phase 28 message controller does not yet own non-button hash starts.");
+            AssertContains(messageController, "DispatchFileLoadOutcome(", "Phase 28 message controller does not yet own non-button file-load dispatch.");
             AssertContains(messageController, "m_hashResultViewController->ShowHyperEditMenu(m_parentWnd);", "Phase 28 message controller does not yet own HyperEdit popup display.");
             AssertContains(messageController, "m_hashResultViewController->UpdatePopupMenu(m_parentWnd, pPopupMenu);", "Phase 28 message controller does not yet own popup-menu updates.");
             AssertContains(messageController, "m_hashResultViewController->CopyLastHyperlink();", "Phase 28 message controller does not yet own hyperlink copying.");
@@ -3230,8 +3238,8 @@ internal static class Program
             AssertContains(dlgCppAndInitialization, "hashMessageController->Initialize(threadData, parentWnd, hashInputController, hashLifecycleController, hashResultViewController);", "FilesHashDlg.cpp does not yet initialize the phase 28 message controller.");
             AssertContains(dlgCpp, "if (m_hashMessageController.HandlePaint(m_hIcon))", "FilesHashDlg.cpp does not yet route icon paint through the phase 28 message controller.");
             AssertContains(dlgCpp, "return m_hashMessageController.GetDragCursor(m_hIcon);", "FilesHashDlg.cpp does not yet route drag-cursor queries through the phase 28 message controller.");
-            AssertContains(dlgCpp, "m_hashMessageController.HandleDropFiles(hDropInfo, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));", "FilesHashDlg.cpp does not yet route WM_DROPFILES through the phase 28 message controller.");
-            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyData(pWnd, pCopyDataStruct, GetStringByKey(MAINDLG_CLEAR), GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM))", "FilesHashDlg.cpp does not yet route WM_COPYDATA through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleDropFiles(", "FilesHashDlg.cpp does not yet route WM_DROPFILES through the phase 28 message controller.");
+            AssertContains(dlgCpp, "m_hashMessageController.HandleCopyData(", "FilesHashDlg.cpp does not yet route WM_COPYDATA through the phase 28 message controller.");
             AssertContains(dlgCpp, "return m_hashMessageController.HandleCustomMessage(wParam);", "FilesHashDlg.cpp does not yet route custom messages through the phase 28 message controller.");
             AssertContains(dlgCpp, "m_hashMessageController.HandleInitMenuPopup(pPopupMenu);", "FilesHashDlg.cpp does not yet route popup-menu updates through the phase 28 message controller.");
             AssertContains(dlgCpp, "m_hashMessageController.HandleCopyHash();", "FilesHashDlg.cpp does not yet route copy-hash commands through the phase 28 message controller.");

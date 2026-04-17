@@ -49,6 +49,11 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithm Selection");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("Select a folder to hash");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("No regular files were found in the selected folder.");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED")] = _T("The selected file set exceeds the per-session limit of %Iu files. Please split it into smaller batches.");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT")] = _T("The selected file set contains %Iu files, which exceeds the per-session limit of %Iu. Please split it into smaller batches.");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_TRUNCATED")] = _T("Loaded %Iu files and stopped at the per-session limit of %Iu. Additional files were not processed.");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED")] = _T("The selected files may not have been fully loaded because the file dialog reached the per-session limit of %Iu files. Please split the selection into smaller batches.");
+	m_stringsMap[_T("MAINDLG_FILES_LOAD_ERROR")] = _T("The selected file set could not be loaded.");
 	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("Text Files (*.txt)|*.txt|All Files (*.*)|*.*||");
 	m_stringsMap[_T("MAINDLG_EXPORT_DEFAULT_NAME")] = _T("LHash-results.txt");
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("&About");

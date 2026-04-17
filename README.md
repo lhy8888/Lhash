@@ -94,6 +94,14 @@ LHash is a good fit for:
 - batch verification of local directories
 - comparing expected and actual digests during delivery or handover
 
+## Input limits
+
+LHash currently processes up to `8192` files per hashing session.
+
+- drag-and-drop and `WM_COPYDATA` batches above this limit are rejected with a visible warning
+- folder recursion stops at the limit and warns that additional files may not have been processed
+- the legacy multi-select file dialog warns when the returned selection may have hit the same limit
+
 ## What the tool is not trying to be
 
 LHash is not presented as a complete authenticity framework by itself.

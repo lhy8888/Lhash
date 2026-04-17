@@ -27,7 +27,7 @@ class HashProgressSink;
 typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 
-#define MAX_FILES_NUM 8192
+static constexpr size_t kMaxHashFilesPerSession = 8192;
 
 enum ResultState
 {

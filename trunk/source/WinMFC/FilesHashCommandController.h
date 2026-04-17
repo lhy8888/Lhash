@@ -9,6 +9,7 @@ class FilesHashInputController;
 class FilesHashSearchController;
 class FilesHashSessionController;
 class FilesHashLifecycleController;
+class FilesHashMessageController;
 class FilesHashProgressController;
 class FilesHashResultViewController;
 
@@ -25,11 +26,31 @@ public:
 		FilesHashSearchController* hashSearchController,
 		FilesHashSessionController* hashSessionController,
 		FilesHashLifecycleController* hashLifecycleController,
+		FilesHashMessageController* hashMessageController,
 		FilesHashProgressController* hashProgressController,
 		FilesHashResultViewController* hashResultViewController);
 
-	void HandleOpenButtonClick(LPCTSTR fileFilter, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);
-	void HandleOpenFolderButtonClick(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage, LPCTSTR clearButtonText, LPCTSTR secondText, LPCTSTR noSelectionMessage);
+	void HandleOpenButtonClick(
+		LPCTSTR fileFilter,
+		LPCTSTR clearButtonText,
+		LPCTSTR secondText,
+		LPCTSTR noSelectionMessage,
+		LPCTSTR overLimitMessage,
+		LPCTSTR overLimitWithCountMessage,
+		LPCTSTR truncatedMessage,
+		LPCTSTR maybeTruncatedMessage,
+		LPCTSTR errorMessage);
+	void HandleOpenFolderButtonClick(
+		LPCTSTR folderDialogTitle,
+		LPCTSTR emptyFolderMessage,
+		LPCTSTR clearButtonText,
+		LPCTSTR secondText,
+		LPCTSTR noSelectionMessage,
+		LPCTSTR overLimitMessage,
+		LPCTSTR overLimitWithCountMessage,
+		LPCTSTR truncatedMessage,
+		LPCTSTR maybeTruncatedMessage,
+		LPCTSTR errorMessage);
 	void HandleExitButtonClick() const;
 	void HandleAboutButtonClick() const;
 	void HandleCleanButtonClick(LPCTSTR clearButtonText, LPCTSTR clearVerifyButtonText);
@@ -47,6 +68,7 @@ private:
 	FilesHashSearchController* m_hashSearchController;
 	FilesHashSessionController* m_hashSessionController;
 	FilesHashLifecycleController* m_hashLifecycleController;
+	FilesHashMessageController* m_hashMessageController;
 	FilesHashProgressController* m_hashProgressController;
 	FilesHashResultViewController* m_hashResultViewController;
 };

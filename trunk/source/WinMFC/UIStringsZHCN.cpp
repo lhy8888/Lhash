@@ -49,6 +49,11 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("算法选择");
 	m_stringsMap[_T("MAINDLG_SELECT_FOLDER")] = _T("选择需要计算的文件夹");
 	m_stringsMap[_T("MAINDLG_EMPTY_FOLDER")] = _T("所选文件夹中没有可计算的普通文件。");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED")] = _T("所选文件数量超过单次处理上限（%Iu 个），请分批处理。");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_REJECTED_WITH_COUNT")] = _T("当前选择包含 %Iu 个文件，已超过单次处理上限（%Iu 个），请分批处理。");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_TRUNCATED")] = _T("已加载 %Iu 个文件，并在达到单次处理上限（%Iu 个）后停止。文件夹内可能还有更多文件未被处理。");
+	m_stringsMap[_T("MAINDLG_FILES_LIMIT_MAYBE_TRUNCATED")] = _T("所选文件可能未完整加载，因为文件对话框触达了单次处理上限（%Iu 个）。建议分批处理，并避免一次选择过多文件。");
+	m_stringsMap[_T("MAINDLG_FILES_LOAD_ERROR")] = _T("所选文件无法加载。");
 	m_stringsMap[_T("MAINDLG_EXPORT_FILTER")] = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||");
 	m_stringsMap[_T("MAINDLG_EXPORT_DEFAULT_NAME")] = _T("LHash-结果.txt");
 	m_stringsMap[_T("MAINDLG_ABOUT")] = _T("关于(&A)");
