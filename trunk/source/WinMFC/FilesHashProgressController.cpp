@@ -55,8 +55,9 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 		return;
 	}
 
+	m_taskListCtrl->ModifyStyle(0, LVS_REPORT | LVS_OWNERDATA);
 	m_taskListCtrl->SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_GRIDLINES);
-	m_taskListCtrl->DeleteAllItems();
+	m_taskListCtrl->SetItemCountEx(0, LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 	while (m_taskListCtrl->DeleteColumn(0))
 	{
 	}
@@ -73,6 +74,7 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 	m_taskListCtrl->InsertColumn(1, algorithmColumnText, LVCFMT_LEFT, algorithmColumnWidth);
 	m_taskListCtrl->InsertColumn(2, statusColumnText, LVCFMT_LEFT, statusColumnWidth);
 	m_taskListCtrl->InsertColumn(3, progressColumnText, LVCFMT_LEFT, progressColumnWidth);
+	m_taskListCtrl->SetItemCountEx(0, LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 	UpdateSummaryText();
 }
 
@@ -309,6 +311,44 @@ void FilesHashProgressController::SetWholeProgress(UINT pos)
 	}
 }
 
+int FilesHashProgressController::GetTaskRowCount() const
+{
+	return static_cast<int>(m_taskRows.size());
+}
+
+bool FilesHashProgressController::TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const
+{
+	if (displayText == NULL)
+	{
+		return false;
+	}
+
+	const TaskRowState* taskRowState = TryGetTaskRowState(rowIndex);
+	if (taskRowState == NULL)
+	{
+		return false;
+	}
+
+	switch (subItem)
+	{
+	case 0:
+		*displayText = taskRowState->displayName.c_str();
+		return true;
+	case 1:
+		*displayText = taskRowState->algorithms.c_str();
+		return true;
+	case 2:
+		*displayText = taskRowState->status.c_str();
+		return true;
+	case 3:
+		*displayText = BuildProgressText(taskRowState->progress);
+		return true;
+	default:
+		displayText->Empty();
+		return false;
+	}
+}
+
 int FilesHashProgressController::FindTaskRowIndex(const sunjwbase::tstring& fullPath) const
 {
 	for (int index = static_cast<int>(m_taskRows.size()) - 1; index >= 0; --index)
@@ -325,6 +365,16 @@ int FilesHashProgressController::FindTaskRowIndex(const sunjwbase::tstring& full
 	return -1;
 }
 
+const FilesHashProgressController::TaskRowState* FilesHashProgressController::TryGetTaskRowState(int rowIndex) const
+{
+	if (rowIndex < 0 || rowIndex >= static_cast<int>(m_taskRows.size()))
+	{
+		return NULL;
+	}
+
+	return &m_taskRows[static_cast<size_t>(rowIndex)];
+}
+
 void FilesHashProgressController::RefreshTaskRow(int rowIndex, bool ensureVisible /*= false*/)
 {
 	if (m_taskListCtrl == NULL || !::IsWindow(m_taskListCtrl->GetSafeHwnd()) || rowIndex < 0 || rowIndex >= static_cast<int>(m_taskRows.size()))
@@ -332,19 +382,8 @@ void FilesHashProgressController::RefreshTaskRow(int rowIndex, bool ensureVisibl
 		return;
 	}
 
-	TaskRowState& taskRowState = m_taskRows[static_cast<size_t>(rowIndex)];
-	if (m_taskListCtrl->GetItemCount() <= rowIndex)
-	{
-		m_taskListCtrl->InsertItem(rowIndex, taskRowState.displayName.c_str());
-	}
-	else
-	{
-		m_taskListCtrl->SetItemText(rowIndex, 0, taskRowState.displayName.c_str());
-	}
-
-	m_taskListCtrl->SetItemText(rowIndex, 1, taskRowState.algorithms.c_str());
-	m_taskListCtrl->SetItemText(rowIndex, 2, taskRowState.status.c_str());
-	m_taskListCtrl->SetItemText(rowIndex, 3, BuildProgressText(taskRowState.progress));
+	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+	m_taskListCtrl->RedrawItems(rowIndex, rowIndex);
 	if (ensureVisible)
 	{
 		m_taskListCtrl->EnsureVisible(rowIndex, FALSE);
@@ -358,11 +397,8 @@ void FilesHashProgressController::RefreshAllTaskRows()
 		return;
 	}
 
-	m_taskListCtrl->DeleteAllItems();
-	for (size_t index = 0; index < m_taskRows.size(); ++index)
-	{
-		RefreshTaskRow(static_cast<int>(index));
-	}
+	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+	m_taskListCtrl->Invalidate(FALSE);
 }
 
 void FilesHashProgressController::UpdateSummaryText()

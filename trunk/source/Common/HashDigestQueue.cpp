@@ -69,7 +69,16 @@ namespace HashEngineInternal
 	{
 		std::atomic<bool> isFileFinished(false);
 
-		queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;
+		const size_t maxBufferedChunkCount = GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan);
+		vector<unique_ptr<DigestDataBuffer>> digestBufferPool;
+		queue<size_t> availableBufferIndices;
+		queue<size_t> queuedBufferIndices;
+		for (size_t bufferIndex = 0; bufferIndex < maxBufferedChunkCount; ++bufferIndex)
+		{
+			digestBufferPool.push_back(unique_ptr<DigestDataBuffer>(new DigestDataBuffer(preferredBufferLength)));
+			availableBufferIndices.push(bufferIndex);
+		}
+
 		mutex mtxQueue;
 		condition_variable cvFile;
 		condition_variable cvCalc;
@@ -78,40 +87,52 @@ namespace HashEngineInternal
 		{
 			while (true)
 			{
-				unique_ptr<DigestDataBuffer> ptrDataBufCalc;
+				size_t bufferIndex = maxBufferedChunkCount;
 
 				{
 					unique_lock<mutex> lock(mtxQueue);
 					cvCalc.wait(lock, [&]
 					{
-						return (!queueDataBuffer.empty() || isFileFinished.load() || ShouldStopHashExecution(*executionContext));
+						return (!queuedBufferIndices.empty() || isFileFinished.load() || ShouldStopHashExecution(*executionContext));
 					});
 
-					if (queueDataBuffer.empty() && isFileFinished.load())
+					if (queuedBufferIndices.empty() && isFileFinished.load())
 					{
 						break;
 					}
 
-					if (!queueDataBuffer.empty())
+					if (!queuedBufferIndices.empty())
 					{
-						ptrDataBufCalc = std::move(queueDataBuffer.front());
-						queueDataBuffer.pop();
+						bufferIndex = queuedBufferIndices.front();
+						queuedBufferIndices.pop();
 					}
 				}
-				cvFile.notify_all();
 
 				if (ShouldStopHashExecution(*executionContext))
 				{
+					if (bufferIndex < maxBufferedChunkCount)
+					{
+						unique_lock<mutex> lock(mtxQueue);
+						availableBufferIndices.push(bufferIndex);
+					}
+					cvFile.notify_all();
 					break;
 				}
 
-				if (!ptrDataBufCalc)
+				if (bufferIndex >= maxBufferedChunkCount)
 				{
 					continue;
 				}
 
-				UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, ptrDataBufCalc->data, ptrDataBufCalc->datalen, threadPool);
-				UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);
+				DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
+				UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, digestDataBuffer.data, digestDataBuffer.datalen, threadPool);
+				UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);
+
+				{
+					unique_lock<mutex> lock(mtxQueue);
+					availableBufferIndices.push(bufferIndex);
+				}
+				cvFile.notify_all();
 			}
 			cvFile.notify_all();
 		});
@@ -123,17 +144,36 @@ namespace HashEngineInternal
 				break;
 			}
 
-			unique_ptr<DigestDataBuffer> ptrDataBufFile = make_unique<DigestDataBuffer>(preferredBufferLength);
-			if (ReadDigestDataBuffer(executionState, *ptrDataBufFile))
+			size_t bufferIndex = maxBufferedChunkCount;
 			{
-				isFileFinished.store(ptrDataBufFile->datalen < ptrDataBufFile->capacity);
-
 				unique_lock<mutex> lock(mtxQueue);
 				cvFile.wait(lock, [&]
 				{
-					return (queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan) || ShouldStopHashExecution(*executionContext));
+					return (!availableBufferIndices.empty() || ShouldStopHashExecution(*executionContext));
 				});
-				queueDataBuffer.push(std::move(ptrDataBufFile));
+				if (ShouldStopHashExecution(*executionContext))
+				{
+					break;
+				}
+
+				bufferIndex = availableBufferIndices.front();
+				availableBufferIndices.pop();
+			}
+
+			DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
+			if (ReadDigestDataBuffer(executionState, digestDataBuffer))
+			{
+				isFileFinished.store(digestDataBuffer.datalen < digestDataBuffer.capacity);
+
+				{
+					unique_lock<mutex> lock(mtxQueue);
+					queuedBufferIndices.push(bufferIndex);
+				}
+			}
+			else
+			{
+				unique_lock<mutex> lock(mtxQueue);
+				availableBufferIndices.push(bufferIndex);
 			}
 			cvCalc.notify_all();
 		}

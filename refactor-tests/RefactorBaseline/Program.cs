@@ -2962,6 +2962,8 @@ internal static class Program
             AssertContains(progressControllerHeader, "void ResetAfterStop();", "Phase 23 progress controller is missing the stop-reset seam.");
             AssertContains(progressControllerHeader, "void SetWholeProgress(UINT pos);", "Phase 23 progress controller is missing the grouped whole-progress seam.");
             AssertContains(progressControllerHeader, "void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);", "Phase 23 progress controller is missing the batched task-update seam.");
+            AssertContains(progressControllerHeader, "int GetTaskRowCount() const;", "Phase 23 progress controller is missing the virtual-list row-count seam.");
+            AssertContains(progressControllerHeader, "bool TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const;", "Phase 23 progress controller is missing the virtual-list display seam.");
 
             AssertContains(progressController, "CoCreateInstance(", "Phase 23 progress controller does not yet own taskbar setup.");
             AssertContains(progressController, "IID_ITaskbarList3", "Phase 23 progress controller does not yet own the taskbar interface binding.");
@@ -2973,6 +2975,10 @@ internal static class Program
             AssertContains(progressController, "m_taskListCtrl->SetRedraw(FALSE);", "Phase 23 progress controller does not yet suspend redraws during batched task updates.");
             AssertContains(progressController, "m_taskListCtrl->SetRedraw(TRUE);", "Phase 23 progress controller does not yet resume redraws after batched task updates.");
             AssertContains(progressController, "int ensureVisibleRowIndex = -1;", "Phase 23 progress controller does not yet track the final visible row during batched updates.");
+            AssertContains(progressController, "m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", "Phase 23 progress controller does not yet drive the task list through virtual-list item counts.");
+            AssertContains(progressController, "m_taskListCtrl->RedrawItems(rowIndex, rowIndex);", "Phase 23 progress controller does not yet redraw just the touched virtual-list row.");
+            AssertDoesNotContain(progressController, "m_taskListCtrl->InsertItem(", "Phase 23 progress controller still inserts concrete list items instead of using owner-data callbacks.");
+            AssertDoesNotContain(progressController, "m_taskListCtrl->SetItemText(", "Phase 23 progress controller still pushes text directly into the list control instead of serving owner-data callbacks.");
 
             AssertContains(dlgHeader, "#include \"FilesHashProgressController.h\"", "FilesHashDlg.h does not yet consume the phase 23 progress controller.");
             AssertContains(dlgHeader, "FilesHashProgressController m_hashProgressController;", "FilesHashDlg.h does not yet keep the phase 23 progress controller.");
@@ -2987,6 +2993,9 @@ internal static class Program
             AssertContains(dlgCppAndInitialization, "hashProgressController->Initialize(parentWnd, progressCtrl);", "FilesHashDlg.cpp does not yet initialize the phase 23 progress controller.");
             AssertContains(dlgCpp, "m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);", "FilesHashDlg.cpp does not yet drain batched task updates from the bridge.");
             AssertContains(dlgCpp, "m_hashProgressController.ApplyTaskUpdates(taskUpdates);", "FilesHashDlg.cpp does not yet route batched task updates through the progress controller.");
+            AssertContains(dlgCpp, "ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", "FilesHashDlg.cpp does not yet wire the virtual-list display callback.");
+            AssertContains(dlgCpp, "void CFilesHashDlg::OnTaskListGetDispInfo", "FilesHashDlg.cpp does not yet expose the virtual-list display callback implementation.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc"), "LVS_OWNERDATA", "Legacy task-list resource does not yet opt into owner-data mode.");
             AssertContains(lifecycleController, "m_hashProgressController->PrepareAdvTaskbar();", "FilesHashDlg.cpp does not yet route taskbar prep through the phase 23 progress controller.");
             AssertContains(lifecycleController, "m_hashProgressController->StartTiming(secondText);", "FilesHashDlg.cpp does not yet route timer startup through the phase 23 progress controller.");
             AssertContains(lifecycleController, "m_hashProgressController->AdvanceTimeTick(secondText);", "FilesHashDlg.cpp does not yet route timer ticks through the phase 23 progress controller.");
@@ -4089,7 +4098,7 @@ internal static class Program
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 52 HashDigestQueue.cpp does not yet delegate parallel digest updates to the digest updater seam.");
             AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState", "Phase 52 HashDigestPipeline.cpp does not yet delegate digest execution dispatch to HashDigestExecution.");
             AssertContains(hashDigestSinglePass, "UpdateDigestContextsSequential(digestUpdateRequest", "Phase 52 HashDigestSinglePass.cpp does not yet delegate sequential digest updates to the digest updater seam.");
-            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 52 HashDigestQueue.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", "Phase 52 HashDigestQueue.cpp does not yet route per-buffer progress updates through the progress tracker seam.");
             AssertContains(hashDigestSinglePass, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 52 HashDigestSinglePass.cpp does not yet route single-thread progress updates through the progress tracker seam.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueue.h\"", "Phase 52 HashEngineInternal.h does not yet consume the digest queue seam.");
@@ -4174,7 +4183,7 @@ internal static class Program
             AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateFileProgressEvent(positionNew));", "Phase 54 HashProgressTracker.cpp does not yet own per-file progress publication.");
             AssertContains(hashProgressTracker, "observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", "Phase 54 HashProgressTracker.cpp does not yet own whole-job progress publication.");
 
-            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 54 HashDigestQueue.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", "Phase 54 HashDigestQueue.cpp does not yet delegate queued buffer progress updates to HashProgressTracker.");
             AssertContains(hashDigestPipeline, "ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState", "Phase 54 HashDigestPipeline.cpp does not yet delegate digest execution through HashDigestExecution.");
             AssertContains(hashDigestExecution, "ProcessOpenedFileHashingSinglePass(executionContext, digestUpdateRequest, fsize, isSizeCaled, preferredBufferLength, executionState);", "Phase 54 HashDigestExecution.cpp does not yet delegate single-thread digest processing through HashDigestSinglePass.");
             AssertContains(hashDigestSinglePass, "UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", "Phase 54 HashDigestSinglePass.cpp does not yet delegate single-thread progress updates to HashProgressTracker.");
@@ -4210,15 +4219,16 @@ internal static class Program
             AssertContains(hashDigestQueueHeader, "bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", "Phase 55 HashDigestQueue.h does not yet expose parallel producer-consumer processing.");
             AssertContains(hashDigestQueueHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 55 HashDigestQueue.h does not yet expose queue planning controls for parallel producer-consumer processing.");
             AssertContains(hashDigestQueue, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", "Phase 55 HashDigestQueue.cpp does not yet own digest chunk reading.");
-            AssertContains(hashDigestQueue, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestQueue.cpp does not yet own queued digest buffers.");
+            AssertContains(hashDigestQueue, "vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", "Phase 55 HashDigestQueue.cpp does not yet own pooled digest buffers.");
             AssertContains(hashDigestQueue, "condition_variable cvFile;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer file queue signaling.");
             AssertContains(hashDigestQueue, "condition_variable cvCalc;", "Phase 55 HashDigestQueue.cpp does not yet own producer-consumer calculator queue signaling.");
             AssertContains(hashDigestQueue, "UpdateDigestContextsParallel(digestUpdateRequest", "Phase 55 HashDigestQueue.cpp does not yet own queued digest updates.");
-            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, ptrDataBufCalc->datalen, &executionState->progressState);", "Phase 55 HashDigestQueue.cpp does not yet own queued progress publication.");
-            AssertContains(hashDigestQueue, "queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan)", "Phase 55 HashDigestQueue.cpp does not yet route queue throttling through queue-plan controls.");
+            AssertContains(hashDigestQueue, "UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", "Phase 55 HashDigestQueue.cpp does not yet own queued progress publication.");
+            AssertContains(hashDigestQueue, "queue<size_t> availableBufferIndices;", "Phase 55 HashDigestQueue.cpp does not yet route producer/consumer availability through queue-plan controls.");
+            AssertContains(hashDigestQueue, "queue<size_t> queuedBufferIndices;", "Phase 55 HashDigestQueue.cpp does not yet route queued buffer ownership through queue-plan controls.");
 
             AssertContains(hashDigestExecution, "ProcessOpenedFileHashingParallel(executionContext, digestUpdateRequest, fsize, isSizeCaled, preferredBufferLength, digestQueuePlan, executionState, threadPool);", "Phase 55 HashDigestExecution.cpp does not yet delegate producer-consumer queue orchestration to HashDigestQueue.");
-            AssertDoesNotContain(hashDigestPipeline, "queue<unique_ptr<DigestDataBuffer>> queueDataBuffer;", "Phase 55 HashDigestPipeline.cpp still owns digest queue buffers instead of delegating them to HashDigestQueue.");
+            AssertDoesNotContain(hashDigestPipeline, "vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", "Phase 55 HashDigestPipeline.cpp still owns digest queue buffers instead of delegating them to HashDigestQueue.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueue.h\"", "Phase 55 HashEngineInternal.h does not yet consume the digest queue seam.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueue.cpp", "Phase 55 desktop native core project does not yet compile HashDigestQueue.cpp.");
@@ -4534,7 +4544,7 @@ internal static class Program
             AssertContains(hashDigestExecutionHeader, "const HashDigestRuntimePlan& digestRuntimePlan", "Phase 63 HashDigestExecution.h does not yet route queue planning into digest execution dispatch.");
             AssertContains(hashDigestExecution, "const HashDigestQueuePlan& digestQueuePlan = GetHashDigestRuntimeQueuePlan(digestRuntimePlan);", "Phase 63 HashDigestExecution.cpp does not yet route queue planning into parallel digest execution.");
             AssertContains(hashDigestQueueHeader, "const HashDigestQueuePlan& digestQueuePlan", "Phase 63 HashDigestQueue.h does not yet expose queue-plan controls for parallel queue processing.");
-            AssertContains(hashDigestQueue, "queueDataBuffer.size() < GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan)", "Phase 63 HashDigestQueue.cpp does not yet use queue-plan buffering controls.");
+            AssertContains(hashDigestQueue, "const size_t maxBufferedChunkCount = GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan);", "Phase 63 HashDigestQueue.cpp does not yet use queue-plan buffering controls.");
 
             AssertContains(hashEngineInternal, "#include \"Common/HashDigestQueuePlan.h\"", "Phase 63 HashEngineInternal.h does not yet consume the HashDigestQueuePlan seam.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashDigestQueuePlan.cpp", "Phase 63 desktop native core project does not yet compile HashDigestQueuePlan.cpp.");
@@ -4708,7 +4718,7 @@ internal static class Program
             AssertContains(hashDigestQueueHeader, "uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);", "Phase 67 HashDigestQueue.h does not yet expose explicit chunk-iteration sizing.");
             AssertContains(hashDigestQueue, "DigestDataBuffer::DigestDataBuffer(unsigned int preferredLength):datalen(0), capacity(NormalizeDigestDataBufferPreferredLength(preferredLength)), data(NULL)", "Phase 67 HashDigestQueue.cpp does not yet initialize per-buffer capacity.");
             AssertContains(hashDigestQueue, "int64_t readRet = executionState->fileAttemptState.osFile->read(dataBuffer.data, dataBuffer.capacity);", "Phase 67 HashDigestQueue.cpp does not yet read using per-buffer capacity.");
-        AssertContains(hashDigestQueue, "isFileFinished.store(ptrDataBufFile->datalen < ptrDataBufFile->capacity);", "Phase 67 HashDigestQueue.cpp does not yet route completion checks through per-buffer capacity.");
+        AssertContains(hashDigestQueue, "isFileFinished.store(digestDataBuffer.datalen < digestDataBuffer.capacity);", "Phase 67 HashDigestQueue.cpp does not yet route completion checks through per-buffer capacity.");
             AssertDoesNotContain(hashDigestQueue, "DigestDataBuffer::preflen", "Phase 67 HashDigestQueue.cpp should no longer rely on global static digest-buffer length.");
             AssertDoesNotContain(hashDigestQueue, "SetDigestDataBufferPreferredLength(", "Phase 67 HashDigestQueue.cpp should no longer expose global digest-buffer mutation helpers.");
 
@@ -5063,9 +5073,9 @@ internal static class Program
 
             AssertContains(hashPreScanSizeProbeHeader, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);", "Phase 73 HashPreScanSizeProbe.h does not yet expose pre-scan size probing.");
             AssertContains(hashPreScanSizeProbe, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path)", "Phase 73 HashPreScanSizeProbe.cpp does not yet own pre-scan size probing.");
-            AssertContains(hashPreScanSizeProbe, "sunjwbase::OsFile osFile(path);", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve pre-scan file-open handling.");
-            AssertContains(hashPreScanSizeProbe, "if (osFile.openRead())", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve pre-scan open gating.");
-            AssertContains(hashPreScanSizeProbe, "fSize = osFile.getLength();", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve pre-scan length reads.");
+            AssertContains(hashPreScanSizeProbe, "GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve Win32 pre-scan attribute probing.");
+            AssertContains(hashPreScanSizeProbe, "fileAttributes.nFileSizeHigh", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve Win32 64-bit pre-scan size composition.");
+            AssertContains(hashPreScanSizeProbe, "sunjwbase::OsFile osFile(path);", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve non-Windows pre-scan file-open fallback.");
             AssertContains(hashEnginePreparation, "uint64_t fSize = ResolveHashPreScannedFileSize(path);", "Phase 73 HashEnginePreparation.cpp does not yet delegate pre-scan size probing.");
             AssertDoesNotContain(hashEnginePreparation, "OsFile osFile(path);", "Phase 73 HashEnginePreparation.cpp should no longer own pre-scan file-open details.");
             AssertContains(hashEngineInternal, "#include \"Common/HashPreScanSizeProbe.h\"", "Phase 73 HashEngineInternal.h does not yet consume HashPreScanSizeProbe.");

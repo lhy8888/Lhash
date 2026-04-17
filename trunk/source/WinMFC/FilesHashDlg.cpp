@@ -3,6 +3,7 @@
 #include "stdafx.h"
 
 #include <string>
+#include <tchar.h>
 #include <vector>
 
 #include <shellapi.h>
@@ -161,6 +162,7 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 	ON_WM_INITMENUPOPUP()
 	ON_MESSAGE(WM_THREAD_INFO, OnThreadMsg)
 	ON_MESSAGE(WM_CUSTOM_MSG, OnCustomMsg)
+	ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)
 	ON_COMMAND(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnHypereditmenuCopyhash)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnUpdateHypereditmenuCopyhash)
 	ON_WM_COPYDATA()
@@ -424,6 +426,28 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 {
 	return m_hashMessageController.HandleCustomMessage(wParam);
+}
+
+void CFilesHashDlg::OnTaskListGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NMLVDISPINFO* pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
+	if (pDispInfo != NULL &&
+		(pDispInfo->item.mask & LVIF_TEXT) != 0 &&
+		pDispInfo->item.pszText != NULL &&
+		pDispInfo->item.cchTextMax > 0)
+	{
+		CString displayText;
+		if (m_hashProgressController.TryGetTaskRowDisplayText(pDispInfo->item.iItem, pDispInfo->item.iSubItem, &displayText))
+		{
+			_tcsncpy_s(pDispInfo->item.pszText, pDispInfo->item.cchTextMax, displayText, _TRUNCATE);
+		}
+		else
+		{
+			pDispInfo->item.pszText[0] = _T('\0');
+		}
+	}
+
+	*pResult = 0;
 }
 
 void CFilesHashDlg::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu)

@@ -243,10 +243,12 @@ public sealed class CommonSeamUnitTests
     {
         string fileAttemptWorkflow = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string preScanSizeProbe = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
+        string digestQueue = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestQueue.cpp");
         string bridgeHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string bridgeImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string dialog = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashDlg.cpp");
         string lifecycleController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashLifecycleController.cpp");
+        string taskListResource = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\fileshash.rc");
         string progressController = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.cpp");
         string progressControllerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
@@ -268,11 +270,21 @@ public sealed class CommonSeamUnitTests
         Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", bridgeImplementation, StringComparison.Ordinal);
         Assert.Contains("m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
         Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
+        Assert.Contains("ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", dialog, StringComparison.Ordinal);
+        Assert.Contains("void CFilesHashDlg::OnTaskListGetDispInfo", dialog, StringComparison.Ordinal);
+        Assert.Contains("_tcsncpy_s(pDispInfo->item.pszText, pDispInfo->item.cchTextMax, displayText, _TRUNCATE);", dialog, StringComparison.Ordinal);
+        Assert.Contains("LVS_OWNERDATA", taskListResource, StringComparison.Ordinal);
 
         Assert.Contains("void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);", progressControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("int GetTaskRowCount() const;", progressControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("bool TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const;", progressControllerHeader, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
         Assert.Contains("int ensureVisibleRowIndex = -1;", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->RedrawItems(rowIndex, rowIndex);", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);
         Assert.Contains("RefreshTaskRow(rowIndex, ensureVisible);", progressController, StringComparison.Ordinal);
         Assert.Contains("if (ensureVisible)", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", progressController, StringComparison.Ordinal);
@@ -280,6 +292,13 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("GetCachedDigestImplementation", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("digestImplementationCache.digestImplementations", providerImplementation, StringComparison.Ordinal);
         Assert.DoesNotContain("EVP_MD_free(digestImplementation);", providerImplementation, StringComparison.Ordinal);
+
+        Assert.Contains("vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queue<size_t> queuedBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("availableBufferIndices.push(bufferIndex);", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queuedBufferIndices.push(bufferIndex);", digestQueue, StringComparison.Ordinal);
+        Assert.DoesNotContain("make_unique<DigestDataBuffer>(preferredBufferLength)", digestQueue, StringComparison.Ordinal);
     }
 
     [Fact]

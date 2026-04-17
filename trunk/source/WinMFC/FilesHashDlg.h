@@ -61,6 +61,7 @@ protected:
 	afx_msg LRESULT OnThreadMsg(WPARAM, LPARAM);
 	afx_msg LRESULT OnCustomMsg(WPARAM, LPARAM);
 	afx_msg void OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu);
+	afx_msg void OnTaskListGetDispInfo(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnHypereditmenuCopyhash();
 	afx_msg void OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI);
 

@@ -31,6 +31,8 @@ public:
 	void FinishTiming(ULONGLONG totalSize);
 	void ResetAfterStop();
 	void SetWholeProgress(UINT pos);
+	int GetTaskRowCount() const;
+	bool TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const;
 
 private:
 	struct TaskRowState
@@ -47,6 +49,7 @@ private:
 	static CString BuildProgressText(int progress);
 	int FindTaskRowIndex(const sunjwbase::tstring& fullPath) const;
 	int ApplyTaskUpdateToState(const FilesHashTaskUpdate& taskUpdate, bool *ensureVisible);
+	const TaskRowState* TryGetTaskRowState(int rowIndex) const;
 	void RefreshTaskRow(int rowIndex, bool ensureVisible = false);
 	void RefreshAllTaskRows();
 	void UpdateSummaryText();

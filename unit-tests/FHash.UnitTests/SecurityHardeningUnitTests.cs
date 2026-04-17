@@ -137,6 +137,7 @@ public sealed class SecurityHardeningUnitTests
         string md5 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\MD5.cpp");
         string sha1 = RepositoryTestContext.ReadTextFile(@"trunk\source\Algorithms\SHA1.cpp");
         string strhelper = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\strhelper.cpp");
+        string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
         string uiBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
         string uiBridgeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
@@ -179,10 +180,17 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", uiBridge, StringComparison.Ordinal);
         Assert.Contains("taskUpdates.swap(m_pendingTaskUpdates);", uiBridge, StringComparison.Ordinal);
         Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", filesHashDialog, StringComparison.Ordinal);
+        Assert.Contains("ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", filesHashDialog, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);
         Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.DoesNotContain("make_unique<DigestDataBuffer>(preferredBufferLength)", digestQueue, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", nativeRuntimeTests, StringComparison.Ordinal);

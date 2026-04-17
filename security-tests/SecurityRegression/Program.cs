@@ -193,7 +193,7 @@ internal static partial class Program
             AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
-            AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer constrained to the compact six-row viewport.");
+            AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_OWNERDATA | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer using the compact virtual-list viewport.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"算法选择\");", "Legacy settings menu no longer labels algorithm controls as 算法选择 in Simplified Chinese.");
             AssertContains(dialogContent, "ShowAlgorithmSelectionDialog();", "Legacy settings flow no longer routes algorithm selection through a dedicated toggle dialog.");
             AssertContains(dialogContent, "CAlgorithmSelectionDialog", "Legacy settings flow no longer defines a dedicated toggle dialog for algorithm selection.");
@@ -594,12 +594,17 @@ internal static partial class Program
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp"), "taskUpdates.swap(m_pendingTaskUpdates);", "Legacy task updates no longer drain the pending batch in one handoff.");
             AssertDoesNotContain(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp"), "new FilesHashTaskUpdate(taskUpdate)", "Legacy task updates unexpectedly reintroduced per-message heap allocations.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp"), "m_hashProgressController.ApplyTaskUpdates(taskUpdates);", "Legacy dialog no longer routes WP_TASK_UPDATE through batched task refresh.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp"), "ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", "Legacy dialog no longer provides virtual-list display callbacks for the task list.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "taskRowState.state == FILES_HASH_TASK_PENDING ||", "Legacy task list no longer keeps older completed rows stable while updating current rows.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->SetRedraw(FALSE);", "Legacy task list no longer suspends redraws during batched task updates.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->SetRedraw(TRUE);", "Legacy task list no longer resumes redraws after batched task updates.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", "Legacy task list no longer drives the list control through virtual-list item counts.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "RefreshTaskRow(rowIndex, ensureVisible);", "Legacy task list no longer routes row refresh through the explicit ensure-visible flag.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "if (ensureVisible)", "Legacy task list no longer gates row auto-scrolling behind an explicit ensure-visible check.");
             AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashProgressController.cpp"), "m_taskListCtrl->EnsureVisible(rowIndex, FALSE);", "Legacy task list no longer performs the final ensure-visible scroll when explicitly requested.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc"), "LVS_OWNERDATA", "Legacy task list resource no longer uses the virtual-list owner-data style.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"), "vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", "Parallel digest execution no longer preallocates a reusable data-buffer pool.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp"), "queue<size_t> availableBufferIndices;", "Parallel digest execution no longer tracks reusable buffer slots.");
         }, failures);
         Run("Native compiler and linker mitigations are imported consistently", () =>
         {
