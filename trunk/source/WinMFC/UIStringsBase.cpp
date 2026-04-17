@@ -45,6 +45,7 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_OPEN_FOLDER")] = _T("Open &Folder");
 	m_stringsMap[_T("MAINDLG_EXPORT")] = _T("&Export");
 	m_stringsMap[_T("MAINDLG_SETTINGS")] = _T("&Settings");
+	m_stringsMap[_T("MAINDLG_ALGORITHMS_BUTTON")] = _T("Algorithms");
 	m_stringsMap[_T("MAINDLG_SETTINGS_CLEAR")] = _T("Clear Results");
 	m_stringsMap[_T("MAINDLG_SETTINGS_ALGORITHMS")] = _T("Algorithm Selection");
 	m_stringsMap[_T("MAINDLG_SETTINGS_HINT")] = _T("Select one or more algorithms, then click OK.");
