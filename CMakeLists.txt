@@ -42,6 +42,8 @@ if (WIN32)
     target_compile_definitions(lhash_core PRIVATE UNICODE _UNICODE)
 endif()
 
+target_compile_definitions(lhash_core PRIVATE FHASH_CORE_BUILD=1)
+
 target_compile_definitions(lhash_core PRIVATE
     BLAKE3_NO_SSE2
     BLAKE3_NO_SSE41

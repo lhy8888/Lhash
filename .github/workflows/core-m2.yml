@@ -24,18 +24,21 @@ jobs:
             generator: Visual Studio 17 2022
             configure_args: -A x64
             build_dir: build/core/windows-x64
+            build_target: lhash_core_smoke
             run_smoke: true
           - name: windows-arm64
             os: windows-11-arm
             generator: Visual Studio 17 2022
             configure_args: -A ARM64
             build_dir: build/core/windows-arm64
+            build_target: lhash_core
             run_smoke: false
           - name: macos-arm64
             os: macos-14
             generator: Xcode
             configure_args: -DCMAKE_OSX_ARCHITECTURES=arm64
             build_dir: build/core/macos-arm64
+            build_target: lhash_core_smoke
             run_smoke: true
 
     defaults:
@@ -68,7 +71,7 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $buildLog = Join-Path $artifactRoot 'cmake-build.log'
 
-          & cmake --build $buildRoot --config Release --target lhash_core_smoke --parallel 2>&1 |
+          & cmake --build $buildRoot --config Release --target ${{ matrix.build_target }} --parallel 2>&1 |
             Tee-Object -FilePath $buildLog
 
           if ($LASTEXITCODE -ne 0) {

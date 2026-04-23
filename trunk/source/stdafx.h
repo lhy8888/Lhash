@@ -17,7 +17,7 @@
 
 #include "targetver.h"
 
-#if defined (WIN32)
+#if defined (WIN32) && !defined (FHASH_CORE_BUILD)
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // 某些 CString 构造函数将是显式的
 
