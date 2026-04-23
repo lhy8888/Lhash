@@ -8,7 +8,12 @@
 #include <cstdint>
 
 #include "./crc32c_arm64.h"
+#if HAVE_ARM64_CRC32C && !(defined(_WIN32) && defined(_M_ARM64))
 #include "./crc32c_arm64_check.h"
+#define CRC32C_HAS_RUNTIME_ARM64_CHECK 1
+#else
+#define CRC32C_HAS_RUNTIME_ARM64_CHECK 0
+#endif
 #include "./crc32c_internal.h"
 #include "./crc32c_sse42.h"
 #include "./crc32c_sse42_check.h"
@@ -19,7 +24,7 @@ uint32_t Extend(uint32_t crc, const uint8_t* data, size_t count) {
 #if HAVE_SSE42 && (defined(_M_X64) || defined(__x86_64__))
   static bool can_use_sse42 = CanUseSse42();
   if (can_use_sse42) return ExtendSse42(crc, data, count);
-#elif HAVE_ARM64_CRC32C
+#elif CRC32C_HAS_RUNTIME_ARM64_CHECK
   static bool can_use_arm64_crc32 = CanUseArm64Crc32();
   if (can_use_arm64_crc32) return ExtendArm64(crc, data, count);
 #endif  // HAVE_SSE42 && (defined(_M_X64) || defined(__x86_64__))
