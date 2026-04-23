@@ -24,3 +24,4 @@ native-benchmarks/**/Release/
 native-benchmarks/**/ARM64/
 native-benchmarks/**/x64/
 native-benchmarks/**/Win32/
+build/

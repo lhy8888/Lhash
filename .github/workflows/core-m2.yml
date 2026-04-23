@@ -1,0 +1,99 @@
+name: Core M2 Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - future-winui-was2
+      - codex/**
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core-matrix:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-2022
+            generator: Visual Studio 17 2022
+            configure_args: -A x64
+            build_dir: build/core/windows-x64
+            run_smoke: true
+          - name: windows-arm64
+            os: windows-11-arm
+            generator: Visual Studio 17 2022
+            configure_args: -A ARM64
+            build_dir: build/core/windows-arm64
+            run_smoke: false
+          - name: macos-arm64
+            os: macos-14
+            generator: Xcode
+            configure_args: -DCMAKE_OSX_ARCHITECTURES=arm64
+            build_dir: build/core/macos-arm64
+            run_smoke: true
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure core build
+        run: |
+          $repoRoot = $env:GITHUB_WORKSPACE
+          $buildRoot = Join-Path $repoRoot '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
+          New-Item -ItemType Directory -Force -Path $buildRoot, $artifactRoot | Out-Null
+
+          $configureLog = Join-Path $artifactRoot 'cmake-configure.log'
+          & cmake -S $repoRoot -B $buildRoot -G "${{ matrix.generator }}" ${{ matrix.configure_args }} -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_ENABLE_OPENSSL_VENDOR=OFF 2>&1 |
+            Tee-Object -FilePath $configureLog
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "CMake configure failed with exit code $LASTEXITCODE. See $configureLog for details."
+          }
+
+      - name: Build core smoke target
+        run: |
+          $repoRoot = $env:GITHUB_WORKSPACE
+          $buildRoot = Join-Path $repoRoot '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
+          $buildLog = Join-Path $artifactRoot 'cmake-build.log'
+
+          & cmake --build $buildRoot --config Release --target lhash_core_smoke --parallel 2>&1 |
+            Tee-Object -FilePath $buildLog
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "CMake build failed with exit code $LASTEXITCODE. See $buildLog for details."
+          }
+
+      - name: Run core smoke
+        if: ${{ matrix.run_smoke }}
+        run: |
+          $repoRoot = $env:GITHUB_WORKSPACE
+          $buildRoot = Join-Path $repoRoot '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
+          $smokeLog = Join-Path $artifactRoot 'core-smoke.log'
+
+          & ctest --test-dir $buildRoot --output-on-failure -C Release -R lhash_core_smoke 2>&1 |
+            Tee-Object -FilePath $smokeLog
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Core smoke test failed with exit code $LASTEXITCODE. See $smokeLog for details."
+          }
+
+      - name: Upload core matrix artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lhash-core-m2-${{ matrix.name }}
+          path: artifacts/core-m2/${{ matrix.name }}/**
+          if-no-files-found: warn

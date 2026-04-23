@@ -1,7 +1,7 @@
 #ifndef _HASH_RESULT_RENDER_H_
 #define _HASH_RESULT_RENDER_H_
 
-#include <stdio.h>
+#include <string>
 
 #include "Common/HashResult.h"
 #include "Common/ResultDataRender.h"
@@ -15,11 +15,9 @@ static inline bool HasHashResultVersion(const HashResult& result)
 
 static inline ResultSizeDisplayInfo GetHashResultSizeDisplayInfo(const HashResult& result)
 {
-	char chSizeBuff[1024] = { 0 };
 	ResultSizeDisplayInfo resultSizeDisplayInfo;
 
-	sprintf_s(chSizeBuff, 1024, "%I64u", result.meta.size);
-	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::string(chSizeBuff));
+	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::to_string(result.meta.size));
 	resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(result.meta.size));
 
 	return resultSizeDisplayInfo;

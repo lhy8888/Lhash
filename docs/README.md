@@ -8,6 +8,7 @@ This directory contains the project’s security, trust, release, and verificati
 - [Security model](SECURITY_MODEL.md)
 - [Release verification guide](RELEASE_VERIFICATION.md)
 - [Supply-chain security](SUPPLY_CHAIN_SECURITY.md)
+- [Core build entry point](CORE_BUILD.md)
 
 ## How to read these documents
 

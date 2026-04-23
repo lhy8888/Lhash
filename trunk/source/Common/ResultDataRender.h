@@ -1,7 +1,6 @@
 #ifndef _RESULT_DATA_RENDER_H_
 #define _RESULT_DATA_RENDER_H_
 
-#include <stdio.h>
 #include <string>
 
 #include "Common/ResultDataAccess.h"
@@ -82,11 +81,9 @@ struct ResultSizeDisplayInfo
 
 static inline ResultSizeDisplayInfo GetResultSizeDisplayInfo(const ResultData& result)
 {
-	char chSizeBuff[1024] = { 0 };
 	ResultSizeDisplayInfo resultSizeDisplayInfo;
 
-	sprintf_s(chSizeBuff, 1024, "%I64u", GetResultSize(result));
-	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::string(chSizeBuff));
+	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::to_string(GetResultSize(result)));
 	resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(GetResultSize(result)));
 
 	return resultSizeDisplayInfo;

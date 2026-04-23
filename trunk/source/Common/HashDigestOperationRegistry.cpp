@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <stdio.h>
 #include <mutex>
 
 #include "Common/HashEngineInternal.h"

@@ -25,6 +25,8 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Windows UI mainline: `MFC`
 - Legacy WinUI / CLR bridge: retired from the maintained release line
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
+- Core CI: [`Core M2 Build workflow`](.github/workflows/core-m2.yml)
+- Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)

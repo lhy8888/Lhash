@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <stdio.h>
 #include <string>
 
 #include "Runtime/Hash/CRC32CHashProvider.h"
