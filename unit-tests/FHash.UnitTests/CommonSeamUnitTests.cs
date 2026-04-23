@@ -462,12 +462,16 @@ public sealed class CommonSeamUnitTests
     [Fact]
     public void HashResultRender_OwnsSharedRealtimeRenderPrimitives()
     {
+        string resultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDataRender.h");
         string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
         string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string bridgeMacHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
 
+        Assert.Contains("ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)", resultRender, StringComparison.Ordinal);
+        Assert.Contains("return GetResultSizeDisplayInfo(GetResultSize(result));", resultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("GetHashResultSizeDisplayInfo(const HashResult& result)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("return GetResultSizeDisplayInfo(result.meta.size);", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("VisitRenderableHashResultMetaLines(const HashResult& result, TResultMetaLineVisitor visitor)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);

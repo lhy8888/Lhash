@@ -1975,9 +1975,10 @@ internal static class Program
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
 
             AssertContains(resultRender, "struct ResultSizeDisplayInfo", "ResultDataRender does not yet expose the grouped file-size display structure.");
+            AssertContains(resultRender, "ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)", "ResultDataRender does not yet expose the shared byte-size display overload.");
             AssertContains(resultRender, "GetResultSizeDisplayInfo(const ResultData& result)", "ResultDataRender does not yet expose the centralized file-size display helper.");
-            AssertContains(resultRender, "sprintf_s(chSizeBuff, 1024, \"%I64u\", GetResultSize(result));", "ResultDataRender file-size display helper does not yet centralize the byte-size formatting.");
-            AssertContains(resultRender, "resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(GetResultSize(result)));", "ResultDataRender file-size display helper does not yet centralize the short-size formatting.");
+            AssertContains(resultRender, "return GetResultSizeDisplayInfo(GetResultSize(result));", "ResultDataRender file-size display helper does not yet route the ResultData overload through the shared size helper.");
+            AssertContains(resultRender, "resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(resultSize));", "ResultDataRender file-size display helper does not yet centralize the short-size formatting.");
             AssertContains(resultRender, "enum ResultMetaLineType", "ResultDataRender does not yet expose the result-metadata line type enum.");
             AssertContains(resultRender, "DispatchResultMetaLineByType(ResultMetaLineType metaLine, TFileSizeAction onFileSize, TModifiedDateAction onModifiedDate, TVersionAction onVersion)", "ResultDataRender does not yet expose the centralized metadata-line dispatch helper.");
             AssertContains(resultRender, "VisitRenderableResultMetaLines(const ResultData& result, TResultMetaLineVisitor visitor)", "ResultDataRender does not yet expose the renderable metadata-line visitor helper.");

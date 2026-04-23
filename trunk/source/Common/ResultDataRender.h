@@ -79,14 +79,19 @@ struct ResultSizeDisplayInfo
 	sunjwbase::tstring shortSizeText;
 };
 
-static inline ResultSizeDisplayInfo GetResultSizeDisplayInfo(const ResultData& result)
+static inline ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)
 {
 	ResultSizeDisplayInfo resultSizeDisplayInfo;
 
-	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::to_string(GetResultSize(result)));
-	resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(GetResultSize(result)));
+	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::to_string(resultSize));
+	resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(resultSize));
 
 	return resultSizeDisplayInfo;
+}
+
+static inline ResultSizeDisplayInfo GetResultSizeDisplayInfo(const ResultData& result)
+{
+	return GetResultSizeDisplayInfo(GetResultSize(result));
 }
 
 static inline bool ShouldRenderResultFileName(ResultState resultState)

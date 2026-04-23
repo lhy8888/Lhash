@@ -15,12 +15,7 @@ static inline bool HasHashResultVersion(const HashResult& result)
 
 static inline ResultSizeDisplayInfo GetHashResultSizeDisplayInfo(const HashResult& result)
 {
-	ResultSizeDisplayInfo resultSizeDisplayInfo;
-
-	resultSizeDisplayInfo.sizeText = sunjwbase::strtotstr(std::to_string(result.meta.size));
-	resultSizeDisplayInfo.shortSizeText = sunjwbase::strtotstr(Utils::ConvertSizeToShortSizeStr(result.meta.size));
-
-	return resultSizeDisplayInfo;
+	return GetResultSizeDisplayInfo(result.meta.size);
 }
 
 template<typename TResultMetaLineVisitor>
