@@ -19,6 +19,7 @@ Archived on the current mainline cleanup pass:
 - `legacy-platforms/sub-proj/fHashUwpNative`
 - `legacy-platforms/sub-proj/fHashUwpShellExt`
 - `legacy-platforms/sub-proj/fHashWUIShellExt`
+- `legacy-platforms/sub-proj/fHashClrBridge`
 - `legacy-algorithms/trunk/source/Algorithms/sha256.cpp`
 - `legacy-algorithms/trunk/source/Algorithms/sha256.h`
 - `legacy-algorithms/trunk/source/Algorithms/sha512.cpp`
