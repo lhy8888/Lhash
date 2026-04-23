@@ -1,7 +1,5 @@
 # LHash
 
-![LHash Logo](../trunk/source/WinUI/Assets/StoreLogo.scale-400.png)
-
 ![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
@@ -24,6 +22,7 @@ This maintained release line turns LHash from a traditional hash utility into a 
 - Current release: [`v1.12.2`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.2)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Main branch: `future-winui-was2`
+- Windows UI mainline: `MFC`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Code signing: [CODE_SIGNING.md](../CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](../CODE_SIGNING_POLICY.md)

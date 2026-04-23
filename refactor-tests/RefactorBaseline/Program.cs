@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 internal static class Program
 {
@@ -3451,7 +3451,8 @@ internal static class Program
         {
             string winUiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
             string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string readme = ReadRepoFile(repoRoot, @"README.md");
 
             AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming fHashNativeCore.");
             AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\SHA1.cpp", "Phase 32 WinUI native project still recompiles SHA1 instead of consuming fHashNativeCore.");
@@ -3473,15 +3474,12 @@ internal static class Program
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", "Phase 32 CLR bridge does not yet search the CLR-compatible fHashNativeCore-md output directory.");
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
 
-            AssertInOrder(
-                previewWorkflow,
-                [
-                    "build-winui-bridge-x64:",
-                    "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
-                    "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
-                    "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore"
-                ],
-                "Phase 32 workflow does not yet build fHashNativeCore before the WinUI native layer and CLR bridge.");
+            if (File.Exists(previewWorkflowPath))
+            {
+                throw new InvalidOperationException("Phase 32 WinUI preview workflow should no longer exist in the maintained build graph.");
+            }
+            AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 32 README no longer marks MFC as the sole Windows UI mainline.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 32 README no longer retires the WinUI / CLR bridge from the maintained release line.");
         }, failures);
 
         Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
@@ -3879,7 +3877,8 @@ internal static class Program
         Run("Phase 47 introduces a native C++ runtime test project and caches the vendored OpenSSL package for parallel native builds", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string readme = ReadRepoFile(repoRoot, @"README.md");
             string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeRuntimeMain = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestMain.cpp");
@@ -3923,6 +3922,12 @@ internal static class Program
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
+            if (File.Exists(previewWorkflowPath))
+            {
+                throw new InvalidOperationException("Phase 47 WinUI preview workflow should no longer exist in the maintained build graph.");
+            }
+            AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 47 README no longer marks MFC as the sole Windows UI mainline.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 47 README no longer retires the WinUI / CLR bridge from the maintained release line.");
             AssertInOrder(
                 workflow,
                 new[]
@@ -6157,10 +6162,8 @@ internal static class Program
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
-            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-            string uwpBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string previewWorkflow = ReadRepoFile(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
             string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
@@ -6168,6 +6171,7 @@ internal static class Program
             string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
             string nativeRuntimeFrameworkTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string licenseException = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
+            string archiveReadme = ReadRepoFile(repoRoot, @"archive\README.md");
 
             AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated MD5 compatibility descriptor.");
             AssertContains(registryCore, "{ \"sha1\", \"SHA1 (Deprecated)\", true, false }", "Phase 98 is missing the deprecated SHA1 compatibility descriptor.");
@@ -6196,10 +6200,6 @@ internal static class Program
             AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "Phase 98 OpenSSL provider no longer configures truncated digest output through OSSL params.");
             AssertContains(providerImplementation, "ConfigureOpenSslEvpFailureInjection", "Phase 98 OpenSSL provider does not yet expose failure injection hooks for runtime error-path coverage.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
-            AssertContains(clrBridgeProject, @"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", "Phase 98 CLR bridge does not yet define explicit OpenSSL bridge-link dependencies.");
-            AssertContains(clrBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 CLR bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
-            AssertContains(uwpBridgeProject, @"<FHashOpenSslAdditionalDependencies Condition=""'$(FHashOpenSslInstallRoot)'!=''"">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>", "Phase 98 WinRT bridge does not yet define explicit OpenSSL bridge-link dependencies.");
-            AssertContains(uwpBridgeProject, @"$(FHashOpenSslAdditionalDependencies)fHashUwpNative.lib;Version.lib;%(AdditionalDependencies)", "Phase 98 WinRT bridge does not yet inject explicit OpenSSL bridge-link dependencies into the active link configuration.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
@@ -6208,11 +6208,14 @@ internal static class Program
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
-            AssertContains(previewWorkflow, "workflow_dispatch:", "Phase 98 dedicated WinUI preview workflow should stay manual-only.");
-            AssertContains(previewWorkflow, "$env:FHashOpenSslInstallRoot = $openSslRoot", "Phase 98 WinUI preview workflow does not yet export the OpenSSL install root into the WinUI preview environment.");
-            AssertContains(previewWorkflow, "$env:OPENSSL_VENDOR_INSTALL_ROOT = $openSslRoot", "Phase 98 WinUI preview workflow does not yet export the shared OpenSSL vendor root into the WinUI preview environment.");
-            AssertContains(previewWorkflow, "LHash-winui-preview-x64", "Phase 98 WinUI preview workflow no longer publishes the preview artifact.");
-        AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
+            if (File.Exists(previewWorkflowPath))
+            {
+                throw new InvalidOperationException("Phase 98 WinUI preview workflow should no longer exist in the maintained build graph.");
+            }
+            AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 98 README no longer marks MFC as the sole Windows UI mainline.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 98 README no longer retires the WinUI / CLR bridge from the maintained release line.");
+            AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Phase 98 archive README no longer records the retired preview surface as reference-only material.");
+            AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
             AssertContains(readme, "SHA-384", "Phase 98 README no longer documents the OpenSSL SHA-384 family.");
@@ -6472,4 +6475,7 @@ internal static class Program
         }
     }
 }
+
+
+
 

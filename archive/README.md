@@ -27,12 +27,12 @@ Archived on the current mainline cleanup pass:
 These items were moved out of `trunk/` because:
 
 - the maintained `push` build chain only drives `trunk/fileshash15.sln`
-- preview WinUI/UWP jobs build direct project files rather than these legacy solution wrappers
+- the repository no longer treats the retired WinUI/UWP/CLR preview line as a maintained delivery route
 - the archived packaging scripts are not referenced by the active GitHub workflows
 - the legacy in-tree SHA256/SHA512 implementations were superseded by the
   maintained OpenSSL SHA-256 / SHA-512 provider path
 
 The archive is intentionally conservative:
 
-- the active preview surface that remains live is limited to `trunk/source/WinUI`, `sub-proj/fHashClrBridge`, and `sub-proj/fHashWUINative`
+- the retired WinUI/UWP/CLR preview surface is kept here for reference only
 - regression and security tests resolve archived legacy-platform files through explicit archive path mappings so the historical source can still be audited without keeping it in the live build tree

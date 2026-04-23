@@ -611,12 +611,15 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void WinUiNativeStack_ReusesNativeCore_InsteadOfRecompilingCoreSources()
+    public void WinUiPreviewWorkflow_IsRetired_FromTheMainline()
     {
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
         string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
         string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-        string previewWorkflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\winui-preview-build.yml");
+        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
+        string readme = RepositoryTestContext.ReadTextFile(@"README.md");
+        string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
+        string previewWorkflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
@@ -647,25 +650,24 @@ public sealed class CommonSeamUnitTests
         Assert.Contains(@"..\..\trunk\source\WinCommon\ClipboardHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
 
-        Assert.Contains("fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", clrBridgeProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", clrBridgeProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", clrBridgeProject, StringComparison.Ordinal);
-
-        RepositoryTestContext.AssertContainsInOrder(
-            previewWorkflow,
-            "build-winui-bridge-x64:",
-            "& msbuild sub-proj/fHashNativeCore/fHashNativeCore.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashDynamicRuntime=true",
-            "& msbuild sub-proj/fHashWUINative/fHashWUINative.vcxproj",
-            "& msbuild sub-proj/fHashClrBridge/fHashClrBridge.vcxproj /restore");
+        Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
+        Assert.False(File.Exists(previewWorkflowPath));
+        Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
+        Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
+        Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void WinUiProject_UsesStableWindowsAppSdkPackage()
+    public void WinUiProject_IsRetired_FromTheMaintainedMainline()
     {
-        string winUiProject = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinUI\fHashWUI.csproj");
+        string readme = RepositoryTestContext.ReadTextFile(@"README.md");
+        string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
+        string previewWorkflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
 
-        Assert.Contains("<PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.8.260317003\" />", winUiProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("2.0.0-experimental", winUiProject, StringComparison.Ordinal);
+        Assert.False(File.Exists(previewWorkflowPath));
+        Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
+        Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
+        Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
     }
 
     [Fact]

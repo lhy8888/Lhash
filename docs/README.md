@@ -1,6 +1,6 @@
 # LHash Documentation
 
-This directory contains the project’s security, trust, release, and verification documents.
+This directory contains the project’s security, trust, release, and verification documents for the maintained MFC Windows mainline.
 
 ## Start here
 

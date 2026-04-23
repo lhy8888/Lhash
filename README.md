@@ -1,7 +1,5 @@
 # LHash
 
-![LHash Logo](trunk/source/WinUI/Assets/StoreLogo.scale-400.png)
-
 ![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
@@ -24,6 +22,8 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Current release: [`v1.12.2`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.2)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Main branch: `future-winui-was2`
+- Windows UI mainline: `MFC`
+- Legacy WinUI / CLR bridge: retired from the maintained release line
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
@@ -159,10 +159,9 @@ NativeCore
 - Algorithms
 - Common
 
-Adapters
-- UiBridge
+Windows UI
+- WinMFC
 
-WinMFC
 LegacyCompat
 third_party
 ```
@@ -175,10 +174,10 @@ Near-term roadmap items that reinforce the verification positioning include:
 
 - stronger release verification documentation
 - broader supply-chain metadata on releases
-- CLI mode for repeatable verification flows
 - clearer threat-model documentation
 - deeper static analysis coverage across managed and native code
+- continued MFC mainline hardening
 
 ## One-line positioning
 
-**LHash is a Windows trusted verification tool for local integrity checking, repeatable review, and safer release validation.**
+**LHash is a Windows MFC trusted verification tool for local integrity checking, repeatable review, and safer release validation.**
