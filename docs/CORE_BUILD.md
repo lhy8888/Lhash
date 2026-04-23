@@ -65,8 +65,9 @@ The `lhash_core_smoke` target verifies a minimal fixed-input set for:
 
 - MD5
 - SHA-1
-- BLAKE3
-- XXH3
-- CRC32C
 
-It is intentionally small. It is meant to prove the core entry point is usable on the supported platforms without pulling in the MFC release line.
+That smoke target is intentionally baseline-only for M2. It proves the new
+core entry point can build and run the portable baseline algorithms without
+pulling the Windows MFC release line back into the core build. The additional
+provider algorithms remain built in the core target, but they are not part of
+the M2 smoke contract.
