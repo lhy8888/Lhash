@@ -96,6 +96,11 @@ if (LHASH_BUILD_M2_SMOKE)
     )
     target_link_libraries(lhash_core_smoke PRIVATE lhash_core)
     target_include_directories(lhash_core_smoke PRIVATE "${LHASH_SOURCE_ROOT}")
+    if (WIN32 AND MSVC)
+        target_link_options(lhash_core_smoke PRIVATE
+            "/WHOLEARCHIVE:$<TARGET_LINKER_FILE:lhash_core>"
+        )
+    endif()
     if (MSVC)
         target_compile_options(lhash_core_smoke PRIVATE /utf-8)
     endif()
