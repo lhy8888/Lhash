@@ -6025,6 +6025,8 @@ internal static class Program
             AssertContains(benchmarkProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 94 native benchmarks do not yet link against the desktop native core.");
             AssertContains(benchmarkProject, "Include=\"Debug|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 debug configuration.");
             AssertContains(benchmarkProject, "Include=\"Release|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 release configuration.");
+            AssertDoesNotContain(benchmarkProject, "Debug|Win32", "Phase 94 native benchmark project still carries a retired Win32 debug configuration.");
+            AssertDoesNotContain(benchmarkProject, "Release|Win32", "Phase 94 native benchmark project still carries a retired Win32 release configuration.");
             AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Phase 94 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
             AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Phase 94 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
             AssertContains(nativeCoreProject, @"..\..\third_party\blake3\1.8.4\c\blake3_neon.c", "Phase 94 desktop native core does not yet compile the ARM64 NEON BLAKE3 translation unit.");
@@ -6151,6 +6153,10 @@ internal static class Program
                 AssertDoesNotContain(projectContents, "/execution-charset:.936", "Phase 97 native project still forces the old 936 execution charset.");
                 AssertDoesNotContain(projectContents, "/c936", "Phase 97 native project still forces the old 936 resource code page.");
             }
+            AssertDoesNotContain(benchmarkProject, "Debug|Win32", "Phase 97 native benchmark project still carries a retired Win32 debug configuration.");
+            AssertDoesNotContain(benchmarkProject, "Release|Win32", "Phase 97 native benchmark project still carries a retired Win32 release configuration.");
+            AssertDoesNotContain(shellProject, "Debug|Win32", "Phase 97 shell-extension project still carries a retired Win32 debug configuration.");
+            AssertDoesNotContain(shellProject, "Release|Win32", "Phase 97 shell-extension project still carries a retired Win32 release configuration.");
 
             AssertContains(mfcRc, "#pragma code_page(65001)", "Phase 97 legacy resource chain does not yet use UTF-8 code pages.");
             AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Phase 97 legacy version resource block is not yet migrated to Unicode metadata.");

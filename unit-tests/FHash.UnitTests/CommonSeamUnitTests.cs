@@ -635,6 +635,10 @@ public sealed class CommonSeamUnitTests
         Assert.Contains(@"..\..\trunk\source\Common\HashFileRunner.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Common\HashScheduler.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Debug|Win32", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Release|Win32", winUiNativeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Debug|Win32", clrBridgeProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Release|Win32", clrBridgeProject, StringComparison.Ordinal);
 
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
         Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);

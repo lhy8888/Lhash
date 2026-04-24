@@ -660,6 +660,10 @@ internal static partial class Program
                 AssertDoesNotContain(projectContents, "/execution-charset:.936", "A native project still forces the old 936 execution charset.");
                 AssertDoesNotContain(projectContents, "/c936", "A native project still forces the old 936 resource compiler code page.");
             }
+            AssertDoesNotContain(benchmarkProject, "Debug|Win32", "The native benchmark project still carries a retired Win32 debug configuration.");
+            AssertDoesNotContain(benchmarkProject, "Release|Win32", "The native benchmark project still carries a retired Win32 release configuration.");
+            AssertDoesNotContain(shellProject, "Debug|Win32", "The shell extension project still carries a retired Win32 debug configuration.");
+            AssertDoesNotContain(shellProject, "Release|Win32", "The shell extension project still carries a retired Win32 release configuration.");
 
             AssertContains(mfcRc, "#pragma code_page(65001)", "Legacy MFC resource chain does not yet use UTF-8 resource code pages.");
             AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Legacy MFC version resource block is not yet migrated to Unicode translation metadata.");
@@ -705,6 +709,9 @@ internal static partial class Program
             AssertContains(uwpHelper, "Launcher.LaunchUriAsync", "UWP URL launching path is missing.");
             AssertDoesNotContain(uwpHelper, "HttpClient", "UWP helper unexpectedly added an in-app HTTP client.");
             AssertDoesNotContain(winUiProject, "Microsoft.Web.WebView2", "WinUI project still carries an explicit WebView2 package reference.");
+            AssertDoesNotContain(winUiProject, "x86;x64;ARM64", "The WinUI project still advertises x86 as a supported platform.");
+            AssertDoesNotContain(winUiProject, "win-x86", "The WinUI project still advertises x86 as a supported runtime identifier.");
+            AssertDoesNotContain(winUiProject, "win10-x86", "The WinUI project still advertises x86 as a supported legacy runtime identifier.");
             AssertContains(winUiHelper, "Launcher.LaunchUriAsync", "WinUI URL launching path is missing.");
             AssertDoesNotContain(uwpMainPage, "MenuItemGoogle", "UWP UI still exposes a Google hash-search action.");
             AssertDoesNotContain(uwpMainPage, "MenuItemVirusTotal", "UWP UI still exposes a VirusTotal hash-search action.");

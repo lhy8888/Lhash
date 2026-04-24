@@ -33,6 +33,8 @@ public sealed class BenchmarkFrameworkUnitTests
         Assert.Contains("<ProjectName>FHash.NativeBenchmarks</ProjectName>", benchmarkProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", benchmarkProject, StringComparison.Ordinal);
         Assert.Contains("FHashBuildFlavorSuffix", benchmarkProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Debug|Win32", benchmarkProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Release|Win32", benchmarkProject, StringComparison.Ordinal);
 
         Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
