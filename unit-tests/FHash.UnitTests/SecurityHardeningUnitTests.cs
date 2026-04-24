@@ -24,8 +24,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("if (fd == NULL || *fd == -1)", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("if (TryGetCurrentFileStatus(fd, strFilePath, &st))", osFilePosixDarwin, StringComparison.Ordinal);
-        Assert.Contains("if (fstat(*fd, &st) != 0)", osFilePosixDarwin, StringComparison.Ordinal);
-        Assert.Contains("if (!IsRegularFile(st))", osFilePosixDarwin, StringComparison.Ordinal);
+        Assert.Contains("if (fstat(fileHandle, &openedStatus) != 0)", osFilePosixDarwin, StringComparison.Ordinal);
+        Assert.Contains("if (!IsRegularFile(openedStatus))", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.DoesNotContain("Open first, we don't check here.", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.DoesNotContain("if ((statRet = stat(strFilePath.c_str(), &st)) == 0", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.DoesNotContain("if (stat(strFilePath.c_str(), &st) == 0)", osFilePosixDarwin, StringComparison.Ordinal);

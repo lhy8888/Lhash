@@ -104,6 +104,13 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $securityLog = Join-Path $artifactRoot 'darwin-security.log'
 
+          & cmake --build $buildRoot --config Release --target lhash_darwin_security --parallel 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'darwin-security-build.log')
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Darwin security build failed with exit code $LASTEXITCODE. See artifacts/core-m2/${{ matrix.name }}/darwin-security-build.log for details."
+          }
+
           & ctest --test-dir $buildRoot --output-on-failure -C Release -R lhash_darwin_security 2>&1 |
             Tee-Object -FilePath $securityLog
 
