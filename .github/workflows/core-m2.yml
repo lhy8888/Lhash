@@ -32,7 +32,7 @@ jobs:
             generator: Visual Studio 17 2022
             configure_args: -A ARM64
             build_dir: build/core/windows-arm64
-            build_target: lhash_core
+            build_target: lhash_core_smoke
             run_smoke: false
             run_security: false
           - name: macos-arm64

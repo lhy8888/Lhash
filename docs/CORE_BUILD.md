@@ -55,8 +55,11 @@ ctest --test-dir build/core/windows-x64 --output-on-failure -C Release -R lhash_
 
 ```powershell
 cmake -S . -B build/core/windows-arm64 -G "Visual Studio 17 2022" -A ARM64 -DLHASH_BUILD_M2_SMOKE=ON
-cmake --build build/core/windows-arm64 --config Release --target lhash_core --parallel
+cmake --build build/core/windows-arm64 --config Release --target lhash_core_smoke --parallel
 ```
+
+This path is build-verification only in CI: the smoke target is compiled on
+Windows arm64, but it is not executed there yet.
 
 ### macOS arm64
 
