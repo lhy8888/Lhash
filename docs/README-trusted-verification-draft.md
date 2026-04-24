@@ -24,6 +24,8 @@ This maintained release line turns LHash from a traditional hash utility into a 
 - Main branch: `future-winui-was2`
 - Windows UI mainline: `MFC`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
+- Core CI: [`Core M2 Build workflow`](../.github/workflows/core-m2.yml)
+- macOS core support: [`macOS core support criteria`](MACOS_CORE_SUPPORT.md)
 - Code signing: [CODE_SIGNING.md](../CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](../CODE_SIGNING_POLICY.md)
 - Security policy: [SECURITY.md](../SECURITY.md)
@@ -71,6 +73,18 @@ LHash uses:
 - RAII-style resource ownership
 
 The goal is not just speed, but repeatable and reviewable results under real workloads.
+
+### macOS core support
+
+The macOS arm64 core support line is intentionally baseline-only:
+
+- the core builds through the cross-platform entry point
+- baseline algorithms run through a minimal smoke target
+- Darwin file handling rejects symlinks and validates opened file descriptors
+- a dedicated macOS security regression target exercises the path policy
+
+This is enough to establish core support without claiming a full macOS product
+line or GUI.
 
 ## What the tool is for
 

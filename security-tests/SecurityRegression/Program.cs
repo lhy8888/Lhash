@@ -295,15 +295,22 @@ internal static partial class Program
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
             AssertContains(osFileHeader, "bool isHashTargetAllowed(void *exception = NULL);", "OsFile no longer exposes the hash-target policy hook.");
+            AssertContains(osFilePosixDarwin, "static const int kNoFollowFlag = O_NOFOLLOW;", "POSIX Darwin file handling no longer defines the no-follow contract flag.");
+            AssertContains(osFilePosixDarwin, "static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)", "POSIX Darwin file handling no longer centralizes pre-open path validation.");
+            AssertContains(osFilePosixDarwin, "static bool TryValidatePathPolicy(const std::string& filePath, bool allowMissingPath, struct stat *pathStatus, bool *pathExists, char *errorBuffer)", "POSIX Darwin file handling no longer centralizes path policy validation.");
+            AssertContains(osFilePosixDarwin, "if (lstat(filePath.c_str(), &pathStatus) != 0)", "POSIX Darwin file handling no longer inspects the path object without following symlinks.");
+            AssertContains(osFilePosixDarwin, "if (IsSymbolicLink(fileStatus))", "POSIX Darwin file handling no longer rejects symbolic links explicitly.");
+            AssertContains(osFilePosixDarwin, "Refusing to hash a symbolic link.", "POSIX Darwin file handling no longer emits a clear symlink rejection error.");
             AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "POSIX Darwin file handling no longer branches on O_CREAT before opening files.");
-            AssertContains(osFilePosixDarwin, "*fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);", "POSIX Darwin file handling no longer passes an explicit mode_t when O_CREAT is used.");
+            AssertContains(osFilePosixDarwin, "openFlags = posixFlag | kNoFollowFlag", "POSIX Darwin file handling no longer forces no-follow on opens.");
+            AssertContains(osFilePosixDarwin, "ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", "POSIX Darwin file handling no longer validates opened handles against the validated path.");
             AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "POSIX Darwin metadata reads no longer centralize on the current-file status helper.");
-            AssertContains(osFilePosixDarwin, "if (fstat(*fd, &st) != 0)", "POSIX Darwin file handling no longer validates the opened file descriptor with fstat.");
-            AssertContains(osFilePosixDarwin, "if (!IsRegularFile(st))", "POSIX Darwin file handling no longer rejects non-regular file descriptors after open.");
+            AssertContains(osFilePosixDarwin, "if (fstat(fileHandle, &openedStatus) != 0)", "POSIX Darwin file handling no longer validates the opened file descriptor with fstat.");
+            AssertContains(osFilePosixDarwin, "if (!IsRegularFile(openedStatus))", "POSIX Darwin file handling no longer rejects non-regular file descriptors after open.");
             AssertContains(osFilePosixDarwin, "if (TryGetCurrentFileStatus(fd, strFilePath, &st))", "POSIX Darwin metadata reads no longer reuse the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fd == NULL || *fd == -1)", "POSIX Darwin file operations no longer self-guard invalid file descriptors.");
+            AssertDoesNotContain(osFilePosixDarwin, "stat(strFilePath.c_str()", "POSIX Darwin file handling regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "if ((statRet = stat(strFilePath.c_str(), &st)) == 0", "POSIX Darwin file handling regressed to a stat-before-open TOCTOU gate.");
-            AssertDoesNotContain(osFilePosixDarwin, "if (stat(strFilePath.c_str(), &st) == 0)", "POSIX Darwin metadata reads regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "Open first, we don't check here.", "POSIX Darwin file operations regressed to unchecked library-boundary assumptions.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Win32 file hashing no longer checks for reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Win32 file hashing no longer rejects reparse points with an explicit message.");

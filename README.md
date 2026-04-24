@@ -27,6 +27,7 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core M2 Build workflow`](.github/workflows/core-m2.yml)
 - Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
+- macOS core support: [`docs/MACOS_CORE_SUPPORT.md`](docs/MACOS_CORE_SUPPORT.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)
@@ -169,6 +170,10 @@ third_party
 ```
 
 This makes it easier to reason about trust boundaries, execution behavior, and future interface expansion.
+
+macOS arm64 now has a baseline-only core support contract with Darwin-specific
+path security checks and a dedicated security regression target. It is part of
+the core bring-up, not a full macOS product line.
 
 ## Roadmap direction
 

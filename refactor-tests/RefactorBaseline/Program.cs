@@ -5784,15 +5784,21 @@ internal static class Program
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
 
-            AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "Phase 90 POSIX Darwin file handling does not yet branch on O_CREAT before opening files.");
-            AssertContains(osFilePosixDarwin, "*fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);", "Phase 90 POSIX Darwin file handling does not yet pass an explicit mode_t when O_CREAT is used.");
+            AssertContains(osFilePosixDarwin, "static const int kNoFollowFlag = O_NOFOLLOW;", "Phase 90 POSIX Darwin file handling does not yet define the no-follow contract flag.");
+            AssertContains(osFilePosixDarwin, "static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)", "Phase 90 POSIX Darwin file handling does not yet centralize pre-open path validation.");
+            AssertContains(osFilePosixDarwin, "static bool TryValidatePathPolicy(const std::string& filePath, bool allowMissingPath, struct stat *pathStatus, bool *pathExists, char *errorBuffer)", "Phase 90 POSIX Darwin file handling does not yet centralize path policy validation.");
+            AssertContains(osFilePosixDarwin, "if (lstat(filePath.c_str(), &pathStatus) != 0)", "Phase 90 POSIX Darwin file handling does not yet inspect the filesystem object without following symlinks.");
+            AssertContains(osFilePosixDarwin, "if (IsSymbolicLink(fileStatus))", "Phase 90 POSIX Darwin file handling does not yet reject symbolic links explicitly.");
+            AssertContains(osFilePosixDarwin, "Refusing to hash a symbolic link.", "Phase 90 POSIX Darwin file handling does not yet surface the symbolic-link refusal message.");
+            AssertContains(osFilePosixDarwin, "openFlags = posixFlag | kNoFollowFlag", "Phase 90 POSIX Darwin file handling does not yet force no-follow on opens.");
+            AssertContains(osFilePosixDarwin, "ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor against the validated path.");
             AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "Phase 90 POSIX Darwin metadata reads do not yet centralize on the current-file status helper.");
-            AssertContains(osFilePosixDarwin, "if (fstat(*fd, &st) != 0)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor with fstat.");
-            AssertContains(osFilePosixDarwin, "if (!IsRegularFile(st))", "Phase 90 POSIX Darwin file handling does not yet reject non-regular descriptors after open.");
+            AssertContains(osFilePosixDarwin, "if (fstat(fileHandle, &openedStatus) != 0)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor with fstat.");
+            AssertContains(osFilePosixDarwin, "if (!IsRegularFile(openedStatus))", "Phase 90 POSIX Darwin file handling does not yet reject non-regular descriptors after open.");
             AssertContains(osFilePosixDarwin, "if (TryGetCurrentFileStatus(fd, strFilePath, &st))", "Phase 90 POSIX Darwin metadata reads do not yet reuse the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fd == NULL || *fd == -1)", "Phase 90 POSIX Darwin file operations do not yet self-guard invalid file descriptors.");
+            AssertDoesNotContain(osFilePosixDarwin, "stat(strFilePath.c_str()", "Phase 90 POSIX Darwin file handling regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "if ((statRet = stat(strFilePath.c_str(), &st)) == 0", "Phase 90 POSIX Darwin file handling regressed to a stat-before-open TOCTOU gate.");
-            AssertDoesNotContain(osFilePosixDarwin, "if (stat(strFilePath.c_str(), &st) == 0)", "Phase 90 POSIX Darwin metadata reads regressed to path-based stat lookups.");
             AssertDoesNotContain(osFilePosixDarwin, "Open first, we don't check here.", "Phase 90 POSIX Darwin file operations regressed to unchecked library-boundary assumptions.");
             AssertContains(osFileWinApi, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 Win32 file handling does not yet reject reparse points.");
             AssertContains(osFileWinApi, "Refusing to hash a symbolic link, junction, mount point, or other reparse point.", "Phase 90 Win32 file handling does not yet surface the reparse-point refusal message.");

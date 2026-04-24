@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
@@ -27,6 +28,8 @@ using namespace sunjwbase;
 
 namespace
 {
+    static const int kNoFollowFlag = O_NOFOLLOW;
+
     static void CopyOpenErrorText(char *errorBuffer, const char *errorText)
     {
         if (errorBuffer != NULL)
@@ -45,6 +48,90 @@ namespace
         return S_ISREG(st.st_mode) != 0;
     }
 
+    static bool IsSymbolicLink(const struct stat& st)
+    {
+        return S_ISLNK(st.st_mode) != 0;
+    }
+
+    static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)
+    {
+        if (fileStatus == NULL)
+        {
+            return false;
+        }
+
+        if (pathExists != NULL)
+        {
+            *pathExists = false;
+        }
+
+        struct stat pathStatus;
+        if (lstat(filePath.c_str(), &pathStatus) != 0)
+        {
+            return allowMissingPath && errno == ENOENT;
+        }
+
+        if (pathExists != NULL)
+        {
+            *pathExists = true;
+        }
+
+        *fileStatus = pathStatus;
+        return true;
+    }
+
+    static bool TryValidatePathPolicy(const std::string& filePath, bool allowMissingPath, struct stat *pathStatus, bool *pathExists, char *errorBuffer)
+    {
+        struct stat fileStatus;
+        bool exists = false;
+        if (!TryGetPathStatus(filePath, allowMissingPath, &fileStatus, &exists))
+        {
+            if (errorBuffer != NULL)
+            {
+                CopyOpenErrorText(errorBuffer, "Cannot inspect this file.");
+            }
+            return false;
+        }
+
+        if (!exists)
+        {
+            if (pathExists != NULL)
+            {
+                *pathExists = false;
+            }
+            return true;
+        }
+
+        if (IsSymbolicLink(fileStatus))
+        {
+            if (errorBuffer != NULL)
+            {
+                CopyOpenErrorText(errorBuffer, "Refusing to hash a symbolic link.");
+            }
+            return false;
+        }
+
+        if (!IsRegularFile(fileStatus))
+        {
+            if (errorBuffer != NULL)
+            {
+                CopyOpenErrorText(errorBuffer, S_ISDIR(fileStatus.st_mode) ? "Cannot open a directory." : "Cannot open this file.");
+            }
+            return false;
+        }
+
+        if (pathStatus != NULL)
+        {
+            *pathStatus = fileStatus;
+        }
+        if (pathExists != NULL)
+        {
+            *pathExists = true;
+        }
+
+        return true;
+    }
+
     static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)
     {
         if (fileStatus == NULL)
@@ -57,7 +144,7 @@ namespace
             return fstat(*fd, fileStatus) == 0;
         }
 
-        int temporaryFd = ::open(filePath.c_str(), O_RDONLY);
+        int temporaryFd = ::open(filePath.c_str(), O_RDONLY | kNoFollowFlag);
         if (temporaryFd == -1)
         {
             return false;
@@ -66,6 +153,56 @@ namespace
         bool statusRead = fstat(temporaryFd, fileStatus) == 0;
         ::close(temporaryFd);
         return statusRead;
+    }
+
+    static bool ValidateOpenedHandleAgainstPathPolicy(int fileHandle, const std::string& expectedPath, const struct stat& expectedPathStatus, bool pathExists, char *errorBuffer)
+    {
+        struct stat openedStatus;
+        if (fstat(fileHandle, &openedStatus) != 0)
+        {
+            CopyOpenErrorText(errorBuffer, "Cannot inspect this file.");
+            return false;
+        }
+
+        if (IsSymbolicLink(openedStatus))
+        {
+            CopyOpenErrorText(errorBuffer, "Refusing to hash a symbolic link.");
+            return false;
+        }
+
+        if (!IsRegularFile(openedStatus))
+        {
+            CopyOpenErrorText(errorBuffer, S_ISDIR(openedStatus.st_mode) ? "Cannot open a directory." : "Cannot open this file.");
+            return false;
+        }
+
+        if (!pathExists)
+        {
+            return true;
+        }
+
+        if (openedStatus.st_dev != expectedPathStatus.st_dev ||
+            openedStatus.st_ino != expectedPathStatus.st_ino)
+        {
+            CopyOpenErrorText(errorBuffer, "Refusing to hash a path whose resolved handle no longer matches the validated path.");
+            return false;
+        }
+
+        struct stat reopenedPathStatus;
+        if (!TryGetPathStatus(expectedPath, false, &reopenedPathStatus, NULL))
+        {
+            CopyOpenErrorText(errorBuffer, "Cannot inspect this file.");
+            return false;
+        }
+
+        if (reopenedPathStatus.st_dev != openedStatus.st_dev ||
+            reopenedPathStatus.st_ino != openedStatus.st_ino)
+        {
+            CopyOpenErrorText(errorBuffer, "Refusing to hash a path whose resolved handle no longer matches the validated path.");
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -92,8 +229,10 @@ OsFile::~OsFile()
 
 bool OsFile::isHashTargetAllowed(void *exception)
 {
-    (void)exception;
-    return true;
+    std::string strFilePath = tstrtostr(_filePath);
+    struct stat pathStatus;
+    bool pathExists = false;
+    return TryValidatePathPolicy(strFilePath, false, &pathStatus, &pathExists, (char *)exception);
 }
 
 bool OsFile::open(void *flag, void *exception)
@@ -104,13 +243,22 @@ bool OsFile::open(void *flag, void *exception)
     *fd = -1;
 
     int posixFlag = (int)(uint64_t)flag;
+    bool allowMissingPath = IsOpenModeCreate(posixFlag);
+    struct stat pathStatus;
+    bool pathExists = false;
+    if (!TryValidatePathPolicy(strFilePath, allowMissingPath, &pathStatus, &pathExists, pFileExc))
+    {
+        return false;
+    }
+
+    int openFlags = posixFlag | kNoFollowFlag;
     if (IsOpenModeCreate(posixFlag))
     {
-        *fd = ::open(strFilePath.c_str(), posixFlag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        *fd = ::open(strFilePath.c_str(), openFlags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     }
     else
     {
-        *fd = ::open(strFilePath.c_str(), posixFlag);
+        *fd = ::open(strFilePath.c_str(), openFlags);
     }
 
     if (*fd == -1)
@@ -131,18 +279,8 @@ bool OsFile::open(void *flag, void *exception)
         return false;
     }
 
-    struct stat st;
-    if (fstat(*fd, &st) != 0)
+    if (!ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc))
     {
-        CopyOpenErrorText(pFileExc, "Cannot inspect this file.");
-        ::close(*fd);
-        *fd = -1;
-        return false;
-    }
-
-    if (!IsRegularFile(st))
-    {
-        CopyOpenErrorText(pFileExc, S_ISDIR(st.st_mode) ? "Cannot open a directory." : "Cannot open this file.");
         ::close(*fd);
         *fd = -1;
         return false;

@@ -26,6 +26,7 @@ jobs:
             build_dir: build/core/windows-x64
             build_target: lhash_core_smoke
             run_smoke: true
+            run_security: false
           - name: windows-arm64
             os: windows-11-arm
             generator: Visual Studio 17 2022
@@ -33,6 +34,7 @@ jobs:
             build_dir: build/core/windows-arm64
             build_target: lhash_core
             run_smoke: false
+            run_security: false
           - name: macos-arm64
             os: macos-14
             generator: Xcode
@@ -40,6 +42,7 @@ jobs:
             build_dir: build/core/macos-arm64
             build_target: lhash_core_smoke
             run_smoke: true
+            run_security: true
 
     defaults:
       run:
@@ -91,6 +94,21 @@ jobs:
 
           if ($LASTEXITCODE -ne 0) {
             throw "Core smoke test failed with exit code $LASTEXITCODE. See $smokeLog for details."
+          }
+
+      - name: Run Darwin security regression
+        if: ${{ matrix.run_security }}
+        run: |
+          $repoRoot = $env:GITHUB_WORKSPACE
+          $buildRoot = Join-Path $repoRoot '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
+          $securityLog = Join-Path $artifactRoot 'darwin-security.log'
+
+          & ctest --test-dir $buildRoot --output-on-failure -C Release -R lhash_darwin_security 2>&1 |
+            Tee-Object -FilePath $securityLog
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Darwin security test failed with exit code $LASTEXITCODE. See $securityLog for details."
           }
 
       - name: Upload core matrix artifacts

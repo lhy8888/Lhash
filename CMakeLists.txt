@@ -101,4 +101,13 @@ if (LHASH_BUILD_M2_SMOKE)
     endif()
 
     add_test(NAME lhash_core_smoke COMMAND lhash_core_smoke)
+
+    if (APPLE)
+        add_executable(lhash_darwin_security
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/darwin_security/lhash_darwin_security.cpp"
+        )
+        target_link_libraries(lhash_darwin_security PRIVATE lhash_core)
+        target_include_directories(lhash_darwin_security PRIVATE "${LHASH_SOURCE_ROOT}")
+        add_test(NAME lhash_darwin_security COMMAND lhash_darwin_security)
+    endif()
 endif()

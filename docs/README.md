@@ -1,52 +1,24 @@
-# LHash Documentation
+# Documentation Index
 
-This directory contains the project’s security, trust, release, and verification documents for the maintained MFC Windows mainline.
+This directory contains the project documents for the maintained LHash release line and the core bring-up work.
 
-## Start here
+## Release and trust
 
-- [Threat model](THREAT_MODEL.md)
-- [Security model](SECURITY_MODEL.md)
 - [Release verification guide](RELEASE_VERIFICATION.md)
+- [Security model](SECURITY_MODEL.md)
+- [Threat model](THREAT_MODEL.md)
 - [Supply-chain security](SUPPLY_CHAIN_SECURITY.md)
+- [OpenSSF preparation notes](OPENSSF_PREP.md)
+- [Trusted verification draft](README-trusted-verification-draft.md)
+
+## Core bring-up
+
 - [Core build entry point](CORE_BUILD.md)
+- [macOS core support criteria](MACOS_CORE_SUPPORT.md)
 
-## How to read these documents
+## Other reference material
 
-### If you are a normal user
-
-Start with:
-
-1. [Release verification guide](RELEASE_VERIFICATION.md)
-2. [Supply-chain security](SUPPLY_CHAIN_SECURITY.md)
-
-These explain how to review a release and what metadata the project publishes to make releases easier to trust.
-
-### If you are reviewing the project’s security posture
-
-Start with:
-
-1. [Threat model](THREAT_MODEL.md)
-2. [Security model](SECURITY_MODEL.md)
-3. [Supply-chain security](SUPPLY_CHAIN_SECURITY.md)
-
-These explain what the project is trying to protect, which risks it is designed to reduce, and how the maintained release line approaches local safety and release trust.
-
-### If you are evaluating LHash for recommendation or audit preparation
-
-Read all four documents in this order:
-
-1. [Threat model](THREAT_MODEL.md)
-2. [Security model](SECURITY_MODEL.md)
-3. [Release verification guide](RELEASE_VERIFICATION.md)
-4. [Supply-chain security](SUPPLY_CHAIN_SECURITY.md)
-
-## Related repository files
-
-- [Security policy](../SECURITY.md)
-- [Code signing](../CODE_SIGNING.md)
-- [Code signing policy](../CODE_SIGNING_POLICY.md)
-- [Project README](../README.md)
-
-## Intent
-
-The goal of this document set is to make LHash easier to explain, easier to review, and easier to trust than a repository that only publishes binaries and source code without any security or verification narrative.
+- [Project profile](PROJECT_PROFILE.md)
+- [Recommendation pitch](RECOMMENDATION_PITCH.md)
+- [Repository metadata suggestions](REPO_METADATA_SUGGESTIONS.md)
+- [Outreach targets](OUTREACH_TARGETS.md)

@@ -12,6 +12,10 @@ This entry point is intentionally narrower than the maintained Windows MFC relea
 
 It does not replace the MFC Windows mainline and it does not bring back WinUI or the CLR bridge as release-path dependencies.
 
+M3 extends this entry point so macOS arm64 is not just buildable, but also has
+an explicit Darwin path-security contract and a macOS-specific security
+regression check.
+
 ## What it builds
 
 The core build target is centered around:
@@ -22,6 +26,9 @@ The core build target is centered around:
 - platform-specific OS shims for Windows and Darwin
 
 The M2 entry point intentionally keeps OpenSSL optional so the core can still build even when the vendor backend is not enabled.
+
+For M3, the macOS bring-up remains baseline-only. OpenSSL extension backends are
+still optional and are not required for the macOS support contract.
 
 ## What it does not build
 
@@ -71,3 +78,14 @@ core entry point can build and run the portable baseline algorithms without
 pulling the Windows MFC release line back into the core build. The additional
 provider algorithms remain built in the core target, but they are not part of
 the M2 smoke contract.
+
+## M3 macOS support
+
+M3 adds the macOS-specific security regression target:
+
+- `lhash_darwin_security`
+
+This target verifies the Darwin hashing contract around symbolic-link rejection,
+regular-file acceptance, and descriptor-based validation. It is intentionally
+smaller than the Windows security regression surface and exists to prove that
+the macOS core support is real rather than merely buildable.
