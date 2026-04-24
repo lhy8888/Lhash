@@ -247,13 +247,12 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", nativeCoreProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX512", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX512", uwpNativeProject, StringComparison.Ordinal);
 
         Assert.Contains("Windows junction attack harness reproduces ancestor reparse-point traversal", securityProgram, StringComparison.Ordinal);

@@ -410,8 +410,8 @@ internal static partial class Program
             AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Desktop native core no longer exposes a benchmark-selectable BLAKE3 SIMD profile.");
             AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Desktop native core no longer exposes the portable BLAKE3 benchmark control.");
             AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Desktop native core no longer allows benchmark runs to disable SIMD translation units.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Desktop native core no longer enables the Win32 SSE2 BLAKE3 path.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Desktop native core no longer enables the Win32 SSE4.1-compatible BLAKE3 path.");
+            AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Desktop native core still carries the retired Win32 SSE2 BLAKE3 path.");
+            AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Desktop native core still carries the retired Win32 SSE4.1-compatible BLAKE3 path.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Desktop native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX512", "Desktop native core no longer enables AVX512 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_sse2.c", "UWP native core no longer compiles the BLAKE3 SSE2 implementation for x64.");
@@ -419,7 +419,6 @@ internal static partial class Program
             AssertContains(uwpNativeProject, @"blake3_avx2.c", "UWP native core no longer compiles the BLAKE3 AVX2 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_avx512.c", "UWP native core no longer compiles the BLAKE3 AVX512 implementation for x64.");
             AssertContains(uwpNativeProject, @"blake3_neon.c", "UWP native core no longer compiles the BLAKE3 NEON implementation for ARM64.");
-            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "UWP native core no longer enables the Win32 SSE2 BLAKE3 path.");
             AssertContains(uwpNativeProject, "/arch:AVX2", "UWP native core no longer enables AVX2 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "/arch:AVX512", "UWP native core no longer enables AVX512 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "UWP native core no longer enables the ARM64 NEON BLAKE3 path.");
@@ -571,7 +570,6 @@ internal static partial class Program
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
             AssertContains(vendorTargets, "libcrypto.lib", "The shared OpenSSL vendor targets no longer link libcrypto.");
             AssertContains(vendorScript, "VC-WIN64A", "The OpenSSL vendor build script no longer covers x64.");
-            AssertContains(vendorScript, "VC-WIN32", "The OpenSSL vendor build script no longer covers Win32.");
             AssertContains(vendorScript, "VC-WIN64-ARM", "The OpenSSL vendor build script no longer covers ARM64.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "The Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");

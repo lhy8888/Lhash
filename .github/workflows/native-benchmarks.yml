@@ -15,9 +15,6 @@ jobs:
           - artifact_suffix: x64
             benchmark_platform: x64
             runner_label: windows-2022
-          - artifact_suffix: win32
-            benchmark_platform: Win32
-            runner_label: windows-2022
           - artifact_suffix: arm64
             benchmark_platform: ARM64
             runner_label: windows-11-arm

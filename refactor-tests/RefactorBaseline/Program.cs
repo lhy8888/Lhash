@@ -2053,7 +2053,7 @@ internal static class Program
 
             AssertContains(legacySolution, "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"fHashNativeCore\", \"..\\sub-proj\\fHashNativeCore\\fHashNativeCore.vcxproj\", \"{E500D56F-3EE3-403C-A24C-034822AE3DF5}\"", "fileshash15.sln does not yet include the extracted desktop native core project.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}", "fileshash15.sln does not yet make the legacy desktop app depend on the extracted desktop native core project.");
-            AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32", "fileshash15.sln is missing the desktop native core Win32 debug mapping.");
+            AssertDoesNotContain(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32", "fileshash15.sln still carries the retired desktop native core Win32 debug mapping.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.Build.0 = Release|x64", "fileshash15.sln is missing the desktop native core x64 release build mapping.");
 
             AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\AdvTaskbar.cpp", "WUINative no longer keeps its platform-specific AdvTaskbar layer in the baseline layout.");
@@ -5948,8 +5948,8 @@ internal static class Program
             AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Phase 92 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
             AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet expose a portable BLAKE3 benchmark control.");
             AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Phase 92 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 desktop native core does not yet enable the Win32 SSE2 BLAKE3 translation unit.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Phase 92 desktop native core does not yet enable the Win32 SSE4.1-compatible BLAKE3 translation unit.");
+            AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 desktop native core still carries the retired Win32 SSE2 BLAKE3 translation unit.");
+            AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Phase 92 desktop native core still carries the retired Win32 SSE4.1-compatible BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Phase 92 desktop native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX512", "Phase 92 desktop native core does not yet enable AVX512 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_sse2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 SSE2 translation unit.");
@@ -5957,7 +5957,6 @@ internal static class Program
             AssertContains(uwpNativeProject, @"blake3_avx2.c", "Phase 92 UWP native core does not yet compile the BLAKE3 AVX2 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_avx512.c", "Phase 92 UWP native core does not yet compile the BLAKE3 AVX512 translation unit.");
             AssertContains(uwpNativeProject, @"blake3_neon.c", "Phase 92 UWP native core does not yet compile the BLAKE3 ARM64 NEON translation unit.");
-            AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 UWP native core does not yet enable the Win32 SSE2 BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "/arch:AVX2", "Phase 92 UWP native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "/arch:AVX512", "Phase 92 UWP native core does not yet enable AVX512 for the dedicated BLAKE3 translation unit.");
             AssertContains(uwpNativeProject, "Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 UWP native core does not yet enable the ARM64 NEON BLAKE3 path.");
@@ -6014,14 +6013,14 @@ internal static class Program
             AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=current", "Phase 94 does not yet build the current BLAKE3 benchmark configuration.");
             AssertContains(benchmarkWorkflow, "windows-11-arm", "Phase 94 does not yet schedule a dedicated ARM64 benchmark runner.");
             AssertContains(benchmarkWorkflow, "benchmark_platform: ARM64", "Phase 94 does not yet benchmark the ARM64 platform.");
-            AssertContains(benchmarkWorkflow, "benchmark_platform: Win32", "Phase 94 does not yet benchmark the Win32 platform.");
             AssertContains(benchmarkWorkflow, "benchmark_platform: x64", "Phase 94 does not yet benchmark the x64 platform.");
             AssertContains(benchmarkWorkflow, "native-benchmarks-portable.csv", "Phase 94 does not yet persist the portable benchmark results.");
             AssertContains(benchmarkWorkflow, "native-benchmarks-current.csv", "Phase 94 does not yet persist the current benchmark results.");
             AssertContains(benchmarkWorkflow, "artifact_suffix: arm64", "Phase 94 does not yet define an ARM64 benchmark artifact suffix.");
-            AssertContains(benchmarkWorkflow, "artifact_suffix: win32", "Phase 94 does not yet define a Win32 benchmark artifact suffix.");
             AssertContains(benchmarkWorkflow, "artifact_suffix: x64", "Phase 94 does not yet define an x64 benchmark artifact suffix.");
             AssertContains(benchmarkWorkflow, "name: FHash-native-benchmarks-${{ matrix.artifact_suffix }}", "Phase 94 does not yet publish per-platform benchmark artifacts.");
+            AssertDoesNotContain(benchmarkWorkflow, "benchmark_platform: Win32", "Phase 94 benchmark workflow still treats Win32 as a supported platform.");
+            AssertDoesNotContain(benchmarkWorkflow, "artifact_suffix: win32", "Phase 94 benchmark workflow still publishes a Win32 benchmark artifact suffix.");
             AssertContains(benchmarkProject, "<ProjectName>FHash.NativeBenchmarks</ProjectName>", "Phase 94 does not yet introduce a standalone native benchmark project.");
             AssertContains(benchmarkProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 94 native benchmarks do not yet link against the desktop native core.");
             AssertContains(benchmarkProject, "Include=\"Debug|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 debug configuration.");
