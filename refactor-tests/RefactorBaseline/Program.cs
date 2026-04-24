@@ -5635,7 +5635,7 @@ internal static class Program
 
         Run("Phase 87 isolates ThreadData into legacy seams and unifies native toolsets on v143", () =>
         {
-            string winUiProject = ReadRepoFile(repoRoot, @"trunk\source\WinUI\fHashWUI.csproj");
+            string winUiProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\fHashWUI.csproj");
             AssertContains(winUiProject, "<PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.8.260317003\" />", "Phase 87 WinUI project does not yet pin to a stable WindowsAppSDK version.");
             AssertDoesNotContain(winUiProject, "2.0.0-experimental", "Phase 87 WinUI project still depends on experimental WindowsAppSDK packages.");
 

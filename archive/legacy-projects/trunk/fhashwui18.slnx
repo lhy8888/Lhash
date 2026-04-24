@@ -13,7 +13,7 @@
     <BuildDependency Project="../sub-proj/fHashWUIShellExt/fHashWUIShellExt.vcxproj" />
     <Deploy />
   </Project>
-  <Project Path="source/WinUI/fHashWUI.csproj">
+  <Project Path="../legacy-platforms/trunk/source/WinUI/fHashWUI.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />

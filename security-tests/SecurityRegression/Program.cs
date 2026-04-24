@@ -694,11 +694,13 @@ internal static partial class Program
             string uwpMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
             string uwpEn = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
             string uwpZh = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
-            string winUiProject = ReadRepoFile(repoRoot, @"trunk\source\WinUI\fHashWUI.csproj");
+            string winUiProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\fHashWUI.csproj");
             string winUiHelper = ReadRepoFile(repoRoot, @"trunk\source\WinUI\WinUIHelper.cs");
             string winUiMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
             string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
             string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
+            string winUiMarker = ReadRepoFile(repoRoot, @"trunk\source\WinUI\NON_MAINLINE.md");
+            string clrBridgeMarker = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\NON_MAINLINE.md");
             string winMfcDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string winMfcRes = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string winMfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
@@ -712,6 +714,8 @@ internal static partial class Program
             AssertDoesNotContain(winUiProject, "x86;x64;ARM64", "The WinUI project still advertises x86 as a supported platform.");
             AssertDoesNotContain(winUiProject, "win-x86", "The WinUI project still advertises x86 as a supported runtime identifier.");
             AssertDoesNotContain(winUiProject, "win10-x86", "The WinUI project still advertises x86 as a supported legacy runtime identifier.");
+            AssertContains(winUiMarker, "Non-Mainline Reference Tree", "WinUI tree does not carry the expected non-mainline marker.");
+            AssertContains(clrBridgeMarker, "Non-Mainline Reference Tree", "CLR bridge tree does not carry the expected non-mainline marker.");
             AssertContains(winUiHelper, "Launcher.LaunchUriAsync", "WinUI URL launching path is missing.");
             AssertDoesNotContain(uwpMainPage, "MenuItemGoogle", "UWP UI still exposes a Google hash-search action.");
             AssertDoesNotContain(uwpMainPage, "MenuItemVirusTotal", "UWP UI still exposes a VirusTotal hash-search action.");

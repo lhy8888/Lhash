@@ -45,11 +45,8 @@ endif()
 target_compile_definitions(lhash_core PRIVATE FHASH_CORE_BUILD=1)
 
 target_compile_definitions(lhash_core PRIVATE
-    BLAKE3_NO_SSE2
-    BLAKE3_NO_SSE41
-    BLAKE3_NO_AVX2
-    BLAKE3_NO_AVX512
-    BLAKE3_USE_NEON=0
+    ${LHASH_BLAKE3_COMPILE_DEFINITIONS}
+    BLAKE3_USE_NEON=${LHASH_BLAKE3_USE_NEON_VALUE}
 )
 
 if (LHASH_ENABLE_OPENSSL_VENDOR)

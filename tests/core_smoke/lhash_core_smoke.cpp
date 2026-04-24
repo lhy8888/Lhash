@@ -1,9 +1,12 @@
 #include "Common/Global.h"
 #include "Algorithms/MD5.h"
 #include "Algorithms/SHA1.h"
+#include "Runtime/Hash/BLAKE3HashProvider.h"
 
+#include <array>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -60,6 +63,20 @@ namespace
         return ToUpperHex(digest, sizeof(digest));
     }
 
+    std::string ComputeBlake3Hex(const std::vector<unsigned char>& input)
+    {
+        blake3_hasher hasher;
+        HashRuntime::InitializeBlake3Hasher(&hasher);
+        if (!input.empty())
+        {
+            HashRuntime::UpdateBlake3Hasher(hasher, input.data(), input.size());
+        }
+
+        std::array<uint8_t, HashRuntime::BLAKE3_256_OUTPUT_BYTES> digestBytes = {};
+        blake3_hasher_finalize(&hasher, digestBytes.data(), digestBytes.size());
+        return ToUpperHex(digestBytes.data(), digestBytes.size());
+    }
+
 }
 
 int main()
@@ -71,6 +88,13 @@ int main()
 
     passed &= ExpectEqual("SHA1 empty", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709", ComputeSha1Hex(""));
     passed &= ExpectEqual("SHA1 abc", "A9993E364706816ABA3E25717850C26C9CD0D89D", ComputeSha1Hex("abc"));
+
+    passed &= ExpectEqual("BLAKE3 empty",
+        "AF1349B9F5F9A1A6A0404DEA36DCC9499BCB25C9ADC112B7CC9A93CAE41F3262",
+        ComputeBlake3Hex(std::vector<unsigned char>{}));
+    passed &= ExpectEqual("BLAKE3 0x00..0x02",
+        "E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F",
+        ComputeBlake3Hex(std::vector<unsigned char>{ 0x00, 0x01, 0x02 }));
 
     if (!passed)
     {

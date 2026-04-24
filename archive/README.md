@@ -14,6 +14,7 @@ Archived on the current mainline cleanup pass:
 - `legacy-platforms/trunk/fHashWUIWap`
 - `legacy-platforms/trunk/fHashUwpWap`
 - `legacy-platforms/trunk/source/WinUWP`
+- `legacy-platforms/trunk/source/WinUI/fHashWUI.csproj`
 - `legacy-platforms/trunk/source/OSXUI`
 - `legacy-platforms/sub-proj/fHashWinRtBridge`
 - `legacy-platforms/sub-proj/fHashUwpNative`

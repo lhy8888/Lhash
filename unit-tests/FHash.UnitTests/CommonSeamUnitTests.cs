@@ -601,12 +601,16 @@ public sealed class CommonSeamUnitTests
 
         string archiveReadme = RepositoryTestContext.ReadUtf8File(@"archive\README.md");
         string legacyProject = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash.vcxproj");
+        string winUiMarker = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinUI\NON_MAINLINE.md");
+        string clrBridgeMarker = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\NON_MAINLINE.md");
 
         Assert.Contains("historical project shells and packaging scripts", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("trunk/fileshash15.sln", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("legacy-platforms/trunk/fHashWUIWap", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("legacy-platforms/sub-proj/fHashWinRtBridge", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("sub-proj/fHashClrBridge", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("non-mainline", winUiMarker, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("non-mainline", clrBridgeMarker, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("NativeSecurity.targets", legacyProject, StringComparison.Ordinal);
         Assert.DoesNotContain("<RandomizedBaseAddress>false</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
         Assert.DoesNotContain("<RandomizedBaseAddress>true</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);

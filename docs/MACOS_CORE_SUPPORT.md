@@ -17,7 +17,8 @@ This is intentionally narrower than a full macOS product line:
 ## What M3 establishes
 
 - macOS arm64 core builds through the new core-only CMake entry point
-- baseline algorithms run through a minimal portable smoke verification
+- baseline algorithms run through a minimal smoke verification
+- BLAKE3 uses the native Apple arm64 NEON path and is checked against fixed vectors
 - Darwin file handling rejects symlinked hash targets
 - Darwin file handling validates opened files through descriptor-level checks
 - macOS-specific security regression coverage exists for the hashing path policy
@@ -47,3 +48,9 @@ M3 does not claim:
 - full coverage of every special filesystem boundary on Darwin
 
 Those items remain for later phases.
+
+## Non-mainline reference trees
+
+The retired WinUI and CLR bridge trees remain in the repository for reference
+and auditability, but they are marked as non-mainline and are not part of the
+macOS core support contract.

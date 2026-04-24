@@ -33,6 +33,13 @@ set(LHASH_BLAKE3_SOURCES
     "${LHASH_THIRD_PARTY_ROOT}/blake3/1.8.4/c/blake3_dispatch.c"
     "${LHASH_THIRD_PARTY_ROOT}/blake3/1.8.4/c/blake3_portable.c"
 )
+set(LHASH_BLAKE3_COMPILE_DEFINITIONS
+    BLAKE3_NO_SSE2
+    BLAKE3_NO_SSE41
+    BLAKE3_NO_AVX2
+    BLAKE3_NO_AVX512
+)
+set(LHASH_BLAKE3_USE_NEON_VALUE 0)
 
 set(LHASH_XXHASH_SOURCES
     "${LHASH_THIRD_PARTY_ROOT}/xxhash/0.8.3/xxhash.c"
@@ -57,4 +64,11 @@ elseif (APPLE AND _LHASH_TARGET_ARCH_LOWER MATCHES "^(arm64|aarch64)$")
     list(APPEND LHASH_CRC32C_SOURCES
         "${LHASH_THIRD_PARTY_ROOT}/crc32c/1.1.2/src/crc32c_arm64.cc"
     )
+endif()
+
+if (APPLE AND _LHASH_TARGET_ARCH_LOWER MATCHES "^(arm64|aarch64)$")
+    list(APPEND LHASH_BLAKE3_SOURCES
+        "${LHASH_THIRD_PARTY_ROOT}/blake3/1.8.4/c/blake3_neon.c"
+    )
+    set(LHASH_BLAKE3_USE_NEON_VALUE 1)
 endif()

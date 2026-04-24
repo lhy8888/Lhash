@@ -24,6 +24,7 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Main branch: `future-winui-was2`
 - Windows UI mainline: `MFC`
 - Legacy WinUI / CLR bridge: retired from the maintained release line
+- WinUI / CLR bridge source trees: reference-only and marked `NON_MAINLINE.md`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core M2 Build workflow`](.github/workflows/core-m2.yml)
 - Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
@@ -131,6 +132,7 @@ Together, those make the project more useful as a trusted verification tool inst
 
 - BLAKE3-256
 - BLAKE3-512
+- BLAKE3 on macOS arm64 uses the native NEON path in the core build
 
 ### OpenSSL 3 extended algorithms
 
