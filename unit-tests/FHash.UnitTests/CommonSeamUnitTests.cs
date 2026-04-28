@@ -229,7 +229,7 @@ public sealed class CommonSeamUnitTests
         string digestBufferPlan = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashDigestBufferPlan.cpp");
         string jobExecutionPlan = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashJobExecutionPlan.cpp");
 
-        Assert.Contains("kDefaultHashBufferLength = 1u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("kDefaultHashBufferLength = 4u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashDigestBufferPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", digestBufferPlan, StringComparison.Ordinal);

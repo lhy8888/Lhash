@@ -271,6 +271,10 @@ bool OsFile::open(void *flag, void *exception)
         {
             CopyOpenErrorText(pFileExc, "Cannot open a directory.");
         }
+        else if (errno == ELOOP)
+        {
+            CopyOpenErrorText(pFileExc, "Refusing to hash a symbolic link.");
+        }
         else
         {
             CopyOpenErrorText(pFileExc, "Cannot open this file.");

@@ -22,6 +22,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("if (IsOpenModeCreate(posixFlag))", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("openFlags = posixFlag | kNoFollowFlag", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", osFilePosixDarwin, StringComparison.Ordinal);
+        Assert.Contains("errno == ELOOP", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("if (fd == NULL || *fd == -1)", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("if (TryGetCurrentFileStatus(fd, strFilePath, &st))", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("if (fstat(fileHandle, &openedStatus) != 0)", osFilePosixDarwin, StringComparison.Ordinal);
@@ -39,6 +40,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("FILE_FLAG_OPEN_REPARSE_POINT", winApi, StringComparison.Ordinal);
         Assert.Contains("GetFileInformationByHandleEx(", winApi, StringComparison.Ordinal);
         Assert.Contains("GetFinalPathNameByHandle(", winApi, StringComparison.Ordinal);
+        Assert.Contains("Cannot verify the final opened file path. Refusing to hash.", winApi, StringComparison.Ordinal);
         Assert.Contains("kWindowsMaxExtendedPath = 32767", winApi, StringComparison.Ordinal);
         Assert.Contains("ERROR_FILENAME_EXCED_RANGE", winApi, StringComparison.Ordinal);
 

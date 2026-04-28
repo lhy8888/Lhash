@@ -3,7 +3,7 @@
 
 namespace HashEngineInternal
 {
-	static constexpr unsigned int kDefaultHashBufferLength = 1u * 1024u * 1024u;
+	static constexpr unsigned int kDefaultHashBufferLength = 4u * 1024u * 1024u;
 
 	struct HashDigestBufferPlan
 	{

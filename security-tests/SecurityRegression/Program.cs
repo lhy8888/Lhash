@@ -304,6 +304,7 @@ internal static partial class Program
             AssertContains(osFilePosixDarwin, "if (IsOpenModeCreate(posixFlag))", "POSIX Darwin file handling no longer branches on O_CREAT before opening files.");
             AssertContains(osFilePosixDarwin, "openFlags = posixFlag | kNoFollowFlag", "POSIX Darwin file handling no longer forces no-follow on opens.");
             AssertContains(osFilePosixDarwin, "ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", "POSIX Darwin file handling no longer validates opened handles against the validated path.");
+            AssertContains(osFilePosixDarwin, "errno == ELOOP", "POSIX Darwin file handling no longer maps symlink-open failures to an explicit refusal message.");
             AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "POSIX Darwin metadata reads no longer centralize on the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fstat(fileHandle, &openedStatus) != 0)", "POSIX Darwin file handling no longer validates the opened file descriptor with fstat.");
             AssertContains(osFilePosixDarwin, "if (!IsRegularFile(openedStatus))", "POSIX Darwin file handling no longer rejects non-regular file descriptors after open.");
@@ -320,6 +321,7 @@ internal static partial class Program
             AssertContains(osFileWinApi, "FILE_FLAG_OPEN_REPARSE_POINT", "Win32 file hashing no longer opens the leaf object with reparse-point awareness.");
             AssertContains(osFileWinApi, "GetFileInformationByHandleEx(", "Win32 file hashing no longer validates opened handle attributes.");
             AssertContains(osFileWinApi, "GetFinalPathNameByHandle(", "Win32 file hashing no longer revalidates the resolved final path after open.");
+            AssertContains(osFileWinApi, "Cannot verify the final opened file path. Refusing to hash.", "Win32 file hashing still fails open when final-path verification cannot complete.");
             AssertContains(osFileWinApi, "kWindowsMaxExtendedPath = 32767", "Win32 long-path handling no longer enforces the extended path limit.");
             AssertContains(osFileWinApi, "ERROR_FILENAME_EXCED_RANGE", "Win32 long-path handling no longer reports explicit extended-path overflow errors.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");

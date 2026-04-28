@@ -4678,7 +4678,7 @@ internal static class Program
 
             AssertContains(hashDigestBufferPlanHeader, "struct HashDigestBufferPlan", "Phase 66 HashDigestBufferPlan.h does not yet expose digest buffer planning state.");
             AssertContains(hashDigestBufferPlanHeader, "unsigned int preferredBufferLength;", "Phase 66 HashDigestBufferPlan.h does not yet expose preferred digest buffer length.");
-            AssertContains(hashDigestBufferPlanHeader, "kDefaultHashBufferLength = 1u * 1024u * 1024u;", "Phase 66 HashDigestBufferPlan.h does not yet expose the named default digest-buffer size.");
+            AssertContains(hashDigestBufferPlanHeader, "kDefaultHashBufferLength = 4u * 1024u * 1024u;", "Phase 66 HashDigestBufferPlan.h does not yet expose the named default digest-buffer size.");
             AssertContains(hashDigestBufferPlanHeader, "HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", "Phase 66 HashDigestBufferPlan.h does not yet expose the default digest-buffer plan factory.");
             AssertContains(hashDigestBufferPlanHeader, "unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", "Phase 66 HashDigestBufferPlan.h does not yet expose digest-buffer plan querying.");
             AssertContains(hashDigestBufferPlan, "HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", "Phase 66 HashDigestBufferPlan.cpp does not yet own the default digest-buffer plan initialization.");
@@ -5792,6 +5792,7 @@ internal static class Program
             AssertContains(osFilePosixDarwin, "Refusing to hash a symbolic link.", "Phase 90 POSIX Darwin file handling does not yet surface the symbolic-link refusal message.");
             AssertContains(osFilePosixDarwin, "openFlags = posixFlag | kNoFollowFlag", "Phase 90 POSIX Darwin file handling does not yet force no-follow on opens.");
             AssertContains(osFilePosixDarwin, "ValidateOpenedHandleAgainstPathPolicy(*fd, strFilePath, pathStatus, pathExists, pFileExc)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor against the validated path.");
+            AssertContains(osFilePosixDarwin, "errno == ELOOP", "Phase 90 POSIX Darwin file handling does not yet surface explicit symlink-open refusal handling.");
             AssertContains(osFilePosixDarwin, "static bool TryGetCurrentFileStatus(int *fd, const std::string& filePath, struct stat *fileStatus)", "Phase 90 POSIX Darwin metadata reads do not yet centralize on the current-file status helper.");
             AssertContains(osFilePosixDarwin, "if (fstat(fileHandle, &openedStatus) != 0)", "Phase 90 POSIX Darwin file handling does not yet validate the opened descriptor with fstat.");
             AssertContains(osFilePosixDarwin, "if (!IsRegularFile(openedStatus))", "Phase 90 POSIX Darwin file handling does not yet reject non-regular descriptors after open.");
@@ -5808,6 +5809,7 @@ internal static class Program
             AssertContains(osFileWinApi, "FILE_FLAG_OPEN_REPARSE_POINT", "Phase 90 Win32 file handling does not yet open the leaf object with reparse-point awareness.");
             AssertContains(osFileWinApi, "GetFileInformationByHandleEx(", "Phase 90 Win32 file handling does not yet validate opened handle attributes.");
             AssertContains(osFileWinApi, "GetFinalPathNameByHandle(", "Phase 90 Win32 file handling does not yet revalidate the resolved final path after open.");
+            AssertContains(osFileWinApi, "Cannot verify the final opened file path. Refusing to hash.", "Phase 90 Win32 file handling still fails open when final-path verification cannot complete.");
             AssertContains(osFileWinApi, "kWindowsMaxExtendedPath = 32767", "Phase 90 Win32 file handling does not yet bound extended paths to the Windows 32767-character limit.");
             AssertContains(osFileWinApi, "ERROR_FILENAME_EXCED_RANGE", "Phase 90 Win32 file handling does not yet report explicit extended-path overflow errors.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");

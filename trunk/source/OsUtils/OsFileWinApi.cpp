@@ -334,7 +334,8 @@ static bool ValidateOpenedHandleAgainstPathPolicy(HANDLE fileHandle, const tstri
 	tstring normalizedFinalPath;
 	if (!TryGetNormalizedFinalPathFromHandle(fileHandle, &normalizedFinalPath))
 	{
-		return true;
+		CopyOpenErrorText(errorBuffer, TEXT("Cannot verify the final opened file path. Refusing to hash."));
+		return false;
 	}
 
 	tstring normalizedExpectedPath = NormalizePathForHandleComparison(expectedPath);
