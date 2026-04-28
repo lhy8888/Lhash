@@ -1,8 +1,6 @@
 name: OpenSSF Scorecard
 
 on:
-  schedule:
-    - cron: '23 4 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -40,6 +38,5 @@ jobs:
           sarif_file: results.sarif
 
 # Note:
-# Scorecard is intentionally limited to scheduled and manual execution so normal
-# repository edits, especially documentation changes, do not create repeated
-# security-workflow noise on the main development branch.
+# Scorecard is intentionally manual-only here so it does not create repeated
+# scheduled security-workflow noise on the main development branch.
