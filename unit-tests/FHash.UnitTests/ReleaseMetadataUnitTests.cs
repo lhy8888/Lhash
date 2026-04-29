@@ -106,6 +106,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("release-assets/LHash-windows-x64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-assets/LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/SHA256SUMS.txt", workflow, StringComparison.Ordinal);
+        Assert.Contains("shasum -a 256 LHash-windows-x64-*.zip LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("artifacts/winui-x64-*", workflow, StringComparison.Ordinal);
     }
 

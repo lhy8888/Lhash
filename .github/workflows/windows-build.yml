@@ -602,6 +602,10 @@ jobs:
           cp "$artifact_root"/LHash-windows-x64-*.zip "$staging_root"/
           cp "$artifact_root"/LHash-windows-arm64-*.zip "$staging_root"/
           find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
+          (
+            cd "$staging_root"
+            shasum -a 256 LHash-windows-x64-*.zip LHash-windows-arm64-*.zip > SHA256SUMS.txt
+          )
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
       - name: Upload release rehearsal artifact
@@ -610,6 +614,7 @@ jobs:
           name: LHash-release-rehearsal
           path: |
             release-staging/RELEASE_MANIFEST.txt
+            release-staging/SHA256SUMS.txt
             LHash-release-rehearsal-*.tar.gz
           if-no-files-found: error
 
@@ -623,4 +628,5 @@ jobs:
             release-assets/LHash-windows-x64-*.zip
             release-assets/LHash-windows-arm64-*.zip
             release-staging/RELEASE_MANIFEST.txt
+            release-staging/SHA256SUMS.txt
 

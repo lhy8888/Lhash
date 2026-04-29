@@ -3962,6 +3962,8 @@ internal static class Program
             AssertContains(workflow, "release-assets/LHash-windows-arm64-*.zip", "Phase 48 publish-release does not yet publish the Windows ARM64 release zip.");
             AssertContains(workflow, "windows_arm64=$(basename $(ls \"$artifact_root\"/LHash-windows-arm64-*.zip | head -n 1))", "Phase 48 publish-release does not yet record the Windows ARM64 bundle in the release manifest.");
             AssertContains(workflow, "release-staging/RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet attach the release manifest.");
+            AssertContains(workflow, "release-staging/SHA256SUMS.txt", "Phase 48 publish-release does not yet attach the release checksum list.");
+            AssertContains(workflow, "shasum -a 256 LHash-windows-x64-*.zip LHash-windows-arm64-*.zip", "Phase 48 publish-release does not yet generate the checksum list.");
             AssertDoesNotContain(workflow, "artifacts/winui-x64-*", "Phase 48 WinUI artifact upload still includes the duplicated uncompressed publish directory.");
         }, failures);
 
