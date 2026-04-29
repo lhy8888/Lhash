@@ -89,7 +89,7 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $smokeLog = Join-Path $artifactRoot 'core-smoke.log'
 
-          & ctest --test-dir $buildRoot --output-on-failure -C Release -R lhash_core_smoke 2>&1 |
+          & ctest --test-dir $buildRoot --output-on-failure -C Release -R "^(lhash_core_smoke|lhash_engine_link_smoke)$" 2>&1 |
             Tee-Object -FilePath $smokeLog
 
           if ($LASTEXITCODE -ne 0) {
