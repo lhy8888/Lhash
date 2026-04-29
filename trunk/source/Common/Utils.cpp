@@ -6,8 +6,8 @@
 #include <string>
 
 #if defined (_WIN32)
-#include <Windows.h>
 #include <Winsock2.h>
+#include <Windows.h>
 #endif
 
 #if defined (__APPLE__) || defined (__unix)
