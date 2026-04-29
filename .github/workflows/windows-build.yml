@@ -72,7 +72,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-           name: LHash-unit-tests
+          name: LHash-unit-tests
           path: |
             artifacts/FHash.UnitTests.trx
           if-no-files-found: warn
@@ -113,7 +113,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-           name: LHash-openssl-vendor-x64
+          name: LHash-openssl-vendor-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
             artifacts/openssl-vendor-x64/**
@@ -136,7 +136,7 @@ jobs:
       - name: Download OpenSSL vendor x64 artifact
         uses: actions/download-artifact@v8
         with:
-           name: LHash-openssl-vendor-x64
+          name: LHash-openssl-vendor-x64
           path: artifacts
 
       - name: Build and run native runtime tests
@@ -173,7 +173,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-           name: LHash-native-runtime-tests
+          name: LHash-native-runtime-tests
           path: |
             artifacts/build-openssl-vendor-x64.log
             artifacts/openssl-vendor-x64/*.log
@@ -201,7 +201,7 @@ jobs:
       - name: Download OpenSSL vendor x64 artifact
         uses: actions/download-artifact@v8
         with:
-           name: LHash-openssl-vendor-x64
+          name: LHash-openssl-vendor-x64
           path: artifacts
 
       - name: Show Visual Studio toolchain info
@@ -382,7 +382,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-           name: LHash-openssl-vendor-arm64
+          name: LHash-openssl-vendor-arm64
           path: |
             artifacts/build-openssl-vendor-arm64.log
             artifacts/openssl-vendor-arm64/**
@@ -408,7 +408,7 @@ jobs:
       - name: Download OpenSSL vendor arm64 artifact
         uses: actions/download-artifact@v8
         with:
-           name: LHash-openssl-vendor-arm64
+          name: LHash-openssl-vendor-arm64
           path: artifacts
 
       - name: Show Visual Studio toolchain info

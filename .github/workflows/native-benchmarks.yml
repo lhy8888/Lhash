@@ -160,7 +160,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-           name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}
+          name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}
           path: |
             artifacts/benchmark-machine-info.txt
             artifacts/build-native-benchmarks-portable.log
