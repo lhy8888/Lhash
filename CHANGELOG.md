@@ -4,25 +4,29 @@ This file only records the current maintained LHash release note. Older version
 entries have been removed, and the historical upstream fHash log is not
 duplicated here.
 
-## 1.12.2 - 2026-04-17
+## 1.12.3 - 2026-04-29
 
-Follow-up patch release focused on safer defaults, cleaner algorithm UX, and continued runtime hardening.
+Patch release focused on Windows release packaging, the Windows ARM64 package
+line, and the macOS CLI MVP that now sits beside the macOS core support
+contract.
 
-### Algorithm defaults and UX
+### Release and packaging
 
-- enabled `SHA3-256` by default alongside the maintained OpenSSL `SHA-256` and `SHA-512` defaults
-- replaced the one-shot settings submenu for algorithm selection with a dedicated multi-toggle dialog, so multiple algorithms can be changed before closing settings
-- fully removed the legacy built-in `SHA256` / `SHA512` implementations from the active code path and kept OpenSSL `SHA-256` / `SHA-512` as the only maintained SHA-2 variants
+- normalized the Windows x64 release artifact name to `LHash-windows-x64`
+- added Windows ARM64 MFC packaging and tagged-release publishing
+- added the macOS arm64 CLI MVP workflow and its `tar.gz` workflow artifact
+
+### Core and documentation alignment
+
+- kept the core build matrix and smoke coverage aligned with the shared core
+  entry point
+- clarified that macOS core support is tracked separately from the macOS CLI
+  MVP workflow
+- aligned release-verification and supply-chain documentation with the current
+  artifact layout
 
 ### Runtime and safety hardening
 
-- made OpenSSL EVP update failures sticky and explicit, so digest update/finalize errors no longer degrade into empty or misleading digest output
-- removed the legacy `CSHA1::HashFile()` file-I/O helper that bypassed the hardened `OsFile` path
-- cleaned up remaining global scratch and registry snapshot edge cases in digest/result access seams
-- tightened Windows legacy helpers by removing stale OS-version detection code and hardening shell/DLL helper behavior
-
-### Input and platform robustness
-
-- unified the per-session file-count limit handling across dialog, drag-and-drop, folder recursion, and `WM_COPYDATA` inputs with explicit user-visible outcomes
-- strengthened Win32 long-path handling and continued reducing TOCTOU-style drift in metadata and file-open paths
-- hardened the POSIX/Darwin string and file helpers around conversion, `O_CREAT`, and metadata lookup behavior
+- retained the previously hardened digest-update and file-open contracts
+- kept the Windows and Darwin security regressions green through the current
+  mainline shape

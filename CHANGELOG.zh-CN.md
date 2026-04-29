@@ -1,26 +1,24 @@
 # 更新日志
 
-本文件只保留当前维护发行版的说明；更早的历史条目已经移除，上游 fHash 的长期历史也不在这里重复维护。
+本文档只保留当前维护中的 LHash 发布说明；更早版本条目已移除，历史上游 fHash 的长篇日志不在此重复维护。
 
-## 1.12.2 - 2026-04-17
+## 1.12.3 - 2026-04-29
 
-这是一次继续收口默认策略、算法交互体验和运行时安全边界的补丁版本。
+这是一次面向 Windows 发布打包、Windows ARM64 包线，以及 macOS CLI MVP 的补丁发布；macOS CLI MVP 现在与 macOS core 支持契约并行存在。
 
-### 默认算法与交互体验
+### 发布与打包
 
-- 将 `SHA3-256` 加入默认启用集合，与当前维护中的 OpenSSL `SHA-256`、`SHA-512` 一起作为默认推荐算法
-- 将设置里的算法选择从“点一下就关闭”的一次性菜单改成可连续切换的独立对话框
-- 将旧的内置 `SHA256` / `SHA512` 实现彻底移出主线，现役 SHA-2 路径只保留 OpenSSL `SHA-256` / `SHA-512`
+- 将 Windows x64 发布产物命名规范化为 `LHash-windows-x64`
+- 新增 Windows ARM64 MFC 打包与 tag release 发布
+- 新增 macOS arm64 CLI MVP workflow 以及对应的 `tar.gz` workflow artifact
 
-### 运行时与安全收口
+### Core 与文档对齐
 
-- OpenSSL EVP 封装层现在会显式传播 `Update/Finalize` 失败，不再把失败静默写成空摘要或误导性结果
-- 删除了绕过 `OsFile` 安全抽象层的 legacy `CSHA1::HashFile()` 文件辅助路径
-- 继续清理 digest/result 访问层里残留的全局 scratch 与 snapshot 一致性尾巴
-- 精简并现代化了 Windows legacy helper 中的旧版本识别逻辑，同时继续收紧 shell / DLL 辅助路径
+- 继续让 core build matrix 与 smoke 覆盖保持在共享 core entry point 上
+- 明确 macOS core support 与 macOS CLI MVP workflow 是分开跟踪的
+- 让 release verification 与 supply-chain 文档与当前 artifact 布局保持一致
 
-### 输入与平台鲁棒性
+### 运行时与安全基线
 
-- 统一了文件对话框、拖放、文件夹递归和 `WM_COPYDATA` 的单次文件数上限处理与用户提示语义
-- 继续加强 Win32 长路径处理与句柄后置校验，减少路径检查与实际打开之间的漂移风险
-- 收紧 POSIX / Darwin 字符串转换和文件辅助逻辑，修复 `O_CREAT`、元数据读取与转换错误路径上的历史问题
+- 保持之前已经加固过的 digest-update 和文件打开契约
+- 继续保持 Windows / Darwin 安全回归在当前主线形态下为绿灯

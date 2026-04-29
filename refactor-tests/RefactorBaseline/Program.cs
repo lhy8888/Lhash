@@ -6232,8 +6232,8 @@ internal static class Program
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
             AssertContains(readme, "SHA-384", "Phase 98 README no longer documents the OpenSSL SHA-384 family.");
             AssertContains(readme, "BLAKE2b-512", "Phase 98 README no longer documents the supported OpenSSL BLAKE2b variant.");
-            AssertContains(changelog, "## 1.12.2 - 2026-04-17", "Phase 98 changelog no longer records the current maintained release note.");
-            AssertContains(changelogZh, "## 1.12.2 - 2026-04-17", "Phase 98 Chinese changelog no longer records the current maintained release note.");
+            AssertContains(changelog, "## 1.12.3 - 2026-04-29", "Phase 98 changelog no longer records the current maintained release note.");
+            AssertContains(changelogZh, "## 1.12.3 - 2026-04-29", "Phase 98 Chinese changelog no longer records the current maintained release note.");
             AssertContains(releaseMetadataTests, "OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild", "Phase 98 release metadata coverage no longer guards the OpenSSL vendor pipeline.");
             AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndOwnsTheOnlyActiveSha256AndSha512Ids", "Phase 98 extensibility coverage no longer guards the OpenSSL-only SHA-256/SHA-512 seam.");
             AssertContains(nativeRuntimeFrameworkTests, "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", "Phase 98 runtime coverage no longer guards OpenSSL EVP update-failure propagation.");

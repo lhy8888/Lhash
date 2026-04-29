@@ -1,9 +1,11 @@
 # macOS Core Support Criteria
 
-## M3 scope
+## Scope
 
-M3 establishes that the LHash core is not only buildable on macOS arm64, but also has a
-minimum trustworthy runtime and security contract.
+This document defines the macOS core support contract. The contract covers the
+macOS arm64 core runtime and its security boundaries. A separate macOS CLI MVP
+workflow exists and is tracked independently as a workflow artifact built on the
+same core entry point.
 
 This is intentionally narrower than a full macOS product line:
 
@@ -11,8 +13,8 @@ This is intentionally narrower than a full macOS product line:
 - no `fHashClrBridge`
 - no Linux
 - no macOS GUI
-- no CLI productization
 - no OpenSSL 4.0 upgrade work
+- no claim that the CLI MVP is a full macOS product line
 
 ## What M3 establishes
 
@@ -23,6 +25,15 @@ This is intentionally narrower than a full macOS product line:
 - Darwin file handling validates opened files through descriptor-level checks
 - macOS-specific security regression coverage exists for the hashing path policy
 - core-only CI runs the macOS build and verification steps
+
+## Related macOS CLI MVP
+
+The separate macOS CLI MVP workflow:
+
+- builds `lhash` from the shared core entry point
+- packages a `tar.gz` workflow artifact
+- is useful as a lightweight validation surface
+- does not change the macOS core support contract above
 
 ## Darwin path policy
 
@@ -42,7 +53,7 @@ filesystem edge case is fully covered yet.
 M3 does not claim:
 
 - a macOS GUI
-- a CLI packaging story
+- full CLI productization beyond the MVP workflow
 - OpenSSL extension backend restoration on macOS
 - Linux support
 - full coverage of every special filesystem boundary on Darwin
