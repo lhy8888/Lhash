@@ -74,16 +74,26 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $buildLog = Join-Path $artifactRoot 'cmake-build.log'
 
-          $buildTargets = @('${{ matrix.build_target }}')
-          if (${{ matrix.run_smoke }}) {
-            $buildTargets += 'lhash_engine_link_smoke'
-          }
-
-          & cmake --build $buildRoot --config Release --target $buildTargets --parallel 2>&1 |
+          & cmake --build $buildRoot --config Release --target ${{ matrix.build_target }} --parallel 2>&1 |
             Tee-Object -FilePath $buildLog
 
           if ($LASTEXITCODE -ne 0) {
             throw "CMake build failed with exit code $LASTEXITCODE. See $buildLog for details."
+          }
+
+      - name: Build engine link smoke target
+        if: ${{ matrix.run_smoke }}
+        run: |
+          $repoRoot = $env:GITHUB_WORKSPACE
+          $buildRoot = Join-Path $repoRoot '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
+          $buildLog = Join-Path $artifactRoot 'engine-link-build.log'
+
+          & cmake --build $buildRoot --config Release --target lhash_engine_link_smoke --parallel 2>&1 |
+            Tee-Object -FilePath $buildLog
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Engine link smoke build failed with exit code $LASTEXITCODE. See $buildLog for details."
           }
 
       - name: Run core smoke
