@@ -20,6 +20,11 @@ set(LHASH_THIRD_PARTY_ROOT "${LHASH_REPO_ROOT}/third_party")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/LHashCoreSources.cmake")
 
 add_library(lhash_core STATIC)
+if (APPLE OR UNIX)
+    target_include_directories(lhash_core BEFORE PRIVATE
+        "${LHASH_REPO_ROOT}/cmake/posix-stubs"
+    )
+endif()
 target_sources(lhash_core PRIVATE
     ${LHASH_COMMON_SOURCES}
     ${LHASH_ALGORITHM_SOURCES}
@@ -98,6 +103,16 @@ if (LHASH_BUILD_M2_SMOKE)
     endif()
 
     add_test(NAME lhash_core_smoke COMMAND lhash_core_smoke)
+
+    add_executable(lhash_engine_link_smoke
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/engine_link_smoke/lhash_engine_link_smoke.cpp"
+    )
+    target_link_libraries(lhash_engine_link_smoke PRIVATE lhash_core)
+    target_include_directories(lhash_engine_link_smoke BEFORE PRIVATE
+        "${LHASH_REPO_ROOT}/cmake/posix-stubs"
+        "${LHASH_SOURCE_ROOT}"
+    )
+    add_test(NAME lhash_engine_link_smoke COMMAND lhash_engine_link_smoke)
 
     if (APPLE)
         add_executable(lhash_darwin_security
