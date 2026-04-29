@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(LHASH_BUILD_M2_SMOKE "Build the M2 core smoke executable" ON)
+option(LHASH_BUILD_CLI "Build the LHash CLI executable" OFF)
 option(LHASH_ENABLE_OPENSSL_VENDOR "Enable the OpenSSL vendor backend in the CMake core build" OFF)
 
 set(LHASH_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -122,4 +123,20 @@ if (LHASH_BUILD_M2_SMOKE)
         target_include_directories(lhash_darwin_security PRIVATE "${LHASH_SOURCE_ROOT}")
         add_test(NAME lhash_darwin_security COMMAND lhash_darwin_security)
     endif()
+endif()
+
+if (LHASH_BUILD_CLI)
+    add_executable(lhash_cli
+        "${LHASH_REPO_ROOT}/trunk/cli/main.cpp"
+    )
+    target_link_libraries(lhash_cli PRIVATE lhash_core)
+    target_include_directories(lhash_cli BEFORE PRIVATE
+        "${LHASH_REPO_ROOT}/cmake/posix-stubs"
+        "${LHASH_SOURCE_ROOT}"
+    )
+    set_target_properties(lhash_cli PROPERTIES
+        OUTPUT_NAME "lhash"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
+    )
 endif()

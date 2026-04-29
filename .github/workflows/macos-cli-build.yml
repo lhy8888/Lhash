@@ -1,0 +1,65 @@
+name: macOS CLI Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - future-winui-was2
+      - codex/**
+      - claude/**
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos-arm64-cli:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure
+        run: |
+          cmake -S . -B build/macos-cli \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLHASH_BUILD_M2_SMOKE=OFF \
+            -DLHASH_BUILD_CLI=ON \
+            -DLHASH_ENABLE_OPENSSL_VENDOR=OFF
+
+      - name: Build
+        run: |
+          cmake --build build/macos-cli \
+            --config Release --target lhash_cli --parallel
+
+      - name: Locate executable
+        run: |
+          CLI_PATH="$(find build/macos-cli -type f -name lhash | head -n 1)"
+          if [ -z "$CLI_PATH" ]; then
+            echo "lhash executable not found" && exit 1
+          fi
+          echo "CLI_PATH=${CLI_PATH}" >> "$GITHUB_ENV"
+
+      - name: Smoke test
+        run: |
+          echo "hello" > sample.txt
+          "$CLI_PATH" sample.txt | tee cli-smoke.log
+          grep -i "md5" cli-smoke.log
+          grep -i "sha1" cli-smoke.log
+
+      - name: Package
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          DIR="LHash-macos-arm64-cli-${SHA}"
+          mkdir -p "dist/${DIR}"
+          cp "$CLI_PATH" "dist/${DIR}/"
+          shasum -a 256 "dist/${DIR}/lhash" > "dist/${DIR}/SHA256.txt"
+          tar -czf "dist/${DIR}.tar.gz" -C dist "${DIR}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: LHash-macos-arm64-cli
+          path: dist/LHash-macos-arm64-cli-*.tar.gz
+          if-no-files-found: error
