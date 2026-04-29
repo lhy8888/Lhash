@@ -3370,12 +3370,12 @@ internal static class Program
             AssertInOrder(
                 workflow,
                 [
-                    "build-legacy-x64:",
+                    "build-windows-x64:",
                     "needs:",
                     "- security-regression",
                     "- unit-tests"
                 ],
-                "Workflow does not yet gate the legacy native build on both regression and unit-test jobs.");
+                "Workflow does not yet gate the Windows x64 native build on both regression and unit-test jobs.");
         }, failures);
 
         Run("Phase 31 introduces stable hash request, result, and progress event contracts", () =>
@@ -3933,13 +3933,13 @@ internal static class Program
                 workflow,
                 new[]
                 {
-                    "build-legacy-x64:",
+                    "build-windows-x64:",
                     "needs:",
                     "- security-regression",
                     "- unit-tests",
                     "- prepare-openssl-vendor-x64"
                 },
-                "Phase 47 build-legacy-x64 does not yet depend on the shared OpenSSL vendor artifact.");
+                "Phase 47 build-windows-x64 does not yet depend on the shared OpenSSL vendor artifact.");
         }, failures);
 
         Run("Phase 48 exercises the publish-release chain on manual dispatch while reserving GitHub releases for version tags", () =>
