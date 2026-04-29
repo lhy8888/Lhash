@@ -30,7 +30,7 @@ body:
     attributes:
       label: Release tag
       description: Which release tag is affected?
-      placeholder: v1.12.3
+      placeholder: v1.12.4
 
   - type: input
     id: asset_name

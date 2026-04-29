@@ -1,24 +1,26 @@
 # 更新日志
 
-本文档只保留当前维护中的 LHash 发布说明；更早版本条目已移除，历史上游 fHash 的长篇日志不在此重复维护。
+本文档只保留当前维护中的 LHash 发布说明。更早版本条目已经移除，历史上的上游 fHash 长篇日志不在此重复维护。
 
-## 1.12.3 - 2026-04-29
+## 1.12.4 - 2026-04-30
 
-这是一次面向 Windows 发布打包、Windows ARM64 包线，以及 macOS CLI MVP 的补丁发布；macOS CLI MVP 现在与 macOS core 支持契约并行存在。
+这是一版聚焦于原样导入 OpenSSL 3.5.6 vendor、更新发布文档，以及清理陈旧一致性检查的补丁发布。
 
 ### 发布与打包
 
-- 将 Windows x64 发布产物命名规范化为 `LHash-windows-x64`
-- 新增 Windows ARM64 MFC 打包与 tag release 发布
-- 新增 macOS arm64 CLI MVP workflow 以及对应的 `tar.gz` workflow artifact
+- 将维护中的 Windows vendor 树升级为原样 OpenSSL 3.5.6
+- 删除退役的 `third_party/openssl/3.0.20`
+- 保持 Windows x64 / ARM64 发布面与当前 vendor 政策一致
 
-### Core 与文档对齐
+### 文档与发布元数据
 
-- 继续让 core build matrix 与 smoke 覆盖保持在共享 core entry point 上
-- 明确 macOS core support 与 macOS CLI MVP workflow 是分开跟踪的
-- 让 release verification 与 supply-chain 文档与当前 artifact 布局保持一致
+- 将当前发布引用更新为 `v1.12.4`
+- 刷新 README、changelog、issue 模板和发布元数据测试
+- 将维护中的 Windows 版本元数据更新为 `1.12.4.0`
 
-### 运行时与安全基线
+### 一致性清理
 
-- 保持之前已经加固过的 digest-update 和文件打开契约
-- 继续保持 Windows / Darwin 安全回归在当前主线形态下为绿灯
+- 让算法顺序断言与当前注册顺序保持一致
+- 补全新注册的 native runtime 测试名称追踪
+- 将退役的 Windows OsUtils 变体移出 active source tree
+- 将 `HashDigestRuntimePlan` 改为按值持有 request 和 queue-plan 状态

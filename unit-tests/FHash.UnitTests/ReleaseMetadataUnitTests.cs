@@ -3,27 +3,27 @@ namespace FHash.UnitTests;
 public sealed class ReleaseMetadataUnitTests
 {
     [Fact]
-    public void LegacyVersion_IsUpdatedTo_1_12_3_0_AndAboutDialogDisplays_1_12_3()
+    public void LegacyVersion_IsUpdatedTo_1_12_4_0_AndAboutDialogDisplays_1_12_4()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,3,0", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.3.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,4,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.4.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (fHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_3_0()
+    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_4_0()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
         string draft = RepositoryTestContext.ReadTextFile(@"docs\README-trusted-verification-draft.md");
 
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.3.0\"", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.3`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.3)", readme, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.3`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.3)", draft, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.4.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("Current release: [`v1.12.4`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.4)", readme, StringComparison.Ordinal);
+        Assert.Contains("Current release: [`v1.12.4`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.4)", draft, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
