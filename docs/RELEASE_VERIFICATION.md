@@ -37,6 +37,13 @@ dedicated workflow:
 
 - `LHash-macos-arm64-cli-<shortsha>.tar.gz`
 
+The CLI tarball currently contains:
+
+- `lhash`
+- `README.txt`
+- `BUILD_INFO.txt`
+- `SHA256.txt`
+
 Treat that file as a workflow artifact unless the release notes for a tag
 explicitly list it as part of the published release bundle set.
 

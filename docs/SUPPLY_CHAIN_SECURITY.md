@@ -96,7 +96,8 @@ The native C/C++ surface can be extended further in later hardening passes.
 ### 7. Separate macOS CLI MVP workflow
 
 The repository also includes a dedicated macOS arm64 CLI workflow that
-publishes a `tar.gz` validation artifact.
+publishes a `tar.gz` validation artifact containing `lhash`, `README.txt`,
+`BUILD_INFO.txt`, and `SHA256.txt`.
 
 Security value:
 
