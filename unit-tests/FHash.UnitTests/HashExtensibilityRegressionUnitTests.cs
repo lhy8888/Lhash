@@ -242,7 +242,7 @@ public sealed class HashExtensibilityRegressionUnitTests
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_VENDOR_INSTALL_ROOT", workflow, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);

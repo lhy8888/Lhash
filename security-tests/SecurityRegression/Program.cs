@@ -523,7 +523,7 @@ internal static partial class Program
             AssertContains(uwpNativeProject, @"Runtime\Hash\OpenSslEvpHashProvider.cpp", "The UWP native core project no longer builds the OpenSSL provider.");
             AssertContains(clrBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "The CLR bridge no longer links libcrypto explicitly when the vendored OpenSSL root is present.");
             AssertContains(uwpBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "The WinRT bridge no longer links libcrypto explicitly when the vendored OpenSSL root is present.");
-            AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
+            AssertContains(vendorTargets, "FHASH_WITH_OPENSSL_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
             AssertContains(vendorTargets, "libcrypto.lib", "The shared OpenSSL vendor targets no longer link libcrypto.");
             AssertContains(vendorScript, "ValidateSet('x64', 'ARM64')", "The OpenSSL vendor build script no longer restricts the supported platforms to x64/ARM64.");
             AssertDoesNotContain(vendorScript, "VC-WIN32", "The OpenSSL vendor build script still supports the retired Win32 platform.");
@@ -537,7 +537,7 @@ internal static partial class Program
             AssertContains(workflow, "openssl_vendor_source=third_party/openssl/3.5.6", "The Windows build workflow no longer records the OpenSSL vendor source directory in release metadata.");
             AssertContains(workflow, "openssl_vendor_policy=pristine-upstream-source", "The Windows build workflow no longer records the OpenSSL vendor policy in release metadata.");
             AssertContains(workflow, "openssl_vendor_local_patches=none", "The Windows build workflow no longer records that the OpenSSL vendor build is patch-free.");
-            AssertContains(workflow, "FHashOpenSslInstallRoot", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");
+            AssertContains(workflow, "OPENSSL_VENDOR_INSTALL_ROOT", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");
             AssertContains(sourceInfo, "version=openssl-3.5.6", "The vendored OpenSSL source info no longer pins the upstream version.");
             AssertContains(sourceInfo, "source_policy=pristine upstream tarball extraction", "The vendored OpenSSL source info no longer records the pristine source policy.");
             AssertContains(sourceInfo, "vendor_directory=third_party/openssl/3.5.6", "The vendored OpenSSL source info no longer records the vendor directory.");

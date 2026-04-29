@@ -156,7 +156,7 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:OPENSSL_VENDOR_INSTALL_ROOT=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -232,7 +232,7 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:OPENSSL_VENDOR_INSTALL_ROOT=$openSslRoot 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -449,7 +449,7 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:OPENSSL_VENDOR_INSTALL_ROOT=$openSslRoot 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {

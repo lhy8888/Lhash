@@ -135,7 +135,7 @@ Together, those make the project more useful as a trusted verification tool inst
 - BLAKE3-512
 - BLAKE3 on macOS arm64 uses the native NEON path in the core build
 
-### OpenSSL 3 extended algorithms
+### OpenSSL 3.5 LTS extended algorithms
 
 - SHA-256
 - SHA-384

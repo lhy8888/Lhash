@@ -408,7 +408,7 @@ namespace
 		return sunjwbase::strtotstr(std::string("D9963A56"));
 	}
 
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(FHASH_WITH_OPENSSL_VENDOR)
 	static std::vector<HashAlgorithmId> CreateOpenSslDigestAlgorithmIds()
 	{
 		std::vector<HashAlgorithmId> algorithmIds;
@@ -948,7 +948,7 @@ namespace
 		NativeAssertEqual(GetOfficialCRC32CIscsiVector(), FindDigestValueByAlgorithmId(*iscsiResult, algorithmIds[0]), "CRC32C iSCSI input vector did not match the official google/crc32c value.");
 	}
 
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(FHASH_WITH_OPENSSL_VENDOR)
 	static void HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -2034,7 +2034,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", &HashThreadFunc_ProcessesMultipleFilesAndWholeProgress });
 	tests.push_back({ "HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", &HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(FHASH_WITH_OPENSSL_VENDOR)
 	tests.push_back({ "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", &HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector });
 		tests.push_back({ "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", &RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily });
 	tests.push_back({ "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered });

@@ -178,7 +178,7 @@
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\CRC32CHashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp">
-      <ExcludedFromBuild Condition="'$(FHashOpenSslInstallRoot)'==''">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'==''">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\XXHash3HashProvider.cpp" />
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3.c">

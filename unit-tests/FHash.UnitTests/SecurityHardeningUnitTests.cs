@@ -381,8 +381,8 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("OPENSSL_VENDOR_INSTALL_ROOT", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHASH_WITH_OPENSSL_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
@@ -396,7 +396,9 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.6", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
-        Assert.Contains("/p:FHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
+        Assert.Contains("/p:OPENSSL_VENDOR_INSTALL_ROOT=$openSslRoot", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR", vendorTargets, StringComparison.Ordinal);
 
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
         Assert.Contains("version=openssl-3.5.6", sourceInfo, StringComparison.Ordinal);

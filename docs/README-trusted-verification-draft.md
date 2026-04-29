@@ -126,7 +126,7 @@ Together, those make the project more useful as a trusted verification tool inst
 - BLAKE3-256
 - BLAKE3-512
 
-### OpenSSL 3 extended algorithms
+### OpenSSL 3.5 LTS extended algorithms
 
 - SHA-256
 - SHA-384

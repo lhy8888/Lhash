@@ -78,10 +78,9 @@
     <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)..\..\trunk\</SolutionDir>
   </PropertyGroup>
   <PropertyGroup>
-    <FHashOpenSslInstallRoot Condition="'$(FHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</FHashOpenSslInstallRoot>
-    <FHashOpenSslLibDir Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>
-    <FHashOpenSslAdditionalDependencies Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</FHashOpenSslAdditionalDependencies>
-    <FHashOpenSslAdditionalLibraryDirectories Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslLibDir);</FHashOpenSslAdditionalLibraryDirectories>
+    <OpenSslVendorLibDir Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)\lib</OpenSslVendorLibDir>
+    <OpenSslVendorAdditionalDependencies Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OpenSslVendorLibDir)\libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;</OpenSslVendorAdditionalDependencies>
+    <OpenSslVendorAdditionalLibraryDirectories Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OpenSslVendorLibDir);</OpenSslVendorAdditionalLibraryDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
@@ -104,8 +103,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OpenSslVendorAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OpenSslVendorAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile />
   </ItemDefinitionGroup>
@@ -118,8 +117,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OpenSslVendorAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OpenSslVendorAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile />
   </ItemDefinitionGroup>
@@ -132,8 +131,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OpenSslVendorAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OpenSslVendorAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile />
   </ItemDefinitionGroup>
@@ -146,8 +145,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(FHashOpenSslAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(FHashOpenSslAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OpenSslVendorAdditionalDependencies)fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OpenSslVendorAdditionalLibraryDirectories)$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\;$(SolutionDir)$(Platform)\$(Configuration)\fHashWUINative\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore-md\;$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\;$(SolutionDir)$(Platform)\$(Configuration)\fHashNativeCore\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile />
   </ItemDefinitionGroup>

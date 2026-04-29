@@ -56,7 +56,7 @@ target_compile_definitions(lhash_core PRIVATE
 )
 
 if (LHASH_ENABLE_OPENSSL_VENDOR)
-    target_compile_definitions(lhash_core PRIVATE FHASH_WITH_OPENSSL3_VENDOR=1)
+    target_compile_definitions(lhash_core PRIVATE FHASH_WITH_OPENSSL_VENDOR=1)
 endif()
 
 if (WIN32)
