@@ -247,7 +247,7 @@
     </ClCompile>
     <ClCompile Include="..\..\third_party\crc32c\1.1.2\src\crc32c_arm64.cc">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(Platform)'!='ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
     <ClCompile Include="..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp" />
