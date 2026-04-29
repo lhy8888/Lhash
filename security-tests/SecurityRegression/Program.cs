@@ -145,8 +145,18 @@ internal static partial class Program
         Run("Win32 read failures propagate as errors", () =>
         {
             string winApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
-            string winUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
+            string winUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OsUtils\OsFileWinUwp.cpp");
             string hashEngine = ReadHashEngineImplementation(repoRoot);
+
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinAfx.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinAfx.cpp should not remain in the active source tree.");
+            }
+
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinUwp.cpp should not remain in the active source tree.");
+            }
 
             AssertContains(winApi, "return -1;", "OsFileWinApi.cpp no longer returns -1 on ReadFile/WriteFile failure.");
             AssertContains(winUwp, "return -1;", "OsFileWinUwp.cpp no longer returns -1 on ReadFile/WriteFile failure.");
@@ -210,7 +220,7 @@ internal static partial class Program
             string osFileHeader = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFile.h");
             string osFilePosixDarwin = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFilePosixDarwin.cpp");
             string osFileWinApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
-            string osFileWinUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
+            string osFileWinUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OsUtils\OsFileWinUwp.cpp");
             string hashEngineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string checkedArithmetic = ReadRepoFile(repoRoot, @"trunk\source\Common\CheckedArithmetic.h");
             string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
@@ -301,10 +311,21 @@ internal static partial class Program
             AssertDoesNotContain(strhelper, "mbstowcs(", "POSIX string helpers still rely on mbstowcs-driven locale conversions.");
             AssertDoesNotContain(strhelper, "\"UTF-8\", \"ASCII\"", "POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
             AssertDoesNotContain(strhelper, "\"ASCII\", \"UTF-8\"", "POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinAfx.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinAfx.cpp should not remain in the active source tree.");
+            }
+
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinUwp.cpp should not remain in the active source tree.");
+            }
+
             AssertContains(uiBridgeHeader, "struct ProgressDispatchState", "MFC UI bridge no longer exposes a throttled progress dispatch state.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "MFC UI bridge no longer throttles progress dispatch.");
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "MFC UI bridge no longer gates total-progress posts through the throttling helper.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Native runtime tests no longer cover concurrent digest consistency.");
+            AssertContains(nativeRuntimeSource, "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", "Native runtime tests no longer cover metadata-only requests without enabled algorithms.");
             AssertContains(nativeRuntimeSource, "std::async(std::launch::async, runSingleRequest)", "Native runtime tests no longer exercise concurrent hashing via async tasks.");
         }, failures);
         Run("BLAKE3 provider and descriptor variants stay covered by hardening gates", () =>

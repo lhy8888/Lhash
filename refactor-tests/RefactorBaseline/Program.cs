@@ -4762,8 +4762,10 @@ internal static class Program
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestRuntimePlanHeader, "struct HashDigestRuntimePlan", "Phase 68 HashDigestRuntimePlan.h does not yet expose the digest runtime-plan contract.");
-            AssertContains(hashDigestRuntimePlanHeader, "const DigestUpdateRequest& digestUpdateRequest;", "Phase 68 HashDigestRuntimePlan.h does not yet expose digest request state.");
-            AssertContains(hashDigestRuntimePlanHeader, "const HashDigestQueuePlan& digestQueuePlan;", "Phase 68 HashDigestRuntimePlan.h does not yet expose queue-plan state.");
+            AssertContains(hashDigestRuntimePlanHeader, "DigestUpdateRequest digestUpdateRequest;", "Phase 68 HashDigestRuntimePlan.h does not yet expose digest request state.");
+            AssertContains(hashDigestRuntimePlanHeader, "HashDigestQueuePlan digestQueuePlan;", "Phase 68 HashDigestRuntimePlan.h does not yet expose queue-plan state.");
+            AssertDoesNotContain(hashDigestRuntimePlanHeader, "const DigestUpdateRequest& digestUpdateRequest;", "Phase 68 HashDigestRuntimePlan.h should no longer keep digest request state by reference.");
+            AssertDoesNotContain(hashDigestRuntimePlanHeader, "const HashDigestQueuePlan& digestQueuePlan;", "Phase 68 HashDigestRuntimePlan.h should no longer keep queue-plan state by reference.");
             AssertContains(hashDigestRuntimePlanHeader, "HashDigestRuntimePlan(const DigestUpdateRequest& updateRequest, HashDigestExecutionMode executionMode, unsigned int bufferLength, const HashDigestQueuePlan& queuePlan)", "Phase 68 HashDigestRuntimePlan.h does not yet require explicit runtime-plan dependencies.");
             AssertContains(hashDigestRuntimePlanHeader, "HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);", "Phase 68 HashDigestRuntimePlan.h does not yet expose runtime-plan creation.");
             AssertContains(hashDigestRuntimePlanHeader, "const DigestUpdateRequest& GetHashDigestRuntimeUpdateRequest(const HashDigestRuntimePlan& digestRuntimePlan);", "Phase 68 HashDigestRuntimePlan.h does not yet expose digest-request querying.");
@@ -5772,7 +5774,7 @@ internal static class Program
         {
             string osFilePosixDarwin = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFilePosixDarwin.cpp");
             string osFileWinApi = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinApi.cpp");
-            string osFileWinUwp = ReadRepoFile(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp");
+            string osFileWinUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OsUtils\OsFileWinUwp.cpp");
             string checkedArithmetic = ReadRepoFile(repoRoot, @"trunk\source\Common\CheckedArithmetic.h");
             string threadAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
             string progressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
@@ -5859,9 +5861,19 @@ internal static class Program
             AssertDoesNotContain(strhelper, "mbstowcs(", "Phase 90 POSIX string helpers still rely on mbstowcs-driven locale conversions.");
             AssertDoesNotContain(strhelper, "\"UTF-8\", \"ASCII\"", "Phase 90 POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
             AssertDoesNotContain(strhelper, "\"ASCII\", \"UTF-8\"", "Phase 90 POSIX UTF-8 helpers still route through an ASCII bridge conversion.");
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinAfx.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinAfx.cpp should not remain in the active source tree.");
+            }
+
+            if (File.Exists(Path.Combine(repoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp")))
+            {
+                failures.Add("trunk/source/OsUtils/OsFileWinUwp.cpp should not remain in the active source tree.");
+            }
             AssertContains(uiBridge, "ShouldPostProgressValue(m_totalProgressDispatchState, value)", "Phase 90 UI progress dispatch does not yet throttle total-progress updates.");
             AssertContains(uiBridge, "kUiProgressDispatchIntervalMs = 80", "Phase 90 UI progress dispatch does not yet enforce the refresh interval.");
             AssertContains(runtimeTests, "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", "Phase 90 native runtime tests do not yet cover concurrent digest consistency.");
+            AssertContains(runtimeTests, "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", "Phase 90 native runtime tests do not yet cover metadata-only requests without enabled algorithms.");
 
             AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Phase 90 native security targets do not yet enable /GS.");
             AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Phase 90 native security targets do not yet enable /sdl.");

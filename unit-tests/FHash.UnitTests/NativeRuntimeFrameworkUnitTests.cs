@@ -76,6 +76,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", testSource, StringComparison.Ordinal);

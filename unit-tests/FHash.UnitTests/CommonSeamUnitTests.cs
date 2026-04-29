@@ -82,10 +82,21 @@ public sealed class CommonSeamUnitTests
             "RegisterHashAlgorithmDescriptorUnlocked({ \"md5\", \"MD5 (Deprecated)\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"sha1\", \"SHA1 (Deprecated)\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-384\", \"SHA-384\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-512\", \"SHA-512\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha3-256\", \"SHA3-256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha3-384\", \"SHA3-384\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha3-512\", \"SHA3-512\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-blake2b-512\", \"BLAKE2b-512\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-blake2s-256\", \"BLAKE2s-256\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-shake128-256\", \"SHAKE128-256\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-shake256-512\", \"SHAKE256-512\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-256\", \"BLAKE3-256\", true, false });",
             "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-512\", \"BLAKE3-512\", true, false });",
-            "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });");
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"blake3-xof\", \"BLAKE3 XOF\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"xxh3-64\", \"XXH3-64\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"xxh3-128\", \"XXH3-128\", true, false });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"crc32c\", \"CRC32C\", true, false });");
         Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });", registryCore, StringComparison.Ordinal);
         Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-512\", \"SHA-512\", true, true });", registryCore, StringComparison.Ordinal);
         Assert.Contains("struct HashAlgorithmDescriptorRegistry", registryCore, StringComparison.Ordinal);

@@ -8,10 +8,12 @@ public sealed class SecurityHardeningUnitTests
         string osFile = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFile.h");
         string osFilePosixDarwin = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFilePosixDarwin.cpp");
         string winApi = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFileWinApi.cpp");
-        string winUwp = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFileWinUwp.cpp");
+        string winUwp = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OsUtils\OsFileWinUwp.cpp");
         string engineResult = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
 
         Assert.Contains("bool isHashTargetAllowed(void *exception = NULL);", osFile, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\OsUtils\OsFileWinAfx.cpp")));
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp")));
 
         Assert.Contains("static const int kNoFollowFlag = O_NOFOLLOW;", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)", osFilePosixDarwin, StringComparison.Ordinal);
@@ -201,6 +203,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("make_unique<DigestDataBuffer>(preferredBufferLength)", digestQueue, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("std::async(std::launch::async, runSingleRequest)", nativeRuntimeTests, StringComparison.Ordinal);
     }

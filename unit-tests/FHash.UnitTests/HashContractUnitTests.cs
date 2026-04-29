@@ -604,8 +604,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("WindowsComm::FileVersionHelper fvHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestRuntimePlan", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("DigestUpdateRequest digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestQueuePlan digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("const DigestUpdateRequest& digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("const HashDigestQueuePlan& digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);", digestRuntimePlanHeader, StringComparison.Ordinal);
-        Assert.Contains("const HashDigestQueuePlan& digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestRuntimePlan(const DigestUpdateRequest& updateRequest, HashDigestExecutionMode executionMode, unsigned int bufferLength, const HashDigestQueuePlan& queuePlan)", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("return HashDigestRuntimePlan(", digestRuntimePlan, StringComparison.Ordinal);
         Assert.Contains("GetHashJobDigestQueuePlan(executionPlan));", digestRuntimePlan, StringComparison.Ordinal);
