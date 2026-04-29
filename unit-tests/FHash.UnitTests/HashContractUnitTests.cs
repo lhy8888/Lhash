@@ -446,7 +446,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("return HASH_DIGEST_EXECUTION_MODE_PARALLEL;", digestExecutionMode, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestBufferPlan", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("unsigned int preferredBufferLength;", digestBufferPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("static constexpr unsigned int kDefaultHashBufferLength = 1u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("static constexpr unsigned int kDefaultHashBufferLength = 4u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", digestBufferPlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", digestBufferPlan, StringComparison.Ordinal);
