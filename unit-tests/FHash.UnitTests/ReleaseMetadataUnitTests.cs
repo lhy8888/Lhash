@@ -186,7 +186,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
         Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
-        Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: LHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
         Assert.Contains("artifacts/openssl-vendor-x64/*.log", workflow, StringComparison.Ordinal);

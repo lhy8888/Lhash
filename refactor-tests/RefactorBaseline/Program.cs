@@ -3914,7 +3914,7 @@ internal static class Program
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 47 workflow does not yet define the shared OpenSSL vendor preparation job.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 47 workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 47 workflow does not yet cache the shared OpenSSL vendor build.");
-            AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
+            AssertContains(workflow, "name: LHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 47 README no longer marks MFC as the sole Windows UI mainline.");
@@ -6025,7 +6025,7 @@ internal static class Program
             AssertContains(benchmarkWorkflow, "native-benchmarks-current.csv", "Phase 94 does not yet persist the current benchmark results.");
             AssertContains(benchmarkWorkflow, "artifact_suffix: arm64", "Phase 94 does not yet define an ARM64 benchmark artifact suffix.");
             AssertContains(benchmarkWorkflow, "artifact_suffix: x64", "Phase 94 does not yet define an x64 benchmark artifact suffix.");
-            AssertContains(benchmarkWorkflow, "name: FHash-native-benchmarks-${{ matrix.artifact_suffix }}", "Phase 94 does not yet publish per-platform benchmark artifacts.");
+            AssertContains(benchmarkWorkflow, "name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}", "Phase 94 does not yet publish per-platform benchmark artifacts.");
             AssertDoesNotContain(benchmarkWorkflow, "benchmark_platform: Win32", "Phase 94 benchmark workflow still treats Win32 as a supported platform.");
             AssertDoesNotContain(benchmarkWorkflow, "artifact_suffix: win32", "Phase 94 benchmark workflow still publishes a Win32 benchmark artifact suffix.");
             AssertContains(benchmarkProject, "<ProjectName>FHash.NativeBenchmarks</ProjectName>", "Phase 94 does not yet introduce a standalone native benchmark project.");
@@ -6222,7 +6222,7 @@ internal static class Program
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
-            AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
+            AssertContains(workflow, "name: LHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");

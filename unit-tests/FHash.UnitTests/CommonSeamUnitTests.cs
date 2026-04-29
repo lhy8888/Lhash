@@ -528,7 +528,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
         Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
-        Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: LHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests:", workflow, StringComparison.Ordinal);
         Assert.Contains("msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", workflow, StringComparison.Ordinal);

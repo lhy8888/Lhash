@@ -25,8 +25,8 @@ The benchmark workflow lives at:
 - [native-benchmarks.yml](D:\hash\fhash\.github\workflows\native-benchmarks.yml)
 
 It runs both profiles per platform and uploads one artifact per platform:
-- `FHash-native-benchmarks-x64`
-- `FHash-native-benchmarks-arm64`
+- `LHash-native-benchmarks-x64`
+- `LHash-native-benchmarks-arm64`
 
 Current runners:
 - `x64`: `windows-2022`

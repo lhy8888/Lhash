@@ -25,7 +25,7 @@ public sealed class BenchmarkFrameworkUnitTests
         Assert.Contains("benchmark_platform: x64", workflow, StringComparison.Ordinal);
         Assert.Contains("artifact_suffix: arm64", workflow, StringComparison.Ordinal);
         Assert.Contains("artifact_suffix: x64", workflow, StringComparison.Ordinal);
-        Assert.Contains("name: FHash-native-benchmarks-${{ matrix.artifact_suffix }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("benchmark_platform: Win32", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("artifact_suffix: win32", workflow, StringComparison.Ordinal);
         Assert.Contains("Positive deltas mean the current benchmark configuration outperformed the portable BLAKE3 control", workflow, StringComparison.Ordinal);
