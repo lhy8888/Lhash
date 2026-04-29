@@ -1,0 +1,6 @@
+version=openssl-3.5.6
+source=https://www.openssl.org/source/openssl-3.5.6.tar.gz
+source_policy=pristine upstream tarball extraction
+vendor_directory=third_party/openssl/3.5.6
+local_patches=none
+imported_for=LHash Windows x64/ARM64 static libcrypto vendor build

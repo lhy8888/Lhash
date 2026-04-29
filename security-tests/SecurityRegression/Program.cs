@@ -133,7 +133,7 @@ internal static partial class Program
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
             AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_OWNERDATA | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer using the compact virtual-list viewport.");
-            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"算法选择\");", "Legacy settings menu no longer labels algorithm controls as 算法选择 in Simplified Chinese.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"缁犳纭堕柅澶嬪\");", "Legacy settings menu no longer labels algorithm controls as 缁犳纭堕柅澶嬪 in Simplified Chinese.");
             AssertContains(dialogContent, "ShowAlgorithmSelectionDialog();", "Legacy settings flow no longer routes algorithm selection through a dedicated toggle dialog.");
             AssertContains(dialogContent, "CAlgorithmSelectionDialog", "Legacy settings flow no longer defines a dedicated toggle dialog for algorithm selection.");
             AssertContains(dialogResource, "IDD_ALGORITHM_DIALOG DIALOGEX", "Legacy MFC resources no longer include the dedicated algorithm selection dialog.");
@@ -434,7 +434,8 @@ internal static partial class Program
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
             string vendorScript = ReadRepoFile(repoRoot, @"trunk\build_openssl_vendor.ps1");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string vendorNote = ReadRepoFile(repoRoot, @"third_party\openssl\3.0.20\README.LHash.md");
+            string sourceInfo = ReadRepoFile(repoRoot, @"third_party\openssl\OPENSSL_3_5_6_SOURCE_INFO.txt");
+            string vendorPolicy = ReadRepoFile(repoRoot, @"third_party\openssl\POLICY.md");
             string exceptionNote = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
 
             AssertContains(registryCore, "{ \"md5\", \"MD5 (Deprecated)\", true, false }", "The deprecated MD5 descriptor variant is missing.");
@@ -503,13 +504,28 @@ internal static partial class Program
             AssertContains(uwpBridgeProject, @"$(FHashOpenSslLibDir)\libcrypto.lib", "The WinRT bridge no longer links libcrypto explicitly when the vendored OpenSSL root is present.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "The shared OpenSSL vendor targets no longer define the OpenSSL build flag.");
             AssertContains(vendorTargets, "libcrypto.lib", "The shared OpenSSL vendor targets no longer link libcrypto.");
+            AssertContains(vendorScript, "ValidateSet('x64', 'ARM64')", "The OpenSSL vendor build script no longer restricts the supported platforms to x64/ARM64.");
+            AssertDoesNotContain(vendorScript, "VC-WIN32", "The OpenSSL vendor build script still supports the retired Win32 platform.");
+            AssertContains(vendorScript, "openssl-3.5.6", "The OpenSSL vendor build script no longer targets 3.5.6.");
             AssertContains(vendorScript, "VC-WIN64A", "The OpenSSL vendor build script no longer covers x64.");
             AssertContains(vendorScript, "VC-WIN64-ARM", "The OpenSSL vendor build script no longer covers ARM64.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "The Windows build workflow no longer builds the vendored OpenSSL package.");
+            AssertContains(workflow, "Verify pristine OpenSSL vendor source", "The Windows build workflow no longer verifies the pristine OpenSSL vendor tree before build.");
+            AssertContains(workflow, "tools/verify_openssl_vendor_pristine.ps1", "The Windows build workflow no longer invokes the OpenSSL pristine checker.");
+            AssertContains(workflow, "openssl_vendor_version=3.5.6", "The Windows build workflow no longer records the OpenSSL vendor version in release metadata.");
+            AssertContains(workflow, "openssl_vendor_source=third_party/openssl/3.5.6", "The Windows build workflow no longer records the OpenSSL vendor source directory in release metadata.");
+            AssertContains(workflow, "openssl_vendor_policy=pristine-upstream-source", "The Windows build workflow no longer records the OpenSSL vendor policy in release metadata.");
+            AssertContains(workflow, "openssl_vendor_local_patches=none", "The Windows build workflow no longer records that the OpenSSL vendor build is patch-free.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "The Windows build workflow no longer passes the OpenSSL install root to native builds.");
-            AssertContains(vendorNote, "Upstream tag: openssl-3.0.20", "The vendored OpenSSL note no longer pins the upstream tag.");
-            AssertContains(vendorNote, "5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", "The vendored OpenSSL note no longer pins the upstream commit.");
-            AssertDoesNotContain(vendorNote, "legacy `sha256` / `sha512` ids and labels untouched", "The vendored OpenSSL note still documents removed legacy SHA coexistence.");
+            AssertContains(sourceInfo, "version=openssl-3.5.6", "The vendored OpenSSL source info no longer pins the upstream version.");
+            AssertContains(sourceInfo, "source_policy=pristine upstream tarball extraction", "The vendored OpenSSL source info no longer records the pristine source policy.");
+            AssertContains(sourceInfo, "vendor_directory=third_party/openssl/3.5.6", "The vendored OpenSSL source info no longer records the vendor directory.");
+            AssertContains(sourceInfo, "local_patches=none", "The vendored OpenSSL source info no longer records the patch-free policy.");
+            AssertContains(sourceInfo, "imported_for=LHash Windows x64/ARM64 static libcrypto vendor build", "The vendored OpenSSL source info no longer records the imported-for context.");
+            AssertContains(vendorPolicy, "pristine upstream OpenSSL source tree", "The OpenSSL vendor policy no longer states the pristine-tree rule.");
+            AssertContains(vendorPolicy, "temporary build copy", "The OpenSSL vendor policy no longer states that patches apply only to the temporary build copy.");
+            AssertContains(vendorPolicy, "third_party/openssl/patches/<version>/", "The OpenSSL vendor policy no longer allows optional patches in the dedicated patch directory.");
+            AssertDoesNotContain("legacy `sha256` / `sha512` ids and labels untouched", sourceInfo, "The vendored OpenSSL source info still documents removed legacy SHA coexistence.");
             AssertContains(exceptionNote, "OpenSSL Linking Exception", "The repository no longer carries the OpenSSL linking exception note.");
         }, failures);
         Run("DLL search path hardening is present", () =>
@@ -655,22 +671,22 @@ internal static partial class Program
             AssertDoesNotContain(uwpMainPage, "MenuItemVirusTotal", "UWP UI still exposes a VirusTotal hash-search action.");
             AssertDoesNotContain(uwpEn, "Search Google", "UWP English resources still advertise Google hash search.");
             AssertDoesNotContain(uwpEn, "Search VirusTotal", "UWP English resources still advertise VirusTotal hash search.");
-            AssertDoesNotContain(uwpZh, "闂佺懓鍚嬬划搴ㄥ磼?Google", "UWP Chinese resources still advertise Google hash search.");
-            AssertDoesNotContain(uwpZh, "闂佺懓鍚嬬划搴ㄥ磼?VirusTotal", "UWP Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(uwpZh, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?Google", "UWP Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(uwpZh, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?VirusTotal", "UWP Chinese resources still advertise VirusTotal hash search.");
             AssertDoesNotContain(winUiMainPage, "MenuItemGoogle", "WinUI UI still exposes a Google hash-search action.");
             AssertDoesNotContain(winUiMainPage, "MenuItemVirusTotal", "WinUI UI still exposes a VirusTotal hash-search action.");
             AssertDoesNotContain(winUiEn, "Search Google", "WinUI English resources still advertise Google hash search.");
             AssertDoesNotContain(winUiEn, "Search VirusTotal", "WinUI English resources still advertise VirusTotal hash search.");
-            AssertDoesNotContain(winUiZh, "闂佺懓鍚嬬划搴ㄥ磼?Google", "WinUI Chinese resources still advertise Google hash search.");
-            AssertDoesNotContain(winUiZh, "闂佺懓鍚嬬划搴ㄥ磼?VirusTotal", "WinUI Chinese resources still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winUiZh, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?Google", "WinUI Chinese resources still advertise Google hash search.");
+            AssertDoesNotContain(winUiZh, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?VirusTotal", "WinUI Chinese resources still advertise VirusTotal hash search.");
             AssertDoesNotContain(winMfcDlg, "Searchgoogle", "WinMFC dialog still exposes a Google hash-search command.");
             AssertDoesNotContain(winMfcDlg, "Searchvirustotal", "WinMFC dialog still exposes a VirusTotal hash-search command.");
             AssertDoesNotContain(winMfcRes, "[Search Google]", "WinMFC menu resources still expose Google hash search.");
             AssertDoesNotContain(winMfcRes, "[Search VirusTotal]", "WinMFC menu resources still expose VirusTotal hash search.");
             AssertDoesNotContain(winMfcBaseStrings, "Search Google", "WinMFC English strings still advertise Google hash search.");
             AssertDoesNotContain(winMfcBaseStrings, "Search VirusTotal", "WinMFC English strings still advertise VirusTotal hash search.");
-            AssertDoesNotContain(winMfcZhStrings, "闂佺懓鍚嬬划搴ㄥ磼?Google", "WinMFC Chinese strings still advertise Google hash search.");
-            AssertDoesNotContain(winMfcZhStrings, "闂佺懓鍚嬬划搴ㄥ磼?VirusTotal", "WinMFC Chinese strings still advertise VirusTotal hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?Google", "WinMFC Chinese strings still advertise Google hash search.");
+            AssertDoesNotContain(winMfcZhStrings, "闂傚倷鑳堕幊鎾诲触鐎ｎ剙鍨濋幖娣妼绾?VirusTotal", "WinMFC Chinese strings still advertise VirusTotal hash search.");
         }, failures);
 
         if (failures.Count > 0)

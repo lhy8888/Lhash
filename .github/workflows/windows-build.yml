@@ -84,12 +84,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Verify pristine OpenSSL vendor source
+        shell: powershell
+        run: |
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -313,6 +318,11 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           "@
 
             Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
@@ -353,12 +363,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Verify pristine OpenSSL vendor source
+        shell: powershell
+        run: |
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+
       - name: Restore cached OpenSSL vendor arm64
         id: restore-openssl-vendor-arm64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-arm64
-          key: ${{ runner.os }}-openssl-vendor-arm64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -520,6 +535,11 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           "@
 
             Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
@@ -594,6 +614,11 @@ jobs:
           commit=$GITHUB_SHA
           short_sha=$short_sha
           frontend=windows-mfc
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
           windows_arm64=$(basename $(ls "$artifact_root"/LHash-windows-arm64-*.zip | head -n 1))
@@ -629,4 +654,3 @@ jobs:
             release-assets/LHash-windows-arm64-*.zip
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
-

@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('x64', 'Win32', 'ARM64')]
+    [ValidateSet('x64', 'ARM64')]
     [string]$Platform,
 
     [string]$InstallRoot = '',
@@ -12,8 +12,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$openSslVersion = 'openssl-3.0.20'
-$openSslSourceDirectory = 'third_party\openssl\3.0.20'
+$openSslVersion = 'openssl-3.5.6'
+$openSslSourceDirectory = 'third_party\openssl\3.5.6'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $repoRoot $openSslSourceDirectory
@@ -42,7 +42,11 @@ $requiredVendorFiles = @(
     'external\perl\MODULES.txt',
     'external\perl\Text-Template-1.56\lib\Text\Template.pm',
     'external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm',
-    'ms\applink.c'
+    'ms\applink.c',
+    'Configure',
+    'configdata.pm.in',
+    'LICENSE.txt',
+    'VERSION.dat'
 )
 foreach ($requiredVendorFile in $requiredVendorFiles) {
     $requiredVendorPath = Join-Path $sourceRoot $requiredVendorFile
@@ -136,10 +140,6 @@ switch ($Platform) {
     'x64' {
         $configureTarget = 'VC-WIN64A'
         $vcvarsArch = 'amd64'
-    }
-    'Win32' {
-        $configureTarget = 'VC-WIN32'
-        $vcvarsArch = 'x86'
     }
     'ARM64' {
         $configureTarget = 'VC-WIN64-ARM'

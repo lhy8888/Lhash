@@ -6219,6 +6219,13 @@ internal static class Program
             AssertContains(providerImplementation, "ConfigureOpenSslEvpFailureInjection", "Phase 98 OpenSSL provider does not yet expose failure injection hooks for runtime error-path coverage.");
             AssertContains(vendorTargets, "FHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
+            AssertContains(workflow, "Verify pristine OpenSSL vendor source", "Phase 98 Windows build workflow no longer validates the pristine OpenSSL vendor tree before build.");
+            AssertContains(workflow, "tools/verify_openssl_vendor_pristine.ps1", "Phase 98 Windows build workflow no longer invokes the pristine OpenSSL vendor checker.");
+            AssertContains(workflow, "openssl_vendor_version=3.5.6", "Phase 98 Windows build workflow no longer records the 3.5.6 OpenSSL vendor version.");
+            AssertContains(workflow, "openssl_vendor_source=third_party/openssl/3.5.6", "Phase 98 Windows build workflow no longer records the 3.5.6 OpenSSL vendor source directory.");
+            AssertContains(workflow, "openssl_vendor_policy=pristine-upstream-source", "Phase 98 Windows build workflow no longer records the pristine upstream vendor policy.");
+            AssertContains(workflow, "openssl_vendor_local_patches=none", "Phase 98 Windows build workflow no longer records that the OpenSSL vendor build is patch-free.");
+            AssertDoesNotContain(workflow, "third_party/openssl/3.0.20", "Phase 98 Windows build workflow still points at the retired 3.0.20 vendor tree.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 98 Windows build workflow does not yet prepare the shared OpenSSL vendor artifact once.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 98 Windows build workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");

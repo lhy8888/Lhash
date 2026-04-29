@@ -192,7 +192,9 @@ public sealed class HashExtensibilityRegressionUnitTests
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
         string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
-        string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
+        string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
+        string sourceInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\OPENSSL_3_5_6_SOURCE_INFO.txt");
+        string vendorPolicy = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\POLICY.md");
         string licenseException = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
         string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
@@ -242,10 +244,25 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
+        Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("openssl-3.5.6", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("Verify pristine OpenSSL vendor source", workflow, StringComparison.Ordinal);
+        Assert.Contains("tools/verify_openssl_vendor_pristine.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_version=3.5.6", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.6", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
 
-        Assert.Contains("Upstream tag: openssl-3.0.20", upstreamNote, StringComparison.Ordinal);
-        Assert.Contains("5aada9c299a3b28fc82348f4e2b93805fa0a0e9c", upstreamNote, StringComparison.Ordinal);
+        Assert.Contains("version=openssl-3.5.6", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("source_policy=pristine upstream tarball extraction", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("vendor_directory=third_party/openssl/3.5.6", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("local_patches=none", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("imported_for=LHash Windows x64/ARM64 static libcrypto vendor build", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("pristine upstream OpenSSL source tree", vendorPolicy, StringComparison.Ordinal);
+        Assert.Contains("temporary build copy", vendorPolicy, StringComparison.Ordinal);
+        Assert.Contains("third_party/openssl/patches/<version>/", vendorPolicy, StringComparison.Ordinal);
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
 
         Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", nativeRuntimeSource, StringComparison.Ordinal);
