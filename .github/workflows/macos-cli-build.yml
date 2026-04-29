@@ -55,6 +55,32 @@ jobs:
           mkdir -p "dist/${DIR}"
           cp "$CLI_PATH" "dist/${DIR}/"
           shasum -a 256 "dist/${DIR}/lhash" > "dist/${DIR}/SHA256.txt"
+          cat > "dist/${DIR}/README.txt" <<EOF
+          LHash macOS ARM64 CLI MVP
+
+          Commit:
+          - $GITHUB_SHA
+
+          Files:
+          - lhash: command-line executable
+          - SHA256.txt: executable checksum
+          - BUILD_INFO.txt: build metadata
+
+          Usage:
+          - ./lhash <file>
+          - This workflow artifact is unsigned and is intended for MVP validation only.
+          EOF
+          cat > "dist/${DIR}/BUILD_INFO.txt" <<EOF
+          commit=$GITHUB_SHA
+          short_sha=$SHA
+          platform=macos-arm64
+          artifact_type=cli-mvp
+          openssl_enabled=false
+          notarized=false
+          source_executable=$CLI_PATH
+          packaged_executable=lhash
+          sha256=$(cut -d ' ' -f 1 "dist/${DIR}/SHA256.txt")
+          EOF
           tar -czf "dist/${DIR}.tar.gz" -C dist "${DIR}"
 
       - name: Upload artifact
