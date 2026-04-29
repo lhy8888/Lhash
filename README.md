@@ -178,6 +178,8 @@ macOS arm64 now has a baseline-only core support contract with Darwin-specific
 path security checks and a dedicated security regression target. It is part of
 the core bring-up, not a full macOS product line.
 
+The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.
+
 ## Roadmap direction
 
 Near-term roadmap items that reinforce the verification positioning include:

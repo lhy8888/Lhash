@@ -142,3 +142,5 @@ The project is best described as:
 ## Short external description
 
 LHash is a Windows trusted local verification tool that helps users review files and release artifacts with safer defaults, repeatable results, and clearer release metadata than a typical generic hash utility.
+
+The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.

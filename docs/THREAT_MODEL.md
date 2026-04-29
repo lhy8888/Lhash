@@ -6,6 +6,8 @@ This document explains what LHash is trying to protect, which trust boundaries m
 
 LHash is a **local Windows verification tool**. Its main goal is to help users perform repeatable integrity checks on files and release bundles without needing a cloud account, a remote verification service, or a background telemetry channel.
 
+The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.
+
 ## Assets the project tries to protect
 
 The maintained release line treats the following as security-relevant assets:
