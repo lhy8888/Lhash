@@ -1105,7 +1105,9 @@ namespace
 	{
 		ScopedTempDirectory tempDirectory;
 		ScopedOpenSslEvpFailureInjection scopedFailureInjection(2, false);
-		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("openssl-update-failure.bin"), std::string((kHashEngineBufferSize * 2) + 17, 'U'));
+		sunjwbase::tstring filePath = tempDirectory.WriteTextFile(
+			_T("openssl-update-failure.bin"),
+			std::string((kHashEngineBufferSize * 5) + 17, 'U'));
 		std::vector<sunjwbase::tstring> filePaths;
 		filePaths.push_back(filePath);
 
