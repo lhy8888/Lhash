@@ -8,7 +8,7 @@ public sealed class ReleaseMetadataUnitTests
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,2,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,3,0", versionHeader, StringComparison.Ordinal);
         Assert.Contains("#define STR_VERSION_LEGACY \"1.12.3.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (fHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
