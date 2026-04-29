@@ -26,7 +26,8 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Legacy WinUI / CLR bridge: retired from the maintained release line
 - WinUI / CLR bridge source trees: reference-only and marked `NON_MAINLINE.md`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
-- Core CI: [`Core M2 Build workflow`](.github/workflows/core-m2.yml)
+- Core CI: [`Core Build Matrix workflow`](.github/workflows/core-m2.yml)
+- macOS CLI MVP: [`macOS CLI MVP Build workflow`](.github/workflows/macos-cli-build.yml)
 - Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
 - macOS core support: [`docs/MACOS_CORE_SUPPORT.md`](docs/MACOS_CORE_SUPPORT.md)
 - Security policy: [SECURITY.md](SECURITY.md)

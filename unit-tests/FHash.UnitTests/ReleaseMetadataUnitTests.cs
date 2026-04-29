@@ -24,6 +24,10 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("#define STR_VERSION_LEGACY \"1.12.2.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
+        Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
+        Assert.Contains("Core Build Matrix workflow", draft, StringComparison.Ordinal);
+        Assert.Contains("macOS CLI MVP Build workflow", readme, StringComparison.Ordinal);
+        Assert.Contains("macOS CLI MVP Build workflow", draft, StringComparison.Ordinal);
         Assert.DoesNotContain("WinUI preview", readme, StringComparison.Ordinal);
     }
 

@@ -93,7 +93,24 @@ Security value:
 
 The native C/C++ surface can be extended further in later hardening passes.
 
-### 7. Dependabot configuration
+### 7. Separate macOS CLI MVP workflow
+
+The repository also includes a dedicated macOS arm64 CLI workflow that
+publishes a `tar.gz` validation artifact.
+
+Security value:
+
+- validates the CLI wrapper separately from the Windows MFC release line
+- keeps the macOS CLI MVP visible in workflow history without pretending it is
+  already part of the tagged release bundle set
+- makes it easier to distinguish workflow artifacts from maintained release
+  assets
+
+Limit:
+
+- the CLI tarball is currently a workflow artifact, not a tagged-release asset
+
+### 8. Dependabot configuration
 
 The repository includes Dependabot configuration for GitHub Actions and NuGet.
 
@@ -103,7 +120,7 @@ Security value:
 - helps keep update review visible in pull-request form
 - improves response to known vulnerable dependency versions over time
 
-### 8. OpenSSF Scorecard workflow
+### 9. OpenSSF Scorecard workflow
 
 The repository includes an OpenSSF Scorecard workflow.
 

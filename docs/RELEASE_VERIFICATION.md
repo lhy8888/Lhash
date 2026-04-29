@@ -30,6 +30,16 @@ For the current maintained line, users should expect release metadata such as:
 
 Not every historical release will contain the full modern metadata set. Newer releases should be preferred for verification-sensitive use cases.
 
+## Related CI artifacts
+
+The repository also publishes a macOS arm64 CLI MVP tarball through its
+dedicated workflow:
+
+- `LHash-macos-arm64-cli-<shortsha>.tar.gz`
+
+Treat that file as a workflow artifact unless the release notes for a tag
+explicitly list it as part of the published release bundle set.
+
 ## Basic verification workflow
 
 ### Step 1: Download the release assets from the official repository

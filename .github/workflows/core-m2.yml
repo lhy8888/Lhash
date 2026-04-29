@@ -1,4 +1,4 @@
-name: Core M2 Build
+name: Core Build Matrix
 
 on:
   workflow_dispatch:

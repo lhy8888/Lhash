@@ -1,4 +1,4 @@
-name: macOS CLI Build
+name: macOS CLI MVP Build
 
 on:
   workflow_dispatch:
