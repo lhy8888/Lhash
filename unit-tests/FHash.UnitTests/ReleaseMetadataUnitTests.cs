@@ -66,7 +66,7 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("LHASH_SIGN_PFX_BASE64", workflow, StringComparison.Ordinal);
         Assert.Contains("LHASH_SIGN_PFX_PASSWORD", workflow, StringComparison.Ordinal);
-        Assert.Contains("Sign legacy Windows app with PFX certificate (optional)", workflow, StringComparison.Ordinal);
+        Assert.Contains("Sign Windows MFC app with PFX certificate (optional)", workflow, StringComparison.Ordinal);
         Assert.Contains("trunk/sign_legacy_exe.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("Get-AuthenticodeSignature", workflow, StringComparison.Ordinal);
         Assert.Contains("SignPath Foundation", signingGuide, StringComparison.Ordinal);

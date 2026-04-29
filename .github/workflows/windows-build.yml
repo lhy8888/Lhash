@@ -216,7 +216,7 @@ jobs:
           & $vswhere -latest -products * -format json
           Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022' -ErrorAction SilentlyContinue
 
-      - name: Build legacy Windows app
+      - name: Build Windows MFC app
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
@@ -242,7 +242,7 @@ jobs:
             throw 'MSBuild succeeded, but no executable was found in trunk\\x64\\Release.'
           }
 
-      - name: Sign legacy Windows app with PFX certificate (optional)
+      - name: Sign Windows MFC app with PFX certificate (optional)
         if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
         shell: powershell
         run: |
@@ -254,7 +254,7 @@ jobs:
           try {
             & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
             if ($LASTEXITCODE -ne 0) {
-              throw "Legacy signing script failed with exit code $LASTEXITCODE."
+              throw "Windows MFC signing script failed with exit code $LASTEXITCODE."
             }
           }
           finally {
@@ -423,7 +423,7 @@ jobs:
           & $vswhere -latest -products * -format json
           Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022' -ErrorAction SilentlyContinue
 
-      - name: Build Windows ARM64 app
+      - name: Build Windows MFC app
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
@@ -449,7 +449,7 @@ jobs:
             throw 'MSBuild succeeded, but no executable was found in trunk\\ARM64\\Release.'
           }
 
-      - name: Sign Windows ARM64 app with PFX certificate (optional)
+      - name: Sign Windows MFC app with PFX certificate (optional)
         if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
         shell: powershell
         run: |
@@ -461,7 +461,7 @@ jobs:
           try {
             & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
             if ($LASTEXITCODE -ne 0) {
-              throw "Legacy signing script failed with exit code $LASTEXITCODE."
+              throw "Windows MFC signing script failed with exit code $LASTEXITCODE."
             }
           }
           finally {
@@ -593,7 +593,7 @@ jobs:
           ref=$GITHUB_REF
           commit=$GITHUB_SHA
           short_sha=$short_sha
-          frontend=legacy-native
+          frontend=windows-mfc
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
           windows_arm64=$(basename $(ls "$artifact_root"/LHash-windows-arm64-*.zip | head -n 1))
