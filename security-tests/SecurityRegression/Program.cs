@@ -133,7 +133,7 @@ internal static partial class Program
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
             AssertContains(dialogResource, "CONTROL         \"\",IDC_TASK_LIST,\"SysListView32\",LVS_REPORT | LVS_OWNERDATA | LVS_SINGLESEL | WS_TABSTOP | WS_BORDER,8,262,608,72", "Legacy MFC task list is no longer using the compact virtual-list viewport.");
-            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"缁犳纭堕柅澶嬪\");", "Legacy settings menu no longer labels algorithm controls as 缁犳纭堕柅澶嬪 in Simplified Chinese.");
+            AssertContains(ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsZHCN.cpp"), "m_stringsMap[_T(\"MAINDLG_SETTINGS_ALGORITHMS\")] = _T(\"算法选择\");", "Legacy settings menu no longer labels algorithm controls as 算法选择 in Simplified Chinese.");
             AssertContains(dialogContent, "ShowAlgorithmSelectionDialog();", "Legacy settings flow no longer routes algorithm selection through a dedicated toggle dialog.");
             AssertContains(dialogContent, "CAlgorithmSelectionDialog", "Legacy settings flow no longer defines a dedicated toggle dialog for algorithm selection.");
             AssertContains(dialogResource, "IDD_ALGORITHM_DIALOG DIALOGEX", "Legacy MFC resources no longer include the dedicated algorithm selection dialog.");
