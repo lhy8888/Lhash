@@ -56,7 +56,7 @@ internal static partial class Program
             AssertContains(legacyPackScript, "EXE_FILE_NAME = 'LHash.exe'", "Legacy packaging script still packages the old executable name.");
             AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
             AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");
-            AssertContains(workflow, "LHash-legacy-x64", "CI workflow no longer packages the lightweight native desktop artifact.");
+            AssertContains(workflow, "LHash-windows-x64", "CI workflow no longer packages the Windows x64 desktop artifact.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "The main Windows build workflow should no longer compile the WinUI preview path on routine runs.");
             if (File.Exists(previewWorkflowPath))
             {

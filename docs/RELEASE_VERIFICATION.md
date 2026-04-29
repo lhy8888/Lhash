@@ -20,7 +20,7 @@ Preferred starting point:
 
 For the current maintained line, users should expect release metadata such as:
 
-- desktop release bundle such as `LHash-legacy-x64-<shortsha>.zip`
+- Windows x64 release bundle such as `LHash-windows-x64-<shortsha>.zip`
 - `RELEASE_MANIFEST.txt`
 - `SHA256SUMS.txt`
 - `LHash-release.cyclonedx.json`
@@ -49,7 +49,7 @@ If available, also download:
 On Windows PowerShell:
 
 ```powershell
-Get-FileHash .\LHash-legacy-x64-<shortsha>.zip -Algorithm SHA256
+Get-FileHash .\LHash-windows-x64-<shortsha>.zip -Algorithm SHA256
 ```
 
 Compare the returned SHA-256 value with the entry recorded in `SHA256SUMS.txt`.

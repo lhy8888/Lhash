@@ -263,13 +263,13 @@ jobs:
             }
           }
 
-      - name: Package legacy x64 build
+      - name: Package Windows x64 build
         if: always()
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           $shortSha = $env:GITHUB_SHA.Substring(0, 7)
-          $bundleRoot = Join-Path $artifactRoot ("legacy-x64-$shortSha")
+          $bundleRoot = Join-Path $artifactRoot ("windows-x64-$shortSha")
           New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 
           $exeCandidates = @(
@@ -288,7 +288,7 @@ jobs:
               $signatureThumbprint = $signature.SignerCertificate.Thumbprint
             }
             $readme = @"
-          LHash legacy x64 build
+          LHash Windows x64 build
 
           Commit:
           - $env:GITHUB_SHA
@@ -320,7 +320,7 @@ jobs:
           }
           else {
             $readme = @"
-          LHash legacy x64 build
+          LHash Windows x64 build
 
           The executable was not produced in this CI run.
           See build-legacy-x64.log in the artifact root for the full MSBuild output.
@@ -330,20 +330,20 @@ jobs:
           Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
 
           if ($exePath) {
-            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-legacy-x64-$shortSha.zip") -Force
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-windows-x64-$shortSha.zip") -Force
           }
 
-      - name: Upload legacy x64 artifacts
+      - name: Upload Windows x64 artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: LHash-legacy-x64
+          name: LHash-windows-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
             artifacts/openssl-vendor-x64/*.log
             artifacts/build-legacy-x64.log
-            artifacts/legacy-x64-*
-            artifacts/LHash-legacy-x64-*.zip
+            artifacts/windows-x64-*
+            artifacts/LHash-windows-x64-*.zip
           if-no-files-found: warn
 
   publish-release:
@@ -356,7 +356,7 @@ jobs:
       - name: Download packaged artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: LHash-legacy-*
+          pattern: LHash-windows-*
           path: release-assets
           merge-multiple: true
 
@@ -369,7 +369,7 @@ jobs:
           staging_root="$PWD/release-staging"
           mkdir -p "$staging_root"
 
-          if ! compgen -G "$artifact_root/LHash-legacy-x64-*.zip" > /dev/null; then
+          if ! compgen -G "$artifact_root/LHash-windows-x64-*.zip" > /dev/null; then
             echo "Expected packaged lightweight native release zip was not downloaded into release-assets." >&2
             exit 1
           fi
@@ -387,10 +387,10 @@ jobs:
           short_sha=$short_sha
           frontend=legacy-native
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-          desktop_bundle=$(basename $(ls "$artifact_root"/LHash-legacy-x64-*.zip | head -n 1))
+          windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
           EOF
 
-          cp "$artifact_root"/LHash-legacy-x64-*.zip "$staging_root"/
+          cp "$artifact_root"/LHash-windows-x64-*.zip "$staging_root"/
           find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
@@ -410,6 +410,6 @@ jobs:
           name: LHash ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            release-assets/LHash-legacy-x64-*.zip
+            release-assets/LHash-windows-x64-*.zip
             release-staging/RELEASE_MANIFEST.txt
 

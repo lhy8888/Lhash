@@ -37,7 +37,7 @@ body:
     attributes:
       label: Asset name
       description: Which asset is affected?
-      placeholder: LHash-legacy-x64-xxxxxxx.zip
+      placeholder: LHash-windows-x64-xxxxxxx.zip
 
   - type: textarea
     id: observed_issue
