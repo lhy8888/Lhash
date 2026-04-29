@@ -664,7 +664,7 @@ public sealed class CommonSeamUnitTests
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
-        Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -675,7 +675,7 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
-        Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
+        Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

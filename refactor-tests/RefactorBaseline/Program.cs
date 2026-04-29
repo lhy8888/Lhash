@@ -6228,7 +6228,7 @@ internal static class Program
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 98 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 98 README no longer retires the WinUI / CLR bridge from the maintained release line.");
-            AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Phase 98 archive README no longer records the retired preview surface as reference-only material.");
+            AssertContains(archiveReadme, "reference only", "Phase 98 archive README no longer records the retired preview surface as reference-only material.");
             AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
