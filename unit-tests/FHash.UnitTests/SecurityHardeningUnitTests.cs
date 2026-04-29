@@ -60,9 +60,9 @@ public sealed class SecurityHardeningUnitTests
         string handleGuard = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\WinHandleGuard.h");
         string threadLaunch = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadLaunch.h");
         string sessionController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSessionController.h");
-        string clrHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.h");
-        string clrSource = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-        string uwpHeader = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\HashMgmt.h");
+        string clrHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+        string clrSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+        string uwpHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
         string shellCore = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\ShellExplorerCommandCore.h");
         string legacyShell = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashShlExt\fHashShellExt.cpp");
         string windowsUtils = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\WindowsUtils.cpp");
@@ -224,7 +224,7 @@ public sealed class SecurityHardeningUnitTests
         string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string securityProgram = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\Program.cs");
         string securityHarness = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
@@ -274,7 +274,7 @@ public sealed class SecurityHardeningUnitTests
         string crc32cProviderImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string crc32cArm64Check = RepositoryTestContext.ReadTextFile(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
 
         Assert.Contains("XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
@@ -321,7 +321,7 @@ public sealed class SecurityHardeningUnitTests
         string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
         string vendorTargets = RepositoryTestContext.ReadTextFile(@"NativeOpenSslVendor.targets");
         string vendorScript = RepositoryTestContext.ReadTextFile(@"trunk\build_openssl_vendor.ps1");

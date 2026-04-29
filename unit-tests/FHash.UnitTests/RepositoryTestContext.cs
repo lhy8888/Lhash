@@ -60,34 +60,7 @@ internal static class RepositoryTestContext
             return livePath;
         }
 
-        foreach ((string livePrefix, string archivePrefix) in GetArchivePathMappings())
-        {
-            if (!relativePath.StartsWith(livePrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            string archivedRelativePath = archivePrefix + relativePath.Substring(livePrefix.Length);
-            string archivedPath = Path.Combine(RepoRoot, archivedRelativePath);
-            if (File.Exists(archivedPath) || Directory.Exists(archivedPath))
-            {
-                return archivedPath;
-            }
-        }
-
         return livePath;
-    }
-
-    private static IEnumerable<(string LivePrefix, string ArchivePrefix)> GetArchivePathMappings()
-    {
-        yield return (@"trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
-        yield return (@"trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
-        yield return (@"trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
-        yield return (@"trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
-        yield return (@"sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
-        yield return (@"sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
-        yield return (@"sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
-        yield return (@"sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
     }
 
     private static Encoding DetectEncoding(string path)

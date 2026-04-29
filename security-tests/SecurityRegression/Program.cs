@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 internal static partial class Program
@@ -17,7 +17,6 @@ internal static partial class Program
         Run("LHash branding, package metadata, and logo assets are consistent", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string archiveReadme = ReadRepoFile(repoRoot, @"archive\README.md");
             string mfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
@@ -26,26 +25,26 @@ internal static partial class Program
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string legacyPackScript = ReadRepoFile(repoRoot, @"archive\legacy-projects\trunk\package_win_mfc64.py");
-            string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
-            string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
-            string winUiAssembly = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Properties\AssemblyInfo.cs");
-            string winUiWap = ReadRepoFile(repoRoot, @"trunk\fHashWUIWap\Package.appxmanifest");
-            string winUiWapDev = ReadRepoFile(repoRoot, @"trunk\fHashWUIWap\Package-DEV.appxmanifest");
-            string uwpEn = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
-            string uwpZh = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
-            string uwpAssembly = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Properties\AssemblyInfo.cs");
-            string uwpManifest = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package.appxmanifest");
-            string uwpManifestDev = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package-DEBUG.appxmanifest");
-            string uwpWap = ReadRepoFile(repoRoot, @"trunk\fHashUwpWap\Package.appxmanifest");
-            string uwpWapDev = ReadRepoFile(repoRoot, @"trunk\fHashUwpWap\Package-DEBUG.appxmanifest");
+            string winUiEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string winUiZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\zh-CN\Resources.resw");
+            string winUiAssembly = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Properties\AssemblyInfo.cs");
+            string winUiWap = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashWUIWap\Package.appxmanifest");
+            string winUiWapDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashWUIWap\Package-DEV.appxmanifest");
+            string uwpEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string uwpZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
+            string uwpAssembly = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Properties\AssemblyInfo.cs");
+            string uwpManifest = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest");
+            string uwpManifestDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package-DEBUG.appxmanifest");
+            string uwpWap = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashUwpWap\Package.appxmanifest");
+            string uwpWapDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashUwpWap\Package-DEBUG.appxmanifest");
             string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsBase.cpp");
             string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsZHCN.cpp");
-            string wuiShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
-            string wuiShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\AppxShellExtStringsBase.cpp");
-            string wuiShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\AppxShellExtStringsZHCN.cpp");
-            string uwpShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
-            string uwpShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\UwpShellExtStringsBase.cpp");
-            string uwpShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\UwpShellExtStringsZHCN.cpp");
+            string wuiShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            string wuiShellStrings = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\AppxShellExtStringsBase.cpp");
+            string wuiShellStringsZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\AppxShellExtStringsZHCN.cpp");
+            string uwpShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string uwpShellStrings = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\UwpShellExtStringsBase.cpp");
+            string uwpShellStringsZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\UwpShellExtStringsZHCN.cpp");
 
             AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
             AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
@@ -59,10 +58,6 @@ internal static partial class Program
             AssertContains(workflow, "LHash-windows-x64", "CI workflow no longer packages the Windows x64 desktop artifact.");
             AssertContains(workflow, "LHash-windows-arm64", "CI workflow no longer packages the Windows ARM64 desktop artifact.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "The main Windows build workflow should no longer compile the WinUI preview path on routine runs.");
-            if (File.Exists(previewWorkflowPath))
-            {
-                throw new InvalidOperationException("The WinUI preview workflow should no longer exist in the maintained release line.");
-            }
             AssertContains(readme, "Windows UI mainline: `MFC`", "Security regression no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Security regression no longer retires the WinUI / CLR bridge from the maintained release line.");
             AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Security regression no longer records the WinUI/CLR preview surface as reference-only material.");
@@ -141,10 +136,10 @@ internal static partial class Program
             AssertContains(uwpShellStrings, "Hash with LHash UWP", "UWP shell extension English menu text still shows the old app name.");
             AssertContains(uwpShellStringsZh, "LHash UWP", "UWP shell extension Chinese menu text still shows the old app name.");
 
-            AssertPngAsset(repoRoot, @"trunk\source\WinUI\Assets\AboutLogo.large.png", 200, 200, 512);
-            AssertPngAsset(repoRoot, @"trunk\source\WinUWP\Assets\AboutLogo.large.png", 200, 200, 512);
+            AssertPngAsset(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Assets\AboutLogo.large.png", 200, 200, 512);
+            AssertPngAsset(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Assets\AboutLogo.large.png", 200, 200, 512);
             AssertNonEmptyFile(repoRoot, @"trunk\source\WinMFC\res\icon1.ico");
-            AssertNonEmptyFile(repoRoot, @"trunk\source\WinUI\Assets\fHashWUI.ico");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Assets\fHashWUI.ico");
         }, failures);
         Run("WinMFC copy-data validation guard exists", () =>
         {
@@ -226,8 +221,8 @@ internal static partial class Program
         Run("Shell extension hardening is present", () =>
         {
             string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShellExt.cpp");
-            string wuiShell = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
-            string uwpShell = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string wuiShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            string uwpShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
@@ -384,7 +379,7 @@ internal static partial class Program
             string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string securityRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string securityHarness = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
             AssertContains(registryCore, "{ \"blake3-256\", \"BLAKE3-256\", true, false }", "The algorithm registry no longer carries the BLAKE3-256 descriptor variant.");
@@ -439,7 +434,7 @@ internal static partial class Program
             string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
             string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string xxhashNote = ReadRepoFile(repoRoot, @"third_party\xxhash\0.8.3\README.LHash.md");
             string crc32cNote = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\README.LHash.md");
             string crc32cArm64Check = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
@@ -497,9 +492,9 @@ internal static partial class Program
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
             string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-            string uwpBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string clrBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+            string uwpBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
             string vendorScript = ReadRepoFile(repoRoot, @"trunk\build_openssl_vendor.ps1");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
@@ -586,8 +581,8 @@ internal static partial class Program
             string filesHashApp = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHash.cpp");
             string windowsUtilsHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
-            string winUiProgram = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Program.cs");
-            string winUiWin32Helper = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Win32Helper.cs");
+            string winUiProgram = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Program.cs");
+            string winUiWin32Helper = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Win32Helper.cs");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
 
             AssertContains(windowsUtilsHeader, "bool InitializeProcessDllSearchPolicy();", "MFC startup is missing the explicit DLL search policy declaration.");
@@ -673,9 +668,9 @@ internal static partial class Program
             AssertContains(mfcRc2, "VALUE \"Translation\", 0x804, 1200", "Legacy MFC version resource translation is not yet migrated to Unicode metadata.");
             AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
             AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc"), "#pragma code_page(65001)", "WinRT bridge resource chain does not yet use UTF-8 code pages.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc"), "#pragma code_page(65001)", "WinUI shell extension resource chain does not yet use UTF-8 code pages.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc"), "#pragma code_page(65001)", "UWP shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc"), "#pragma code_page(65001)", "WinRT bridge resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc"), "#pragma code_page(65001)", "WinUI shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc"), "#pragma code_page(65001)", "UWP shell extension resource chain does not yet use UTF-8 code pages.");
         }, failures);
         Run("WinMFC context-menu controller preserves elevation and context-menu safety flow", () =>
         {
@@ -692,18 +687,18 @@ internal static partial class Program
         }, failures);
         Run("UWP and WinUI attack surface stays minimal", () =>
         {
-            string uwpManifest = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Package.appxmanifest");
-            string uwpHelper = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\UwpHelper.cs");
-            string uwpMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
-            string uwpEn = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
-            string uwpZh = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
+            string uwpManifest = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest");
+            string uwpHelper = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\UwpHelper.cs");
+            string uwpMainPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
+            string uwpEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string uwpZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
             string winUiProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\fHashWUI.csproj");
-            string winUiHelper = ReadRepoFile(repoRoot, @"trunk\source\WinUI\WinUIHelper.cs");
-            string winUiMainPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
-            string winUiEn = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
-            string winUiZh = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\zh-CN\Resources.resw");
-            string winUiMarker = ReadRepoFile(repoRoot, @"trunk\source\WinUI\NON_MAINLINE.md");
-            string clrBridgeMarker = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\NON_MAINLINE.md");
+            string winUiHelper = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\WinUIHelper.cs");
+            string winUiMainPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
+            string winUiEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string winUiZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\zh-CN\Resources.resw");
+            string winUiMarker = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\NON_MAINLINE.md");
+            string clrBridgeMarker = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\NON_MAINLINE.md");
             string winMfcDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string winMfcRes = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string winMfcBaseStrings = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIStringsBase.cpp");
@@ -846,14 +841,14 @@ internal static partial class Program
 
     private static IEnumerable<(string LivePrefix, string ArchivePrefix)> GetArchivePathMappings()
     {
-        yield return (@"trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
-        yield return (@"trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
-        yield return (@"trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
-        yield return (@"trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
-        yield return (@"sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
-        yield return (@"sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
-        yield return (@"sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
-        yield return (@"sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
+        yield return (@"archive\legacy-platforms\trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
+        yield return (@"archive\legacy-platforms\trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
+        yield return (@"archive\legacy-platforms\trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
+        yield return (@"archive\legacy-platforms\trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
     }
 
     private static Encoding DetectEncoding(string path)

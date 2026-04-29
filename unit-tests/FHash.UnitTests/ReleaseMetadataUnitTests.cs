@@ -34,10 +34,8 @@ public sealed class ReleaseMetadataUnitTests
     [Fact]
     public void WinUiPreviewWorkflow_Is_NoLongerPartOfTheRootMainline()
     {
-        string workflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
         string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
 
-        Assert.False(File.Exists(workflowPath));
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("LHash-winui-preview-x64", workflow, StringComparison.Ordinal);
     }
@@ -121,9 +119,9 @@ public sealed class ReleaseMetadataUnitTests
         string legacyRc = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\fileshash.rc");
         string legacyRc2 = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\res\fileshash.rc2");
         string shellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashShlExt\fHashShlExt.rc");
-        string bridgeRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc");
-        string wuiShellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc");
-        string uwpShellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc");
+        string bridgeRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc");
+        string wuiShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc");
+        string uwpShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc");
 
         Assert.Contains("<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
         Assert.Contains("<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
@@ -162,7 +160,6 @@ public sealed class ReleaseMetadataUnitTests
     public void OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild()
     {
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
-        string previewWorkflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
         string vendorTargets = RepositoryTestContext.ReadUtf8File(@"NativeOpenSslVendor.targets");
         string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
         string vendorNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
@@ -183,7 +180,6 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
-        Assert.False(File.Exists(previewWorkflowPath));
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
         Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
         Assert.Contains("name: FHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);

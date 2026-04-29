@@ -78,7 +78,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\README.LHash.md");
         string upstreamHeader = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\c\blake3.h");
         string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -129,7 +129,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string crc32cProviderHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
         string crc32cProviderImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string xxhashNote = RepositoryTestContext.ReadUtf8File(@"third_party\xxhash\0.8.3\README.LHash.md");
         string crc32cNote = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\README.LHash.md");
         string crc32cArm64Check = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
@@ -190,7 +190,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.0.20\README.LHash.md");
         string licenseException = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");

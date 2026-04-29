@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 internal static class Program
 {
@@ -432,8 +432,8 @@ internal static class Program
         {
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string mfcInitializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
-            string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrBridge = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpBridge = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialogAndInitialization = mfcDialog + Environment.NewLine + mfcInitializationController;
 
             AssertContains(mfcDialogAndInitialization, "SetThreadDataObserver(*threadData, *uiBridgeMFC);", "MFC dialog no longer wires ThreadData through the neutral observer field.");
@@ -453,8 +453,8 @@ internal static class Program
             string legacyThreadInputAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataInputAccess.h");
             string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
             string threadAccess = ReadLegacyThreadDataAccessSeams(repoRoot);
-            string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrBridge = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpBridge = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string mfcInitializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
             string mfcResultViewController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashResultViewController.cpp");
@@ -595,12 +595,12 @@ internal static class Program
             string engineImpl = ReadHashEngineImplementation(repoRoot);
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
-            string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string clrMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertDoesNotContain(global, "enum ResultDigestType", "Global.h should no longer anchor the compatibility digest enum after the algorithm-id cleanup.");
             AssertContains(legacyDigestType, "enum ResultDigestType", "LegacyCompat should retain the digest enum for compatibility callers.");
@@ -932,8 +932,8 @@ internal static class Program
         {
             string digestAccess = ReadResultDigestAccessSeams(repoRoot);
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContainsAny(digestAccess,
                 [
@@ -1110,8 +1110,8 @@ internal static class Program
             string resultAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataAccess.h");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
             string filesHashDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
 
             AssertContains(resultAccess, "GetResultPath(const ResultData& result)", "ResultDataAccess does not yet expose the neutral path getter introduced in phase 4.");
@@ -1179,8 +1179,8 @@ internal static class Program
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
             string engineImpl = ReadHashEngineImplementation(repoRoot);
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(resultAccess, "GetResultState(const ResultData& result)", "ResultDataAccess does not yet expose the neutral ResultState getter introduced in phase 4.");
             AssertContains(resultAccess, "SetResultState(ResultData& result, ResultState resultState)", "ResultDataAccess does not yet expose the neutral ResultState setter introduced in phase 4.");
@@ -1318,10 +1318,10 @@ internal static class Program
         Run("Phase 5 routes managed bridge result projection dispatch through dedicated bridge helpers", () =>
         {
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
 
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultHandler>", "ResultDataProjection does not yet expose the centralized project-and-dispatch helper template.");
@@ -1354,10 +1354,10 @@ internal static class Program
         Run("Phase 5 routes managed showFile forwarding through dedicated bridge dispatch helpers", () =>
         {
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(managedDispatch, "enum ManagedResultEventType", "Common managed-bridge dispatch header does not yet expose the dedicated managed result-dispatch type.");
             AssertContains(managedDispatch, "DispatchManagedResultEventByType(ManagedResultEventType eventType, TResultDataNet resultDataNet, bool uppercase", "Common managed-bridge dispatch header does not yet expose the centralized managed result-dispatch helper.");
@@ -1390,8 +1390,8 @@ internal static class Program
         Run("Phase 5 routes managed bridge delegate forwarding through dedicated bridge helpers", () =>
         {
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(managedDispatch, "DispatchManagedBridgeLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-action wrapper.");
             AssertContains(managedDispatch, "DispatchManagedBridgeQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)", "Common managed-bridge dispatch header does not yet expose the shared bridge-level delegate-query wrapper.");
@@ -1420,10 +1420,10 @@ internal static class Program
         Run("Phase 5 routes managed bridge delegate queries through dedicated query-type dispatch helpers", () =>
         {
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(managedDispatch, "enum ManagedBridgeQueryType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-query type.");
             AssertContains(managedDispatch, "DispatchManagedQueryByType(ManagedBridgeQueryType queryType, TProgressValueMaxQuery queryProgressValueMax)", "Common managed-bridge dispatch header does not yet expose the centralized delegate-query helper.");
@@ -1446,10 +1446,10 @@ internal static class Program
         Run("Phase 5 routes managed bridge delegate actions through dedicated action-type dispatch helpers", () =>
         {
             string managedDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(managedDispatch, "enum ManagedBridgeLifecycleEventType", "Common managed-bridge dispatch header does not yet expose the dedicated delegate-action type.");
             AssertContains(managedDispatch, "DispatchManagedLifecycleEventByType(ManagedBridgeLifecycleEventType eventType, int value", "Common managed-bridge dispatch header does not yet expose the centralized delegate-action helper.");
@@ -1487,10 +1487,10 @@ internal static class Program
 
         Run("Phase 5 routes managed bridge text conversion through dedicated bridge helpers", () =>
         {
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(bridgeWuiHeader, "static System::String^ ConvertManagedResultText(const TCHAR* resultText);", "WinUI bridge does not yet expose the dedicated managed text-conversion helper.");
             AssertContains(bridgeWui, "return ConvertManagedResultText(resultText);", "WinUI bridge does not yet route projected-result text conversion through the dedicated helper.");
@@ -1507,10 +1507,10 @@ internal static class Program
 
         Run("Phase 5 removes bridge-local single-result projection wrappers after centralizing dispatch", () =>
         {
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertDoesNotContain(bridgeWuiHeader, "ResultDataNet ConvertResultDataToNet(const ResultData& result);", "WinUI bridge still declares the local single-result projection wrapper after centralizing dispatch.");
             AssertDoesNotContain(bridgeWui, "ResultDataNet FilesHashWUI::ConvertResultDataToNet(const ResultData& result)", "WinUI bridge still defines the local single-result projection wrapper after centralizing dispatch.");
@@ -1521,8 +1521,8 @@ internal static class Program
         Run("Phase 5 routes managed result-list projection through a centralized ResultDataAccess helper", () =>
         {
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
-            string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(resultProjection, "template<typename TResultDataNet, typename TResultStateNet, typename TStringConverter, typename TResultVisitor>", "ResultDataProjection does not yet expose the centralized result-list projection visitor template.");
             AssertContains(resultProjection, "VisitProjectedResults(const ResultList& resultList, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized result-list projection helper.");
@@ -1553,8 +1553,8 @@ internal static class Program
         {
             string resultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataSearch.h");
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
-            string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(resultSearch, "template<typename TResultPredicate, typename TResultVisitor>", "ResultDataSearch does not yet expose the centralized result-list matching visitor template.");
             AssertContains(resultSearch, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataSearch does not yet expose the centralized result-list matching helper.");
@@ -1590,8 +1590,8 @@ internal static class Program
         Run("Phase 5 routes managed digest-match projection through dedicated ResultDataAccess helpers", () =>
         {
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
-            string clrMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(resultProjection, "VisitProjectedDigestMatchingResults(const ResultList& resultList, const sunjwbase::tstring& digestText, TStringConverter convertString, TResultVisitor visitor)", "ResultDataProjection does not yet expose the centralized digest-match projection helper.");
             AssertContains(resultProjection, "VisitProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet>(resultList, digestText, convertString, visitor);", "ResultDataProjection digest-match projection helper does not yet defer to the shared HashResult digest-projection seam.");
@@ -1735,8 +1735,8 @@ internal static class Program
         Run("Phase 4 routes managed ResultStateNet conversion through dedicated bridge helpers", () =>
         {
             string resultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDataProjection.h");
-            string bridgeWui = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWui = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             string resultNetProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultNetProjection.h");
 
@@ -2027,7 +2027,7 @@ internal static class Program
             string legacyFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
             string legacySolution = ReadRepoFile(repoRoot, @"trunk\fileshash15.sln");
             string desktopNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string nativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(desktopNativeProject, "<ProjectName>fHashNativeCore</ProjectName>", "Desktop native core project is missing.");
             AssertContains(desktopNativeProject, "..\\..\\trunk\\source\\Algorithms\\MD5.cpp", "Desktop native core project does not yet own MD5.cpp.");
@@ -2063,7 +2063,7 @@ internal static class Program
 
         Run("CLR bridge still depends on the native library through linker configuration in the baseline", () =>
         {
-            string clrBridge = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+            string clrBridge = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
 
             AssertContains(clrBridge, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "CLR bridge no longer links the WinUI platform layer and native core through AdditionalDependencies in the baseline layout.");
             AssertContains(clrBridge, @"$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\", "CLR bridge no longer resolves the WinUI platform layer through the current output-path coupling.");
@@ -2074,9 +2074,9 @@ internal static class Program
         {
             string bridgeBase = ReadRepoFile(repoRoot, @"trunk\source\Adapters\UiBridge\HashEngineBridge.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeMacHeader = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.h");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeMacHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
             string compatibilityBridgePath = Path.Combine(repoRoot, @"trunk\source\Common\UIBridgeBase.h");
 
             AssertContains(bridgeBase, "#include \"Adapters/UiBridge/HashEngineObserver.h\"", "HashUiBridgeAdapter does not yet layer directly on top of the adapter observer seam.");
@@ -2161,16 +2161,16 @@ internal static class Program
 
         Run("Phase 8 exposes algorithm selection through managed and UI entry points", () =>
         {
-            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
-            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
-            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
-            string winUiXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml");
-            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
-            string winUiRes = ReadRepoFile(repoRoot, @"trunk\source\WinUI\Strings\en-US\Resources.resw");
-            string uwpXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml");
-            string uwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
-            string uwpRes = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\Strings\en-US\Resources.resw");
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string winUiXaml = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml");
+            string winUiPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
+            string winUiRes = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\en-US\Resources.resw");
+            string uwpXaml = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml");
+            string uwpPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
+            string uwpRes = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\en-US\Resources.resw");
             string mfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.h");
             string mfcDialog = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string mfcInitializationController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInitializationController.cpp");
@@ -2258,8 +2258,8 @@ internal static class Program
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string bridgeMfc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
             string filesHashDlg = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
-            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertDoesNotContain(resultAccess, "VisitMatchingResults(const ResultList& resultList, TResultPredicate predicate, TResultVisitor visitor)", "ResultDataAccess still owns result-list search traversal after the phase 9 seam split.");
             AssertDoesNotContain(resultAccess, "ProjectResultDataToNet(const ResultData& result, TStringConverter convertString)", "ResultDataAccess still owns managed projection after the phase 9 seam split.");
@@ -2318,8 +2318,8 @@ internal static class Program
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(engine, "#include \"Common/HashEngineInternal.h\"", "HashEngine.cpp does not yet consume the new internal HashEngine split seam.");
             AssertContains(fileRunner, "bool ProcessOpenedFileHashing(", "HashDigestPipeline.cpp no longer owns the opened-file read/update orchestration.");
@@ -2435,14 +2435,14 @@ internal static class Program
         Run("Phase 12 routes managed and XAML algorithm entry through dynamic registry-driven descriptors while keeping the legacy desktop checkbox surface intact", () =>
         {
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
-            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
-            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
-            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
-            string winUiXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml");
-            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
-            string uwpXaml = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml");
-            string uwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string winUiXaml = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml");
+            string winUiPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
+            string uwpXaml = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml");
+            string uwpPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
 
             AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmType(int digestTypeValue, ResultDigestType *digestType)", "HashAlgorithmRegistry does not yet expose the generic digest-type conversion seam.");
             AssertContains(hashAlgorithmRegistry, "IsRegisteredHashAlgorithmType(ResultDigestType digestType)", "HashAlgorithmRegistry does not yet expose the registered-type validation helper.");
@@ -2530,10 +2530,10 @@ internal static class Program
         Run("Phase 14 keeps the shared shell ExplorerCommand seam while archiving legacy shell-extension projects", () =>
         {
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
-            string wuiShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
-            string uwpShellVerb = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
-            string wuiShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj");
-            string uwpShellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj");
+            string wuiShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            string uwpShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            string wuiShellProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj");
+            string uwpShellProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
             string archiveReadme = ReadRepoFile(repoRoot, @"archive\README.md");
 
@@ -2574,10 +2574,10 @@ internal static class Program
         {
             string shellRegisterHeader = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellRegisterExtension.h");
             string shellRegisterImpl = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellRegisterExtensionImpl.h");
-            string wuiRegisterHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\RegisterExtension.h");
-            string wuiRegisterCpp = ReadRepoFile(repoRoot, @"sub-proj\fHashWUIShellExt\RegisterExtension.cpp");
-            string uwpRegisterHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\RegisterExtension.h");
-            string uwpRegisterCpp = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpShellExt\RegisterExtension.cpp");
+            string wuiRegisterHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\RegisterExtension.h");
+            string wuiRegisterCpp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\RegisterExtension.cpp");
+            string uwpRegisterHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\RegisterExtension.h");
+            string uwpRegisterCpp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\RegisterExtension.cpp");
 
             AssertContains(shellRegisterHeader, "class CRegisterExtension", "Phase 15 is missing the shared shell registration class declaration.");
             AssertContains(shellRegisterHeader, "HRESULT RegisterExplorerCommandVerb", "Phase 15 is missing the shared shell registration explorer-command contract.");
@@ -2736,10 +2736,10 @@ internal static class Program
         Run("Phase 19 extracts shared managed hash-management helpers for CLR and UWP bridges", () =>
         {
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
-            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
-            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
-            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string hashMgmtClrHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 19 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "TryConvertManagedHashAlgorithmId(const sunjwbase::tstring& managedAlgorithmId, HashAlgorithmId *algorithmId)", "Phase 19 is missing the shared managed algorithm-id conversion helper.");
@@ -3450,9 +3450,8 @@ internal static class Program
 
         Run("Phase 32 routes the WinUI native stack through fHashNativeCore instead of recompiling the core", () =>
         {
-            string winUiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
-            string clrBridgeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
+            string winUiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string clrBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
             string readme = ReadRepoFile(repoRoot, @"README.md");
 
             AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming fHashNativeCore.");
@@ -3475,10 +3474,6 @@ internal static class Program
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", "Phase 32 CLR bridge does not yet search the CLR-compatible fHashNativeCore-md output directory.");
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
 
-            if (File.Exists(previewWorkflowPath))
-            {
-                throw new InvalidOperationException("Phase 32 WinUI preview workflow should no longer exist in the maintained build graph.");
-            }
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 32 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 32 README no longer retires the WinUI / CLR bridge from the maintained release line.");
         }, failures);
@@ -3602,10 +3597,10 @@ internal static class Program
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
             string bridgeMfcHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string bridgeMfcSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.h");
-            string bridgeWuiSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-            string bridgeUwpSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string bridgeWuiHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
+            string bridgeWuiSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
+            string bridgeUwpSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
 
             AssertContains(observer, "virtual void handleFileResultProgressEvent(const HashResult& result,", "Phase 36 observer seam does not yet expose a HashResult-based file-result event contract.");
             AssertContains(observer, "virtual int getProgressValueMax() = 0;", "Phase 36 observer seam does not yet expose a neutral progress query contract.");
@@ -3636,8 +3631,8 @@ internal static class Program
             string hashResultSearch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultSearch.h");
             string hashResultProjection = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultProjection.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
-            string hashMgmtClr = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string hashMgmtUwp = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string hashMgmtClr = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string hashMgmtUwp = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(hashResultSearch, "HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", "Phase 37 does not yet expose HashResult digest-search matching.");
             AssertContains(hashResultSearch, "HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", "Phase 37 does not yet expose HashResult digest-search predicate matching.");
@@ -3660,14 +3655,14 @@ internal static class Program
         Run("Phase 38 promotes managed query results onto HashResultNet as the primary managed query contract", () =>
         {
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
-            string clrHashResultNet = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashResultNet.h");
-            string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
-            string clrHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpHashResultNet = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashResultNet.h");
-            string uwpHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
-            string uwpHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
-            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
-            string winUwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+            string clrHashResultNet = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashResultNet.h");
+            string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string clrHashMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpHashResultNet = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashResultNet.h");
+            string uwpHashMgmtHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string uwpHashMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string winUiPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
+            string winUwpPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
 
             AssertFileMissing(repoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h", "Phase 38 Common ManagedHashMgmtAccess shim should be removed after the LegacyCompat boundary cleanup.");
             AssertContains(legacyManagedHashMgmtAccess, "static inline TResultArray CreateProjectedManagedDigestMatchingHashResults(", "Phase 38 managed hash-management seam does not yet expose HashResultNet-based digest search projection.");
@@ -3697,14 +3692,14 @@ internal static class Program
 
         Run("Phase 39 promotes managed realtime bridge delegates and page rendering onto HashResultNet", () =>
         {
-            string clrDelegatesHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeDelegates.h");
-            string clrDelegatesSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeDelegates.cpp");
-            string uwpDelegateHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeDelegate.h");
-            string uwpDelegateSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeDelegate.cpp");
-            string bridgeWuiSource = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-            string bridgeUwpSource = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
-            string winUiPage = ReadRepoFile(repoRoot, @"trunk\source\WinUI\MainPage.xaml.cs");
-            string winUwpPage = ReadRepoFile(repoRoot, @"trunk\source\WinUWP\MainPage.xaml.cs");
+            string clrDelegatesHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeDelegates.h");
+            string clrDelegatesSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeDelegates.cpp");
+            string uwpDelegateHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeDelegate.h");
+            string uwpDelegateSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeDelegate.cpp");
+            string bridgeWuiSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
+            string bridgeUwpSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
+            string winUiPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
+            string winUwpPage = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
 
             AssertContains(clrDelegatesHeader, "#include \"HashResultNet.h\"", "Phase 39 CLR delegate header does not yet consume HashResultNet.");
             AssertContains(clrDelegatesHeader, "public delegate void HashResultEventHandler(HashResultNet);", "Phase 39 CLR delegate header does not yet expose HashResultNet event handlers.");
@@ -3730,10 +3725,10 @@ internal static class Program
 
         Run("Phase 40 removes managed ResultDataNet query compatibility wrappers in favor of HashResultNet-only query APIs", () =>
         {
-            string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.h");
-            string clrHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-            string uwpHashMgmtHeader = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.h");
-            string uwpHashMgmt = ReadRepoFile(repoRoot, @"sub-proj\fHashWinRtBridge\HashMgmt.cpp");
+            string clrHashMgmtHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
+            string clrHashMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
+            string uwpHashMgmtHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
+            string uwpHashMgmt = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
 
             AssertContains(clrHashMgmtHeader, "cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", "Phase 40 CLR HashMgmt no longer exposes the HashResultNet query API.");
             AssertDoesNotContain(clrHashMgmtHeader, "FindResult(System::String^ sstrHashToFind)", "Phase 40 CLR HashMgmt still exposes the legacy ResultDataNet query wrapper.");
@@ -3808,9 +3803,9 @@ internal static class Program
         {
             string searchHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.h");
             string searchSource = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
-            string bridgeMacHeader = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.h");
-            string bridgeMacSource = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\UIBridgeMacSwift.mm");
-            string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
+            string bridgeMacHeader = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
+            string bridgeMacSource = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.mm");
+            string hashBridgeMac = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OSXUI\HashBridge.mm");
             string compatibilityPath = Path.Combine(repoRoot, @"trunk\source\Common\HashResultCompatibility.h");
 
             if (File.Exists(compatibilityPath))
@@ -3839,7 +3834,7 @@ internal static class Program
             string legacyThreadResultAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
             string legacyManagedHashMgmtAccess = ReadRepoFile(repoRoot, @"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
             string filesHashSearchController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashSearchController.cpp");
-            string hashBridgeMac = ReadRepoFile(repoRoot, @"trunk\source\OSXUI\HashBridge.mm");
+            string hashBridgeMac = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\OSXUI\HashBridge.mm");
 
             AssertContains(hashResultSearch, "VisitHashResults(const HashResultList& resultList, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose whole-list HashResult traversal.");
             AssertContains(hashResultSearch, "VisitMatchingHashResults(const HashResultList& resultList, THashResultPredicate predicate, THashResultVisitor visitor)", "Phase 45 HashResultSearch does not yet expose shared HashResult matching traversal.");
@@ -3878,7 +3873,6 @@ internal static class Program
         Run("Phase 47 introduces a native C++ runtime test project and caches the vendored OpenSSL package for parallel native builds", () =>
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -3923,10 +3917,6 @@ internal static class Program
             AssertContains(workflow, "name: FHash-openssl-vendor-x64", "Phase 47 workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
-            if (File.Exists(previewWorkflowPath))
-            {
-                throw new InvalidOperationException("Phase 47 WinUI preview workflow should no longer exist in the maintained build graph.");
-            }
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 47 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 47 README no longer retires the WinUI / CLR bridge from the maintained release line.");
             AssertInOrder(
@@ -3992,7 +3982,7 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(hashEngine, "RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", "Phase 49 HashEngine.cpp does not yet delegate orchestration to the extracted scheduler seam.");
             AssertDoesNotContain(hashEngine, "static bool ProcessOpenedFileHashing(", "Phase 49 HashEngine.cpp still owns the opened-file hashing loop.");
@@ -4018,9 +4008,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashEngine, "if (!RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes))", "Phase 50 HashEngine.cpp does not yet route request scheduling through HashScheduler.");
             AssertDoesNotContain(hashEngine, "VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", "Phase 50 HashEngine.cpp still owns file iteration instead of delegating it to HashScheduler.");
@@ -4048,8 +4038,8 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
 
             AssertContains(hashEngineResult, "PrepareFileMetaResult(", "Phase 51 HashEngineResult.cpp should still own file metadata result preparation.");
             AssertDoesNotContain(hashEngineResult, "FinalizeDigestStrings(", "Phase 51 HashEngineResult.cpp should no longer own digest finalization after lifecycle extraction.");
@@ -4089,9 +4079,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileRunner, "ExecuteFileHashAttemptWorkflow(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes, executionState", "Phase 52 HashFileRunner.cpp does not yet delegate file-attempt execution through HashFileAttemptWorkflow.");
             AssertContains(hashFileAttemptWorkflow, "bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", "Phase 52 HashFileAttemptWorkflow.cpp does not yet delegate opened-file digest updates through the digest pipeline seam.");
@@ -4149,9 +4139,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestUpdaterHeader, "struct DigestUpdateRequest", "Phase 53 HashDigestUpdater.h does not yet expose the digest update request seam.");
             AssertContains(hashDigestUpdaterHeader, "DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request);", "Phase 53 HashDigestUpdater.h does not yet expose digest update request creation.");
@@ -4193,9 +4183,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashProgressTrackerHeader, "void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", "Phase 54 HashProgressTracker.h does not yet expose the progress tracker update seam.");
             AssertContains(hashProgressTracker, "void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", "Phase 54 HashProgressTracker.cpp does not yet own progress update orchestration.");
@@ -4229,9 +4219,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestQueueHeader, "class DigestDataBuffer", "Phase 55 HashDigestQueue.h does not yet expose queue buffer state.");
             AssertContains(hashDigestQueueHeader, "bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);", "Phase 55 HashDigestQueue.h does not yet expose digest chunk reads.");
@@ -4270,9 +4260,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestSinglePassHeader, "bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", "Phase 56 HashDigestSinglePass.h does not yet expose single-thread digest processing.");
             AssertContains(hashDigestSinglePass, "bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", "Phase 56 HashDigestSinglePass.cpp does not yet own single-thread digest processing.");
@@ -4304,9 +4294,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestExecutionHeader, "bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,", "Phase 57 HashDigestExecution.h does not yet expose digest execution strategy dispatch.");
             AssertContains(hashDigestExecution, "const HashDigestQueuePlan& digestQueuePlan = GetHashDigestRuntimeQueuePlan(digestRuntimePlan);", "Phase 57 HashDigestExecution.cpp does not yet expose planned queue controls in digest execution strategy dispatch.");
@@ -4336,9 +4326,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileAttemptWorkflowHeader, "bool ExecuteFileHashAttemptWorkflow(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath,", "Phase 58 HashFileAttemptWorkflow.h does not yet expose per-file attempt workflow dispatch.");
             AssertContains(hashFileAttemptWorkflow, "bool ExecuteFileHashAttemptWorkflow(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath,", "Phase 58 HashFileAttemptWorkflow.cpp does not yet own per-file attempt workflow dispatch.");
@@ -4368,9 +4358,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashSchedulerDispatchHeader, "bool ExecuteScheduledHashRequestFiles(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState", "Phase 59 HashSchedulerDispatch.h does not yet expose scheduler file-dispatch traversal.");
             AssertContains(hashSchedulerDispatch, "bool ExecuteScheduledHashRequestFiles(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState", "Phase 59 HashSchedulerDispatch.cpp does not yet own scheduler file-dispatch traversal.");
@@ -4401,9 +4391,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashJobExecutionPlanHeader, "struct HashJobExecutionPlan", "Phase 60 HashJobExecutionPlan.h does not yet define the job execution plan contract.");
             AssertContains(hashJobExecutionPlanHeader, "DigestUpdateRequest digestUpdateRequest;", "Phase 60 HashJobExecutionPlan.h does not yet expose digest update selection in the job execution plan.");
@@ -4452,9 +4442,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileVersionResolverHeader, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", "Phase 61 HashFileVersionResolver.h does not yet expose file-version resolution.");
             AssertContains(hashFileVersionResolver, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", "Phase 61 HashFileVersionResolver.cpp does not yet own file-version resolution.");
@@ -4489,9 +4479,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestExecutionModeHeader, "enum HashDigestExecutionMode", "Phase 62 HashDigestExecutionMode.h does not yet expose digest execution modes.");
             AssertContains(hashDigestExecutionModeHeader, "HASH_DIGEST_EXECUTION_MODE_SINGLE_PASS", "Phase 62 HashDigestExecutionMode.h does not yet expose single-pass mode.");
@@ -4541,9 +4531,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestQueuePlanHeader, "struct HashDigestQueuePlan", "Phase 63 HashDigestQueuePlan.h does not yet expose the queue-plan contract.");
             AssertContains(hashDigestQueuePlanHeader, "size_t maxBufferedChunkCount;", "Phase 63 HashDigestQueuePlan.h does not yet expose queue buffering controls.");
@@ -4587,9 +4577,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashSchedulerPlanHeader, "struct HashSchedulerPlan", "Phase 64 HashSchedulerPlan.h does not yet expose scheduler plan state.");
             AssertContains(hashSchedulerPlanHeader, "size_t workerThreadCount;", "Phase 64 HashSchedulerPlan.h does not yet expose scheduler worker-thread controls.");
@@ -4633,9 +4623,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashPreparationPlanHeader, "struct HashPreparationPlan", "Phase 65 HashPreparationPlan.h does not yet expose preparation planning state.");
             AssertContains(hashPreparationPlanHeader, "size_t preScanFileCountThreshold;", "Phase 65 HashPreparationPlan.h does not yet expose pre-scan threshold controls.");
@@ -4685,9 +4675,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestBufferPlanHeader, "struct HashDigestBufferPlan", "Phase 66 HashDigestBufferPlan.h does not yet expose digest buffer planning state.");
             AssertContains(hashDigestBufferPlanHeader, "unsigned int preferredBufferLength;", "Phase 66 HashDigestBufferPlan.h does not yet expose preferred digest buffer length.");
@@ -4765,9 +4755,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestRuntimePlanHeader, "struct HashDigestRuntimePlan", "Phase 68 HashDigestRuntimePlan.h does not yet expose the digest runtime-plan contract.");
             AssertContains(hashDigestRuntimePlanHeader, "const DigestUpdateRequest& digestUpdateRequest;", "Phase 68 HashDigestRuntimePlan.h does not yet expose digest request state.");
@@ -4828,9 +4818,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashDigestLifecycleHeader, "struct FileHashContexts;", "Phase 69 HashDigestLifecycle.h does not yet expose digest lifecycle context seams.");
             AssertContains(hashDigestLifecycleHeader, "void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);", "Phase 69 HashDigestLifecycle.h does not yet expose hash-context initialization.");
@@ -4942,9 +4932,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContainsAny(hashDigestContextOpsHeader,
                 [
@@ -5006,9 +4996,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileSizeAccountingHeader, "uint64_t TrackHashResolvedFileSize(HashExecutionContext *executionContext, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result, uint64_t fsize);", "Phase 71 HashFileSizeAccounting.h does not yet expose the direct tracked-size seam.");
             AssertContains(hashFileSizeAccountingHeader, "uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result);", "Phase 71 HashFileSizeAccounting.h does not yet expose file-size accounting seams.");
@@ -5046,9 +5036,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileAttemptStateOpsHeader, "struct FileAttemptState;", "Phase 72 HashFileAttemptStateOps.h does not yet expose FileAttemptState forward declarations.");
             AssertContains(hashFileAttemptStateOpsHeader, "struct FileProgressState;", "Phase 72 HashFileAttemptStateOps.h does not yet expose FileProgressState forward declarations.");
@@ -5086,9 +5076,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashPreScanSizeProbeHeader, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);", "Phase 73 HashPreScanSizeProbe.h does not yet expose pre-scan size probing.");
             AssertContains(hashPreScanSizeProbe, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path)", "Phase 73 HashPreScanSizeProbe.cpp does not yet own pre-scan size probing.");
@@ -5118,9 +5108,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashPreScanSizeAccountingHeader, "uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", "Phase 74 HashPreScanSizeAccounting.h does not yet expose pre-scan size accounting.");
             AssertContains(hashPreScanSizeAccounting, "uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", "Phase 74 HashPreScanSizeAccounting.cpp does not yet own pre-scan size accounting.");
@@ -5150,9 +5140,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashPreScanWorkflowHeader, "void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);", "Phase 75 HashPreScanWorkflow.h does not yet expose pre-scan visit workflow orchestration.");
             AssertContains(hashPreScanWorkflow, "void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)", "Phase 75 HashPreScanWorkflow.cpp does not yet own pre-scan visit workflow orchestration.");
@@ -5183,9 +5173,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashPreparationWorkflowHeader, "bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);", "Phase 76 HashPreparationWorkflow.h does not yet expose preparation lifecycle orchestration.");
             AssertContains(hashPreparationWorkflow, "bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)", "Phase 76 HashPreparationWorkflow.cpp does not yet own preparation lifecycle orchestration.");
@@ -5217,9 +5207,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileResultWorkflowHeader, "void PublishFilePathResult(HashExecutionContext *executionContext, HashResult& result);", "Phase 77 HashFileResultWorkflow.h does not yet expose path-result publication.");
             AssertContains(hashFileResultWorkflowHeader, "HashResult& ExecuteFileResultBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path);", "Phase 77 HashFileResultWorkflow.h does not yet expose file-result begin workflow.");
@@ -5257,9 +5247,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashFileAttemptCompletionWorkflowHeader, "void ExecuteOpenedFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.h does not yet expose opened-file completion workflow.");
             AssertContains(hashFileAttemptCompletionWorkflowHeader, "void ExecuteFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 78 HashFileAttemptCompletionWorkflow.h does not yet expose file-attempt completion workflow.");
@@ -5297,9 +5287,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashSuccessfulFileCompletionWorkflowHeader, "void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);", "Phase 79 HashSuccessfulFileCompletionWorkflow.h does not yet expose whole-progress publication.");
             AssertContains(hashSuccessfulFileCompletionWorkflowHeader, "void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", "Phase 79 HashSuccessfulFileCompletionWorkflow.h does not yet expose successful-file completion workflow.");
@@ -5339,9 +5329,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashErrorResultWorkflowHeader, "void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);", "Phase 80 HashErrorResultWorkflow.h does not yet expose error-message publication.");
             AssertContains(hashErrorResultWorkflow, "void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)", "Phase 80 HashErrorResultWorkflow.cpp does not yet own error-message publication.");
@@ -5373,9 +5363,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashResultEventWorkflowHeader, "void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result);", "Phase 81 HashResultEventWorkflow.h does not yet expose meta-result publication.");
             AssertContains(hashResultEventWorkflowHeader, "void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", "Phase 81 HashResultEventWorkflow.h does not yet expose hash-result publication.");
@@ -5422,9 +5412,9 @@ internal static class Program
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertContains(hashJobLifecycleWorkflowHeader, "void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", "Phase 82 HashJobLifecycleWorkflow.h does not yet expose cancellation lifecycle publication.");
             AssertContains(hashJobLifecycleWorkflowHeader, "void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", "Phase 82 HashJobLifecycleWorkflow.h does not yet expose completion lifecycle publication.");
@@ -5468,9 +5458,9 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
             string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string uwpNativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
-            string wuiNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
+            string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
             AssertDoesNotContain(hashDigestUpdaterHeader, "std::vector<ResultDigestType> algorithms;", "Phase 83 HashDigestUpdater.h still carries legacy algorithm-list state in digest update requests.");
             AssertContains(hashDigestUpdaterHeader, "std::vector<HashDigestOperationDescriptor> operationDescriptors;", "Phase 83 HashDigestUpdater.h does not yet preserve operation-descriptor state in digest update requests.");
@@ -5897,7 +5887,7 @@ internal static class Program
             string internalHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string upstreamNote = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\README.LHash.md");
             string upstreamHeader = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\c\blake3.h");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -5944,7 +5934,7 @@ internal static class Program
             string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "Phase 92 execution context does not yet expose the null-object progress sink.");
             AssertContains(executionContext, "HashProgressSink& progressSinkObserver;", "Phase 92 execution context does not yet model the sink as a non-owning observer reference.");
@@ -6069,7 +6059,7 @@ internal static class Program
             string crc32cProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
             string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
             string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string uwpNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
+            string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
             string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
             string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
@@ -6190,7 +6180,6 @@ internal static class Program
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
             string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
-            string previewWorkflowPath = Path.Combine(repoRoot, @".github\workflows\winui-preview-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
             string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
@@ -6235,10 +6224,6 @@ internal static class Program
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
             AssertContains(workflow, "FHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
-            if (File.Exists(previewWorkflowPath))
-            {
-                throw new InvalidOperationException("Phase 98 WinUI preview workflow should no longer exist in the maintained build graph.");
-            }
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 98 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 98 README no longer retires the WinUI / CLR bridge from the maintained release line.");
             AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Phase 98 archive README no longer records the retired preview surface as reference-only material.");
@@ -6247,8 +6232,8 @@ internal static class Program
             AssertContains(readme, "SHA-256", "Phase 98 README no longer documents the OpenSSL SHA-2 family.");
             AssertContains(readme, "SHA-384", "Phase 98 README no longer documents the OpenSSL SHA-384 family.");
             AssertContains(readme, "BLAKE2b-512", "Phase 98 README no longer documents the supported OpenSSL BLAKE2b variant.");
-            AssertContains(changelog, "OpenSSL 3 EVP", "Phase 98 changelog no longer records the OpenSSL EVP family.");
-            AssertContains(changelogZh, "OpenSSL 3 EVP", "Phase 98 Chinese changelog no longer records the OpenSSL EVP family.");
+            AssertContains(changelog, "## 1.12.2 - 2026-04-17", "Phase 98 changelog no longer records the current maintained release note.");
+            AssertContains(changelogZh, "## 1.12.2 - 2026-04-17", "Phase 98 Chinese changelog no longer records the current maintained release note.");
             AssertContains(releaseMetadataTests, "OpenSslVendorPipeline_AndLinkingException_Are_WiredIntoTheMaintainedBuild", "Phase 98 release metadata coverage no longer guards the OpenSSL vendor pipeline.");
             AssertContains(extensibilityTests, "OpenSslEvpIntegration_VendorsOfficialFixedVersion_AndOwnsTheOnlyActiveSha256AndSha512Ids", "Phase 98 extensibility coverage no longer guards the OpenSSL-only SHA-256/SHA-512 seam.");
             AssertContains(nativeRuntimeFrameworkTests, "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", "Phase 98 runtime coverage no longer guards OpenSSL EVP update-failure propagation.");
@@ -6304,14 +6289,14 @@ internal static class Program
 
     private static IEnumerable<(string LivePrefix, string ArchivePrefix)> GetArchivePathMappings()
     {
-        yield return (@"trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
-        yield return (@"trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
-        yield return (@"trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
-        yield return (@"trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
-        yield return (@"sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
-        yield return (@"sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
-        yield return (@"sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
-        yield return (@"sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
+        yield return (@"archive\legacy-platforms\trunk\fHashWUIWap\", @"archive\legacy-platforms\trunk\fHashWUIWap\");
+        yield return (@"archive\legacy-platforms\trunk\fHashUwpWap\", @"archive\legacy-platforms\trunk\fHashUwpWap\");
+        yield return (@"archive\legacy-platforms\trunk\source\WinUWP\", @"archive\legacy-platforms\trunk\source\WinUWP\");
+        yield return (@"archive\legacy-platforms\trunk\source\OSXUI\", @"archive\legacy-platforms\trunk\source\OSXUI\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\", @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashUwpNative\", @"archive\legacy-platforms\sub-proj\fHashUwpNative\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashUwpShellExt\", @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\");
+        yield return (@"archive\legacy-platforms\sub-proj\fHashWUIShellExt\", @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\");
     }
 
     private static string ReadResultDigestAccessSeams(string repoRoot)

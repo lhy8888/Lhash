@@ -465,7 +465,7 @@ public sealed class CommonSeamUnitTests
         string resultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDataRender.h");
         string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
         string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
-        string bridgeMacHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
+        string bridgeMacHeader = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
 
         Assert.Contains("ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)", resultRender, StringComparison.Ordinal);
         Assert.Contains("return GetResultSizeDisplayInfo(GetResultSize(result));", resultRender, StringComparison.Ordinal);
@@ -485,9 +485,9 @@ public sealed class CommonSeamUnitTests
         string compatibilityPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultCompatibility.h");
         string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
         string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
-        string bridgeMacHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.h");
-        string bridgeMacSource = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\UIBridgeMacSwift.mm");
-        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"trunk\source\OSXUI\HashBridge.mm");
+        string bridgeMacHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
+        string bridgeMacSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.mm");
+        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\HashBridge.mm");
 
         Assert.False(File.Exists(compatibilityPath));
         Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
@@ -601,8 +601,8 @@ public sealed class CommonSeamUnitTests
 
         string archiveReadme = RepositoryTestContext.ReadUtf8File(@"archive\README.md");
         string legacyProject = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash.vcxproj");
-        string winUiMarker = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinUI\NON_MAINLINE.md");
-        string clrBridgeMarker = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\NON_MAINLINE.md");
+        string winUiMarker = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\trunk\source\WinUI\NON_MAINLINE.md");
+        string clrBridgeMarker = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashClrBridge\NON_MAINLINE.md");
 
         Assert.Contains("historical project shells and packaging scripts", archiveReadme, StringComparison.Ordinal);
         Assert.Contains("trunk/fileshash15.sln", archiveReadme, StringComparison.Ordinal);
@@ -622,12 +622,11 @@ public sealed class CommonSeamUnitTests
     public void WinUiPreviewWorkflow_IsRetired_FromTheMainline()
     {
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-        string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashWUINative\fHashWUINative.vcxproj");
-        string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
+        string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
+        string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
         string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
-        string previewWorkflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
@@ -663,7 +662,6 @@ public sealed class CommonSeamUnitTests
         Assert.Contains(@"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
 
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
-        Assert.False(File.Exists(previewWorkflowPath));
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
         Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
@@ -674,9 +672,7 @@ public sealed class CommonSeamUnitTests
     {
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
         string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
-        string previewWorkflowPath = Path.Combine(RepositoryTestContext.RepoRoot, @".github\workflows\winui-preview-build.yml");
 
-        Assert.False(File.Exists(previewWorkflowPath));
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
         Assert.Contains("retired WinUI/UWP/CLR preview surface is kept here for reference only", archiveReadme, StringComparison.Ordinal);
