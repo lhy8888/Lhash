@@ -2,16 +2,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.1300
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHash", "fileshash.vcxproj", "{6644A084-A7A3-40C1-9DDD-3312944FED03}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHash", "fileshash.vcxproj", "{6644A084-A7A3-40C1-9DDD-3312944FED03}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashNativeCore", "..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "{E500D56F-3EE3-403C-A24C-034822AE3DF5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashNativeCore", "..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "{E500D56F-3EE3-403C-A24C-034822AE3DF5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fHashShlExt", "..\sub-proj\fHashShlExt\fHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashShlExt", "..\sub-proj\fHashShlExt\fHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FHash.NativeRuntimeTests", "..\native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj", "{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHash.NativeRuntimeTests", "..\native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj", "{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

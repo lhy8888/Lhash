@@ -2051,7 +2051,7 @@ internal static class Program
             AssertDoesNotContain(legacyFilters, "source\\Common\\HashEngine.cpp", "Legacy desktop filters still expose HashEngine.cpp even though the source moved to the desktop native core project.");
             AssertDoesNotContain(legacyFilters, "source\\OsUtils\\OsFileWinApi.cpp", "Legacy desktop filters still expose OsFileWinApi.cpp even though the source moved to the desktop native core project.");
 
-            AssertContains(legacySolution, "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"fHashNativeCore\", \"..\\sub-proj\\fHashNativeCore\\fHashNativeCore.vcxproj\", \"{E500D56F-3EE3-403C-A24C-034822AE3DF5}\"", "fileshash15.sln does not yet include the extracted desktop native core project.");
+            AssertContains(legacySolution, "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"LHashNativeCore\", \"..\\sub-proj\\fHashNativeCore\\fHashNativeCore.vcxproj\", \"{E500D56F-3EE3-403C-A24C-034822AE3DF5}\"", "fileshash15.sln does not yet include the extracted desktop native core project.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}", "fileshash15.sln does not yet make the legacy desktop app depend on the extracted desktop native core project.");
             AssertDoesNotContain(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32", "fileshash15.sln still carries the retired desktop native core Win32 debug mapping.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.Build.0 = Release|x64", "fileshash15.sln is missing the desktop native core x64 release build mapping.");
@@ -2379,10 +2379,10 @@ internal static class Program
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Desktop native core filters do not yet expose HashEngineResult.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core filters do not yet expose HashResultPublisher.cpp.");
 
-            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "WinUI native project still compiles HashFileRunner.cpp instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "WinUI native project still compiles HashThreadEntry.cpp instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project still compiles HashEngineResult.cpp instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "WinUI native project still compiles HashFileRunner.cpp instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "WinUI native project still compiles HashThreadEntry.cpp instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "WinUI native project still compiles HashEnginePreparation.cpp instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(wuiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "WinUI native project still compiles HashEngineResult.cpp instead of consuming LHashNativeCore.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashFileRunner.cpp", "UWP native project does not yet compile HashFileRunner.cpp.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "UWP native project does not yet compile HashThreadEntry.cpp from LegacyCompat.");
             AssertContains(uwpNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "UWP native project does not yet compile HashEnginePreparation.cpp.");
@@ -3448,31 +3448,31 @@ internal static class Program
             AssertContains(hashEngine, "observer->onProgressEvent(CreateCompletedProgressEvent());", "HashEngine does not yet emit completion progress events.");
         }, failures);
 
-        Run("Phase 32 routes the WinUI native stack through fHashNativeCore instead of recompiling the core", () =>
+        Run("Phase 32 routes the WinUI native stack through LHashNativeCore instead of recompiling the core", () =>
         {
             string winUiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
             string clrBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
             string readme = ReadRepoFile(repoRoot, @"README.md");
 
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\SHA1.cpp", "Phase 32 WinUI native project still recompiles SHA1 instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha256.cpp", "Phase 32 WinUI native project still recompiles SHA256 instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha512.cpp", "Phase 32 WinUI native project still recompiles SHA512 instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngine.cpp", "Phase 32 WinUI native project still recompiles HashEngine instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Phase 32 WinUI native project still recompiles HashEnginePreparation instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Phase 32 WinUI native project still recompiles HashEngineResult instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\strhelper.cpp", "Phase 32 WinUI native project still recompiles strhelper instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsFileWinApi.cpp", "Phase 32 WinUI native project still recompiles OsFileWinApi instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsThreadWinApi.cpp", "Phase 32 WinUI native project still recompiles OsThreadWinApi instead of consuming fHashNativeCore.");
-            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\WinCommon\WindowsComm.cpp", "Phase 32 WinUI native project still recompiles WindowsComm instead of consuming fHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\MD5.cpp", "Phase 32 WinUI native project still recompiles MD5 instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\SHA1.cpp", "Phase 32 WinUI native project still recompiles SHA1 instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha256.cpp", "Phase 32 WinUI native project still recompiles SHA256 instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Algorithms\sha512.cpp", "Phase 32 WinUI native project still recompiles SHA512 instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngine.cpp", "Phase 32 WinUI native project still recompiles HashEngine instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Phase 32 WinUI native project still recompiles HashEnginePreparation instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\HashEngineResult.cpp", "Phase 32 WinUI native project still recompiles HashEngineResult instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\Common\strhelper.cpp", "Phase 32 WinUI native project still recompiles strhelper instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsFileWinApi.cpp", "Phase 32 WinUI native project still recompiles OsFileWinApi instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\OsUtils\OsThreadWinApi.cpp", "Phase 32 WinUI native project still recompiles OsThreadWinApi instead of consuming LHashNativeCore.");
+            AssertDoesNotContain(winUiNativeProject, @"..\..\trunk\source\WinCommon\WindowsComm.cpp", "Phase 32 WinUI native project still recompiles WindowsComm instead of consuming LHashNativeCore.");
 
             AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\AdvTaskbar.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific AdvTaskbar layer.");
             AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\ClipboardHelper.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific ClipboardHelper layer.");
             AssertContains(winUiNativeProject, @"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", "Phase 32 WinUI native project no longer keeps its platform-specific FileVersionHelper layer.");
 
-            AssertContains(clrBridgeProject, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 32 CLR bridge does not yet link both the WinUI platform layer and fHashNativeCore.");
+            AssertContains(clrBridgeProject, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "Phase 32 CLR bridge does not yet link both the WinUI platform layer and LHashNativeCore.");
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore-md\", "Phase 32 CLR bridge does not yet search the CLR-compatible fHashNativeCore-md output directory.");
-            AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the fHashNativeCore output directory.");
+            AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the LHashNativeCore output directory.");
 
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 32 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 32 README no longer retires the WinUI / CLR bridge from the maintained release line.");
@@ -3882,7 +3882,7 @@ internal static class Program
 
             AssertContains(nativeRuntimeProject, "<ProjectName>FHash.NativeRuntimeTests</ProjectName>", "Phase 47 native runtime test project does not yet exist.");
             AssertContains(nativeRuntimeProject, "<ConfigurationType>Application</ConfigurationType>", "Phase 47 native runtime test project is not a standalone executable.");
-            AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference fHashNativeCore.");
+            AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference LHashNativeCore.");
             AssertContains(nativeRuntimeProject, "Version.lib;%(AdditionalDependencies)", "Phase 47 native runtime test project does not yet link Version.lib for WindowsComm version helpers.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForSingleFile", "Phase 47 native runtime tests do not yet cover the main HashThreadFunc runtime path.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", "Phase 47 native runtime tests do not yet cover multi-file runtime progress and result storage.");
@@ -3905,7 +3905,7 @@ internal static class Program
             AssertDoesNotContain(nativeRuntimeSource, "executionContext.progressSink = &progressSink;", "Phase 47 native runtime tests still mutate progress-sink pointers directly.");
             AssertContains(nativeRuntimeMain, "All native runtime tests passed", "Phase 47 native runtime test main does not yet report aggregate success.");
 
-            AssertContains(solution, "FHash.NativeRuntimeTests", "Phase 47 fileshash15.sln does not yet include the native runtime test project.");
+            AssertContains(solution, "LHash.NativeRuntimeTests", "Phase 47 fileshash15.sln does not yet include the native runtime test project.");
             AssertContains(gitignore, "native-runtime-tests/**/x64/", "Phase 47 .gitignore does not yet ignore native runtime test build outputs.");
 
             AssertContains(workflow, "native-runtime-tests:", "Phase 47 workflow does not yet define a native-runtime-tests job.");

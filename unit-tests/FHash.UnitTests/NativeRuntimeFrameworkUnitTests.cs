@@ -25,7 +25,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("Filter Include=\"Source Files\"", filters, StringComparison.Ordinal);
         Assert.Contains("Filter Include=\"Header Files\"", filters, StringComparison.Ordinal);
 
-        Assert.Contains("FHash.NativeRuntimeTests", solution, StringComparison.Ordinal);
+        Assert.Contains("LHash.NativeRuntimeTests", solution, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests/**/x64/", gitignore, StringComparison.Ordinal);
     }
 
