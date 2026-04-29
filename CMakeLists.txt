@@ -113,10 +113,16 @@ if (LHASH_BUILD_M2_SMOKE)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/engine_link_smoke/lhash_engine_link_smoke.cpp"
     )
     target_link_libraries(lhash_engine_link_smoke PRIVATE lhash_core)
-    target_include_directories(lhash_engine_link_smoke BEFORE PRIVATE
-        "${LHASH_REPO_ROOT}/cmake/posix-stubs"
-        "${LHASH_SOURCE_ROOT}"
-    )
+    if (WIN32)
+        target_include_directories(lhash_engine_link_smoke PRIVATE
+            "${LHASH_SOURCE_ROOT}"
+        )
+    else()
+        target_include_directories(lhash_engine_link_smoke BEFORE PRIVATE
+            "${LHASH_REPO_ROOT}/cmake/posix-stubs"
+            "${LHASH_SOURCE_ROOT}"
+        )
+    endif()
     add_test(NAME lhash_engine_link_smoke COMMAND lhash_engine_link_smoke)
 
     if (APPLE)
