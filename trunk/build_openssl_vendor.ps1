@@ -104,7 +104,7 @@ if ((Test-Path $libPath) -and (Test-Path $pdbPath)) {
     Add-Content -Path $CombinedLogPath -Value ("OPENSSL_VENDOR_INSTALL_ROOT={0}" -f $InstallRoot) -Encoding UTF8
     Write-Host "Reusing existing OpenSSL vendor build at $InstallRoot"
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"
-    return
+    exit 0
 }
 elseif (Test-Path $libPath) {
     Write-Host "Existing OpenSSL vendor build at $InstallRoot is missing ossl_static.pdb; rebuilding to restore full debug companion assets."
