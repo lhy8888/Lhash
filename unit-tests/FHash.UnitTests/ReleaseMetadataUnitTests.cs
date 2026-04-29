@@ -86,17 +86,21 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("publish-release:", workflow, StringComparison.Ordinal);
         Assert.Contains("if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
+        Assert.Contains("build-windows-arm64:", workflow, StringComparison.Ordinal);
+        Assert.Contains("prepare-openssl-vendor-arm64:", workflow, StringComparison.Ordinal);
         Assert.Contains("pattern: LHash-windows-*", workflow, StringComparison.Ordinal);
         Assert.Contains("merge-multiple: true", workflow, StringComparison.Ordinal);
         Assert.Contains("Stage release rehearsal bundle", workflow, StringComparison.Ordinal);
         Assert.Contains("release_mode=\"rehearsal\"", workflow, StringComparison.Ordinal);
         Assert.Contains("release_mode=\"tagged-release\"", workflow, StringComparison.Ordinal);
         Assert.Contains("RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
+        Assert.Contains("windows_arm64=$(basename $(ls \"$artifact_root\"/LHash-windows-arm64-*.zip | head -n 1))", workflow, StringComparison.Ordinal);
         Assert.Contains("LHash-release-rehearsal", workflow, StringComparison.Ordinal);
         Assert.Contains("tar -czf \"$PWD/LHash-release-rehearsal-$short_sha.tar.gz\"", workflow, StringComparison.Ordinal);
         Assert.Contains("if: startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
         Assert.Contains("softprops/action-gh-release@v2", workflow, StringComparison.Ordinal);
         Assert.Contains("release-assets/LHash-windows-x64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-assets/LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("artifacts/winui-x64-*", workflow, StringComparison.Ordinal);
     }

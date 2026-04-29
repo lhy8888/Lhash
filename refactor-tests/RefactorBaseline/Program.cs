@@ -3940,6 +3940,17 @@ internal static class Program
                     "- prepare-openssl-vendor-x64"
                 },
                 "Phase 47 build-windows-x64 does not yet depend on the shared OpenSSL vendor artifact.");
+            AssertInOrder(
+                workflow,
+                new[]
+                {
+                    "build-windows-arm64:",
+                    "needs:",
+                    "- security-regression",
+                    "- unit-tests",
+                    "- prepare-openssl-vendor-arm64"
+                },
+                "Phase 47 build-windows-arm64 does not yet depend on the shared OpenSSL vendor artifact.");
         }, failures);
 
         Run("Phase 48 exercises the publish-release chain on manual dispatch while reserving GitHub releases for version tags", () =>
@@ -3958,6 +3969,8 @@ internal static class Program
             AssertContains(workflow, "if: startsWith(github.ref, 'refs/tags/v')", "Phase 48 publish-release does not yet reserve GitHub release publishing for version tags.");
             AssertContains(workflow, "softprops/action-gh-release@v2", "Phase 48 publish-release does not yet invoke the GitHub release publisher.");
             AssertContains(workflow, "release-assets/LHash-windows-x64-*.zip", "Phase 48 publish-release does not yet publish the Windows x64 release zip.");
+            AssertContains(workflow, "release-assets/LHash-windows-arm64-*.zip", "Phase 48 publish-release does not yet publish the Windows ARM64 release zip.");
+            AssertContains(workflow, "windows_arm64=$(basename $(ls \"$artifact_root\"/LHash-windows-arm64-*.zip | head -n 1))", "Phase 48 publish-release does not yet record the Windows ARM64 bundle in the release manifest.");
             AssertContains(workflow, "release-staging/RELEASE_MANIFEST.txt", "Phase 48 publish-release does not yet attach the release manifest.");
             AssertDoesNotContain(workflow, "artifacts/winui-x64-*", "Phase 48 WinUI artifact upload still includes the duplicated uncompressed publish directory.");
         }, failures);

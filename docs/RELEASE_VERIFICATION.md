@@ -21,6 +21,7 @@ Preferred starting point:
 For the current maintained line, users should expect release metadata such as:
 
 - Windows x64 release bundle such as `LHash-windows-x64-<shortsha>.zip`
+- Windows ARM64 release bundle such as `LHash-windows-arm64-<shortsha>.zip`
 - `RELEASE_MANIFEST.txt`
 - `SHA256SUMS.txt`
 - `LHash-release.cyclonedx.json`
@@ -35,7 +36,7 @@ Not every historical release will contain the full modern metadata set. Newer re
 
 Download at minimum:
 
-- the desktop release bundle
+- the desktop release bundle(s)
 - `SHA256SUMS.txt`
 - `RELEASE_MANIFEST.txt`
 

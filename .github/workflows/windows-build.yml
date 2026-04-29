@@ -346,10 +346,218 @@ jobs:
             artifacts/LHash-windows-x64-*.zip
           if-no-files-found: warn
 
+  prepare-openssl-vendor-arm64:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Restore cached OpenSSL vendor arm64
+        id: restore-openssl-vendor-arm64-cache
+        uses: actions/cache@v4
+        with:
+          path: artifacts/openssl-vendor-arm64
+          key: ${{ runner.os }}-openssl-vendor-arm64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build OpenSSL vendor arm64 once
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-arm64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-arm64'
+
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform ARM64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+            Tee-Object -FilePath $openSslLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-arm64.log for details."
+          }
+
+      - name: Upload OpenSSL vendor arm64 artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: FHash-openssl-vendor-arm64
+          path: |
+            artifacts/build-openssl-vendor-arm64.log
+            artifacts/openssl-vendor-arm64/**
+          if-no-files-found: warn
+
+  build-windows-arm64:
+    needs:
+      - security-regression
+      - unit-tests
+      - prepare-openssl-vendor-arm64
+    runs-on: windows-2022
+    env:
+      LHASH_SIGN_PFX_BASE64: ${{ secrets.LHASH_SIGN_PFX_BASE64 }}
+      LHASH_SIGN_PFX_PASSWORD: ${{ secrets.LHASH_SIGN_PFX_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download OpenSSL vendor arm64 artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: FHash-openssl-vendor-arm64
+          path: artifacts
+
+      - name: Show Visual Studio toolchain info
+        shell: powershell
+        run: |
+          $installerRoot = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer'
+          $vswhere = Join-Path $installerRoot 'vswhere.exe'
+          if (-not (Test-Path $vswhere)) {
+            throw 'Unable to locate vswhere.exe on the runner.'
+          }
+
+          & $vswhere -latest -products * -format json
+          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022' -ErrorAction SilentlyContinue
+
+      - name: Build Windows ARM64 app
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $logPath = Join-Path $artifactRoot 'build-windows-arm64.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-arm64'
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
+          }
+
+          & msbuild trunk/fileshash15.sln /m /t:fHash /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+            Tee-Object -FilePath $logPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed with exit code $LASTEXITCODE. See artifacts/build-windows-arm64.log for details."
+          }
+
+          $exeCandidates = @(
+            'trunk\ARM64\Release\LHash.exe'
+          )
+          $builtExe = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $builtExe) {
+            throw 'MSBuild succeeded, but no executable was found in trunk\\ARM64\\Release.'
+          }
+
+      - name: Sign Windows ARM64 app with PFX certificate (optional)
+        if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $pfxPath = Join-Path $artifactRoot 'windows-signing-cert.pfx'
+          $exePath = 'trunk\\ARM64\\Release\\LHash.exe'
+
+          [System.IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:LHASH_SIGN_PFX_BASE64))
+          try {
+            & powershell -ExecutionPolicy Bypass -File 'trunk/sign_legacy_exe.ps1' -FilePath $exePath -PfxPath $pfxPath -PfxPassword $env:LHASH_SIGN_PFX_PASSWORD
+            if ($LASTEXITCODE -ne 0) {
+              throw "Legacy signing script failed with exit code $LASTEXITCODE."
+            }
+          }
+          finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
+      - name: Package Windows ARM64 build
+        if: always()
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+          $bundleRoot = Join-Path $artifactRoot ("windows-arm64-$shortSha")
+          New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
+
+          $exeCandidates = @(
+            'trunk\ARM64\Release\LHash.exe'
+          )
+          $exePath = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if ($exePath) {
+            $packagedExe = Join-Path $bundleRoot 'LHash.exe'
+            Copy-Item $exePath -Destination $packagedExe -ErrorAction Stop
+            $exeHash = (Get-FileHash $packagedExe -Algorithm SHA256).Hash
+            $signature = Get-AuthenticodeSignature $packagedExe
+            $signatureSubject = ''
+            $signatureThumbprint = ''
+            if ($signature.SignerCertificate) {
+              $signatureSubject = $signature.SignerCertificate.Subject
+              $signatureThumbprint = $signature.SignerCertificate.Thumbprint
+            }
+            $readme = @"
+          LHash Windows ARM64 build
+
+          Commit:
+          - $env:GITHUB_SHA
+
+          Files:
+          - LHash.exe: desktop application
+          - SHA256.txt: executable checksum
+          - BUILD_INFO.txt: build metadata
+
+          Usage:
+          - Double-click LHash.exe to run the app.
+          - 'Publisher unknown' is removed only after the executable is Authenticode-signed with a publicly trusted code-signing identity such as Artifact Signing Public Trust or a trusted CA-issued certificate.
+          - Shell extension packaging is intentionally skipped in CI.
+          "@
+
+            $buildInfo = @"
+          commit=$env:GITHUB_SHA
+          short_sha=$shortSha
+          source_exe=$exePath
+          packaged_exe=LHash.exe
+          sha256=$exeHash
+          signature_status=$($signature.Status)
+          signature_subject=$signatureSubject
+          signature_thumbprint=$signatureThumbprint
+          "@
+
+            Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
+            Set-Content -Path (Join-Path $bundleRoot 'BUILD_INFO.txt') -Value $buildInfo -Encoding ASCII
+          }
+          else {
+            $readme = @"
+          LHash Windows ARM64 build
+
+          The executable was not produced in this CI run.
+          See build-windows-arm64.log in the artifact root for the full MSBuild output.
+          "@
+          }
+
+          Set-Content -Path (Join-Path $bundleRoot 'README.txt') -Value $readme -Encoding ASCII
+
+          if ($exePath) {
+            Compress-Archive -Path (Join-Path $bundleRoot '*') -DestinationPath (Join-Path $artifactRoot "LHash-windows-arm64-$shortSha.zip") -Force
+          }
+
+      - name: Upload Windows ARM64 artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: LHash-windows-arm64
+          path: |
+            artifacts/build-openssl-vendor-arm64.log
+            artifacts/openssl-vendor-arm64/*.log
+            artifacts/build-windows-arm64.log
+            artifacts/windows-arm64-*
+            artifacts/LHash-windows-arm64-*.zip
+          if-no-files-found: warn
+
   publish-release:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - build-windows-x64
+      - build-windows-arm64
     runs-on: ubuntu-latest
 
     steps:
@@ -388,9 +596,11 @@ jobs:
           frontend=legacy-native
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
+          windows_arm64=$(basename $(ls "$artifact_root"/LHash-windows-arm64-*.zip | head -n 1))
           EOF
 
           cp "$artifact_root"/LHash-windows-x64-*.zip "$staging_root"/
+          cp "$artifact_root"/LHash-windows-arm64-*.zip "$staging_root"/
           find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
           tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
 
@@ -411,5 +621,6 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/LHash-windows-x64-*.zip
+            release-assets/LHash-windows-arm64-*.zip
             release-staging/RELEASE_MANIFEST.txt
 
