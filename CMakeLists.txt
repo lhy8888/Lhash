@@ -64,6 +64,10 @@ if (WIN32)
     target_link_libraries(lhash_core PUBLIC Version)
 endif()
 
+if (APPLE)
+    target_link_libraries(lhash_core PUBLIC iconv)
+endif()
+
 if (MSVC)
     target_compile_options(lhash_core PRIVATE
         $<$<COMPILE_LANGUAGE:C>:/utf-8>
