@@ -74,7 +74,12 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $buildLog = Join-Path $artifactRoot 'cmake-build.log'
 
-          & cmake --build $buildRoot --config Release --target ${{ matrix.build_target }} --parallel 2>&1 |
+          $buildTargets = @('${{ matrix.build_target }}')
+          if (${{ matrix.run_smoke }}) {
+            $buildTargets += 'lhash_engine_link_smoke'
+          }
+
+          & cmake --build $buildRoot --config Release --target $buildTargets --parallel 2>&1 |
             Tee-Object -FilePath $buildLog
 
           if ($LASTEXITCODE -ne 0) {
