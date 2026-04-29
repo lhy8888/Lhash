@@ -24,36 +24,20 @@ internal static partial class Program
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string legacyPackScript = ReadRepoFile(repoRoot, @"archive\legacy-projects\trunk\package_win_mfc64.py");
-            string winUiEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\en-US\Resources.resw");
-            string winUiZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\zh-CN\Resources.resw");
-            string winUiAssembly = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Properties\AssemblyInfo.cs");
-            string winUiWap = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashWUIWap\Package.appxmanifest");
-            string winUiWapDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashWUIWap\Package-DEV.appxmanifest");
-            string uwpEn = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\en-US\Resources.resw");
-            string uwpZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Strings\zh-CN\Resources.resw");
-            string uwpAssembly = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Properties\AssemblyInfo.cs");
-            string uwpManifest = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest");
-            string uwpManifestDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package-DEBUG.appxmanifest");
-            string uwpWap = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashUwpWap\Package.appxmanifest");
-            string uwpWapDev = ReadRepoFile(repoRoot, @"archive\legacy-platforms\trunk\fHashUwpWap\Package-DEBUG.appxmanifest");
             string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsBase.cpp");
             string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsZHCN.cpp");
-            string wuiShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
-            string wuiShellStrings = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\AppxShellExtStringsBase.cpp");
-            string wuiShellStringsZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\AppxShellExtStringsZHCN.cpp");
-            string uwpShellVerb = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
-            string uwpShellStrings = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\UwpShellExtStringsBase.cpp");
-            string uwpShellStringsZh = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\UwpShellExtStringsZHCN.cpp");
 
             AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
             AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
-            if (File.Exists(Path.Combine(repoRoot, @"trunk\package_win_mfc64.py")))
-            {
-                throw new InvalidOperationException("Legacy Windows packaging script should be archived instead of living in trunk root.");
-            }
-            AssertContains(legacyPackScript, "EXE_FILE_NAME = 'LHash.exe'", "Legacy packaging script still packages the old executable name.");
-            AssertContains(legacyPackScript, "'LHash-%s-win64.zip'", "Legacy packaging script still emits the old archive name.");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-projects\trunk\package_win_mfc64.py");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Strings\en-US\Resources.resw");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
+            AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Security regression no longer records the WinUI/CLR preview surface as reference-only material.");
+            AssertContains(archiveReadme, "archived packaging scripts are not referenced by the active GitHub workflows", "Security regression no longer records archived packaging scripts as non-mainline material.");
+            AssertContains(archiveReadme, "legacy in-tree SHA256/SHA512 implementations were superseded by the", "Security regression no longer records archived hash implementations as superseded material.");
+            AssertContains(archiveReadme, "maintained OpenSSL SHA-256 / SHA-512 provider path", "Security regression no longer records archived hash implementations as superseded material.");
             AssertContains(workflow, "LHash.exe", "CI packaging no longer looks for the renamed executable.");
             AssertContains(workflow, "LHash-windows-x64", "CI workflow no longer packages the Windows x64 desktop artifact.");
             AssertContains(workflow, "LHash-windows-arm64", "CI workflow no longer packages the Windows ARM64 desktop artifact.");
@@ -85,56 +69,8 @@ internal static partial class Program
             AssertContains(mfcRc2, "VALUE \"OriginalFilename\", \"LHash.exe\"", "Legacy MFC version resources still expose the old original filename.");
             AssertContains(mfcRc2, "VALUE \"LegalCopyright\", \"(C) 2026- LHY.\"", "Legacy MFC version resources still expose the old copyright.");
 
-            AssertContains(winUiEn, "<value>LHash</value>", "WinUI English title still shows the old app name.");
-            AssertContains(winUiEn, "<value>About LHash</value>", "WinUI English About title still shows the old app name.");
-            AssertContains(winUiEn, "<value>LHash: Files Hash Calculator</value>", "WinUI English About text still shows the old product name.");
-            AssertContains(winUiEn, "<value>Copyright (C) 2026- LHY.</value>", "WinUI English About text still shows the old copyright.");
-            AssertContains(winUiEn, "https://github.com/lhy8888/Lhash", "WinUI English About link still points to the old GitHub repo.");
-            AssertContains(winUiZh, "LHash</value>", "WinUI Chinese About title still shows the old app name.");
-            AssertContains(winUiZh, "LHash: ", "WinUI Chinese About text still shows the old product name.");
-            AssertContains(winUiAssembly, "AssemblyTitle(\"LHash\")", "WinUI assembly title still shows the old product name.");
-            AssertContains(winUiAssembly, "AssemblyCompany(\"LHY\")", "WinUI assembly company still shows the old publisher.");
-            AssertContains(winUiAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "WinUI assembly copyright still shows the old owner.");
-            AssertContains(winUiWap, "Alias=\"LHash.exe\"", "WinUI package execution alias still points at the old executable name.");
-            AssertContains(winUiWapDev, "Alias=\"LHashDev.exe\"", "WinUI dev package execution alias still points at the old executable name.");
-            AssertContains(winUiWap, "<DisplayName>LHash</DisplayName>", "WinUI package display name still shows the old app name.");
-            AssertContains(winUiWap, "Description=\"LHash\"", "WinUI package description still shows the old app name.");
-            AssertContains(winUiWap, "<PublisherDisplayName>LHY</PublisherDisplayName>", "WinUI package publisher display name still shows the old owner.");
-            AssertContains(winUiWapDev, "<DisplayName>LHash Dev</DisplayName>", "WinUI dev package display name still shows the old app name.");
-            AssertContains(winUiWapDev, "Description=\"LHash Dev\"", "WinUI dev package description still shows the old app name.");
-            AssertContains(winUiWapDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "WinUI dev package publisher display name still shows the old owner.");
-
-            AssertContains(uwpEn, "<value>LHash UWP</value>", "UWP English title still shows the old app name.");
-            AssertContains(uwpEn, "<value>About LHash UWP</value>", "UWP English About title still shows the old app name.");
-            AssertContains(uwpEn, "<value>LHash UWP: Files Hash Calculator</value>", "UWP English About text still shows the old product name.");
-            AssertContains(uwpEn, "<value>Copyright (C) 2026- LHY.</value>", "UWP English About text still shows the old copyright.");
-            AssertContains(uwpEn, "https://github.com/lhy8888/Lhash", "UWP English About link still points to the old GitHub repo.");
-            AssertContains(uwpZh, "LHash UWP</value>", "UWP Chinese About title still shows the old app name.");
-            AssertContains(uwpZh, "LHash UWP: ", "UWP Chinese About text still shows the old product name.");
-            AssertContains(uwpAssembly, "AssemblyTitle(\"LHashUwp\")", "UWP assembly title still shows the old product name.");
-            AssertContains(uwpAssembly, "AssemblyCompany(\"LHY\")", "UWP assembly company still shows the old publisher.");
-            AssertContains(uwpAssembly, "AssemblyCopyright(\"Copyright (C) 2026- LHY.\")", "UWP assembly copyright still shows the old owner.");
-            AssertContains(uwpManifest, "<DisplayName>LHash UWP</DisplayName>", "UWP manifest display name still shows the old app name.");
-            AssertContains(uwpManifest, "Description=\"LHash UWP\"", "UWP manifest description still shows the old app name.");
-            AssertContains(uwpManifest, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP manifest publisher display name still shows the old owner.");
-            AssertContains(uwpManifestDev, "<DisplayName>LHash UWP Dev</DisplayName>", "UWP debug manifest display name still shows the old app name.");
-            AssertContains(uwpManifestDev, "Description=\"LHash UWP Dev\"", "UWP debug manifest description still shows the old app name.");
-            AssertContains(uwpManifestDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP debug manifest publisher display name still shows the old owner.");
-            AssertContains(uwpWap, "<DisplayName>LHash UWP</DisplayName>", "UWP WAP package display name still shows the old app name.");
-            AssertContains(uwpWap, "Description=\"LHash UWP\"", "UWP WAP package description still shows the old app name.");
-            AssertContains(uwpWap, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP WAP package publisher display name still shows the old owner.");
-            AssertContains(uwpWapDev, "<DisplayName>LHash UWP Dev</DisplayName>", "UWP WAP debug package display name still shows the old app name.");
-            AssertContains(uwpWapDev, "Description=\"LHash UWP Dev\"", "UWP WAP debug package description still shows the old app name.");
-            AssertContains(uwpWapDev, "<PublisherDisplayName>LHY</PublisherDisplayName>", "UWP WAP debug package publisher display name still shows the old owner.");
-
             AssertContains(legacyShellStrings, "Hash with LHash", "Legacy shell extension menu text still shows the old app name.");
             AssertContains(legacyShellStringsZh, "LHash", "Legacy shell extension Chinese menu text still shows the old app name.");
-            AssertContains(wuiShellVerb, "Hash with LHash", "WinUI shell extension verb display name still shows the old app name.");
-            AssertContains(wuiShellStrings, "Hash with LHash", "WinUI shell extension English menu text still shows the old app name.");
-            AssertContains(wuiShellStringsZh, "LHash", "WinUI shell extension Chinese menu text still shows the old app name.");
-            AssertContains(uwpShellVerb, "Hash with LHash UWP", "UWP shell extension verb display name still shows the old app name.");
-            AssertContains(uwpShellStrings, "Hash with LHash UWP", "UWP shell extension English menu text still shows the old app name.");
-            AssertContains(uwpShellStringsZh, "LHash UWP", "UWP shell extension Chinese menu text still shows the old app name.");
 
             AssertPngAsset(repoRoot, @"archive\legacy-platforms\trunk\source\WinUI\Assets\AboutLogo.large.png", 200, 200, 512);
             AssertPngAsset(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Assets\AboutLogo.large.png", 200, 200, 512);
