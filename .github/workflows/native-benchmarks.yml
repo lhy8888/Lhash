@@ -28,6 +28,33 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Verify pristine OpenSSL vendor source
+        shell: powershell
+        run: |
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+
+      - name: Restore cached OpenSSL vendor
+        id: restore-openssl-vendor-cache
+        uses: actions/cache@v4
+        with:
+          path: artifacts/openssl-vendor-${{ matrix.artifact_suffix }}
+          key: ${{ runner.os }}-openssl-vendor-${{ matrix.artifact_suffix }}-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+
+      - name: Build OpenSSL vendor
+        shell: powershell
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $buildLogPath = Join-Path $artifactRoot ('build-openssl-vendor-{0}.log' -f '${{ matrix.artifact_suffix }}')
+          $openSslRoot = Join-Path $artifactRoot ('openssl-vendor-{0}' -f '${{ matrix.artifact_suffix }}')
+
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform ${{ matrix.benchmark_platform }} -InstallRoot $openSslRoot -CombinedLogPath $buildLogPath 2>&1 |
+            Tee-Object -FilePath $buildLogPath
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-${{ matrix.artifact_suffix }}.log for details."
+          }
+
       - name: Capture benchmark machine info
         shell: powershell
         run: |
@@ -54,8 +81,12 @@ jobs:
           $buildLogPath = Join-Path $artifactRoot 'build-native-benchmarks-portable.log'
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-portable.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-portable.csv'
+          $openSslRoot = Join-Path $artifactRoot ('openssl-vendor-{0}' -f '${{ matrix.artifact_suffix }}')
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
+          }
 
-          & msbuild native-benchmarks/LHash.NativeBenchmarks/LHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-portable /p:LHashBlake3SimdProfile=portable 2>&1 |
+          & msbuild native-benchmarks/LHash.NativeBenchmarks/LHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-portable /p:LHashBlake3SimdProfile=portable /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -80,8 +111,12 @@ jobs:
           $buildLogPath = Join-Path $artifactRoot 'build-native-benchmarks-current.log'
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-current.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-current.csv'
+          $openSslRoot = Join-Path $artifactRoot ('openssl-vendor-{0}' -f '${{ matrix.artifact_suffix }}')
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
+            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
+          }
 
-          & msbuild native-benchmarks/LHash.NativeBenchmarks/LHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-current /p:LHashBlake3SimdProfile=current 2>&1 |
+          & msbuild native-benchmarks/LHash.NativeBenchmarks/LHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-current /p:LHashBlake3SimdProfile=current /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -162,6 +197,7 @@ jobs:
         with:
           name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}
           path: |
+            artifacts/build-openssl-vendor-${{ matrix.artifact_suffix }}.log
             artifacts/benchmark-machine-info.txt
             artifacts/build-native-benchmarks-portable.log
             artifacts/run-native-benchmarks-portable.log
