@@ -199,9 +199,11 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
 
         Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslIncludeDir", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslLibDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("/p:LHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);

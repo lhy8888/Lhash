@@ -70,10 +70,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)..\..\</SolutionDir>
-    <LHashBuildFlavor Condition="'$(LHashBuildFlavor)'=='' and '$(FHashBuildFlavor)'!=''">$(FHashBuildFlavor)</LHashBuildFlavor>
-    <FHashBuildFlavor Condition="'$(FHashBuildFlavor)'=='' and '$(LHashBuildFlavor)'!=''">$(LHashBuildFlavor)</FHashBuildFlavor>
+    <LHashBuildFlavor Condition="'$(LHashBuildFlavor)'==''" />
     <LHashBuildFlavorSuffix Condition="'$(LHashBuildFlavor)'!=''">-$(LHashBuildFlavor)</LHashBuildFlavorSuffix>
-    <FHashBuildFlavorSuffix Condition="'$(FHashBuildFlavorSuffix)'=='' and '$(LHashBuildFlavorSuffix)'!=''">$(LHashBuildFlavorSuffix)</FHashBuildFlavorSuffix>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</OutDir>
@@ -96,7 +94,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -113,7 +111,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -130,7 +128,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -147,7 +145,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

@@ -48,7 +48,7 @@ if (WIN32)
     target_compile_definitions(lhash_core PRIVATE UNICODE _UNICODE)
 endif()
 
-target_compile_definitions(lhash_core PRIVATE LHASH_CORE_BUILD=1 FHASH_CORE_BUILD=1)
+target_compile_definitions(lhash_core PRIVATE LHASH_CORE_BUILD=1)
 
 target_compile_definitions(lhash_core PRIVATE
     ${LHASH_BLAKE3_COMPILE_DEFINITIONS}
@@ -56,7 +56,7 @@ target_compile_definitions(lhash_core PRIVATE
 )
 
 if (LHASH_ENABLE_OPENSSL_VENDOR)
-    target_compile_definitions(lhash_core PRIVATE LHASH_WITH_OPENSSL3_VENDOR=1 FHASH_WITH_OPENSSL3_VENDOR=1)
+    target_compile_definitions(lhash_core PRIVATE LHASH_WITH_OPENSSL3_VENDOR=1)
 endif()
 
 if (WIN32)
@@ -113,7 +113,7 @@ if (LHASH_BUILD_M2_SMOKE)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/engine_link_smoke/lhash_engine_link_smoke.cpp"
     )
     target_link_libraries(lhash_engine_link_smoke PRIVATE lhash_core)
-    target_compile_definitions(lhash_engine_link_smoke PRIVATE LHASH_CORE_BUILD=1 FHASH_CORE_BUILD=1)
+    target_compile_definitions(lhash_engine_link_smoke PRIVATE LHASH_CORE_BUILD=1)
     if (WIN32)
         target_include_directories(lhash_engine_link_smoke PRIVATE
             "${LHASH_SOURCE_ROOT}"

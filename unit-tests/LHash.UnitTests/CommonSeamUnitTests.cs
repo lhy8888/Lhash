@@ -640,12 +640,13 @@ public sealed class CommonSeamUnitTests
         string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
 
         Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<LHashDynamicRuntime Condition=\"'$(LHashDynamicRuntime)'==''\">false</LHashDynamicRuntime>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<LHashRuntimeSuffix Condition=\"'$(LHashDynamicRuntime)'=='true'\">-md</LHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<UseOfMfc Condition=\"'$(FHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(MSBuildProjectName)$(FHashRuntimeSuffix)", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<UseOfMfc Condition=\"'$(LHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("<RuntimeLibrary Condition=\"'$(LHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"$(MSBuildProjectName)$(LHashRuntimeSuffix)", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Common\HashFileRunner.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Common\HashScheduler.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);

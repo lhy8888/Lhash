@@ -2,7 +2,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</LHashOpenSslInstallRoot>
-    <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)</LHashOpenSslInstallRoot>
     <LHashOpenSslIncludeDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\include</LHashOpenSslIncludeDir>
     <LHashOpenSslLibDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\lib</LHashOpenSslLibDir>
   </PropertyGroup>
@@ -10,7 +9,7 @@
   <ItemDefinitionGroup Condition="'$(LHashOpenSslInstallRoot)'!=''">
     <ClCompile>
       <AdditionalIncludeDirectories>$(LHashOpenSslIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LHASH_WITH_OPENSSL3_VENDOR=1;FHASH_WITH_OPENSSL3_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LHASH_WITH_OPENSSL3_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(LHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

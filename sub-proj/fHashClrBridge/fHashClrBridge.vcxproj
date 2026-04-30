@@ -79,7 +79,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</LHashOpenSslInstallRoot>
-    <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)</LHashOpenSslInstallRoot>
     <LHashOpenSslLibDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\lib</LHashOpenSslLibDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

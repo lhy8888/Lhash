@@ -2367,12 +2367,13 @@ internal static class Program
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashResultPublisher.cpp", "Desktop native core project does not yet compile HashResultPublisher.cpp.");
             AssertContains(nativeProject, @"..\..\trunk\source\Common\HashEngineInternal.h", "Desktop native core project does not yet include HashEngineInternal.h.");
             AssertContains(nativeProject, "<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", "Desktop native core project is missing the standalone SolutionDir fallback required by the direct CI build.");
-            AssertContains(nativeProject, "<FHashRuntimeSuffix Condition=\"'$(FHashDynamicRuntime)'=='true'\">-md</FHashRuntimeSuffix>", "Desktop native core project is missing the runtime-variant suffix required for CLR-compatible WinUI builds.");
+            AssertContains(nativeProject, "<LHashDynamicRuntime Condition=\"'$(LHashDynamicRuntime)'==''\">false</LHashDynamicRuntime>", "Desktop native core project is missing the runtime-variant toggle required for CLR-compatible WinUI builds.");
+            AssertContains(nativeProject, "<LHashRuntimeSuffix Condition=\"'$(LHashDynamicRuntime)'=='true'\">-md</LHashRuntimeSuffix>", "Desktop native core project is missing the runtime-variant suffix required for CLR-compatible WinUI builds.");
             AssertContains(nativeProject, @"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\", "Desktop native core project is missing the standalone include-root fallback required by the direct CI build.");
             AssertContains(nativeProject, @"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", "Desktop native core project is missing the fixed-version BLAKE3 vendor include root.");
-            AssertContains(nativeProject, "<UseOfMfc Condition=\"'$(FHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", "Desktop native core project is missing the CLR-compatible shared-MFC override.");
-            AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(FHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
-            AssertContains(nativeProject, @"$(MSBuildProjectName)$(FHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
+            AssertContains(nativeProject, "<UseOfMfc Condition=\"'$(LHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", "Desktop native core project is missing the CLR-compatible shared-MFC override.");
+            AssertContains(nativeProject, "<RuntimeLibrary Condition=\"'$(LHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", "Desktop native core project is missing the CLR-compatible dynamic runtime override.");
+            AssertContains(nativeProject, @"$(MSBuildProjectName)$(LHashRuntimeSuffix)", "Desktop native core project does not yet route output directories through the runtime-variant suffix.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashFileRunner.cpp", "Desktop native core filters do not yet expose HashFileRunner.cpp.");
             AssertContains(nativeFilters, @"..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp", "Desktop native core filters do not yet expose HashThreadEntry.cpp from LegacyCompat.");
             AssertContains(nativeFilters, @"..\..\trunk\source\Common\HashEnginePreparation.cpp", "Desktop native core filters do not yet expose HashEnginePreparation.cpp.");
@@ -5877,9 +5878,9 @@ internal static class Program
 
             AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Phase 90 native security targets do not yet enable /GS.");
             AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Phase 90 native security targets do not yet enable /sdl.");
-            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard>true</FHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG by default.");
-            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard Condition=\"'$(CLRSupport)'!=''\">false</FHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet exempt managed CLR bridge projects from CFG.");
-            AssertContains(nativeSecurityTargets, "<ControlFlowGuard Condition=\"'$(FHashEnableControlFlowGuard)'=='true'\">Guard</ControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG for eligible native projects.");
+            AssertContains(nativeSecurityTargets, "<LHashEnableControlFlowGuard>true</LHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG by default.");
+            AssertContains(nativeSecurityTargets, "<LHashEnableControlFlowGuard Condition=\"'$(CLRSupport)'!=''\">false</LHashEnableControlFlowGuard>", "Phase 90 native security targets do not yet exempt managed CLR bridge projects from CFG.");
+            AssertContains(nativeSecurityTargets, "<ControlFlowGuard Condition=\"'$(LHashEnableControlFlowGuard)'=='true'\">Guard</ControlFlowGuard>", "Phase 90 native security targets do not yet enable CFG for eligible native projects.");
             AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Phase 90 native security targets do not yet enable ASLR.");
             AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Phase 90 native security targets do not yet enable high-entropy VA for x64.");
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Phase 90 native security targets do not yet enable DEP.");

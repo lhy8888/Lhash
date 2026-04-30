@@ -382,9 +382,11 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslIncludeDir", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslLibDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);

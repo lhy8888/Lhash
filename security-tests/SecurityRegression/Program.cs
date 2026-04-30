@@ -596,9 +596,9 @@ internal static partial class Program
 
             AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Shared native security targets do not enable /GS.");
             AssertContains(nativeSecurityTargets, "<SDLCheck>true</SDLCheck>", "Shared native security targets do not enable /sdl.");
-            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard>true</FHashEnableControlFlowGuard>", "Shared native security targets do not enable CFG by default.");
-            AssertContains(nativeSecurityTargets, "<FHashEnableControlFlowGuard Condition=\"'$(CLRSupport)'!=''\">false</FHashEnableControlFlowGuard>", "Shared native security targets do not exempt managed CLR bridge projects from CFG.");
-            AssertContains(nativeSecurityTargets, "<ControlFlowGuard Condition=\"'$(FHashEnableControlFlowGuard)'=='true'\">Guard</ControlFlowGuard>", "Shared native security targets do not enable CFG for eligible native projects.");
+            AssertContains(nativeSecurityTargets, "<LHashEnableControlFlowGuard>true</LHashEnableControlFlowGuard>", "Shared native security targets do not enable CFG by default.");
+            AssertContains(nativeSecurityTargets, "<LHashEnableControlFlowGuard Condition=\"'$(CLRSupport)'!=''\">false</LHashEnableControlFlowGuard>", "Shared native security targets do not exempt managed CLR bridge projects from CFG.");
+            AssertContains(nativeSecurityTargets, "<ControlFlowGuard Condition=\"'$(LHashEnableControlFlowGuard)'=='true'\">Guard</ControlFlowGuard>", "Shared native security targets do not enable CFG for eligible native projects.");
             AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Shared native security targets do not enable ASLR.");
             AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Shared native security targets do not enable high-entropy VA.");
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
