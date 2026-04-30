@@ -601,7 +601,9 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("void EmitErrorResult(", result, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", fileVersionResolverHeader, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", fileVersionResolver, StringComparison.Ordinal);
-        Assert.Contains("WindowsComm::FileVersionHelper fvHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("WindowsComm::FileVersionHelper fvHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_UWP_LIB", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_WUI_LIB", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestRuntimePlan", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);

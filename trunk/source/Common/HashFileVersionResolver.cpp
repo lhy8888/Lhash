@@ -4,9 +4,6 @@
 
 #if defined (_WIN32)
 #include "WinCommon/WindowsComm.h"
-#if (defined (LHASH_UWP_LIB) || defined(LHASH_WUI_LIB))
-#include "WinCommon/FileVersionHelper.h"
-#endif
 #endif
 
 namespace HashEngineInternal
@@ -36,19 +33,13 @@ namespace HashEngineInternal
 	sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)
 	{
 #if defined (_WIN32)
-#if (defined (LHASH_UWP_LIB) || defined(LHASH_WUI_LIB))
-		WindowsComm::FileVersionHelper fvHelper(osFile);
-		sunjwbase::tstring fileVersion = fvHelper.Find();
-		osFile.seek(0, sunjwbase::OsFile::OsFileSeekFrom::OF_SEEK_BEGIN);
-		return fileVersion;
-#else
+		(void)osFile;
 		if (!ShouldResolveWindowsFileVersion(path))
 		{
 			return sunjwbase::tstring();
 		}
 
 		return WindowsComm::GetExeFileVersion((TCHAR *)path);
-#endif
 #else
 		(void)osFile;
 		(void)path;

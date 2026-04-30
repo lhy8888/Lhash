@@ -283,6 +283,9 @@ internal static partial class Program
             AssertContains(osFileWinApi, "Cannot verify the final opened file path. Refusing to hash.", "Win32 file hashing still fails open when final-path verification cannot complete.");
             AssertContains(osFileWinApi, "kWindowsMaxExtendedPath = 32767", "Win32 long-path handling no longer enforces the extended path limit.");
             AssertContains(osFileWinApi, "ERROR_FILENAME_EXCED_RANGE", "Win32 long-path handling no longer reports explicit extended-path overflow errors.");
+            AssertDoesNotContain(osFileWinApi, "CreateFileFromAppW", "Win32 file hashing still carries the retired UWP open-file branch.");
+            AssertDoesNotContain(osFileWinApi, "LHASH_UWP_LIB", "Win32 file hashing still carries the retired UWP open-file macro.");
+            AssertDoesNotContain(osFileWinApi, "LHASH_WUI_LIB", "Win32 file hashing still carries the retired WinUI open-file macro.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "UWP file hashing no longer walks ancestor path segments when checking for reparse points.");
             AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine metadata flow no longer relies on the opened file handle.");

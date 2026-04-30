@@ -4466,7 +4466,9 @@ internal static class Program
 
             AssertContains(hashFileVersionResolverHeader, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", "Phase 61 HashFileVersionResolver.h does not yet expose file-version resolution.");
             AssertContains(hashFileVersionResolver, "sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", "Phase 61 HashFileVersionResolver.cpp does not yet own file-version resolution.");
-            AssertContains(hashFileVersionResolver, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve WinUI/UWP file-version probing.");
+            AssertDoesNotContain(hashFileVersionResolver, "WindowsComm::FileVersionHelper fvHelper(osFile);", "Phase 61 HashFileVersionResolver.cpp still carries retired WinUI/UWP file-version probing.");
+            AssertDoesNotContain(hashFileVersionResolver, "LHASH_UWP_LIB", "Phase 61 HashFileVersionResolver.cpp still carries the retired UWP file-version branch.");
+            AssertDoesNotContain(hashFileVersionResolver, "LHASH_WUI_LIB", "Phase 61 HashFileVersionResolver.cpp still carries the retired WinUI file-version branch.");
             AssertContains(hashFileVersionResolver, "return WindowsComm::GetExeFileVersion((TCHAR *)path);", "Phase 61 HashFileVersionResolver.cpp does not yet preserve desktop file-version probing.");
             AssertContains(hashEngineResult, "result.meta.version.clear();", "Phase 61 HashEngineResult.cpp does not yet clear eager version metadata from the hot hashing path.");
             AssertDoesNotContain(hashEngineResult, "ResolveHashFileVersion(osFile, path);", "Phase 61 HashEngineResult.cpp still performs synchronous file-version probing inside the hot metadata path.");
@@ -5835,6 +5837,9 @@ internal static class Program
             AssertContains(osFileWinApi, "Cannot verify the final opened file path. Refusing to hash.", "Phase 90 Win32 file handling still fails open when final-path verification cannot complete.");
             AssertContains(osFileWinApi, "kWindowsMaxExtendedPath = 32767", "Phase 90 Win32 file handling does not yet bound extended paths to the Windows 32767-character limit.");
             AssertContains(osFileWinApi, "ERROR_FILENAME_EXCED_RANGE", "Phase 90 Win32 file handling does not yet report explicit extended-path overflow errors.");
+            AssertDoesNotContain(osFileWinApi, "CreateFileFromAppW", "Phase 90 Win32 file handling still carries the retired UWP open-file branch.");
+            AssertDoesNotContain(osFileWinApi, "LHASH_UWP_LIB", "Phase 90 Win32 file handling still carries the retired UWP open-file macro.");
+            AssertDoesNotContain(osFileWinApi, "LHASH_WUI_LIB", "Phase 90 Win32 file handling still carries the retired WinUI open-file macro.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "Phase 90 UWP file handling does not yet reject reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "Phase 90 UWP file handling does not yet walk ancestor path segments for reparse-point checks.");
 

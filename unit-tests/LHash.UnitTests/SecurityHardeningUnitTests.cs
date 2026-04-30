@@ -45,6 +45,9 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("Cannot verify the final opened file path. Refusing to hash.", winApi, StringComparison.Ordinal);
         Assert.Contains("kWindowsMaxExtendedPath = 32767", winApi, StringComparison.Ordinal);
         Assert.Contains("ERROR_FILENAME_EXCED_RANGE", winApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFileFromAppW", winApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_UWP_LIB", winApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_WUI_LIB", winApi, StringComparison.Ordinal);
 
         Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winUwp, StringComparison.Ordinal);
         Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winUwp, StringComparison.Ordinal);
