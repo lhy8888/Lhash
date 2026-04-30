@@ -103,8 +103,8 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("LHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
@@ -242,7 +242,7 @@ public sealed class HashExtensibilityRegressionUnitTests
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_VENDOR_INSTALL_ROOT", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);

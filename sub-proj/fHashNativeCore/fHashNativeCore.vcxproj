@@ -76,34 +76,39 @@
   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)..\..\trunk\</SolutionDir>
     <FHashRuntimeSuffix Condition="'$(FHashDynamicRuntime)'=='true'">-md</FHashRuntimeSuffix>
-    <FHashBuildFlavorSuffix Condition="'$(FHashBuildFlavor)'!=''">-$(FHashBuildFlavor)</FHashBuildFlavorSuffix>
-    <FHashBlake3SimdProfile Condition="'$(FHashBlake3SimdProfile)'==''">current</FHashBlake3SimdProfile>
+    <LHashBuildFlavor Condition="'$(LHashBuildFlavor)'=='' and '$(FHashBuildFlavor)'!=''">$(FHashBuildFlavor)</LHashBuildFlavor>
+    <FHashBuildFlavor Condition="'$(FHashBuildFlavor)'=='' and '$(LHashBuildFlavor)'!=''">$(LHashBuildFlavor)</FHashBuildFlavor>
+    <LHashBuildFlavorSuffix Condition="'$(LHashBuildFlavor)'!=''">-$(LHashBuildFlavor)</LHashBuildFlavorSuffix>
+    <FHashBuildFlavorSuffix Condition="'$(FHashBuildFlavorSuffix)'=='' and '$(LHashBuildFlavorSuffix)'!=''">$(LHashBuildFlavorSuffix)</FHashBuildFlavorSuffix>
+    <LHashBlake3SimdProfile Condition="'$(LHashBlake3SimdProfile)'=='' and '$(FHashBlake3SimdProfile)'!=''">$(FHashBlake3SimdProfile)</LHashBlake3SimdProfile>
+    <FHashBlake3SimdProfile Condition="'$(FHashBlake3SimdProfile)'=='' and '$(LHashBlake3SimdProfile)'!=''">$(LHashBlake3SimdProfile)</FHashBlake3SimdProfile>
+    <LHashBlake3SimdProfile Condition="'$(LHashBlake3SimdProfile)'==''">current</LHashBlake3SimdProfile>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>15.0.28307.799</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(MSBuildProjectName)$(FHashRuntimeSuffix)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(FHashDynamicRuntime)'=='true'">MultiThreadedDebugDLL</RuntimeLibrary>
@@ -120,7 +125,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(FHashDynamicRuntime)'=='true'">MultiThreadedDebugDLL</RuntimeLibrary>
@@ -139,7 +144,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary Condition="'$(FHashDynamicRuntime)'=='true'">MultiThreadedDLL</RuntimeLibrary>
@@ -159,7 +164,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary Condition="'$(FHashDynamicRuntime)'=='true'">MultiThreadedDLL</RuntimeLibrary>
@@ -178,56 +183,56 @@
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\CRC32CHashProvider.cpp" />
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp">
-      <ExcludedFromBuild Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'==''">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashOpenSslInstallRoot)'==''">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Runtime\Hash\XXHash3HashProvider.cpp" />
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_dispatch.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_portable.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'=='portable'">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='x64'">BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_sse2.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(FHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Platform)'=='ARM64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_sse41.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(FHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Platform)'=='ARM64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_avx2.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(FHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Platform)'=='ARM64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions>BLAKE3_USE_NEON=0;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/arch:AVX2 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_avx512.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(FHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions>BLAKE3_USE_NEON=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/arch:AVX512 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\..\third_party\blake3\1.8.4\c\blake3_neon.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(FHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(LHashBlake3SimdProfile)'=='portable'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM64'">true</ExcludedFromBuild>
       <PreprocessorDefinitions>BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>

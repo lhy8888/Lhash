@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OpenSslVendorIncludeDir Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)\include</OpenSslVendorIncludeDir>
-    <OpenSslVendorLibDir Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)\lib</OpenSslVendorLibDir>
+    <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</LHashOpenSslInstallRoot>
+    <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)</LHashOpenSslInstallRoot>
+    <LHashOpenSslIncludeDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\include</LHashOpenSslIncludeDir>
+    <LHashOpenSslLibDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\lib</LHashOpenSslLibDir>
   </PropertyGroup>
 
-  <ItemDefinitionGroup Condition="'$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">
+  <ItemDefinitionGroup Condition="'$(LHashOpenSslInstallRoot)'!=''">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(OpenSslVendorIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FHASH_WITH_OPENSSL_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LHashOpenSslIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LHASH_WITH_OPENSSL3_VENDOR=1;FHASH_WITH_OPENSSL3_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(OpenSslVendorLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(LHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

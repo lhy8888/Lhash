@@ -180,7 +180,7 @@ public sealed class ReleaseMetadataUnitTests
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
 
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_VENDOR_INSTALL_ROOT", workflow, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("build-openssl-vendor-x64.log", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
@@ -198,10 +198,12 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
 
-        Assert.Contains("FHASH_WITH_OPENSSL_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
-        Assert.DoesNotContain("FHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("/p:LHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);

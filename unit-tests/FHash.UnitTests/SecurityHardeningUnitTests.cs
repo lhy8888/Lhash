@@ -249,9 +249,9 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains(@"blake3_sse41.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_avx2.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("LHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
         Assert.DoesNotContain("Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", nativeCoreProject, StringComparison.Ordinal);
         Assert.DoesNotContain("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);
@@ -381,8 +381,10 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("OPENSSL_VENDOR_INSTALL_ROOT", vendorTargets, StringComparison.Ordinal);
-        Assert.Contains("FHASH_WITH_OPENSSL_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
@@ -396,9 +398,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.6", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
-        Assert.Contains("/p:OPENSSL_VENDOR_INSTALL_ROOT=$openSslRoot", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
-        Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("/p:LHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
 
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
         Assert.Contains("version=openssl-3.5.6", sourceInfo, StringComparison.Ordinal);

@@ -70,30 +70,33 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)..\..\</SolutionDir>
-    <FHashBuildFlavorSuffix Condition="'$(FHashBuildFlavor)'!=''">-$(FHashBuildFlavor)</FHashBuildFlavorSuffix>
+    <LHashBuildFlavor Condition="'$(LHashBuildFlavor)'=='' and '$(FHashBuildFlavor)'!=''">$(FHashBuildFlavor)</LHashBuildFlavor>
+    <FHashBuildFlavor Condition="'$(FHashBuildFlavor)'=='' and '$(LHashBuildFlavor)'!=''">$(LHashBuildFlavor)</FHashBuildFlavor>
+    <LHashBuildFlavorSuffix Condition="'$(LHashBuildFlavor)'!=''">-$(LHashBuildFlavor)</LHashBuildFlavorSuffix>
+    <FHashBuildFlavorSuffix Condition="'$(FHashBuildFlavorSuffix)'=='' and '$(LHashBuildFlavorSuffix)'!=''">$(LHashBuildFlavorSuffix)</FHashBuildFlavorSuffix>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)$(FHashBuildFlavorSuffix)\</IntDir>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)$(LHashBuildFlavorSuffix)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -110,7 +113,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -127,7 +130,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -144,7 +147,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

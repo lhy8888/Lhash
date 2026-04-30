@@ -5964,9 +5964,9 @@ internal static class Program
             AssertContains(nativeCoreProject, @"blake3_sse41.c", "Phase 92 desktop native core does not yet compile the BLAKE3 SSE4.1 translation unit.");
             AssertContains(nativeCoreProject, @"blake3_avx2.c", "Phase 92 desktop native core does not yet compile the BLAKE3 AVX2 translation unit.");
             AssertContains(nativeCoreProject, @"blake3_avx512.c", "Phase 92 desktop native core does not yet compile the BLAKE3 AVX512 translation unit.");
-            AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Phase 92 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet expose a portable BLAKE3 benchmark control.");
-            AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Phase 92 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
+            AssertContains(nativeCoreProject, "LHashBlake3SimdProfile", "Phase 92 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 92 desktop native core does not yet expose a portable BLAKE3 benchmark control.");
+            AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\"", "Phase 92 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
             AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:SSE2", "Phase 92 desktop native core still carries the retired Win32 SSE2 BLAKE3 translation unit.");
             AssertDoesNotContain(nativeCoreProject, "Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", "Phase 92 desktop native core still carries the retired Win32 SSE4.1-compatible BLAKE3 translation unit.");
             AssertContains(nativeCoreProject, "/arch:AVX2", "Phase 92 desktop native core does not yet enable AVX2 for the dedicated BLAKE3 translation unit.");
@@ -6028,8 +6028,8 @@ internal static class Program
             AssertContains(benchmarkWorkflow, "name: Native Benchmarks", "Phase 94 does not yet define a dedicated native benchmark workflow.");
             AssertContains(benchmarkWorkflow, "workflow_dispatch:", "Phase 94 native benchmark workflow should remain manually triggered.");
             AssertDoesNotContain(benchmarkWorkflow, "push:", "Phase 94 native benchmark workflow should not auto-run on every push.");
-            AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=portable", "Phase 94 does not yet build a portable BLAKE3 benchmark control.");
-            AssertContains(benchmarkWorkflow, "/p:FHashBlake3SimdProfile=current", "Phase 94 does not yet build the current BLAKE3 benchmark configuration.");
+            AssertContains(benchmarkWorkflow, "/p:LHashBlake3SimdProfile=portable", "Phase 94 does not yet build a portable BLAKE3 benchmark control.");
+            AssertContains(benchmarkWorkflow, "/p:LHashBlake3SimdProfile=current", "Phase 94 does not yet build the current BLAKE3 benchmark configuration.");
             AssertContains(benchmarkWorkflow, "windows-11-arm", "Phase 94 does not yet schedule a dedicated ARM64 benchmark runner.");
             AssertContains(benchmarkWorkflow, "benchmark_platform: ARM64", "Phase 94 does not yet benchmark the ARM64 platform.");
             AssertContains(benchmarkWorkflow, "benchmark_platform: x64", "Phase 94 does not yet benchmark the x64 platform.");
@@ -6046,10 +6046,10 @@ internal static class Program
             AssertContains(benchmarkProject, "Include=\"Release|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 release configuration.");
             AssertDoesNotContain(benchmarkProject, "Debug|Win32", "Phase 94 native benchmark project still carries a retired Win32 debug configuration.");
             AssertDoesNotContain(benchmarkProject, "Release|Win32", "Phase 94 native benchmark project still carries a retired Win32 release configuration.");
-            AssertContains(nativeCoreProject, "FHashBlake3SimdProfile", "Phase 94 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
-            AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", "Phase 94 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
+            AssertContains(nativeCoreProject, "LHashBlake3SimdProfile", "Phase 94 desktop native core does not yet expose a benchmark-selectable BLAKE3 SIMD profile.");
+            AssertContains(nativeCoreProject, "ExcludedFromBuild Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\"", "Phase 94 desktop native core does not yet allow benchmark builds to disable BLAKE3 SIMD translation units.");
             AssertContains(nativeCoreProject, @"..\..\third_party\blake3\1.8.4\c\blake3_neon.c", "Phase 94 desktop native core does not yet compile the ARM64 NEON BLAKE3 translation unit.");
-            AssertContains(nativeCoreProject, "Condition=\"'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 94 desktop native core does not yet configure the ARM64 NEON BLAKE3 path.");
+            AssertContains(nativeCoreProject, "Condition=\"'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", "Phase 94 desktop native core does not yet configure the ARM64 NEON BLAKE3 path.");
             AssertContains(benchmarkSource, "small-single-64k", "Phase 94 native benchmarks do not yet cover the small-file scenario.");
             AssertContains(benchmarkSource, "many-small-256x64k", "Phase 94 native benchmarks do not yet cover the many-file scenario.");
             AssertContains(benchmarkSource, "large-single-128m", "Phase 94 native benchmarks do not yet cover the large-file scenario.");
@@ -6229,7 +6229,7 @@ internal static class Program
             AssertContains(providerImplementation, "EVP_DigestFinalXOF", "Phase 98 OpenSSL provider no longer uses EVP XOF finalization.");
             AssertContains(providerImplementation, "OSSL_DIGEST_PARAM_SIZE", "Phase 98 OpenSSL provider no longer configures truncated digest output through OSSL params.");
             AssertContains(providerImplementation, "ConfigureOpenSslEvpFailureInjection", "Phase 98 OpenSSL provider does not yet expose failure injection hooks for runtime error-path coverage.");
-            AssertContains(vendorTargets, "FHASH_WITH_OPENSSL_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
+            AssertContains(vendorTargets, "LHASH_WITH_OPENSSL3_VENDOR=1", "Phase 98 shared OpenSSL vendor targets no longer define the OpenSSL vendor flag.");
             AssertContains(workflow, "build_openssl_vendor.ps1", "Phase 98 Windows build workflow no longer builds the vendored OpenSSL package.");
             AssertContains(workflow, "Verify pristine OpenSSL vendor source", "Phase 98 Windows build workflow no longer validates the pristine OpenSSL vendor tree before build.");
             AssertContains(workflow, "tools/verify_openssl_vendor_pristine.ps1", "Phase 98 Windows build workflow no longer invokes the pristine OpenSSL vendor checker.");
@@ -6242,7 +6242,7 @@ internal static class Program
             AssertContains(workflow, "actions/cache@v4", "Phase 98 Windows build workflow does not yet cache the shared OpenSSL vendor build.");
             AssertContains(workflow, "name: LHash-openssl-vendor-x64", "Phase 98 Windows build workflow does not yet upload the shared OpenSSL vendor artifact.");
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 98 Windows build workflow does not yet reuse the shared OpenSSL vendor artifact downstream.");
-            AssertContains(workflow, "OPENSSL_VENDOR_INSTALL_ROOT", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
+            AssertContains(workflow, "LHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 98 README no longer marks MFC as the sole Windows UI mainline.");
             AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 98 README no longer retires the WinUI / CLR bridge from the maintained release line.");

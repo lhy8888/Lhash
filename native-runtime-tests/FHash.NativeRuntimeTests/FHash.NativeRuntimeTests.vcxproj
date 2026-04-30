@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -73,7 +73,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CONSOLE;LHASH_WIN_UI;FHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

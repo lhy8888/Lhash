@@ -105,7 +105,7 @@ static inline void EnsureDefaultHashAlgorithmDescriptorsRegistered()
 
 	RegisterHashAlgorithmDescriptorUnlocked({ "md5", "MD5 (Deprecated)", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "sha1", "SHA1 (Deprecated)", true, false });
-#if defined(FHASH_WITH_OPENSSL_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-256", "SHA-256", true, true });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-384", "SHA-384", true, false });
 	RegisterHashAlgorithmDescriptorUnlocked({ "openssl-sha-512", "SHA-512", true, true });

@@ -16,8 +16,8 @@ public sealed class BenchmarkFrameworkUnitTests
         Assert.Contains("name: Native Benchmarks", workflow, StringComparison.Ordinal);
         Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("push:", workflow, StringComparison.Ordinal);
-        Assert.Contains("/p:FHashBlake3SimdProfile=portable", workflow, StringComparison.Ordinal);
-        Assert.Contains("/p:FHashBlake3SimdProfile=current", workflow, StringComparison.Ordinal);
+        Assert.Contains("/p:LHashBlake3SimdProfile=portable", workflow, StringComparison.Ordinal);
+        Assert.Contains("/p:LHashBlake3SimdProfile=current", workflow, StringComparison.Ordinal);
         Assert.Contains("native-benchmarks-portable.csv", workflow, StringComparison.Ordinal);
         Assert.Contains("native-benchmarks-current.csv", workflow, StringComparison.Ordinal);
         Assert.Contains("windows-11-arm", workflow, StringComparison.Ordinal);
@@ -32,17 +32,17 @@ public sealed class BenchmarkFrameworkUnitTests
 
         Assert.Contains("<ProjectName>FHash.NativeBenchmarks</ProjectName>", benchmarkProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", benchmarkProject, StringComparison.Ordinal);
-        Assert.Contains("FHashBuildFlavorSuffix", benchmarkProject, StringComparison.Ordinal);
+        Assert.Contains("LHashBuildFlavorSuffix", benchmarkProject, StringComparison.Ordinal);
         Assert.DoesNotContain("Debug|Win32", benchmarkProject, StringComparison.Ordinal);
         Assert.DoesNotContain("Release|Win32", benchmarkProject, StringComparison.Ordinal);
 
-        Assert.Contains("FHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("ExcludedFromBuild Condition=\"'$(FHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("LHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\"", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\third_party\blake3\1.8.4\c\blake3_neon.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Include=\"Debug|ARM64\"", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Include=\"Release|ARM64\"", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(FHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("Condition=\"'$(LHashBlake3SimdProfile)'!='portable' and '$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("ExcludedFromBuild Condition=\"'$(Platform)'!='ARM64'\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
 
         Assert.Contains("small-single-64k", benchmarkSource, StringComparison.Ordinal);

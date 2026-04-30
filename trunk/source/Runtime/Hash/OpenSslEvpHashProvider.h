@@ -5,7 +5,7 @@
 
 #include "Common/Global.h"
 
-#if defined(FHASH_WITH_OPENSSL_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/evp.h>
 #else
 typedef struct evp_md_ctx_st EVP_MD_CTX;

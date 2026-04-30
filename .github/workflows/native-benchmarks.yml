@@ -55,7 +55,7 @@ jobs:
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-portable.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-portable.csv'
 
-          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-portable /p:FHashBlake3SimdProfile=portable 2>&1 |
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-portable /p:LHashBlake3SimdProfile=portable 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -81,7 +81,7 @@ jobs:
           $runLogPath = Join-Path $artifactRoot 'run-native-benchmarks-current.log'
           $csvPath = Join-Path $artifactRoot 'native-benchmarks-current.csv'
 
-          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashBuildFlavor=bench-current /p:FHashBlake3SimdProfile=current 2>&1 |
+          & msbuild native-benchmarks/FHash.NativeBenchmarks/FHash.NativeBenchmarks.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.benchmark_platform }} /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashBuildFlavor=bench-current /p:LHashBlake3SimdProfile=current 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
