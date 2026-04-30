@@ -24,8 +24,8 @@ internal static partial class Program
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExtStringsBase.cpp");
-            string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExtStringsZHCN.cpp");
+            string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExtStringsBase.cpp");
+            string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExtStringsZHCN.cpp");
 
             AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
             AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
@@ -34,6 +34,23 @@ internal static partial class Program
             AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest");
             AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
             AssertNonEmptyFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
+            if (Directory.Exists(Path.Combine(repoRoot, @"sub-proj\fHashClrBridge")) ||
+                Directory.Exists(Path.Combine(repoRoot, @"sub-proj\LHashClrBridge")))
+            {
+                failures.Add("The retired CLR bridge should live only under archive/legacy-platforms, not in the active tree.");
+            }
+
+            if (Directory.Exists(Path.Combine(repoRoot, @"sub-proj\fHashWUINative")) ||
+                Directory.Exists(Path.Combine(repoRoot, @"sub-proj\LHashWUINative")))
+            {
+                failures.Add("The retired WinUI native support should live only under archive/legacy-platforms, not in the active tree.");
+            }
+
+            if (Directory.Exists(Path.Combine(repoRoot, @"trunk\source\WinUI")))
+            {
+                failures.Add("trunk/source/WinUI should not remain in the active source tree.");
+            }
+
             AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Security regression no longer records the WinUI/CLR preview surface as reference-only material.");
             AssertContains(archiveReadme, "archived packaging scripts are not referenced by the active GitHub workflows", "Security regression no longer records archived packaging scripts as non-mainline material.");
             AssertContains(archiveReadme, "legacy in-tree SHA256/SHA512 implementations were superseded by the", "Security regression no longer records archived hash implementations as superseded material.");
@@ -166,7 +183,7 @@ internal static partial class Program
         }, failures);
         Run("Shell extension hardening is present", () =>
         {
-            string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShellExt.cpp");
+            string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShellExt.cpp");
             string wuiShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
             string uwpShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
@@ -639,8 +656,8 @@ internal static partial class Program
             AssertContains(mfcRc, "#pragma code_page(65001)", "Legacy MFC resource chain does not yet use UTF-8 resource code pages.");
             AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Legacy MFC version resource block is not yet migrated to Unicode translation metadata.");
             AssertContains(mfcRc2, "VALUE \"Translation\", 0x804, 1200", "Legacy MFC version resource translation is not yet migrated to Unicode metadata.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc"), "#pragma code_page(65001)", "WinRT bridge resource chain does not yet use UTF-8 code pages.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc"), "#pragma code_page(65001)", "WinUI shell extension resource chain does not yet use UTF-8 code pages.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc"), "#pragma code_page(65001)", "UWP shell extension resource chain does not yet use UTF-8 code pages.");
@@ -653,7 +670,7 @@ internal static partial class Program
             AssertContains(dialog, "m_hashContextMenuController.HandleButtonClick(", "WinMFC dialog no longer routes context-menu clicks through the dedicated controller.");
             AssertContains(controller, "WindowsComm::IsWindowsVistaOrGreater()", "WinMFC context-menu controller no longer gates elevation by the modern Windows-version helper.");
             AssertContains(controller, "WindowsUtils::ElevateProcess()", "WinMFC context-menu controller no longer uses the hardened elevation helper.");
-            AssertContains(controller, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash", "WinMFC context-menu controller no longer performs the defensive pre-add cleanup.");
+            AssertContains(controller, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to LHash", "WinMFC context-menu controller no longer performs the defensive pre-add cleanup.");
             AssertContains(controller, "WindowsUtils::AddContextMenu()", "WinMFC context-menu controller no longer uses the shared context-menu add helper.");
             AssertContains(controller, "SetStatusText(addFailedText);", "WinMFC context-menu controller no longer surfaces add failures to the UI.");
             AssertContains(controller, "SetStatusText(removeFailedText);", "WinMFC context-menu controller no longer surfaces remove failures to the UI.");

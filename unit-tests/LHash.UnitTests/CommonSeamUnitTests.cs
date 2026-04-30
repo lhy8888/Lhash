@@ -569,6 +569,9 @@ public sealed class CommonSeamUnitTests
             @"archive\legacy-projects\trunk\fileshashuwp17.sln",
             @"archive\legacy-projects\trunk\package_macos_dmg.sh",
             @"archive\legacy-projects\trunk\package_win_mfc64.py",
+            @"archive\legacy-platforms\sub-proj\fHashClrBridge",
+            @"archive\legacy-platforms\sub-proj\fHashWUINative",
+            @"archive\legacy-platforms\trunk\source\WinUI",
             @"archive\legacy-platforms\trunk\fHashWUIWap\version.h",
             @"archive\legacy-platforms\trunk\fHashUwpWap\version.h",
             @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest",
@@ -588,14 +591,19 @@ public sealed class CommonSeamUnitTests
             @"trunk\fileshashuwp17.sln",
             @"trunk\package_macos_dmg.sh",
             @"trunk\package_win_mfc64.py",
+            @"sub-proj\fHashClrBridge",
+            @"sub-proj\fHashWUINative",
             @"trunk\fHashWUIWap",
             @"trunk\fHashUwpWap",
             @"trunk\source\WinUWP",
             @"trunk\source\OSXUI",
+            @"trunk\source\WinUI",
             @"sub-proj\fHashWinRtBridge",
             @"sub-proj\fHashUwpNative",
             @"sub-proj\fHashUwpShellExt",
-            @"sub-proj\fHashWUIShellExt"
+            @"sub-proj\fHashWUIShellExt",
+            @"sub-proj\LHashClrBridge",
+            @"sub-proj\LHashWUINative"
         ];
 
         foreach (string relativePath in archivedRelativePaths)

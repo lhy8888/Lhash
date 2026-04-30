@@ -2059,6 +2059,16 @@ internal static class Program
             AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\AdvTaskbar.cpp", "WUINative no longer keeps its platform-specific AdvTaskbar layer in the baseline layout.");
             AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\ClipboardHelper.cpp", "WUINative no longer keeps its platform-specific ClipboardHelper layer in the baseline layout.");
             AssertContains(nativeProject, "..\\..\\trunk\\source\\WinCommon\\FileVersionHelper.cpp", "WUINative no longer keeps its platform-specific FileVersionHelper layer in the baseline layout.");
+            if (Directory.Exists(Path.Combine(repoRoot, @"sub-proj\fHashWUINative")) ||
+                Directory.Exists(Path.Combine(repoRoot, @"sub-proj\LHashWUINative")))
+            {
+                failures.Add("Retired WinUI native support should live only under archive/legacy-platforms, not in the active tree.");
+            }
+
+            if (Directory.Exists(Path.Combine(repoRoot, @"trunk\source\WinUI")))
+            {
+                failures.Add("trunk/source/WinUI should not remain in the active tree.");
+            }
         }, failures);
 
         Run("CLR bridge still depends on the native library through linker configuration in the baseline", () =>
@@ -2068,6 +2078,11 @@ internal static class Program
             AssertContains(clrBridge, "fHashWUINative.lib;fHashNativeCore.lib;Version.lib;%(AdditionalDependencies)", "CLR bridge no longer links the WinUI platform layer and native core through AdditionalDependencies in the baseline layout.");
             AssertContains(clrBridge, @"$(ProjectDir)..\fHashWUINative\$(Platform)\$(Configuration)\fHashWUINative\", "CLR bridge no longer resolves the WinUI platform layer through the current output-path coupling.");
             AssertContains(clrBridge, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "CLR bridge no longer resolves the native core through the current output-path coupling.");
+            if (Directory.Exists(Path.Combine(repoRoot, @"sub-proj\fHashClrBridge")) ||
+                Directory.Exists(Path.Combine(repoRoot, @"sub-proj\LHashClrBridge")))
+            {
+                failures.Add("Retired CLR bridge should live only under archive/legacy-platforms, not in the active tree.");
+            }
         }, failures);
 
         Run("Phase 7 routes platform bridges through the shared adapter bridge seam and removes the empty UIBridgeBase compatibility shim", () =>
@@ -2921,7 +2936,7 @@ internal static class Program
             AssertContains(contextController, "#include \"WindowsUtils.h\"", "Phase 22 context controller no longer consumes WindowsUtils for context-menu actions.");
             AssertContains(contextController, "WindowsUtils::ContextMenuExisted()", "Phase 22 context controller does not yet own the context-menu existence check.");
             AssertContains(contextController, "WindowsUtils::ElevateProcess()", "Phase 22 context controller does not yet own the elevation path.");
-            AssertContains(contextController, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash", "Phase 22 context controller does not yet keep the pre-add cleanup path.");
+            AssertContains(contextController, "WindowsUtils::RemoveContextMenu(); // Try to delete all items related to LHash", "Phase 22 context controller does not yet keep the pre-add cleanup path.");
             AssertContains(contextController, "WindowsUtils::AddContextMenu()", "Phase 22 context controller does not yet own context-menu creation.");
             AssertContains(contextController, "WindowsUtils::RemoveContextMenu()", "Phase 22 context controller does not yet own context-menu removal.");
             AssertContains(contextController, "WindowsComm::IsWindowsVistaOrGreater()", "Phase 22 context controller does not yet gate elevation through the modern Windows-version helper.");
@@ -6161,7 +6176,7 @@ internal static class Program
             string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\ReleaseMetadataUnitTests.cs");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
-            string shellRc = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc");
+            string shellRc = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExt.rc");
 
             AssertContains(nativeUtf8Targets, "<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /utf-8.");
             AssertContains(nativeUtf8Targets, "<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /c65001.");
