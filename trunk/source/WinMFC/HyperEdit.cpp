@@ -16,7 +16,7 @@
 //* History:						                                                         *
 //*	========																				 *
 //* 7.8.2016 - Sun Junwen                                                                    *
-//* Change for fHash usage.                                                                  *
+//* Change for LHash usage.                                                                  *
 //********************************************************************************************
 
 #include "stdafx.h"

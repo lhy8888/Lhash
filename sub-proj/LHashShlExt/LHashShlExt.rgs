@@ -2,10 +2,11 @@ HKCR
 {
 	NoRemove AppID
 	{
-		'%APPID%' = s 'fHashShlExt'
-		'fHashShlExt.DLL'
+		'%APPID%' = s 'LHashShlExt'
+		'LHashShlExt.DLL'
 		{
 			val AppID = s '%APPID%'
 		}
 	}
 }
+

@@ -1,8 +1,8 @@
-// fHashShlExt.idl : fHashShlExt 的 IDL 源
+// LHashShlExt.idl : LHashShlExt 的 IDL 源
 //
 
 // 此文件将由 MIDL 工具处理以
-// 产生类型库(fHashShlExt.tlb)和封送处理代码。
+// 产生类型库(LHashShlExt.tlb)和封送处理代码。
 
 import "oaidl.idl";
 import "ocidl.idl";
@@ -12,25 +12,26 @@ import "ocidl.idl";
 	uuid(D182DF41-B00D-4895-9C5E-620E33332062),
 	dual,
 	nonextensible,
-	helpstring("IfHashShellExt 接口"),
+	helpstring("ILHashShellExt 接口"),
 	pointer_default(unique)
 ]
-interface IfHashShellExt : IDispatch{
+interface ILHashShellExt : IDispatch{
 };
 [
 	uuid(06C9350D-8B12-4190-973C-0350988CFCE1),
 	version(1.0),
-	helpstring("fHashShlExt 1.0 类型库")
+	helpstring("LHashShlExt 1.0 类型库")
 ]
-library fHashShlExtLib
+library LHashShlExtLib
 {
 	importlib("stdole2.tlb");
 	[
 		uuid(2B1ADB34-87ED-40E4-84E2-012D298F5370),
-		helpstring("fHashShellExt Class")
+		helpstring("LHashShellExt Class")
 	]
-	coclass fHashShellExt
+	coclass LHashShellExt
 	{
-		[default] interface IfHashShellExt;
+		[default] interface ILHashShellExt;
 	};
 };
+

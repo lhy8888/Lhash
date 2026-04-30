@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
+    <Filter Include="源文�?>
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="头文件">
+    <Filter Include="头文�?>
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="生成的文件">
+    <Filter Include="生成的文�?>
       <UniqueIdentifier>{ba35e8cd-e33e-4c68-a7e9-162642c81de8}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
@@ -26,28 +26,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文�?/Filter>
     </ClCompile>
-    <ClCompile Include="fHashShellExt.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="LHashShellExt.cpp">
+      <Filter>源文�?/Filter>
     </ClCompile>
-    <ClCompile Include="fHashShlExt.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="LHashShlExt.cpp">
+      <Filter>源文�?/Filter>
     </ClCompile>
-    <ClCompile Include="fHashShlExtStringsBase.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="LHashShlExtStringsBase.cpp">
+      <Filter>源文�?/Filter>
     </ClCompile>
-    <ClCompile Include="fHashShlExtStringsZHCN.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="LHashShlExtStringsZHCN.cpp">
+      <Filter>源文�?/Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\WinMFC\ShellExtComm.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文�?/Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文�?/Filter>
     </ClCompile>
-    <ClCompile Include="fHashShlExt_i.c">
-      <Filter>生成的文件</Filter>
+    <ClCompile Include="LHashShlExt_i.c">
+      <Filter>生成的文�?/Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\OsUtils\OsThreadWinApi.cpp">
       <Filter>OsUtils</Filter>
@@ -63,48 +63,48 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fHashShlExt.def">
-      <Filter>源文件</Filter>
+    <None Include="LHashShlExt.def">
+      <Filter>源文�?/Filter>
     </None>
-    <None Include="fHashShellExt.rgs">
+    <None Include="LHashShellExt.rgs">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="fHashShlExt.rgs">
+    <None Include="LHashShlExt.rgs">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="fHashShlExt.idl">
-      <Filter>源文件</Filter>
+    <Midl Include="LHashShlExt.idl">
+      <Filter>源文�?/Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
-      <Filter>头文件</Filter>
+      <Filter>头文�?/Filter>
     </ClInclude>
-    <ClInclude Include="fHashShellExt.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="LHashShellExt.h">
+      <Filter>头文�?/Filter>
     </ClInclude>
-    <ClInclude Include="fHashShlExtStringsBase.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="LHashShlExtStringsBase.h">
+      <Filter>头文�?/Filter>
     </ClInclude>
-    <ClInclude Include="fHashShlExtStringsZHCN.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="LHashShlExtStringsZHCN.h">
+      <Filter>头文�?/Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
+      <Filter>头文�?/Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\WinMFC\ShellExtComm.h">
-      <Filter>头文件</Filter>
+      <Filter>头文�?/Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
+      <Filter>头文�?/Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
+      <Filter>头文�?/Filter>
     </ClInclude>
-    <ClInclude Include="fHashShlExt_i.h">
-      <Filter>生成的文件</Filter>
+    <ClInclude Include="LHashShlExt_i.h">
+      <Filter>生成的文�?/Filter>
     </ClInclude>
     <ClInclude Include="..\..\trunk\source\OsUtils\OsThread.h">
       <Filter>OsUtils</Filter>
@@ -120,10 +120,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="fHashShlExt.rc">
+    <ResourceCompile Include="LHashShlExt.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
 </Project>
+

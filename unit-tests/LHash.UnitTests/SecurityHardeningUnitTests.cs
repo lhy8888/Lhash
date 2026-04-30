@@ -66,7 +66,7 @@ public sealed class SecurityHardeningUnitTests
         string clrSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
         string uwpHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
         string shellCore = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\ShellExplorerCommandCore.h");
-        string legacyShell = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\fHashShellExt.cpp");
+        string legacyShell = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShellExt.cpp");
         string windowsUtils = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\WindowsUtils.cpp");
 
         Assert.Contains("typedef UniqueHandleBase<HANDLE, HandleCloseTraits> UniqueWinHandle;", handleGuard, StringComparison.Ordinal);
@@ -93,7 +93,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", legacyShell, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle hProcfHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidfHash));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("WinHandleGuard::UniqueWinHandle hProcLHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidLHash));", legacyShell, StringComparison.Ordinal);
         Assert.Contains("0, 0, FALSE,", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("0, 0, TRUE,", legacyShell, StringComparison.Ordinal);
 

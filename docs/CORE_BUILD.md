@@ -35,7 +35,7 @@ still optional and are not required for the macOS support contract.
 The core entry point does not include:
 
 - WinUI
-- `fHashClrBridge`
+- `LHashClrBridge`
 - MFC UI targets
 - Linux targets
 - macOS GUI targets
@@ -109,3 +109,4 @@ builds `lhash_cli` on top of the core entry point and publishes a `tar.gz`
 validation artifact containing `lhash`, `README.txt`, `BUILD_INFO.txt`, and
 `SHA256.txt`. It is separate from the core matrix workflow and is not part of
 the Windows MFC release line.
+

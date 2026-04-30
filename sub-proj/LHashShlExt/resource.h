@@ -1,10 +1,10 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by fHashShlExt.rc
+// Used by LHashShlExt.rc
 //
 #define IDS_PROJNAME                    100
-#define IDR_FHASHSHLEXT                 101
-#define IDR_FHASHSHELLEXT               102
+#define IDR_LHASHSHLEXT                 101
+#define IDR_LHASHSHELLEXT               102
 
 // Next default values for new objects
 // 
@@ -16,3 +16,4 @@
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif
+

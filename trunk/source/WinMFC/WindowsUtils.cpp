@@ -378,7 +378,6 @@ namespace WindowsUtils
 		if(lResShellEx == ERROR_SUCCESS)
 		{
 			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("LHashShellExt")));
-			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("fHashShellExt")));
 			keyShellEx.Close();
 		}
 
@@ -421,5 +420,6 @@ namespace WindowsUtils
 	}
 
 }
+
 
 

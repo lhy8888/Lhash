@@ -1,6 +1,6 @@
-; fHashShlExt.def : 定义模块参数。
+; LHashShlExt.def : 定义模块参数。
 
-LIBRARY      "fHashShlExt.DLL"
+LIBRARY      "LHashShlExt.DLL"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE
@@ -8,3 +8,4 @@ EXPORTS
 	DllRegisterServer	PRIVATE
 	DllUnregisterServer	PRIVATE
 	DllInstall		PRIVATE
+

@@ -60,11 +60,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <TargetEnvironment>X64</TargetEnvironment>
       <GenerateStublessProxies>true</GenerateStublessProxies>
-      <TypeLibraryName>$(IntDir)fHashShlExt.tlb</TypeLibraryName>
-      <HeaderFileName>fHashShlExt_i.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)LHashShlExt.tlb</TypeLibraryName>
+      <HeaderFileName>LHashShlExt_i.h</HeaderFileName>
       <DllDataFileName />
-      <InterfaceIdentifierFileName>fHashShlExt_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>fHashShlExt_p.c</ProxyFileName>
+      <InterfaceIdentifierFileName>LHashShlExt_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>LHashShlExt_p.c</ProxyFileName>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -88,7 +88,7 @@
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>Psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName)64.dll</OutputFile>
-      <ModuleDefinitionFile>.\fHashShlExt.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\LHashShlExt.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -100,11 +100,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <TargetEnvironment>X64</TargetEnvironment>
       <GenerateStublessProxies>true</GenerateStublessProxies>
-      <TypeLibraryName>$(IntDir)fHashShlExt.tlb</TypeLibraryName>
-      <HeaderFileName>fHashShlExt_i.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)LHashShlExt.tlb</TypeLibraryName>
+      <HeaderFileName>LHashShlExt_i.h</HeaderFileName>
       <DllDataFileName />
-      <InterfaceIdentifierFileName>fHashShlExt_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>fHashShlExt_p.c</ProxyFileName>
+      <InterfaceIdentifierFileName>LHashShlExt_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>LHashShlExt_p.c</ProxyFileName>
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -126,7 +126,7 @@
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>Psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName)64.dll</OutputFile>
-      <ModuleDefinitionFile>.\fHashShlExt.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\LHashShlExt.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -148,11 +148,11 @@
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="fHashShellExt.cpp" />
-    <ClCompile Include="fHashShlExt.cpp" />
-    <ClCompile Include="fHashShlExtStringsBase.cpp" />
-    <ClCompile Include="fHashShlExtStringsZHCN.cpp" />
-    <ClCompile Include="fHashShlExt_i.c">
+    <ClCompile Include="LHashShellExt.cpp" />
+    <ClCompile Include="LHashShlExt.cpp" />
+    <ClCompile Include="LHashShlExtStringsBase.cpp" />
+    <ClCompile Include="LHashShlExtStringsZHCN.cpp" />
+    <ClCompile Include="LHashShlExt_i.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -166,12 +166,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fHashShellExt.rgs" />
-    <None Include="fHashShlExt.def" />
-    <None Include="fHashShlExt.rgs" />
+    <None Include="LHashShellExt.rgs" />
+    <None Include="LHashShlExt.def" />
+    <None Include="LHashShlExt.rgs" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="fHashShlExt.idl" />
+    <Midl Include="LHashShlExt.idl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\trunk\source\Common\strhelper.h" />
@@ -180,16 +180,16 @@
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsStrings.h" />
     <ClInclude Include="..\..\trunk\source\WinCommon\WindowsStringsInternal.h" />
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="fHashShellExt.h" />
-    <ClInclude Include="fHashShlExtStringsBase.h" />
-    <ClInclude Include="fHashShlExtStringsZHCN.h" />
-    <ClInclude Include="fHashShlExt_i.h" />
+    <ClInclude Include="LHashShellExt.h" />
+    <ClInclude Include="LHashShlExtStringsBase.h" />
+    <ClInclude Include="LHashShlExtStringsZHCN.h" />
+    <ClInclude Include="LHashShlExt_i.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="fHashShlExt.rc" />
+    <ResourceCompile Include="LHashShlExt.rc" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -199,4 +199,5 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
 

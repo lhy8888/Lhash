@@ -394,7 +394,7 @@ bool OsFile::open(void *flag, void *exception)
 	}
 
 	HANDLE openedHandle = INVALID_HANDLE_VALUE;
-#if defined (FHASH_UWP_LIB)
+#if defined (LHASH_UWP_LIB)
 	openedHandle = CreateFileFromAppW(fixedPath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
@@ -669,3 +669,4 @@ void OsFile::close()
 		_fileStatus = CLOSED;
 	}
 }
+

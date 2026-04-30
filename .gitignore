@@ -8,7 +8,7 @@
 !.vscode/*.code-snippets
 !*.code-workspace
 browser-submit-tmp/
-security-tests/ISSUE_REPORT_lhy8888_fhash.md
+security-tests/ISSUE_REPORT_lhy8888_lhash.md
 security-tests/**/bin/
 security-tests/**/obj/
 refactor-tests/**/bin/

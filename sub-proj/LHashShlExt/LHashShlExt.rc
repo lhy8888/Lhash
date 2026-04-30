@@ -1,4 +1,4 @@
-Ôªø// Microsoft Visual C++ generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -17,7 +17,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ‰∏≠Êñá(‰∏≠Âçé‰∫∫Ê∞ëÂÖ±ÂíåÂõΩ) resources
+// ÷–Œƒ(÷–ª™»À√Òπ≤∫Õπ˙) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 #ifdef _WIN32
@@ -47,7 +47,7 @@ END
 
 3 TEXTINCLUDE
 BEGIN
-    "1 TYPELIB ""fHashShlExt.tlb""\r\n"
+    "1 TYPELIB ""LHashShlExt.tlb""\r\n"
     "\0"
 END
 
@@ -79,9 +79,9 @@ BEGIN
             VALUE "CompanyName", "LHY"
             VALUE "FileDescription", "ShellExt for LHash"
             VALUE "FileVersion", STR_VERSION_LEGACY
-            VALUE "InternalName", "fHashShlExt.dll"
+            VALUE "InternalName", "LHashShlExt.dll"
             VALUE "LegalCopyright", "(C) 2026- LHY."
-            VALUE "OriginalFilename", "fHashShlExt.dll"
+            VALUE "OriginalFilename", "LHashShlExt.dll"
             VALUE "ProductName", "ShellExt for LHash"
             VALUE "ProductVersion", STR_VERSION_LEGACY
         END
@@ -98,8 +98,8 @@ END
 // REGISTRY
 //
 
-IDR_FHASHSHLEXT         REGISTRY                "fHashShlExt.rgs"
-IDR_FHASHSHELLEXT       REGISTRY                "fHashShellExt.rgs"
+IDR_LHASHSHLEXT         REGISTRY                "LHashShlExt.rgs"
+IDR_LHASHSHELLEXT       REGISTRY                "LHashShellExt.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -111,7 +111,7 @@ BEGIN
     IDS_PROJNAME            "LHashShlExt"
 END
 
-#endif    // ‰∏≠Êñá(‰∏≠Âçé‰∫∫Ê∞ëÂÖ±ÂíåÂõΩ) resources
+#endif    // ÷–Œƒ(÷–ª™»À√Òπ≤∫Õπ˙) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -121,9 +121,10 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-1 TYPELIB "fHashShlExt.tlb"
+1 TYPELIB "LHashShlExt.tlb"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 

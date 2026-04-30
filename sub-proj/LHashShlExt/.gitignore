@@ -361,6 +361,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-fHashShlExt_i.c
-fHashShlExt_i.h
-fHashShlExt_p.c
+LHashShlExt_i.c
+LHashShlExt_i.h
+LHashShlExt_p.c
+

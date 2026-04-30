@@ -26,7 +26,7 @@ namespace
 				rootPath.erase(rootPath.length() - 1);
 			}
 
-			rootPath += _T("\\fhash-native-security-tests");
+			rootPath += _T("\\lhash-native-security-tests");
 			::CreateDirectory(rootPath.c_str(), NULL);
 
 			std::basic_ostringstream<TCHAR> pathBuilder;
@@ -160,3 +160,4 @@ void RegisterHashEngineSecurityRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions", &OsFile_RejectsLeafPathsNestedUnderDirectoryJunctions });
 	tests.push_back({ "OsFile_ReportsSharingViolationsForLockedFiles", &OsFile_ReportsSharingViolationsForLockedFiles });
 }
+

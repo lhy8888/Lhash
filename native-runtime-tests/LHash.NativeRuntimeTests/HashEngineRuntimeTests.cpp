@@ -208,7 +208,7 @@ namespace
 				rootPath.erase(rootPath.length() - 1);
 			}
 
-			rootPath += _T("\\fhash-native-runtime-tests");
+			rootPath += _T("\\lhash-native-runtime-tests");
 			::CreateDirectory(rootPath.c_str(), NULL);
 
 			std::basic_ostringstream<TCHAR> pathBuilder;
@@ -2076,3 +2076,4 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", &RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent });
 	tests.push_back({ "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", &RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles });
 }
+

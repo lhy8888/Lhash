@@ -10,8 +10,8 @@ public sealed class ReleaseMetadataUnitTests
 
         Assert.Contains("#define NUM_VERSION_LEGACY 1,12,4,0", versionHeader, StringComparison.Ordinal);
         Assert.Contains("#define STR_VERSION_LEGACY \"1.12.4.0\"", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("if (fHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
-        Assert.Contains("fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
+        Assert.Contains("if (LHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
+        Assert.Contains("LHashVersion = LHashVersion.Left(LHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class ReleaseMetadataUnitTests
         string shellProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashShlExt\LHashShlExt.vcxproj");
         string legacyRc = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\fileshash.rc");
         string legacyRc2 = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\res\fileshash.rc2");
-        string shellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\fHashShlExt.rc");
+        string shellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShlExt.rc");
         string bridgeRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc");
         string wuiShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc");
         string uwpShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc");
@@ -264,3 +264,4 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("GPL-2.0-only with an OpenSSL linking exception", readme, StringComparison.Ordinal);
     }
 }
+

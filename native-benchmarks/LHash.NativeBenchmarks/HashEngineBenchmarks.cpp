@@ -94,7 +94,7 @@ namespace
 				rootPath.erase(rootPath.length() - 1);
 			}
 
-			rootPath += _T("\\fhash-native-benchmarks");
+			rootPath += _T("\\lhash-native-benchmarks");
 			::CreateDirectory(rootPath.c_str(), NULL);
 
 			std::basic_ostringstream<TCHAR> pathBuilder;
@@ -430,3 +430,4 @@ bool WriteNativeBenchmarkCsv(const std::string& csvOutputPath, const std::vector
 
 	return output.good();
 }
+

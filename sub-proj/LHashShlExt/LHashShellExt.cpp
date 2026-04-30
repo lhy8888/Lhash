@@ -1,7 +1,7 @@
-ï»¿// fHashShellExt.cpp : CfHashShellExt çš„å®žçŽ°
+// LHashShellExt.cpp : CLHashShellExt µÄÊµÏÖ
 
 #include "stdafx.h"
-#include "fHashShellExt.h"
+#include "LHashShellExt.h"
 
 #include <string>
 #include <vector>
@@ -13,8 +13,8 @@
 #include "WinMFC/ShellExtComm.h"
 #include "WinCommon/WinHandleGuard.h"
 #include "WinCommon/WindowsStrings.h"
-#include "fHashShlExtStringsBase.h"
-#include "fHashShlExtStringsZHCN.h"
+#include "LHashShlExtStringsBase.h"
+#include "LHashShlExtStringsZHCN.h"
 
 using namespace std;
 using namespace sunjwbase;
@@ -43,15 +43,15 @@ namespace
 	}
 }
 
-// CfHashShellExt
-CfHashShellExt::CfHashShellExt()
+// CLHashShellExt
+CLHashShellExt::CLHashShellExt()
 {
-	RegisterStringsForLang(-1, new fHashShlExtStringsBase());
-	RegisterStringsForLang(2052, new fHashShlExtStringsZHCN());
+	RegisterStringsForLang(-1, new LHashShlExtStringsBase());
+	RegisterStringsForLang(2052, new LHashShlExtStringsZHCN());
 }
 
-// CfHashShellExt
-HRESULT CfHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
+// CLHashShellExt
+HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 								  LPDATAOBJECT pDataObj,
 								  HKEY hProgID)
 {
@@ -75,7 +75,7 @@ HRESULT CfHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 		return E_INVALIDARG;
 	}
 
-	// Sanity check â€“ make sure there is at least one filename.
+	// Sanity check ¨C make sure there is at least one filename.
 	UINT uNumFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 	HRESULT hr = S_OK;
 
@@ -102,7 +102,7 @@ HRESULT CfHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 	GlobalUnlock(stg.hGlobal);
 	ReleaseStgMedium(&stg);
 
-	// Try to find fHash
+	// Try to find LHash
 	CRegKey key;
 	LPCTSTR lpszKeyName = SHELL_EXT_REGESTRY;
 	LONG lResult;
@@ -119,14 +119,14 @@ HRESULT CfHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 	}
 	key.Close();
 
-	m_fHashPath = szPath;
-	if(m_fHashPath == _T(""))
+	m_LHashPath = szPath;
+	if(m_LHashPath == _T(""))
 		hr = E_INVALIDARG;
 
 	return hr;
 }
 
-HRESULT CfHashShellExt::QueryContextMenu(
+HRESULT CLHashShellExt::QueryContextMenu(
 						HMENU hmenu, UINT uMenuIndex, UINT uidFirstCmd,
 						UINT uidLastCmd, UINT uFlags)
 {
@@ -142,7 +142,7 @@ HRESULT CfHashShellExt::QueryContextMenu(
 	return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 1);
 }
 
-HRESULT CfHashShellExt::GetCommandString(
+HRESULT CLHashShellExt::GetCommandString(
 						  UINT_PTR idCmd, UINT uFlags, UINT* pwReserved,
 						  LPSTR pszName, UINT cchMax)
 {
@@ -176,7 +176,7 @@ HRESULT CfHashShellExt::GetCommandString(
   return E_INVALIDARG;
 }
 
-HRESULT CfHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
+HRESULT CLHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 {
 	// If lpVerb really points to a string, ignore this function call and bail out.
 	if(0 != HIWORD(pCmdInfo->lpVerb))
@@ -187,12 +187,12 @@ HRESULT CfHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
     {
     case 0:
 		{
-			HWND hWndfHash = FindfHashWindow();
-			if (hWndfHash == NULL) // Launch and calculate...
-				return LaunchfHashByCommandLine(pCmdInfo, TRUE);
+			HWND hWndLHash = FindLHashWindow();
+			if (hWndLHash == NULL) // Launch and calculate...
+				return LaunchLHashByCommandLine(pCmdInfo, TRUE);
 
-			// Found fHash, send message.
-			SendFilesTofHash(pCmdInfo, hWndfHash);
+			// Found LHash, send message.
+			SendFilesToLHash(pCmdInfo, hWndLHash);
 			return S_OK;
 		}
 		break;
@@ -205,11 +205,11 @@ HRESULT CfHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 	return S_OK;
 }
 
-HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo, BOOL bWithFiles)
+HRESULT CLHashShellExt::LaunchLHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo, BOOL bWithFiles)
 {
-	tstring tstrfHashPath = m_fHashPath;
-	// fHash.exe
-	tstring tstrCmd = _T("\"") + tstrfHashPath + _T("\"");
+	tstring tstrLHashPath = m_LHashPath;
+	// LHash.exe
+	tstring tstrCmd = _T("\"") + tstrLHashPath + _T("\"");
 
 	if (bWithFiles == TRUE)
 	{
@@ -247,7 +247,7 @@ HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 	sInfo.cb = sizeof(sInfo);
 	PROCESS_INFORMATION pInfo = {0};
 
-	BOOL bCreated = CreateProcess(tstrfHashPath.c_str(), pszCmd,
+	BOOL bCreated = CreateProcess(tstrLHashPath.c_str(), pszCmd,
 		0, 0, FALSE,
 		NORMAL_PRIORITY_CLASS,
 		0, 0, &sInfo, &pInfo);
@@ -265,37 +265,37 @@ HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 	return S_OK;
 }
 
-HWND CfHashShellExt::FindfHashWindow()
+HWND CLHashShellExt::FindLHashWindow()
 {
-	HWND hWndfHash = NULL;
-	hWndfHash = FindWindow(_T("#32770"), _T("LHash"));
-	if (hWndfHash == NULL)
+	HWND hWndLHash = NULL;
+	hWndLHash = FindWindow(_T("#32770"), _T("LHash"));
+	if (hWndLHash == NULL)
 		return NULL;
 
-	DWORD dwPidfHash = 0;
-	GetWindowThreadProcessId(hWndfHash, &dwPidfHash);
-	WinHandleGuard::UniqueWinHandle hProcfHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidfHash));
-	if (!hProcfHash.isValid())
+	DWORD dwPidLHash = 0;
+	GetWindowThreadProcessId(hWndLHash, &dwPidLHash);
+	WinHandleGuard::UniqueWinHandle hProcLHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidLHash));
+	if (!hProcLHash.isValid())
 		return NULL;
 
 	std::vector<TCHAR> exePath(32768, 0);
 	DWORD cchExecutable = (DWORD)exePath.size();
-	if (!QueryFullProcessImageName(hProcfHash.get(), 0, exePath.data(), &cchExecutable))
+	if (!QueryFullProcessImageName(hProcLHash.get(), 0, exePath.data(), &cchExecutable))
 	{
 		return NULL;
 	}
 
 
-	tstring tstrProcfHashPath(exePath.data());
-	if (tstrProcfHashPath == m_fHashPath)
-		return hWndfHash;
+	tstring tstrProcLHashPath(exePath.data());
+	if (tstrProcLHashPath == m_LHashPath)
+		return hWndLHash;
 
 	return NULL;
 }
 
-void CfHashShellExt::SendFilesTofHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndfHash)
+void CLHashShellExt::SendFilesToLHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndLHash)
 {
-	if (hWndfHash == NULL)
+	if (hWndLHash == NULL)
 		return;
 
 	tstring tstrFiles;
@@ -324,9 +324,10 @@ void CfHashShellExt::SendFilesTofHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndf
 	cdFiles.cbData = (DWORD)(cmdLen * sizeof(TCHAR));
 	cdFiles.lpData = (PVOID)(tstrFiles.c_str());
 
-	SendMessage(hWndfHash,
+	SendMessage(hWndLHash,
 				WM_COPYDATA,
 				(WPARAM)pCmdInfo->hwnd,
 				(LPARAM)&cdFiles);
 }
+
 
