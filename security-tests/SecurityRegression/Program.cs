@@ -24,8 +24,8 @@ internal static partial class Program
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string fileshashProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsBase.cpp");
-            string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExtStringsZHCN.cpp");
+            string legacyShellStrings = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExtStringsBase.cpp");
+            string legacyShellStringsZh = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExtStringsZHCN.cpp");
 
             AssertContains(fileshashProject, "<ProjectName>LHash</ProjectName>", "Legacy project still exposes the old project name.");
             AssertContains(fileshashProject, "$(OutDir)$(ProjectName).exe", "Legacy project no longer emits the unified LHash.exe output.");
@@ -166,7 +166,7 @@ internal static partial class Program
         }, failures);
         Run("Shell extension hardening is present", () =>
         {
-            string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShellExt.cpp");
+            string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShellExt.cpp");
             string wuiShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\ExplorerCommandVerb.cpp");
             string uwpShell = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\ExplorerCommandVerb.cpp");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
@@ -234,7 +234,7 @@ internal static partial class Program
             string strhelper = ReadRepoFile(repoRoot, @"trunk\source\Common\strhelper.cpp");
             string uiBridgeHeader = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.h");
             string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
 
             AssertContains(osFileHeader, "bool isHashTargetAllowed(void *exception = NULL);", "OsFile no longer exposes the hash-target policy hook.");
             AssertContains(osFilePosixDarwin, "static const int kNoFollowFlag = O_NOFOLLOW;", "POSIX Darwin file handling no longer defines the no-follow contract flag.");
@@ -333,9 +333,9 @@ internal static partial class Program
             string registryCore = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashAlgorithmRegistryCore.h");
             string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
-            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string securityRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string securityHarness = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
@@ -389,8 +389,8 @@ internal static partial class Program
             string xxh3ProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
             string crc32cProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
             string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
-            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string xxhashNote = ReadRepoFile(repoRoot, @"third_party\xxhash\0.8.3\README.LHash.md");
             string crc32cNote = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\README.LHash.md");
@@ -447,8 +447,8 @@ internal static partial class Program
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string providerHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
-            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string runtimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string clrBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
             string uwpBridgeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj");
@@ -614,10 +614,10 @@ internal static partial class Program
         {
             string nativeUtf8Targets = ReadRepoFile(repoRoot, @"NativeUtf8.targets");
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
-            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
-            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj");
+            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\LHash.NativeBenchmarks\LHash.NativeBenchmarks.vcxproj");
+            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExt.vcxproj");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
 
@@ -639,8 +639,8 @@ internal static partial class Program
             AssertContains(mfcRc, "#pragma code_page(65001)", "Legacy MFC resource chain does not yet use UTF-8 resource code pages.");
             AssertContains(mfcRc2, "BLOCK \"080404b0\"", "Legacy MFC version resource block is not yet migrated to Unicode translation metadata.");
             AssertContains(mfcRc2, "VALUE \"Translation\", 0x804, 1200", "Legacy MFC version resource translation is not yet migrated to Unicode metadata.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
-            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc"), "#pragma code_page(65001)", "Legacy shell extension resource chain does not yet use UTF-8 code pages.");
+            AssertContains(ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc"), "VALUE \"Translation\", 0x804, 1200", "Legacy shell extension version resource translation is not yet migrated to Unicode metadata.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc"), "#pragma code_page(65001)", "WinRT bridge resource chain does not yet use UTF-8 code pages.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc"), "#pragma code_page(65001)", "WinUI shell extension resource chain does not yet use UTF-8 code pages.");
             AssertContains(ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc"), "#pragma code_page(65001)", "UWP shell extension resource chain does not yet use UTF-8 code pages.");

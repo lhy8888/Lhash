@@ -54,7 +54,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore unit test project
-        run: dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj
+        run: dotnet restore unit-tests/LHash.UnitTests/LHash.UnitTests.csproj
 
       - name: Run unit tests
         shell: powershell
@@ -62,10 +62,10 @@ jobs:
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
 
-          & dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=FHash.UnitTests.trx" --results-directory $artifactRoot
+          & dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=LHash.UnitTests.trx" --results-directory $artifactRoot
 
           if ($LASTEXITCODE -ne 0) {
-            throw "dotnet test failed with exit code $LASTEXITCODE. See artifacts/FHash.UnitTests.trx for details."
+            throw "dotnet test failed with exit code $LASTEXITCODE. See artifacts/LHash.UnitTests.trx for details."
           }
 
       - name: Upload unit test artifacts
@@ -74,7 +74,7 @@ jobs:
         with:
           name: LHash-unit-tests
           path: |
-            artifacts/FHash.UnitTests.trx
+            artifacts/LHash.UnitTests.trx
           if-no-files-found: warn
 
   prepare-openssl-vendor-x64:
@@ -156,16 +156,16 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild native-runtime-tests/LHash.NativeRuntimeTests/LHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
-            throw "MSBuild failed while building FHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
+            throw "MSBuild failed while building LHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
           }
 
-          $exePath = 'native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe'
+          $exePath = 'native-runtime-tests\LHash.NativeRuntimeTests\x64\Release\LHash.NativeRuntimeTests.exe'
           if (-not (Test-Path $exePath)) {
-            throw 'Native runtime test executable was not produced in native-runtime-tests\\FHash.NativeRuntimeTests\\x64\\Release.'
+            throw 'Native runtime test executable was not produced in native-runtime-tests\\LHash.NativeRuntimeTests\\x64\\Release.'
           }
 
           & $exePath 2>&1 | Tee-Object -FilePath $runLogPath

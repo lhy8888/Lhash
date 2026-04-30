@@ -2026,10 +2026,10 @@ internal static class Program
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
             string legacyFilters = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj.filters");
             string legacySolution = ReadRepoFile(repoRoot, @"trunk\fileshash15.sln");
-            string desktopNativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string desktopNativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string nativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
 
-            AssertContains(desktopNativeProject, "<ProjectName>fHashNativeCore</ProjectName>", "Desktop native core project is missing.");
+            AssertContains(desktopNativeProject, "<ProjectName>LHashNativeCore</ProjectName>", "Desktop native core project is missing.");
             AssertContains(desktopNativeProject, "..\\..\\trunk\\source\\Algorithms\\MD5.cpp", "Desktop native core project does not yet own MD5.cpp.");
             AssertContains(desktopNativeProject, "..\\..\\trunk\\source\\Common\\HashEngine.cpp", "Desktop native core project does not yet own HashEngine.cpp.");
             AssertContains(desktopNativeProject, "..\\..\\trunk\\source\\OsUtils\\OsFileWinApi.cpp", "Desktop native core project does not yet own OsFileWinApi.cpp.");
@@ -2044,14 +2044,14 @@ internal static class Program
             AssertDoesNotContain(legacyProject, "source\\OsUtils\\OsFileWinApi.cpp", "Legacy desktop project still directly compiles OsFileWinApi.cpp instead of linking the desktop native core.");
             AssertDoesNotContain(legacyProject, "source\\OsUtils\\OsThreadWinApi.cpp", "Legacy desktop project still directly compiles OsThreadWinApi.cpp instead of linking the desktop native core.");
             AssertDoesNotContain(legacyProject, "source\\WinCommon\\WindowsComm.cpp", "Legacy desktop project still directly compiles WindowsComm.cpp instead of linking the desktop native core.");
-            AssertContains(legacyProject, "<AdditionalDependencies>fHashNativeCore.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>", "Legacy desktop project does not yet link the extracted desktop native core library.");
-            AssertContains(legacyProject, "<AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\\$(Configuration)\\fHashNativeCore\\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>", "Legacy desktop project does not yet resolve the extracted desktop native core library through the current output-path coupling.");
+            AssertContains(legacyProject, "<AdditionalDependencies>LHashNativeCore.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>", "Legacy desktop project does not yet link the extracted desktop native core library.");
+            AssertContains(legacyProject, "<AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\\$(Configuration)\\LHashNativeCore\\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>", "Legacy desktop project does not yet resolve the extracted desktop native core library through the current output-path coupling.");
 
             AssertDoesNotContain(legacyFilters, "source\\Algorithms\\MD5.cpp", "Legacy desktop filters still expose MD5.cpp even though the source moved to the desktop native core project.");
             AssertDoesNotContain(legacyFilters, "source\\Common\\HashEngine.cpp", "Legacy desktop filters still expose HashEngine.cpp even though the source moved to the desktop native core project.");
             AssertDoesNotContain(legacyFilters, "source\\OsUtils\\OsFileWinApi.cpp", "Legacy desktop filters still expose OsFileWinApi.cpp even though the source moved to the desktop native core project.");
 
-            AssertContains(legacySolution, "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"LHashNativeCore\", \"..\\sub-proj\\fHashNativeCore\\fHashNativeCore.vcxproj\", \"{E500D56F-3EE3-403C-A24C-034822AE3DF5}\"", "fileshash15.sln does not yet include the extracted desktop native core project.");
+            AssertContains(legacySolution, "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"LHashNativeCore\", \"..\\sub-proj\\LHashNativeCore\\LHashNativeCore.vcxproj\", \"{E500D56F-3EE3-403C-A24C-034822AE3DF5}\"", "fileshash15.sln does not yet include the extracted desktop native core project.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}", "fileshash15.sln does not yet make the legacy desktop app depend on the extracted desktop native core project.");
             AssertDoesNotContain(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Debug|Win32.ActiveCfg = Debug|Win32", "fileshash15.sln still carries the retired desktop native core Win32 debug mapping.");
             AssertContains(legacySolution, "{E500D56F-3EE3-403C-A24C-034822AE3DF5}.Release|x64.Build.0 = Release|x64", "fileshash15.sln is missing the desktop native core x64 release build mapping.");
@@ -2316,8 +2316,8 @@ internal static class Program
             string enginePreparation = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEnginePreparation.cpp");
             string engineResult = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineResult.cpp");
             string resultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
@@ -3351,9 +3351,9 @@ internal static class Program
 
         Run("Phase 30 introduces an independent xUnit unit-test framework and runs it in CI", () =>
         {
-            string unitTestProject = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\FHash.UnitTests.csproj");
-            string unitTestContext = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\RepositoryTestContext.cs");
-            string unitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\CommonSeamUnitTests.cs");
+            string unitTestProject = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\LHash.UnitTests.csproj");
+            string unitTestContext = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\RepositoryTestContext.cs");
+            string unitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\CommonSeamUnitTests.cs");
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
 
             AssertContains(unitTestProject, "<PackageReference Include=\"Microsoft.NET.Test.Sdk\"", "Phase 30 unit test project is missing Microsoft.NET.Test.Sdk.");
@@ -3365,8 +3365,8 @@ internal static class Program
             AssertContains(unitTests, "Workflow_RunsIndependentUnitTests_And_PreparesNativeOpenSslVendor_Once", "Phase 30 unit tests do not yet cover CI gating for the new unit framework.");
             AssertContains(unitTestContext, "FindRepoRoot()", "Phase 30 unit test helper is missing repository-root discovery.");
             AssertContains(workflow, "unit-tests:", "Workflow does not yet declare the phase 30 unit-tests job.");
-            AssertContains(workflow, "dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj", "Workflow does not yet restore the phase 30 unit test project.");
-            AssertContains(workflow, "dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore", "Workflow does not yet run the phase 30 unit test project.");
+            AssertContains(workflow, "dotnet restore unit-tests/LHash.UnitTests/LHash.UnitTests.csproj", "Workflow does not yet restore the phase 30 unit test project.");
+            AssertContains(workflow, "dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release --no-restore", "Workflow does not yet run the phase 30 unit test project.");
             AssertInOrder(
                 workflow,
                 [
@@ -3874,15 +3874,15 @@ internal static class Program
         {
             string workflow = ReadRepoFile(repoRoot, @".github\workflows\windows-build.yml");
             string readme = ReadRepoFile(repoRoot, @"README.md");
-            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeRuntimeMain = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\NativeTestMain.cpp");
+            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeMain = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\NativeTestMain.cpp");
             string solution = ReadRepoFile(repoRoot, @"trunk\fileshash15.sln");
             string gitignore = ReadRepoFile(repoRoot, @".gitignore");
 
-            AssertContains(nativeRuntimeProject, "<ProjectName>FHash.NativeRuntimeTests</ProjectName>", "Phase 47 native runtime test project does not yet exist.");
+            AssertContains(nativeRuntimeProject, "<ProjectName>LHash.NativeRuntimeTests</ProjectName>", "Phase 47 native runtime test project does not yet exist.");
             AssertContains(nativeRuntimeProject, "<ConfigurationType>Application</ConfigurationType>", "Phase 47 native runtime test project is not a standalone executable.");
-            AssertContains(nativeRuntimeProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference LHashNativeCore.");
+            AssertContains(nativeRuntimeProject, @"..\..\sub-proj\LHashNativeCore\LHashNativeCore.vcxproj", "Phase 47 native runtime tests do not yet reference LHashNativeCore.");
             AssertContains(nativeRuntimeProject, "Version.lib;%(AdditionalDependencies)", "Phase 47 native runtime test project does not yet link Version.lib for WindowsComm version helpers.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesExpectedDigestsForSingleFile", "Phase 47 native runtime tests do not yet cover the main HashThreadFunc runtime path.");
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", "Phase 47 native runtime tests do not yet cover multi-file runtime progress and result storage.");
@@ -3909,8 +3909,8 @@ internal static class Program
             AssertContains(gitignore, "native-runtime-tests/**/x64/", "Phase 47 .gitignore does not yet ignore native runtime test build outputs.");
 
             AssertContains(workflow, "native-runtime-tests:", "Phase 47 workflow does not yet define a native-runtime-tests job.");
-            AssertContains(workflow, "msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj", "Phase 47 workflow does not yet build the native runtime test project.");
-            AssertContains(workflow, @"native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
+            AssertContains(workflow, "msbuild native-runtime-tests/LHash.NativeRuntimeTests/LHash.NativeRuntimeTests.vcxproj", "Phase 47 workflow does not yet build the native runtime test project.");
+            AssertContains(workflow, @"native-runtime-tests\LHash.NativeRuntimeTests\x64\Release\LHash.NativeRuntimeTests.exe", "Phase 47 workflow does not yet execute the native runtime test binary.");
             AssertContains(workflow, "prepare-openssl-vendor-x64:", "Phase 47 workflow does not yet define the shared OpenSSL vendor preparation job.");
             AssertContains(workflow, "Restore cached OpenSSL vendor x64", "Phase 47 workflow does not yet restore the shared OpenSSL vendor cache.");
             AssertContains(workflow, "actions/cache@v4", "Phase 47 workflow does not yet cache the shared OpenSSL vendor build.");
@@ -3982,8 +3982,8 @@ internal static class Program
             string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string hashSchedulerDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(hashEngine, "RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", "Phase 49 HashEngine.cpp does not yet delegate orchestration to the extracted scheduler seam.");
@@ -4008,8 +4008,8 @@ internal static class Program
             string hashScheduler = ReadRepoFile(repoRoot, @"trunk\source\Common\HashScheduler.cpp");
             string hashSchedulerDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4038,8 +4038,8 @@ internal static class Program
             string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string hashResultPublisherHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
 
@@ -4079,8 +4079,8 @@ internal static class Program
             string hashDigestSinglePass = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp");
             string hashDigestSinglePassHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4139,8 +4139,8 @@ internal static class Program
             string hashDigestUpdater = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp");
             string hashDigestUpdaterHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4183,8 +4183,8 @@ internal static class Program
             string hashProgressTracker = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.cpp");
             string hashProgressTrackerHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashProgressTracker.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4219,8 +4219,8 @@ internal static class Program
             string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
             string hashDigestQueueHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4260,8 +4260,8 @@ internal static class Program
             string hashDigestSinglePass = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp");
             string hashDigestSinglePassHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4294,8 +4294,8 @@ internal static class Program
             string hashDigestExecution = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp");
             string hashDigestExecutionHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4326,8 +4326,8 @@ internal static class Program
             string hashFileAttemptWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.cpp");
             string hashFileAttemptWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4358,8 +4358,8 @@ internal static class Program
             string hashSchedulerDispatch = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.cpp");
             string hashSchedulerDispatchHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSchedulerDispatch.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4391,8 +4391,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4442,8 +4442,8 @@ internal static class Program
             string hashFileVersionResolver = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileVersionResolver.cpp");
             string hashFileVersionResolverHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileVersionResolver.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4479,8 +4479,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4531,8 +4531,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4577,8 +4577,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4623,8 +4623,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4675,8 +4675,8 @@ internal static class Program
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
             string hashJobExecutionPlanHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4755,8 +4755,8 @@ internal static class Program
             string hashDigestExecution = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.cpp");
             string hashDigestExecutionHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestExecution.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4820,8 +4820,8 @@ internal static class Program
             string hashResultPublisher = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultPublisher.cpp");
             string hashSuccessfulFileCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4934,8 +4934,8 @@ internal static class Program
             string hashDigestContextOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestContextOps.h");
             string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -4998,8 +4998,8 @@ internal static class Program
             string hashFileSizeAccounting = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.cpp");
             string hashFileSizeAccountingHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileSizeAccounting.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5038,8 +5038,8 @@ internal static class Program
             string hashFileAttemptStateOps = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.cpp");
             string hashFileAttemptStateOpsHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptStateOps.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5078,8 +5078,8 @@ internal static class Program
             string hashPreScanSizeProbe = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeProbe.cpp");
             string hashPreScanSizeProbeHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeProbe.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5110,8 +5110,8 @@ internal static class Program
             string hashPreScanSizeAccounting = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.cpp");
             string hashPreScanSizeAccountingHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanSizeAccounting.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5142,8 +5142,8 @@ internal static class Program
             string hashPreScanWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.cpp");
             string hashPreScanWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreScanWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5175,8 +5175,8 @@ internal static class Program
             string hashPreparationWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.cpp");
             string hashPreparationWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashPreparationWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5209,8 +5209,8 @@ internal static class Program
             string hashFileResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.cpp");
             string hashFileResultWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileResultWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5249,8 +5249,8 @@ internal static class Program
             string hashFileAttemptCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp");
             string hashFileAttemptCompletionWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashFileAttemptCompletionWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5289,8 +5289,8 @@ internal static class Program
             string hashSuccessfulFileCompletionWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
             string hashSuccessfulFileCompletionWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5331,8 +5331,8 @@ internal static class Program
             string hashErrorResultWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.cpp");
             string hashErrorResultWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashErrorResultWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5365,8 +5365,8 @@ internal static class Program
             string hashResultEventWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.cpp");
             string hashResultEventWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashResultEventWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5414,8 +5414,8 @@ internal static class Program
             string hashJobLifecycleWorkflow = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.cpp");
             string hashJobLifecycleWorkflowHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobLifecycleWorkflow.h");
             string hashEngineInternal = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5460,8 +5460,8 @@ internal static class Program
             string hashDigestQueue = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestQueue.cpp");
             string hashDigestSinglePass = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestSinglePass.cpp");
             string hashJobExecutionPlan = ReadRepoFile(repoRoot, @"trunk\source\Common\HashJobExecutionPlan.cpp");
-            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj.filters");
+            string nativeProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string nativeFilters = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj.filters");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string uwpNativeFilters = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj.filters");
             string wuiNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
@@ -5586,8 +5586,8 @@ internal static class Program
             string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
             string hashDigestOperationRegistryHeader = ReadHashDigestOperationRegistrySeams(repoRoot);
             string hashDigestUpdater = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestUpdater.cpp");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
 
             AssertContains(hashDigestOperationRegistryHeader, "bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", "Phase 85 HashDigestOperationRegistry.h does not yet expose descriptor-completeness validation.");
             AssertContainsAny(hashDigestOperationRegistryHeader,
@@ -5623,9 +5623,9 @@ internal static class Program
         Run("Phase 86 derives digest-operation snapshots from the algorithm registry seam", () =>
         {
             string hashDigestOperationRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
-            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashContractUnitTests.cs");
 
             AssertContains(hashDigestOperationRegistry, "GetMutableHashDigestOperationDescriptorStorage()", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose dedicated descriptor storage.");
             AssertContains(hashDigestOperationRegistry, "RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor)", "Phase 86 HashDigestOperationRegistry.cpp does not yet expose descriptor registration through a dedicated seam.");
@@ -5714,9 +5714,9 @@ internal static class Program
         {
             string hashAlgorithmRegistry = ReadHashAlgorithmRegistrySeams(repoRoot);
             string hashRequest = ReadRepoFile(repoRoot, @"trunk\source\Domain\HashRequest.h");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
-            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string hashContractUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashContractUnitTests.cs");
 
             AssertContains(hashAlgorithmRegistry, "GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index lookup.");
             AssertContains(hashAlgorithmRegistry, "TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", "Phase 88 HashAlgorithmRegistry.h does not yet expose descriptor-id index probe helpers.");
@@ -5738,8 +5738,8 @@ internal static class Program
             string digestMetadataAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestMetadataAccess.h");
             string digestValueAccess = ReadRepoFile(repoRoot, @"trunk\source\Common\ResultDigestValueAccess.h");
             string global = ReadRepoFile(repoRoot, @"trunk\source\Common\Global.h");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
 
             AssertContains(registryCore, "RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", "Phase 89 HashAlgorithmRegistryCore.h does not yet expose descriptor registration for new algorithms.");
             AssertContains(registryCore, "ClearHashAlgorithmDescriptorsForTesting()", "Phase 89 HashAlgorithmRegistryCore.h does not yet expose registry reset for extension tests.");
@@ -5785,11 +5785,11 @@ internal static class Program
             string handleGuard = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\WinHandleGuard.h");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
-            string runtimeTests = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string runtimeTests = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\SecurityHardeningUnitTests.cs");
             string nativeSecurityTargets = ReadRepoFile(repoRoot, @"NativeSecurity.targets");
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
 
             AssertContains(osFilePosixDarwin, "static const int kNoFollowFlag = O_NOFOLLOW;", "Phase 90 POSIX Darwin file handling does not yet define the no-follow contract flag.");
             AssertContains(osFilePosixDarwin, "static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)", "Phase 90 POSIX Darwin file handling does not yet centralize pre-open path validation.");
@@ -5900,12 +5900,12 @@ internal static class Program
             string providerImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
             string internalHeader = ReadRepoFile(repoRoot, @"trunk\source\Common\HashEngineInternal.h");
             string digestRegistry = ReadRepoFile(repoRoot, @"trunk\source\Common\HashDigestOperationRegistry.cpp");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
             string upstreamNote = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\README.LHash.md");
             string upstreamHeader = ReadRepoFile(repoRoot, @"third_party\blake3\1.8.4\c\blake3.h");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
 
             AssertContains(registryCore, "{ \"blake3-256\", \"BLAKE3-256\", true, false }", "Phase 91 registry does not yet register BLAKE3-256 as a fixed descriptor variant.");
             AssertContains(registryCore, "{ \"blake3-512\", \"BLAKE3-512\", true, false }", "Phase 91 registry does not yet register BLAKE3-512 as a fixed descriptor variant.");
@@ -5942,12 +5942,12 @@ internal static class Program
         Run("Phase 92 strengthens BLAKE3 runtime coverage and keeps the progress sink non-owning", () =>
         {
             string executionContext = ReadRepoFile(repoRoot, @"trunk\source\Runtime\HashExecutionContext.h");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
-            string hashContractTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashContractUnitTests.cs");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string hashContractTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashContractUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "Phase 92 execution context does not yet expose the null-object progress sink.");
@@ -5992,10 +5992,10 @@ internal static class Program
         {
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
             string securityHarness = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
-            string nativeSecurityRuntime = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
-            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
-            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeSecurityRuntime = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineSecurityRuntimeTests.cpp");
+            string nativeRuntimeProject = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\SecurityHardeningUnitTests.cs");
 
             AssertContains(securityRegression, "Windows junction attack harness reproduces ancestor reparse-point traversal", "Phase 93 security regression does not yet run the junction attack harness.");
             AssertContains(securityRegression, "Windows hash-style open harness reproduces sharing violations for locked files", "Phase 93 security regression does not yet run the sharing-violation harness.");
@@ -6019,10 +6019,10 @@ internal static class Program
         Run("Phase 94 adds a controlled native benchmark workflow before changing BLAKE3 SIMD shipping decisions", () =>
         {
             string benchmarkWorkflow = ReadRepoFile(repoRoot, @".github\workflows\native-benchmarks.yml");
-            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
-            string benchmarkSource = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\HashEngineBenchmarks.cpp");
-            string benchmarkUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\BenchmarkFrameworkUnitTests.cs");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\LHash.NativeBenchmarks\LHash.NativeBenchmarks.vcxproj");
+            string benchmarkSource = ReadRepoFile(repoRoot, @"native-benchmarks\LHash.NativeBenchmarks\HashEngineBenchmarks.cpp");
+            string benchmarkUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\BenchmarkFrameworkUnitTests.cs");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string benchmarkDoc = ReadRepoFile(repoRoot, @"docs\NATIVE_BENCHMARKS.md");
 
             AssertContains(benchmarkWorkflow, "name: Native Benchmarks", "Phase 94 does not yet define a dedicated native benchmark workflow.");
@@ -6040,8 +6040,8 @@ internal static class Program
             AssertContains(benchmarkWorkflow, "name: LHash-native-benchmarks-${{ matrix.artifact_suffix }}", "Phase 94 does not yet publish per-platform benchmark artifacts.");
             AssertDoesNotContain(benchmarkWorkflow, "benchmark_platform: Win32", "Phase 94 benchmark workflow still treats Win32 as a supported platform.");
             AssertDoesNotContain(benchmarkWorkflow, "artifact_suffix: win32", "Phase 94 benchmark workflow still publishes a Win32 benchmark artifact suffix.");
-            AssertContains(benchmarkProject, "<ProjectName>FHash.NativeBenchmarks</ProjectName>", "Phase 94 does not yet introduce a standalone native benchmark project.");
-            AssertContains(benchmarkProject, @"..\..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "Phase 94 native benchmarks do not yet link against the desktop native core.");
+            AssertContains(benchmarkProject, "<ProjectName>LHash.NativeBenchmarks</ProjectName>", "Phase 94 does not yet introduce a standalone native benchmark project.");
+            AssertContains(benchmarkProject, @"..\..\sub-proj\LHashNativeCore\LHashNativeCore.vcxproj", "Phase 94 native benchmarks do not yet link against the desktop native core.");
             AssertContains(benchmarkProject, "Include=\"Debug|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 debug configuration.");
             AssertContains(benchmarkProject, "Include=\"Release|ARM64\"", "Phase 94 native benchmark project does not yet define an ARM64 release configuration.");
             AssertDoesNotContain(benchmarkProject, "Debug|Win32", "Phase 94 native benchmark project still carries a retired Win32 debug configuration.");
@@ -6072,12 +6072,12 @@ internal static class Program
             string xxh3ProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\XXHash3HashProvider.cpp");
             string crc32cProviderHeader = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
             string crc32cProviderImplementation = ReadRepoFile(repoRoot, @"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
-            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
             string xxhashNote = ReadRepoFile(repoRoot, @"third_party\xxhash\0.8.3\README.LHash.md");
             string crc32cNote = ReadRepoFile(repoRoot, @"third_party\crc32c\1.1.2\README.LHash.md");
@@ -6125,10 +6125,10 @@ internal static class Program
 
         Run("Phase 96 expands xxHash3 and CRC32C from presence checks into stronger runtime vector and concurrent multi-file coverage", () =>
         {
-            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
-            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
-            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\SecurityHardeningUnitTests.cs");
-            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string nativeRuntimeSource = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
+            string extensibilityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string securityUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\SecurityHardeningUnitTests.cs");
+            string nativeRuntimeUnitTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
 
             AssertContains(nativeRuntimeSource, "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", "Phase 96 native runtime coverage does not yet sweep official CRC32C boundary vectors.");
@@ -6152,15 +6152,15 @@ internal static class Program
         {
             string nativeUtf8Targets = ReadRepoFile(repoRoot, @"NativeUtf8.targets");
             string legacyProject = ReadRepoFile(repoRoot, @"trunk\fileshash.vcxproj");
-            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\fHashNativeCore\fHashNativeCore.vcxproj");
-            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj");
-            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\FHash.NativeBenchmarks\FHash.NativeBenchmarks.vcxproj");
-            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.vcxproj");
+            string nativeCoreProject = ReadRepoFile(repoRoot, @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+            string runtimeTestsProject = ReadRepoFile(repoRoot, @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj");
+            string benchmarkProject = ReadRepoFile(repoRoot, @"native-benchmarks\LHash.NativeBenchmarks\LHash.NativeBenchmarks.vcxproj");
+            string shellProject = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShlExt.vcxproj");
             string securityRegression = ReadRepoFile(repoRoot, @"security-tests\SecurityRegression\Program.cs");
-            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\ReleaseMetadataUnitTests.cs");
+            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\ReleaseMetadataUnitTests.cs");
             string mfcRc = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\fileshash.rc");
             string mfcRc2 = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\res\fileshash.rc2");
-            string shellRc = ReadRepoFile(repoRoot, @"sub-proj\fHashShlExt\fHashShlExt.rc");
+            string shellRc = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\fHashShlExt.rc");
 
             AssertContains(nativeUtf8Targets, "<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /utf-8.");
             AssertContains(nativeUtf8Targets, "<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", "Phase 97 shared UTF-8 targets do not yet enable /c65001.");
@@ -6197,9 +6197,9 @@ internal static class Program
             string readme = ReadRepoFile(repoRoot, @"README.md");
             string changelog = ReadRepoFile(repoRoot, @"CHANGELOG.md");
             string changelogZh = ReadRepoFile(repoRoot, @"CHANGELOG.zh-CN.md");
-            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\ReleaseMetadataUnitTests.cs");
-            string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
-            string nativeRuntimeFrameworkTests = ReadRepoFile(repoRoot, @"unit-tests\FHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
+            string releaseMetadataTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\ReleaseMetadataUnitTests.cs");
+            string extensibilityTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\HashExtensibilityRegressionUnitTests.cs");
+            string nativeRuntimeFrameworkTests = ReadRepoFile(repoRoot, @"unit-tests\LHash.UnitTests\NativeRuntimeFrameworkUnitTests.cs");
             string licenseException = ReadRepoFile(repoRoot, @"LICENSE-OPENSSL-EXCEPTION.md");
             string archiveReadme = ReadRepoFile(repoRoot, @"archive\README.md");
 
