@@ -1869,7 +1869,7 @@ namespace
 
 		NativeAssertEqual(static_cast<int>(2), state.startedCount.load(std::memory_order_relaxed), "Parallel digest update workers should both start before the updater returns.");
 		NativeAssertEqual(static_cast<int>(0), state.finishedCount.load(std::memory_order_relaxed), "The blocking digest update worker should still be waiting for release before the exception is rethrown.");
-		NativeAssertEqual(std::future_status::timeout, updateFuture.wait_for(std::chrono::milliseconds(50)), "The digest updater should wait for all parallel workers before rethrowing exceptions.");
+		NativeAssertTrue(updateFuture.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout, "The digest updater should wait for all parallel workers before rethrowing exceptions.");
 
 		releasePromise.set_value();
 
