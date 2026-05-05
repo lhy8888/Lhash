@@ -172,7 +172,11 @@ public sealed class HashContractUnitTests
     public void HashExecutionContext_ModelsProgressSinkAsANonOwningObserverSeam()
     {
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+        string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
 
+        Assert.Contains("HashExecutionContext is a non-owning synchronous execution context.", executionContext, StringComparison.Ordinal);
+        Assert.Contains("The caller must keep the sink, jobState, and cancellationState alive until", executionContext, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest returns.", executionContext, StringComparison.Ordinal);
         Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashProgressSink *progressSinkObserver;", executionContext, StringComparison.Ordinal);
@@ -180,6 +184,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("return executionContext.progressSinkObserver;", executionContext, StringComparison.Ordinal);
         Assert.DoesNotContain("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
         Assert.DoesNotContain("HashProgressSink *progressSink;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest is synchronous. The caller must keep the execution context", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("and its observed state alive until this function returns.", engineHeader, StringComparison.Ordinal);
     }
 
     [Fact]

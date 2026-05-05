@@ -25,6 +25,9 @@ static inline HashProgressSink& GetNullHashProgressSink()
 	return sink;
 }
 
+// HashExecutionContext is a non-owning synchronous execution context.
+// The caller must keep the sink, jobState, and cancellationState alive until
+// RunHashRequest returns.
 struct HashExecutionContext
 {
 	HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)

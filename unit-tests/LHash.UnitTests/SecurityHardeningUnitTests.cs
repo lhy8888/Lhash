@@ -415,6 +415,8 @@ public sealed class SecurityHardeningUnitTests
     {
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
 
+        Assert.Contains("HashExecutionContext is a non-owning synchronous execution context.", executionContext, StringComparison.Ordinal);
+        Assert.Contains("The caller must keep the sink, jobState, and cancellationState alive until", executionContext, StringComparison.Ordinal);
         Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
         Assert.Contains("sink != NULL ? sink : &GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);

@@ -6,6 +6,8 @@
 struct HashRequest;
 struct HashExecutionContext;
 
+// RunHashRequest is synchronous. The caller must keep the execution context
+// and its observed state alive until this function returns.
 int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);
 
 #endif
