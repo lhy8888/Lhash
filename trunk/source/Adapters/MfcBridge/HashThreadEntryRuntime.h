@@ -2,7 +2,7 @@
 #define _MFC_HASH_THREAD_ENTRY_RUNTIME_H_
 
 #include "Common/HashEngine.h"
-#include "Adapters/MfcBridge/HashThreadEntryProjection.h"
+#include "Adapters/MfcBridge/HashThreadEntryBridge.h"
 
 static inline int RunMfcHashThread(void *param)
 {

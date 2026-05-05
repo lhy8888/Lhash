@@ -27,7 +27,7 @@
 #include "Common/ResultDigestValueAccess.h"
 #include "Adapters/MfcBridge/HashAlgorithmType.h"
 #include "Adapters/MfcBridge/HashDigestOperationType.h"
-#include "Adapters/MfcBridge/HashThreadEntryProjection.h"
+#include "Adapters/MfcBridge/HashThreadEntryBridge.h"
 #include "Adapters/MfcBridge/HashRequestType.h"
 #include "Adapters/MfcBridge/ResultDigestTypeValue.h"
 #include "Adapters/MfcBridge/ThreadDataAccess.h"

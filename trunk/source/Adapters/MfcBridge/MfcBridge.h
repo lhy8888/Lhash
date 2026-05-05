@@ -6,7 +6,7 @@
 #include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "Adapters/MfcBridge/ThreadDataInputAccess.h"
 #include "Adapters/MfcBridge/ThreadDataResultAccess.h"
-#include "Adapters/MfcBridge/HashRequestProjection.h"
-#include "Adapters/MfcBridge/HashThreadEntryProjection.h"
+#include "Adapters/MfcBridge/HashRequestBridge.h"
+#include "Adapters/MfcBridge/HashThreadEntryBridge.h"
 
 #endif

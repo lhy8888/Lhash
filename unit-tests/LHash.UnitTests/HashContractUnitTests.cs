@@ -6,7 +6,7 @@ public sealed class HashContractUnitTests
     public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
-        string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestProjection.h");
+        string requestBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestBridge.h");
         string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestType.h");
         string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
         string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
@@ -35,10 +35,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
         Assert.False(File.Exists(requestProjectionPath));
-        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestType.h\"", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestType.h\"", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataInputAccess.h\"", requestBridge, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public sealed class HashContractUnitTests
         string platformCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\PlatformCompat.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntry.cpp");
-        string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryProjection.h");
+        string threadEntryBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryBridge.h");
         string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryRuntime.h");
         string threadExecutionAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
         string threadEntryProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
@@ -413,23 +413,23 @@ public sealed class HashContractUnitTests
         Assert.Contains("int WINAPI HashThreadFunc(void *param);", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
         Assert.Contains("#include \"Adapters/MfcBridge/HashThreadEntryRuntime.h\"", threadEntry, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashRequestBridge.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashThreadEntryBridge.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashRequestBridge.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("return RunMfcHashThread(param);", threadEntry, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
-        Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetThreadDataObserver(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetMutableThreadDataHashJobState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateHashRequest(threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashJobState(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(threadData)", threadEntryBridge, StringComparison.Ordinal);
         Assert.Contains("return RunHashRequest(&executionContext, request);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("InitializeHashJobExecutionPlan(request, &executionPlan);", engine, StringComparison.Ordinal);
         Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);

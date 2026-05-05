@@ -647,7 +647,7 @@ public sealed class CommonSeamUnitTests
 
         Assert.Contains("#include \"Adapters/MfcBridge/MfcHashState.h\"", mfcBridgeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataAccess.h\"", mfcBridgeContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestProjection.h\"", mfcBridgeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestBridge.h\"", mfcBridgeContracts, StringComparison.Ordinal);
     }
 
     [Fact]

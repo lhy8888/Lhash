@@ -1,5 +1,5 @@
-#ifndef _MFC_HASH_REQUEST_PROJECTION_H_
-#define _MFC_HASH_REQUEST_PROJECTION_H_
+#ifndef _MFC_HASH_REQUEST_BRIDGE_H_
+#define _MFC_HASH_REQUEST_BRIDGE_H_
 
 #include "Domain/HashRequest.h"
 #include "Adapters/MfcBridge/HashRequestType.h"

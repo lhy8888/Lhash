@@ -1,8 +1,8 @@
-#ifndef _MFC_HASH_THREAD_ENTRY_PROJECTION_H_
-#define _MFC_HASH_THREAD_ENTRY_PROJECTION_H_
+#ifndef _MFC_HASH_THREAD_ENTRY_BRIDGE_H_
+#define _MFC_HASH_THREAD_ENTRY_BRIDGE_H_
 
 #include "Runtime/HashExecutionContext.h"
-#include "Adapters/MfcBridge/HashRequestProjection.h"
+#include "Adapters/MfcBridge/HashRequestBridge.h"
 #include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 
 static inline HashExecutionContext CreateThreadDataHashExecutionContext(ThreadData& threadData)
