@@ -106,6 +106,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("release_mode=\"rehearsal\"", workflow, StringComparison.Ordinal);
         Assert.Contains("release_mode=\"tagged-release\"", workflow, StringComparison.Ordinal);
         Assert.Contains("RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
+        Assert.Contains("lhash_application_version=$app_version", workflow, StringComparison.Ordinal);
+        Assert.Contains("Expected packaged Windows ARM64 release zip was not downloaded into release-assets.", workflow, StringComparison.Ordinal);
         Assert.Contains("windows_arm64=$(basename $(ls \"$artifact_root\"/LHash-windows-arm64-*.zip | head -n 1))", workflow, StringComparison.Ordinal);
         Assert.Contains("LHash-release-rehearsal", workflow, StringComparison.Ordinal);
         Assert.Contains("tar -czf \"$PWD/LHash-release-rehearsal-$short_sha.tar.gz\"", workflow, StringComparison.Ordinal);
@@ -210,6 +212,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("LHashOpenSslIncludeDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslLibDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("FailNonReleaseOpenSslVendor", vendorTargets, StringComparison.Ordinal);
+        Assert.Contains("Do not link it into non-Release builds.", vendorTargets, StringComparison.Ordinal);
         Assert.DoesNotContain("FHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
         Assert.DoesNotContain("FHASH_WITH_OPENSSL3_VENDOR=1", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);

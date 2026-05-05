@@ -6,6 +6,12 @@
     <LHashOpenSslLibDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\lib</LHashOpenSslLibDir>
   </PropertyGroup>
 
+  <Target Name="FailNonReleaseOpenSslVendor"
+          BeforeTargets="ClCompile"
+          Condition="'$(LHashOpenSslInstallRoot)'!='' and '$(Configuration)'!='Release'">
+    <Error Text="LHash OpenSSL vendor is built for Release only. Do not link it into non-Release builds." />
+  </Target>
+
   <ItemDefinitionGroup Condition="'$(LHashOpenSslInstallRoot)'!=''">
     <ClCompile>
       <AdditionalIncludeDirectories>$(LHashOpenSslIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

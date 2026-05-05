@@ -601,7 +601,17 @@ jobs:
             echo "Expected packaged lightweight native release zip was not downloaded into release-assets." >&2
             exit 1
           fi
+          if ! compgen -G "$artifact_root/LHash-windows-arm64-*.zip" > /dev/null; then
+            echo "Expected packaged Windows ARM64 release zip was not downloaded into release-assets." >&2
+            exit 1
+          fi
 
+          version_header="trunk/source/WinMFC/version.h"
+          version_rc2="trunk/source/WinMFC/fileshash.rc2"
+          app_version=$(grep -oP '(?<=LHASH_VERSION_STRING\s")[^"]+' "$version_header" \
+                        || grep -oP '(?<=STR_VERSION_LEGACY\s")[^"]+' "$version_header" \
+                        || grep -oP '(?<="FileVersion", ")[^"]+' "$version_rc2" \
+                        || echo "unknown")
           short_sha="${GITHUB_SHA::7}"
           release_mode="rehearsal"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
@@ -613,6 +623,7 @@ jobs:
           ref=$GITHUB_REF
           commit=$GITHUB_SHA
           short_sha=$short_sha
+          lhash_application_version=$app_version
           frontend=windows-mfc
           openssl_vendor_version=3.5.6
           openssl_vendor_source=third_party/openssl/3.5.6

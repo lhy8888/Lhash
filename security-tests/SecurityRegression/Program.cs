@@ -626,6 +626,7 @@ internal static partial class Program
         Run("Native compiler and linker mitigations are imported consistently", () =>
         {
             string nativeSecurityTargets = ReadRepoFile(repoRoot, @"NativeSecurity.targets");
+            string vendorTargets = ReadRepoFile(repoRoot, @"NativeOpenSslVendor.targets");
             string cmakeLists = ReadRepoFile(repoRoot, @"CMakeLists.txt");
             string[] vcxProjects = Directory.GetFiles(repoRoot, "*.vcxproj", SearchOption.AllDirectories);
 
@@ -637,6 +638,8 @@ internal static partial class Program
             AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Shared native security targets do not enable ASLR.");
             AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Shared native security targets do not enable high-entropy VA.");
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
+            AssertContains(vendorTargets, "FailNonReleaseOpenSslVendor", "Shared OpenSSL vendor targets do not reject non-Release builds.");
+            AssertContains(vendorTargets, "Do not link it into non-Release builds.", "Shared OpenSSL vendor targets do not explain the Release-only restriction.");
             AssertContains(cmakeLists, "message(FATAL_ERROR", "CMake does not fail fast when OpenSSL vendor integration is enabled.");
             AssertContains(cmakeLists, "CMake OpenSSL vendor integration is not implemented yet.", "CMake does not document the unsupported OpenSSL vendor path.");
             AssertContains(cmakeLists, "Use the MSBuild Windows release workflow with LHashOpenSslInstallRoot.", "CMake does not direct users to the supported Windows vendor workflow.");
