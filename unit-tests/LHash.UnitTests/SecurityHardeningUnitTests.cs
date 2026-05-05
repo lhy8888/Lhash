@@ -113,6 +113,15 @@ public sealed class SecurityHardeningUnitTests
     }
 
     [Fact]
+    public void ShellExtensionProject_UsesStableOutputName()
+    {
+        string shellExtProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShlExt.vcxproj");
+
+        Assert.Contains("<OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>", shellExtProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("$(ProjectName)64.dll", shellExtProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void RuntimeUses_CheckedArithmetic_ForSizesAndProgress()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
