@@ -81,11 +81,17 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle hProcLHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidLHash));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("TCHAR szPath[MAX_PATH + 1] = {};", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("ULONG nChars = static_cast<ULONG>(_countof(szPath));", legacyShell, StringComparison.Ordinal);
         Assert.Contains("std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", legacyShell, StringComparison.Ordinal);
         Assert.Contains("CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("new TCHAR[cmdLen]", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("memset(pszCmd, 0, cmdLen);", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("delete [] pszCmd;", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("TCHAR szPath[MAX_PATH + 1] = { L'0' };", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("ULONG nChars = MAX_PATH;", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(tstrProcLHashPath.c_str(), m_LHashPath.c_str()) == 0", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("tstrProcLHashPath == m_LHashPath", legacyShell, StringComparison.Ordinal);
         Assert.Contains("0, 0, FALSE,", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("0, 0, TRUE,", legacyShell, StringComparison.Ordinal);
 

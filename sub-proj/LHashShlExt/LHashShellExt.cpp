@@ -110,8 +110,8 @@ HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 	if(lResult != ERROR_SUCCESS)
 		return E_INVALIDARG;
 
-	TCHAR szPath[MAX_PATH + 1] = { L'0' };
-	ULONG nChars = MAX_PATH;
+	TCHAR szPath[MAX_PATH + 1] = {};
+	ULONG nChars = static_cast<ULONG>(_countof(szPath));
 	if (key.QueryStringValue(SHELL_EXT_EXEPATH, szPath, &nChars) != ERROR_SUCCESS)
 	{
 		key.Close();
@@ -284,7 +284,7 @@ HWND CLHashShellExt::FindLHashWindow()
 
 
 	tstring tstrProcLHashPath(exePath.data());
-	if (tstrProcLHashPath == m_LHashPath)
+	if (_tcsicmp(tstrProcLHashPath.c_str(), m_LHashPath.c_str()) == 0)
 		return hWndLHash;
 
 	return NULL;

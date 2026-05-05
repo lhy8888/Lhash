@@ -3,7 +3,7 @@
 #include "Common/HashFileVersionResolver.h"
 
 #if defined (_WIN32)
-#include "WinCommon/WindowsComm.h"
+#include "WinCommon/FileVersionHelper.h"
 #endif
 
 namespace HashEngineInternal
@@ -33,13 +33,13 @@ namespace HashEngineInternal
 	sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)
 	{
 #if defined (_WIN32)
-		(void)osFile;
 		if (!ShouldResolveWindowsFileVersion(path))
 		{
 			return sunjwbase::tstring();
 		}
 
-		return WindowsComm::GetExeFileVersion((TCHAR *)path);
+		WindowsComm::FileVersionHelper fileVersionHelper(osFile);
+		return fileVersionHelper.Find();
 #else
 		(void)osFile;
 		(void)path;

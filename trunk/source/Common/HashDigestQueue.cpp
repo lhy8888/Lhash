@@ -181,7 +181,7 @@ namespace HashEngineInternal
 
 		isFileFinished.store(true);
 		cvCalc.notify_all();
-		taskHash.wait();
+		taskHash.get();
 
 		return ShouldStopHashExecution(*executionContext);
 	}

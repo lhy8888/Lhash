@@ -189,6 +189,28 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
+    public void HashFileVersionResolver_UsesOpenedHandleAndBuildListsIncludeFileVersionHelper()
+    {
+        string fileVersionResolver = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileVersionResolver.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+        string cmakeCoreSources = RepositoryTestContext.ReadTextFile(@"cmake\LHashCoreSources.cmake");
+        int windowsBranchEnd = fileVersionResolver.IndexOf("#else", StringComparison.Ordinal);
+        string windowsBranch = windowsBranchEnd >= 0
+            ? fileVersionResolver[..windowsBranchEnd]
+            : fileVersionResolver;
+
+        Assert.Contains("#include \"WinCommon/FileVersionHelper.h\"", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("ShouldResolveWindowsFileVersion(path)", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("WindowsComm::FileVersionHelper fileVersionHelper(osFile);", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("return fileVersionHelper.Find();", windowsBranch, StringComparison.Ordinal);
+        Assert.DoesNotContain("WindowsComm::GetExeFileVersion((TCHAR *)path);", windowsBranch, StringComparison.Ordinal);
+        Assert.DoesNotContain("(void)osFile;", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("FileVersionHelper.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("FileVersionHelper.h", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("WinCommon/FileVersionHelper.cpp", cmakeCoreSources, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NativeProjectFiles_DoNotDefineLegacyWinUiMacro()
     {
         string[] projectFiles =
@@ -204,6 +226,17 @@ public sealed class HashContractUnitTests
             string projectContents = RepositoryTestContext.ReadTextFile(projectFile);
             Assert.DoesNotContain("LHASH_WIN_UI", projectContents, StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void CoreM2Workflow_PushBranchesIncludeCodexAndClaude()
+    {
+        string coreM2Workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\core-m2.yml");
+
+        Assert.Contains("branches:", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("future-winui-was2", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("codex/**", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("claude/**", coreM2Workflow, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -479,6 +512,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", digestQueue, StringComparison.Ordinal);
         Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);
         Assert.Contains("queue<size_t> queuedBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("taskHash.get();", digestQueue, StringComparison.Ordinal);
+        Assert.DoesNotContain("taskHash.wait();", digestQueue, StringComparison.Ordinal);
         Assert.Contains("ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsSequential(digestUpdateRequest", digestSinglePass, StringComparison.Ordinal);
         Assert.Contains("struct FileHashContexts;", digestLifecycleHeader, StringComparison.Ordinal);
@@ -688,10 +723,13 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("void EmitErrorResult(", result, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", fileVersionResolverHeader, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("#include \"WinCommon/FileVersionHelper.h\"", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("WindowsComm::FileVersionHelper fileVersionHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("return fileVersionHelper.Find();", fileVersionResolver, StringComparison.Ordinal);
         Assert.DoesNotContain("WindowsComm::FileVersionHelper fvHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
         Assert.DoesNotContain("LHASH_UWP_LIB", fileVersionResolver, StringComparison.Ordinal);
         Assert.DoesNotContain("LHASH_WUI_LIB", fileVersionResolver, StringComparison.Ordinal);
-        Assert.Contains("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestRuntimePlan", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("DigestUpdateRequest digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);
         Assert.Contains("HashDigestQueuePlan digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);

@@ -60,6 +60,7 @@ set(LHASH_PLATFORM_SOURCES "")
 if (WIN32)
     list(APPEND LHASH_PLATFORM_SOURCES
         "${LHASH_SOURCE_ROOT}/WinCommon/WindowsComm.cpp"
+        "${LHASH_SOURCE_ROOT}/WinCommon/FileVersionHelper.cpp"
         "${LHASH_SOURCE_ROOT}/OsUtils/OsFileWinApi.cpp"
         "${LHASH_SOURCE_ROOT}/OsUtils/OsThreadWinApi.cpp"
     )
