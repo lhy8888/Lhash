@@ -1,8 +1,8 @@
-#ifndef _LEGACY_RESULT_DIGEST_TYPE_METADATA_COMPAT_H_
-#define _LEGACY_RESULT_DIGEST_TYPE_METADATA_COMPAT_H_
+#ifndef _MFC_RESULT_DIGEST_TYPE_METADATA_H_
+#define _MFC_RESULT_DIGEST_TYPE_METADATA_H_
 
 #include "Common/ResultDigestMetadataAccess.h"
-#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmType.h"
 
 static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
 {

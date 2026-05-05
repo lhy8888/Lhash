@@ -1,8 +1,8 @@
-#ifndef _LEGACY_RESULT_DIGEST_TYPE_VALUE_COMPAT_H_
-#define _LEGACY_RESULT_DIGEST_TYPE_VALUE_COMPAT_H_
+#ifndef _MFC_RESULT_DIGEST_TYPE_VALUE_H_
+#define _MFC_RESULT_DIGEST_TYPE_VALUE_H_
 
 #include "Common/ResultDigestValueAccess.h"
-#include "Adapters/MfcBridge/ResultDigestTypeStateCompat.h"
+#include "Adapters/MfcBridge/ResultDigestTypeState.h"
 
 static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result, ResultDigestType digestType)
 {

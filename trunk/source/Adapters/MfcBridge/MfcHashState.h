@@ -1,5 +1,5 @@
-#ifndef _LEGACY_THREAD_DATA_H_
-#define _LEGACY_THREAD_DATA_H_
+#ifndef _MFC_HASH_STATE_H_
+#define _MFC_HASH_STATE_H_
 
 #include "Common/HashTypes.h"
 class HashProgressSink;

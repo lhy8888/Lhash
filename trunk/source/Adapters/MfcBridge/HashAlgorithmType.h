@@ -1,10 +1,10 @@
-#ifndef _LEGACY_HASH_ALGORITHM_TYPE_COMPAT_H_
-#define _LEGACY_HASH_ALGORITHM_TYPE_COMPAT_H_
+#ifndef _MFC_HASH_ALGORITHM_TYPE_H_
+#define _MFC_HASH_ALGORITHM_TYPE_H_
 
 #include <string>
 
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "Adapters/MfcBridge/ResultDigestTypeCompat.h"
+#include "Adapters/MfcBridge/ResultDigestType.h"
 
 static inline bool TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgorithmId *algorithmId)
 {
@@ -37,22 +37,22 @@ static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmI
 		return false;
 	}
 
-	struct LegacyHashAlgorithmTypeMapping
+	struct HashAlgorithmTypeMapping
 	{
 		ResultDigestType digestType;
 		const char *stableName;
 	};
 
-	static const LegacyHashAlgorithmTypeMapping legacyMappings[] =
+	static const HashAlgorithmTypeMapping hashAlgorithmTypeMappings[] =
 	{
 		{ RESULT_DIGEST_MD5, "md5" },
 		{ RESULT_DIGEST_SHA1, "sha1" }
 	};
 
-	for (int mappingIndex = 0; mappingIndex < static_cast<int>(sizeof(legacyMappings) / sizeof(legacyMappings[0])); ++mappingIndex)
+	for (int mappingIndex = 0; mappingIndex < static_cast<int>(sizeof(hashAlgorithmTypeMappings) / sizeof(hashAlgorithmTypeMappings[0])); ++mappingIndex)
 	{
 		HashAlgorithmId mappedAlgorithmId =
-			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(legacyMappings[mappingIndex].stableName)));
+			NormalizeHashAlgorithmId(sunjwbase::strtotstr(std::string(hashAlgorithmTypeMappings[mappingIndex].stableName)));
 		if (mappedAlgorithmId != normalizedAlgorithmId)
 		{
 			continue;
@@ -60,7 +60,7 @@ static inline bool TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmI
 
 		if (digestType != NULL)
 		{
-			*digestType = legacyMappings[mappingIndex].digestType;
+			*digestType = hashAlgorithmTypeMappings[mappingIndex].digestType;
 		}
 		return true;
 	}

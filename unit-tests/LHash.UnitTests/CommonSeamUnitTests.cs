@@ -175,8 +175,8 @@ public sealed class CommonSeamUnitTests
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\HashAlgorithmTypeCompat.h");
-        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeCompat.h");
+        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\HashAlgorithmType.h");
+        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestType.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
         string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
@@ -461,7 +461,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestMetadataAccess_OwnsMetadataTraversalSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeMetadataCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeMetadata.h");
 
         Assert.Contains("typedef HashAlgorithmDescriptor ResultDigestMetadata;", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestCount()", access, StringComparison.Ordinal);
@@ -477,7 +477,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestStateAccess_OwnsRegistrySizedStorageSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeStateCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeState.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
 
         Assert.Contains("#include \"Common/HashTypes.h\"", access, StringComparison.Ordinal);
@@ -503,7 +503,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestValueAccess_OwnsReadWriteAndAggregateSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeValueCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeValue.h");
 
         Assert.Contains("GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("return GetStoredResultDigestById(result, algorithmId);", access, StringComparison.Ordinal);

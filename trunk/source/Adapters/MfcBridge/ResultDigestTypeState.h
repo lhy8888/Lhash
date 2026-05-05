@@ -1,8 +1,8 @@
-#ifndef _LEGACY_RESULT_DIGEST_TYPE_STATE_COMPAT_H_
-#define _LEGACY_RESULT_DIGEST_TYPE_STATE_COMPAT_H_
+#ifndef _MFC_RESULT_DIGEST_TYPE_STATE_H_
+#define _MFC_RESULT_DIGEST_TYPE_STATE_H_
 
 #include "Common/ResultDigestStateAccess.h"
-#include "Adapters/MfcBridge/ResultDigestTypeMetadataCompat.h"
+#include "Adapters/MfcBridge/ResultDigestTypeMetadata.h"
 
 static inline bool TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)
 {

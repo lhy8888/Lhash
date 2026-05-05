@@ -1,5 +1,5 @@
-#ifndef _LEGACY_HASH_THREAD_ENTRY_PROJECTION_H_
-#define _LEGACY_HASH_THREAD_ENTRY_PROJECTION_H_
+#ifndef _MFC_HASH_THREAD_ENTRY_PROJECTION_H_
+#define _MFC_HASH_THREAD_ENTRY_PROJECTION_H_
 
 #include "Runtime/HashExecutionContext.h"
 #include "Adapters/MfcBridge/HashRequestProjection.h"

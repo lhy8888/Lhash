@@ -5,5 +5,5 @@
 
 int WINAPI HashThreadFunc(void *param)
 {
-	return RunLegacyHashThread(param);
+	return RunMfcHashThread(param);
 }

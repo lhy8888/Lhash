@@ -1,8 +1,8 @@
-#ifndef _LEGACY_HASH_REQUEST_PROJECTION_H_
-#define _LEGACY_HASH_REQUEST_PROJECTION_H_
+#ifndef _MFC_HASH_REQUEST_PROJECTION_H_
+#define _MFC_HASH_REQUEST_PROJECTION_H_
 
 #include "Domain/HashRequest.h"
-#include "Adapters/MfcBridge/HashRequestTypeCompat.h"
+#include "Adapters/MfcBridge/HashRequestType.h"
 #include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "Adapters/MfcBridge/ThreadDataInputAccess.h"
 

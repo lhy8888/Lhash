@@ -1,5 +1,5 @@
-#ifndef _LEGACY_THREAD_DATA_RESULT_ACCESS_H_
-#define _LEGACY_THREAD_DATA_RESULT_ACCESS_H_
+#ifndef _MFC_THREAD_DATA_RESULT_ACCESS_H_
+#define _MFC_THREAD_DATA_RESULT_ACCESS_H_
 
 #include "Adapters/MfcBridge/MfcHashState.h"
 #include "Common/HashResultSearch.h"
@@ -7,14 +7,14 @@
 
 static inline HashResultList& GetMutableThreadDataResults(ThreadData& threadData)
 {
-	// Legacy synchronous bridge only. The execution thread owns the live result
+	// MFC synchronous bridge only. The execution thread owns the live result
 	// list; UI code must not touch it concurrently.
 	return GetMutableThreadDataHashJobState(threadData).results;
 }
 
 static inline const HashResultList& GetThreadDataResults(const ThreadData& threadData)
 {
-	// Legacy synchronous bridge only. UI code should consume published snapshots
+	// MFC synchronous bridge only. UI code should consume published snapshots
 	// instead of traversing the live mutable result list concurrently.
 	return GetThreadDataHashJobState(threadData).results;
 }

@@ -7,7 +7,7 @@ public sealed class HashContractUnitTests
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
         string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestProjection.h");
-        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestTypeCompat.h");
+        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestType.h");
         string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
         string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
 
@@ -36,7 +36,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
         Assert.False(File.Exists(requestProjectionPath));
         Assert.Contains("CreateHashRequest(const ThreadData& threadData)", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestTypeCompat.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestType.h\"", legacyRequestProjection, StringComparison.Ordinal);
         Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
         Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
     }
@@ -45,7 +45,7 @@ public sealed class HashContractUnitTests
     public void HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam()
     {
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashAlgorithmTypeCompat.h");
+        string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashAlgorithmType.h");
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
         string registryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
@@ -68,7 +68,7 @@ public sealed class HashContractUnitTests
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
-        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeCompat.h");
+        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ResultDigestType.h");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashResult.h");
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
@@ -252,7 +252,7 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("HashJobState.results is owned by the synchronous HashEngine execution thread.", global, StringComparison.Ordinal);
         Assert.Contains("UI code must consume published snapshots instead of mutating or traversing", global, StringComparison.Ordinal);
-        Assert.Contains("Legacy synchronous bridge only. The execution thread owns the live result", threadDataResultAccess, StringComparison.Ordinal);
+        Assert.Contains("MFC synchronous bridge only. The execution thread owns the live result", threadDataResultAccess, StringComparison.Ordinal);
         Assert.Contains("UI code must not touch it concurrently.", threadDataResultAccess, StringComparison.Ordinal);
         Assert.Contains("UI code should consume published snapshots", threadDataResultAccess, StringComparison.Ordinal);
     }
@@ -298,7 +298,7 @@ public sealed class HashContractUnitTests
         string digestOperationRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
         string digestOperationRegistryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.h");
         string digestOperationRegistryRuntimeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashDigestOperationRegistryRuntime.h");
-        string digestOperationTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashDigestOperationTypeCompat.h");
+        string digestOperationTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashDigestOperationType.h");
         string digestLifecycle = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.cpp");
         string digestLifecycleHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.h");
         string digestRuntimePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.cpp");
@@ -420,7 +420,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
-        Assert.Contains("return RunLegacyHashThread(param);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("return RunMfcHashThread(param);", threadEntry, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);

@@ -1,5 +1,5 @@
-#ifndef _LEGACY_HASH_THREAD_LAUNCH_H_
-#define _LEGACY_HASH_THREAD_LAUNCH_H_
+#ifndef _MFC_HASH_THREAD_LAUNCH_H_
+#define _MFC_HASH_THREAD_LAUNCH_H_
 
 #include <process.h>
 #include <utility>

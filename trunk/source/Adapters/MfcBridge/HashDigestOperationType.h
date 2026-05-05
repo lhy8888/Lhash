@@ -1,8 +1,8 @@
-#ifndef _LEGACY_HASH_DIGEST_OPERATION_TYPE_COMPAT_H_
-#define _LEGACY_HASH_DIGEST_OPERATION_TYPE_COMPAT_H_
+#ifndef _MFC_HASH_DIGEST_OPERATION_TYPE_H_
+#define _MFC_HASH_DIGEST_OPERATION_TYPE_H_
 
 #include "Common/HashDigestOperationRegistry.h"
-#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmType.h"
 
 namespace HashEngineInternal
 {

@@ -1,5 +1,5 @@
-#ifndef _LEGACY_COMPATIBILITY_H_
-#define _LEGACY_COMPATIBILITY_H_
+#ifndef _MFC_BRIDGE_H_
+#define _MFC_BRIDGE_H_
 
 #include "Adapters/MfcBridge/MfcHashState.h"
 #include "Adapters/MfcBridge/ThreadDataAccess.h"

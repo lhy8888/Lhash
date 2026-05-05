@@ -1,8 +1,8 @@
-#ifndef _LEGACY_HASH_REQUEST_TYPE_COMPAT_H_
-#define _LEGACY_HASH_REQUEST_TYPE_COMPAT_H_
+#ifndef _MFC_HASH_REQUEST_TYPE_H_
+#define _MFC_HASH_REQUEST_TYPE_H_
 
 #include "Domain/HashRequest.h"
-#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmType.h"
 
 static inline void AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)
 {

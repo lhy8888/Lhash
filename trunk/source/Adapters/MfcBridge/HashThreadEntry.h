@@ -1,5 +1,5 @@
-#ifndef _LEGACY_HASH_THREAD_ENTRY_H_
-#define _LEGACY_HASH_THREAD_ENTRY_H_
+#ifndef _MFC_HASH_THREAD_ENTRY_H_
+#define _MFC_HASH_THREAD_ENTRY_H_
 
 #include "Common/PlatformCompat.h"
 
