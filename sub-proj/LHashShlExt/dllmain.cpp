@@ -1,4 +1,4 @@
-// dllmain.cpp : DllMain µÄÊµÏÖ¡£
+// dllmain.cpp : DllMain çš„å®ç°ã€‚
 
 #include "stdafx.h"
 #include "resource.h"
@@ -7,7 +7,7 @@
 
 CLHashShlExtModule _AtlModule;
 
-// DLL Èë¿Úµã
+// DLL å…¥å£ç‚¹
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	hInstance;

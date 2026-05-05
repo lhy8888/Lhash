@@ -1,4 +1,4 @@
-// LHashShlExt.cpp : DLL µ¼³öµÄÊµÏÖ¡£
+// LHashShlExt.cpp : DLL å¯¼å‡ºçš„å®ç°ã€‚
 
 
 #include "stdafx.h"
@@ -6,38 +6,38 @@
 #include "LHashShlExt_i.h"
 #include "dllmain.h"
 
-// ÓÃÓÚÈ·¶¨ DLL ÊÇ·ñ¿ÉÓÉ OLE Ğ¶ÔØ
+// ç”¨äºç¡®å®š DLL æ˜¯å¦å¯ç”± OLE å¸è½½
 STDAPI DllCanUnloadNow(void)
 {
     return _AtlModule.DllCanUnloadNow();
 }
 
 
-// ·µ»ØÒ»¸öÀà¹¤³§ÒÔ´´½¨ËùÇëÇóÀàĞÍµÄ¶ÔÏó
+// è¿”å›ä¸€ä¸ªç±»å·¥å‚ä»¥åˆ›å»ºæ‰€è¯·æ±‚ç±»å‹çš„å¯¹è±¡
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
     return _AtlModule.DllGetClassObject(rclsid, riid, ppv);
 }
 
 
-// DllRegisterServer - ½«ÏîÌí¼Óµ½ÏµÍ³×¢²á±í
+// DllRegisterServer - å°†é¡¹æ·»åŠ åˆ°ç³»ç»Ÿæ³¨å†Œè¡¨
 STDAPI DllRegisterServer(void)
 {
-    // ×¢²á¶ÔÏó¡¢ÀàĞÍ¿âºÍÀàĞÍ¿âÖĞµÄËùÓĞ½Ó¿Ú
+    // æ³¨å†Œå¯¹è±¡ã€ç±»å‹åº“å’Œç±»å‹åº“ä¸­çš„æ‰€æœ‰æ¥å£
     HRESULT hr = _AtlModule.DllRegisterServer();
 	return hr;
 }
 
 
-// DllUnregisterServer - ½«Ïî´ÓÏµÍ³×¢²á±íÖĞÒÆ³ı
+// DllUnregisterServer - å°†é¡¹ä»ç³»ç»Ÿæ³¨å†Œè¡¨ä¸­ç§»é™¤
 STDAPI DllUnregisterServer(void)
 {
 	HRESULT hr = _AtlModule.DllUnregisterServer();
 	return hr;
 }
 
-// DllInstall - °´ÓÃ»§»òÕß°´¼ÆËã»úÔÚÏµÍ³×¢²á±íÖĞÌí¼Ó/É¾³ı
-//              Ïî¡£
+// DllInstall - æŒ‰ç”¨æˆ·æˆ–è€…æŒ‰è®¡ç®—æœºåœ¨ç³»ç»Ÿæ³¨å†Œè¡¨ä¸­æ·»åŠ /åˆ é™¤
+//              é¡¹ã€‚
 STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
 {
     HRESULT hr = E_FAIL;
