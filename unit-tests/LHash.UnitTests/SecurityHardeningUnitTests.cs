@@ -364,7 +364,10 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("OPENSSL_BLAKE2S_256_OUTPUT_BYTES = 32", providerHeader, StringComparison.Ordinal);
         Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
 
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProviderStub.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'!=''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'==''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslIncludeDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslLibDir", vendorTargets, StringComparison.Ordinal);

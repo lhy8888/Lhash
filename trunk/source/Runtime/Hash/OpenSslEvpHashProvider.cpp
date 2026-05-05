@@ -1,5 +1,9 @@
 #include "stdafx.h"
 
+#if !defined(LHASH_WITH_OPENSSL3_VENDOR)
+#error "OpenSslEvpHashProvider.cpp is the vendor-backed implementation. Use OpenSslEvpHashProviderStub.cpp in default builds."
+#endif
+
 #include <atomic>
 #include <mutex>
 #include <string>

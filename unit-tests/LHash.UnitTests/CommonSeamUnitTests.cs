@@ -100,6 +100,8 @@ public sealed class CommonSeamUnitTests
         [
             @"trunk/source/Adapters/ThreadDataBridge/HashThreadEntry.cpp",
             @"trunk/source/Common/Utils.cpp",
+            @"trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp",
+            @"trunk/source/Runtime/Hash/OpenSslEvpHashProviderStub.cpp",
             @"trunk/source/OsUtils/OsFilePosixDarwin.cpp",
             @"trunk/source/OsUtils/OsFileWinApi.cpp",
             @"trunk/source/OsUtils/OsThreadPosixDarwin.cpp",
@@ -131,8 +133,42 @@ public sealed class CommonSeamUnitTests
         Assert.True(
             missingFromNativeCore.Count == 0 && extraInNativeCore.Count == 0,
             $"Shared core source manifests diverged.\n" +
-            $"Missing from LHashNativeCore.vcxproj: {string.Join(", ", missingFromNativeCore)}\n" +
-            $"Extra in LHashNativeCore.vcxproj: {string.Join(", ", extraInNativeCore)}");
+              $"Missing from LHashNativeCore.vcxproj: {string.Join(", ", missingFromNativeCore)}\n" +
+              $"Extra in LHashNativeCore.vcxproj: {string.Join(", ", extraInNativeCore)}");
+    }
+
+    [Fact]
+    public void OpenSslProviderSourceSelection_UsesStubInCMakeAndVendorOnlyRealProviderInNativeCore()
+    {
+        string cmakeSources = RepositoryTestContext.ReadUtf8File(@"cmake\LHashCoreSources.cmake");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+        string stubProvider = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProviderStub.cpp");
+        string vendorProvider = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+
+        HashSet<string> cmakeSourceSet = ExtractCMakeSourceManifest(cmakeSources);
+        HashSet<string> nativeCoreSourceSet = ExtractNativeCoreSourceManifest(nativeCoreProject);
+
+        Assert.Contains("trunk/source/Runtime/Hash/OpenSslEvpHashProviderStub.cpp", cmakeSourceSet);
+        Assert.DoesNotContain("trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp", cmakeSourceSet);
+
+        Assert.Contains(@"..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProviderStub.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains(@"..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'!=''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'==''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
+
+        Assert.Contains("OpenSslEvpHashContext", stubProvider, StringComparison.Ordinal);
+        Assert.Contains("return false;", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("<openssl/", stubProvider, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EVP_MD_fetch", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_DigestInit_ex2", stubProvider, StringComparison.Ordinal);
+
+        Assert.Contains("EVP_MD_fetch", vendorProvider, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestInit_ex2", vendorProvider, StringComparison.Ordinal);
+        Assert.Contains("EVP_DigestFinal_ex", vendorProvider, StringComparison.Ordinal);
+
+        Assert.True(
+            nativeCoreSourceSet.Contains("trunk/source/Runtime/Hash/OpenSslEvpHashProviderStub.cpp") &&
+            nativeCoreSourceSet.Contains("trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp"));
     }
 
     [Fact]

@@ -228,7 +228,10 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("EVP_DigestFinal_ex", providerImplementation, StringComparison.Ordinal);
         Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
 
+        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProviderStub.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'!=''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("ExcludedFromBuild Condition=\"'$(LHashOpenSslInstallRoot)'==''\">true</ExcludedFromBuild>", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);

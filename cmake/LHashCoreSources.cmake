@@ -49,7 +49,10 @@ set(LHASH_ALGORITHM_SOURCES
 set(LHASH_RUNTIME_HASH_SOURCES
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/BLAKE3HashProvider.cpp"
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/CRC32CHashProvider.cpp"
-    "${LHASH_SOURCE_ROOT}/Runtime/Hash/OpenSslEvpHashProvider.cpp"
+    # CMake core uses the no-op OpenSSL provider stub. The vendor-backed
+    # implementation remains MSBuild-only until CMake OpenSSL vendor support
+    # is explicitly added.
+    "${LHASH_SOURCE_ROOT}/Runtime/Hash/OpenSslEvpHashProviderStub.cpp"
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/XXHash3HashProvider.cpp"
 )
 
