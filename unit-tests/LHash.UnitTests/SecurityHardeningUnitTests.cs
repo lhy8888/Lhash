@@ -196,7 +196,7 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);
-        Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("std::this_thread::yield();", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.Contains("vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", digestQueue, StringComparison.Ordinal);
         Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);

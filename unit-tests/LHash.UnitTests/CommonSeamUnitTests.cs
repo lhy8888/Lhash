@@ -268,8 +268,10 @@ public sealed class CommonSeamUnitTests
         string progressControllerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashProgressController.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
 
-        Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("std::this_thread::yield();", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("sched_yield();", fileAttemptWorkflow, StringComparison.Ordinal);
 
         Assert.Contains("#include \"OsUtils/OsFile.h\"", preScanSizeProbe, StringComparison.Ordinal);
         Assert.DoesNotContain("#include <Windows.h>", preScanSizeProbe, StringComparison.Ordinal);
