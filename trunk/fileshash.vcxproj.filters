@@ -194,7 +194,10 @@
     <ClInclude Include="source\OsUtils\OsThread.h">
       <Filter>OsUtils</Filter>
     </ClInclude>
-    <ClInclude Include="source\Common\Global.h">
+    <ClInclude Include="source\Common\HashTypes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Common\PlatformCompat.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="source\Common\HashEngine.h">
@@ -220,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="source\WinCommon\WindowsStringsInternal.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WinMFC\WinMFCMessages.h">
+      <Filter>WinMFC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

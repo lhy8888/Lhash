@@ -51,6 +51,21 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
+    public void GlobalUmbrella_Header_IsReducedToTypesAndPlatformCompatOnly()
+    {
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
+
+        Assert.Contains("#include \"Common/HashTypes.h\"", global, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/PlatformCompat.h\"", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinUser.h>", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinDef.h>", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinNT.h>", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("WM_THREAD_INFO", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("WP_WORKING", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("WM_CUSTOM_MSG", global, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NativeVcxprojToolset_IsUnifiedToV143()
     {
         string[] vcxProjects = Directory.GetFiles(RepositoryTestContext.RepoRoot, "*.vcxproj", SearchOption.AllDirectories);
@@ -73,7 +88,7 @@ public sealed class CommonSeamUnitTests
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
         string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeCompat.h");
-        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
         string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
         Assert.False(File.Exists(legacyRegistryShimPath));
@@ -372,9 +387,9 @@ public sealed class CommonSeamUnitTests
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
         string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeStateCompat.h");
-        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
 
-        Assert.Contains("#include \"Common/Global.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashTypes.h\"", access, StringComparison.Ordinal);
         Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);

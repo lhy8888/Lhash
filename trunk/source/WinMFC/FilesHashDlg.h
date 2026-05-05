@@ -11,7 +11,7 @@
 #include "Common/strhelper.h"
 #include "OsUtils/OsThread.h"
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Adapters/ThreadDataBridge/LegacyThreadData.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"

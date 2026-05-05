@@ -2,6 +2,8 @@
 
 #include "FilesHashMessageController.h"
 
+#include "WinMFC/WinMFCMessages.h"
+
 #include <vector>
 
 #include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"

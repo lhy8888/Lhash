@@ -12,7 +12,7 @@
 
 #include "FilesHash.h"
 #include "FilesHashDlg.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Adapters/ThreadDataBridge/ThreadDataAccess.h"
 #include "Common/Utils.h"
 #include "WindowsUtils.h"

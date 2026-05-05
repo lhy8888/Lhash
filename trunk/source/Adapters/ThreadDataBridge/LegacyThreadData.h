@@ -1,7 +1,7 @@
 #ifndef _LEGACY_THREAD_DATA_H_
 #define _LEGACY_THREAD_DATA_H_
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 class HashProgressSink;
 
 struct ThreadDataInputState

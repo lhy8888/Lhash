@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Common/ResultDigestMetadataAccess.h"
 
 template<typename TResultStateNet>

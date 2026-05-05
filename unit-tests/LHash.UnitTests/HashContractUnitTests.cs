@@ -1,4 +1,4 @@
-﻿namespace LHash.UnitTests;
+namespace LHash.UnitTests;
 
 public sealed class HashContractUnitTests
 {
@@ -67,7 +67,7 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
-        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
         string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeCompat.h");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashResult.h");
         string resultShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
@@ -185,7 +185,7 @@ public sealed class HashContractUnitTests
     [Fact]
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
-        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
         string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\LegacyThreadData.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
         string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
@@ -328,7 +328,7 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("return RunLegacyHashThread(param);", threadEntry, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/Global.h\"", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", legacyThreadEntryProjection, StringComparison.Ordinal);

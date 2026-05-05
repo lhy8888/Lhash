@@ -8,7 +8,7 @@
 #include <Windows.h>
 
 #include "Common/strhelper.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Common/ResultDataRender.h"
 #include "Common/ResultDigestRender.h"
 #include "Common/Utils.h"

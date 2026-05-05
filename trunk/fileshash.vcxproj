@@ -269,7 +269,8 @@
   <ItemGroup>
     <ClInclude Include="source\Algorithms\MD5.h" />
     <ClInclude Include="source\Algorithms\SHA1.h" />
-    <ClInclude Include="source\Common\Global.h" />
+    <ClInclude Include="source\Common\HashTypes.h" />
+    <ClInclude Include="source\Common\PlatformCompat.h" />
     <ClInclude Include="source\Common\HashEngine.h" />
     <ClInclude Include="source\Common\strhelper.h" />
     <ClInclude Include="source\Adapters\UiBridge\HashEngineBridge.h" />
@@ -299,6 +300,7 @@
     <ClInclude Include="source\WinMFC\FindDlg.h" />
     <ClInclude Include="source\WinMFC\HyperEdit.h" />
     <ClInclude Include="source\WinMFC\HyperEditHash.h" />
+    <ClInclude Include="source\WinMFC\WinMFCMessages.h" />
     <ClInclude Include="source\WinMFC\ShellExtComm.h" />
     <ClInclude Include="source\WinMFC\UIBridgeMFC.h" />
     <ClInclude Include="source\WinMFC\UIStringsBase.h" />

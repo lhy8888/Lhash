@@ -5,7 +5,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "FilesHashTaskUpdate.h"
 
 struct ITaskbarList3;

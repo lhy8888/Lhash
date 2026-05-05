@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_CONTEXT_OPS_H_
 #define _HASH_DIGEST_CONTEXT_OPS_H_
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 
 namespace HashEngineInternal
 {

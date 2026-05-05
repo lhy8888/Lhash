@@ -109,7 +109,7 @@ public sealed class SecurityHardeningUnitTests
     [Fact]
     public void RuntimeUses_CheckedArithmetic_ForSizesAndProgress()
     {
-        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
         string checkedArithmetic = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\CheckedArithmetic.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
         string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");

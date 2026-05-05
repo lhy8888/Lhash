@@ -1,7 +1,7 @@
 #ifndef _HASH_DIGEST_LIFECYCLE_H_
 #define _HASH_DIGEST_LIFECYCLE_H_
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Runtime/HashExecutionContext.h"
 #include "Domain/HashRequest.h"
 #include "Common/HashResult.h"

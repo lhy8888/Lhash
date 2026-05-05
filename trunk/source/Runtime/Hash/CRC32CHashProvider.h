@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "crc32c/crc32c.h"
 
 namespace HashRuntime

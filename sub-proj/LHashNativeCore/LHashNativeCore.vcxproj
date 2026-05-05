@@ -321,7 +321,8 @@
     <ClInclude Include="..\..\third_party\crc32c\1.1.2\src\crc32c_round_up.h" />
     <ClInclude Include="..\..\third_party\crc32c\1.1.2\src\crc32c_sse42.h" />
     <ClInclude Include="..\..\third_party\crc32c\1.1.2\src\crc32c_sse42_check.h" />
-    <ClInclude Include="..\..\trunk\source\Common\Global.h" />
+    <ClInclude Include="..\..\trunk\source\Common\HashTypes.h" />
+    <ClInclude Include="..\..\trunk\source\Common\PlatformCompat.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestBufferPlan.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestCompletion.h" />
     <ClInclude Include="..\..\trunk\source\Common\HashDigestContextOps.h" />

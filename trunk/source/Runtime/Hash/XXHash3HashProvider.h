@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 
 #ifndef XXH_STATIC_LINKING_ONLY
 #define XXH_STATIC_LINKING_ONLY

@@ -2,7 +2,7 @@
 #define _RUNTIME_HASH_EXECUTION_CONTEXT_H_
 
 #include "Common/CheckedArithmetic.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Runtime/HashProgressSink.h"
 
 class NullHashProgressSink : public HashProgressSink

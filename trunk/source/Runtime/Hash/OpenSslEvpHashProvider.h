@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 
 #if defined(LHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/evp.h>

@@ -36,7 +36,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string result = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashResult.h");
         string digestMetadataAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
         string digestValueAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
-        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
+        string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
         string legacyTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
 
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
