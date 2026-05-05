@@ -22,7 +22,7 @@ Profiles:
 ## Workflow
 
 The benchmark workflow lives at:
-- [native-benchmarks.yml](D:\hash\fhash\.github\workflows\native-benchmarks.yml)
+- [native-benchmarks.yml](../.github/workflows/native-benchmarks.yml)
 
 It runs both profiles per platform and uploads one artifact per platform:
 - `LHash-native-benchmarks-x64`
