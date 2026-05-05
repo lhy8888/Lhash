@@ -557,7 +557,9 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("fileAttributes.nFileSizeLow", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("uint64_t size = static_cast<uint64_t>(osFile.getLength());", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("int64_t fileLength = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("return static_cast<uint64_t>(fileLength);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("osFile.close();", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", preScanSizeAccountingHeader, StringComparison.Ordinal);
         Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", preScanSizeAccounting, StringComparison.Ordinal);

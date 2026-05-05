@@ -5116,8 +5116,10 @@ internal static class Program
             AssertDoesNotContain(hashPreScanSizeProbe, "fileAttributes.nFileSizeLow", "Phase 73 HashPreScanSizeProbe.cpp still composes file size from Windows attribute data.");
             AssertContains(hashPreScanSizeProbe, "sunjwbase::OsFile osFile(path);", "Phase 73 HashPreScanSizeProbe.cpp does not yet use the shared OsFile path.");
             AssertContains(hashPreScanSizeProbe, "if (!osFile.openReadScan())", "Phase 73 HashPreScanSizeProbe.cpp does not yet gate size probing through openReadScan.");
-            AssertContains(hashPreScanSizeProbe, "uint64_t size = static_cast<uint64_t>(osFile.getLength());", "Phase 73 HashPreScanSizeProbe.cpp does not yet read the file size from the opened handle.");
-            AssertContains(hashPreScanSizeProbe, "osFile.close();", "Phase 73 HashPreScanSizeProbe.cpp does not yet close the shared OsFile handle.");
+AssertContains(hashPreScanSizeProbe, "int64_t fileLength = osFile.getLength();", "Phase 73 HashPreScanSizeProbe.cpp does not yet read the file size from the opened handle.");
+AssertContains(hashPreScanSizeProbe, "if (fileLength <= 0)", "Phase 73 HashPreScanSizeProbe.cpp does not yet reject non-positive file lengths.");
+AssertContains(hashPreScanSizeProbe, "return static_cast<uint64_t>(fileLength);", "Phase 73 HashPreScanSizeProbe.cpp does not yet return the opened handle length safely.");
+AssertContains(hashPreScanSizeProbe, "osFile.close();", "Phase 73 HashPreScanSizeProbe.cpp does not yet close the shared OsFile handle.");
             AssertContains(hashEnginePreparation, "uint64_t fSize = ResolveHashPreScannedFileSize(path);", "Phase 73 HashEnginePreparation.cpp does not yet delegate pre-scan size probing.");
             AssertDoesNotContain(hashEnginePreparation, "OsFile osFile(path);", "Phase 73 HashEnginePreparation.cpp should no longer own pre-scan file-open details.");
             AssertContains(hashEngineInternal, "#include \"Common/HashPreScanSizeProbe.h\"", "Phase 73 HashEngineInternal.h does not yet consume HashPreScanSizeProbe.");

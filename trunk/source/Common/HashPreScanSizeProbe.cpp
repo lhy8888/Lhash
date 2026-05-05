@@ -18,8 +18,14 @@ namespace HashEngineInternal
 			return 0;
 		}
 
-		uint64_t size = static_cast<uint64_t>(osFile.getLength());
+		int64_t fileLength = osFile.getLength();
 		osFile.close();
-		return size;
+
+		if (fileLength <= 0)
+		{
+			return 0;
+		}
+
+		return static_cast<uint64_t>(fileLength);
 	}
 }

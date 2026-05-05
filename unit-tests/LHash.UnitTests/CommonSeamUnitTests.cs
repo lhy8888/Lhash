@@ -274,7 +274,9 @@ public sealed class CommonSeamUnitTests
         Assert.DoesNotContain("fileAttributes.nFileSizeHigh", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("uint64_t size = static_cast<uint64_t>(osFile.getLength());", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("int64_t fileLength = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("return static_cast<uint64_t>(fileLength);", preScanSizeProbe, StringComparison.Ordinal);
 
         Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", bridgeHeader, StringComparison.Ordinal);
