@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace LHash.UnitTests;
 
 public sealed class CommonSeamUnitTests
@@ -80,6 +82,57 @@ public sealed class CommonSeamUnitTests
             Assert.DoesNotContain("<PlatformToolset>v145</PlatformToolset>", projectContents, StringComparison.Ordinal);
             Assert.Contains("<PlatformToolset>v143</PlatformToolset>", projectContents, StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void SharedCoreSourceManifests_StayAlignedBetweenCMakeAndNativeCore()
+    {
+        string cmakeSources = RepositoryTestContext.ReadUtf8File(@"cmake\LHashCoreSources.cmake");
+        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+
+        HashSet<string> cmakeSourceSet = ExtractCMakeSourceManifest(cmakeSources);
+        HashSet<string> nativeCoreSourceSet = ExtractNativeCoreSourceManifest(nativeCoreProject);
+
+        // Keep this check focused on the shared core chain, not on build-system
+        // support files or third-party implementation variants that are owned by
+        // another manifest layer.
+        string[] excludedSourcePaths =
+        [
+            @"trunk/source/Adapters/ThreadDataBridge/HashThreadEntry.cpp",
+            @"trunk/source/Common/Utils.cpp",
+            @"trunk/source/OsUtils/OsFilePosixDarwin.cpp",
+            @"trunk/source/OsUtils/OsFileWinApi.cpp",
+            @"trunk/source/OsUtils/OsThreadPosixDarwin.cpp",
+            @"trunk/source/OsUtils/OsThreadWinApi.cpp",
+            @"trunk/source/stdafx.cpp",
+            @"trunk/source/WinCommon/WindowsComm.cpp",
+            @"third_party/blake3/1.8.4/c/blake3_avx2.c",
+            @"third_party/blake3/1.8.4/c/blake3_avx512.c",
+            @"third_party/blake3/1.8.4/c/blake3_neon.c",
+            @"third_party/blake3/1.8.4/c/blake3_sse2.c",
+            @"third_party/blake3/1.8.4/c/blake3_sse41.c",
+        ];
+
+        foreach (string excludedSourcePath in excludedSourcePaths)
+        {
+            cmakeSourceSet.Remove(excludedSourcePath);
+            nativeCoreSourceSet.Remove(excludedSourcePath);
+        }
+
+        List<string> missingFromNativeCore = cmakeSourceSet
+            .Except(nativeCoreSourceSet, StringComparer.Ordinal)
+            .OrderBy(sourcePath => sourcePath, StringComparer.Ordinal)
+            .ToList();
+        List<string> extraInNativeCore = nativeCoreSourceSet
+            .Except(cmakeSourceSet, StringComparer.Ordinal)
+            .OrderBy(sourcePath => sourcePath, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.True(
+            missingFromNativeCore.Count == 0 && extraInNativeCore.Count == 0,
+            $"Shared core source manifests diverged.\n" +
+            $"Missing from LHashNativeCore.vcxproj: {string.Join(", ", missingFromNativeCore)}\n" +
+            $"Extra in LHashNativeCore.vcxproj: {string.Join(", ", extraInNativeCore)}");
     }
 
     [Fact]
@@ -606,5 +659,44 @@ public sealed class CommonSeamUnitTests
             count++;
             startIndex = index + needle.Length;
         }
+    }
+
+    private static HashSet<string> ExtractCMakeSourceManifest(string content)
+    {
+        HashSet<string> sourcePaths = new(StringComparer.Ordinal);
+        MatchCollection matches = Regex.Matches(content, "\"(?<path>[^\"]+\\.(?:cpp|cc|c))\"");
+        foreach (Match match in matches)
+        {
+            sourcePaths.Add(NormalizeCMakeSourcePath(match.Groups["path"].Value));
+        }
+
+        return sourcePaths;
+    }
+
+    private static HashSet<string> ExtractNativeCoreSourceManifest(string content)
+    {
+        HashSet<string> sourcePaths = new(StringComparer.Ordinal);
+        MatchCollection matches = Regex.Matches(content, "Include=\"(?<path>[^\"]+\\.(?:cpp|cc|c))\"");
+        foreach (Match match in matches)
+        {
+            sourcePaths.Add(NormalizeNativeCoreSourcePath(match.Groups["path"].Value));
+        }
+
+        return sourcePaths;
+    }
+
+    private static string NormalizeCMakeSourcePath(string sourcePath)
+    {
+        return sourcePath
+            .Replace("${LHASH_SOURCE_ROOT}/", "trunk/source/", StringComparison.Ordinal)
+            .Replace("${LHASH_THIRD_PARTY_ROOT}/", "third_party/", StringComparison.Ordinal)
+            .Replace('\\', '/');
+    }
+
+    private static string NormalizeNativeCoreSourcePath(string sourcePath)
+    {
+        return sourcePath
+            .Replace(@"..\..\", string.Empty, StringComparison.Ordinal)
+            .Replace('\\', '/');
     }
 }
