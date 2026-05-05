@@ -125,6 +125,7 @@ public sealed class SecurityHardeningUnitTests
     [Fact]
     public void RuntimeUses_CheckedArithmetic_ForSizesAndProgress()
     {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
         string checkedArithmetic = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\CheckedArithmetic.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
         string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
@@ -132,6 +133,7 @@ public sealed class SecurityHardeningUnitTests
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string successfulCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
 
+        Assert.Contains("std::atomic<uint64_t> countedSize;", global, StringComparison.Ordinal);
         Assert.Contains("TryAddUInt64", checkedArithmetic, StringComparison.Ordinal);
         Assert.Contains("TrySubtractUInt64", checkedArithmetic, StringComparison.Ordinal);
         Assert.Contains("TryMultiplyUInt64", checkedArithmetic, StringComparison.Ordinal);
@@ -142,8 +144,14 @@ public sealed class SecurityHardeningUnitTests
 
         Assert.Contains("SaturatingAddUInt64", executionContext, StringComparison.Ordinal);
         Assert.Contains("ReplaceSizedValueUInt64", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.compare_exchange_weak(", executionContext, StringComparison.Ordinal);
         Assert.Contains("SaturatingAddUInt64", threadAccess, StringComparison.Ordinal);
         Assert.Contains("ReplaceSizedValueUInt64", threadAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", threadAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", threadAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.compare_exchange_weak(", threadAccess, StringComparison.Ordinal);
         Assert.Contains("CalculateBoundedProgressValue", progressTracker, StringComparison.Ordinal);
         Assert.Contains("SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("CalculateIndexedProgressValue", successfulCompletion, StringComparison.Ordinal);

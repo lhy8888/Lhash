@@ -241,22 +241,46 @@ static inline void ResetThreadDataHashAlgorithms(ThreadData& threadData)
 
 static inline uint64_t GetThreadDataTotalSize(const ThreadData& threadData)
 {
-	return GetThreadDataHashJobState(threadData).countedSize;
+	return GetThreadDataHashJobState(threadData).countedSize.load(std::memory_order_relaxed);
 }
 
 static inline void ResetThreadDataTotalSize(ThreadData& threadData)
 {
-	GetMutableThreadDataHashJobState(threadData).countedSize = 0;
+	GetMutableThreadDataHashJobState(threadData).countedSize.store(0, std::memory_order_relaxed);
 }
 
 static inline void AddThreadDataTotalSize(ThreadData& threadData, uint64_t sizeDelta)
 {
-	GetMutableThreadDataHashJobState(threadData).countedSize = SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta);
+	uint64_t current = GetMutableThreadDataHashJobState(threadData).countedSize.load(std::memory_order_relaxed);
+	for (;;)
+	{
+		uint64_t desired = SaturatingAddUInt64(current, sizeDelta);
+		if (GetMutableThreadDataHashJobState(threadData).countedSize.compare_exchange_weak(
+			current,
+			desired,
+			std::memory_order_relaxed,
+			std::memory_order_relaxed))
+		{
+			return;
+		}
+	}
 }
 
 static inline void ReplaceThreadDataCountedFileSize(ThreadData& threadData, uint64_t previousSize, uint64_t currentSize)
 {
-	GetMutableThreadDataHashJobState(threadData).countedSize = ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize);
+	uint64_t current = GetMutableThreadDataHashJobState(threadData).countedSize.load(std::memory_order_relaxed);
+	for (;;)
+	{
+		uint64_t desired = ReplaceSizedValueUInt64(current, previousSize, currentSize);
+		if (GetMutableThreadDataHashJobState(threadData).countedSize.compare_exchange_weak(
+			current,
+			desired,
+			std::memory_order_relaxed,
+			std::memory_order_relaxed))
+		{
+			return;
+		}
+	}
 }
 
 #endif

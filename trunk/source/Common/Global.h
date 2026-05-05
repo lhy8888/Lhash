@@ -146,7 +146,7 @@ struct HashJobState
 
 	HashJobState(const HashJobState& other)
 		: working(other.working.load()),
-		countedSize(other.countedSize),
+		countedSize(other.countedSize.load(std::memory_order_relaxed)),
 		results(other.results)
 	{
 	}
@@ -154,13 +154,13 @@ struct HashJobState
 	HashJobState& operator=(const HashJobState& other)
 	{
 		working.store(other.working.load());
-		countedSize = other.countedSize;
+		countedSize.store(other.countedSize.load(std::memory_order_relaxed), std::memory_order_relaxed);
 		results = other.results;
 		return *this;
 	}
 
 	std::atomic<bool> working;
-	uint64_t countedSize;
+	std::atomic<uint64_t> countedSize;
 	HashResultList results;
 };
 

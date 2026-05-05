@@ -530,8 +530,9 @@ internal static class Program
             AssertContains(threadAccess, "return GetThreadDataHashCancellationState(threadData).stopRequested.load();", "ThreadData access seams stop getter does not yet route through the grouped cancellation seam.");
             AssertContains(threadAccess, "GetMutableThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest = uppercase;", "ThreadData access seams uppercase setter does not yet route through the grouped preference seam.");
             AssertContains(threadAccess, "return GetThreadDataHashExecutionPreferenceState(threadData).uppercaseDigest;", "ThreadData access seams uppercase getter does not yet route through the grouped preference seam.");
-            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize = SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta);", "ThreadData access seams total-size increment helper does not yet use bounded uint64 accounting.");
-            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize = ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize);", "ThreadData access seams replacement-size helper does not yet use checked uint64 accounting.");
+            AssertContains(threadAccess, "GetThreadDataHashJobState(threadData).countedSize.load(std::memory_order_relaxed)", "ThreadData access seams total-size getter does not yet read the counted size atomically.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize.store(0, std::memory_order_relaxed);", "ThreadData access seams reset helper does not yet clear the counted size atomically.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize.compare_exchange_weak(", "ThreadData access seams total-size increment helper does not yet use an atomic compare-exchange loop.");
             AssertContains(threadAccess, "return GetThreadDataInputState(threadData).fileCount;", "ThreadData access seams file-count getter does not yet route through the grouped input-state seam.");
             AssertContains(threadAccess, "return GetThreadDataInputFiles(threadData)[fileIndex];", "ThreadData access seams grouped path getter does not yet route through the neutral ThreadData field name.");
             AssertContains(threadAccess, "return GetThreadDataHashJobState(threadData).results;", "ThreadData access seams grouped result-list getter does not yet route through the grouped job-state seam.");
@@ -5856,8 +5857,9 @@ internal static class Program
             AssertContains(checkedArithmetic, "SaturatingAddUInt64", "Phase 90 checked arithmetic helpers do not yet expose saturating adds.");
             AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Phase 90 checked arithmetic helpers do not yet expose bounded replacement math.");
             AssertContains(progressTracker, "CalculateBoundedProgressValue", "Phase 90 progress tracking does not yet use bounded progress math.");
-            AssertContains(threadAccess, "SaturatingAddUInt64(GetThreadDataTotalSize(threadData), sizeDelta)", "Phase 90 thread-data accounting does not yet use saturating adds.");
-            AssertContains(threadAccess, "ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize)", "Phase 90 thread-data accounting does not yet use bounded replacement math.");
+            AssertContains(threadAccess, "GetThreadDataHashJobState(threadData).countedSize.load(std::memory_order_relaxed)", "Phase 90 thread-data accounting does not yet read the counted size atomically.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize.store(0, std::memory_order_relaxed);", "Phase 90 thread-data accounting does not yet clear the counted size atomically.");
+            AssertContains(threadAccess, "GetMutableThreadDataHashJobState(threadData).countedSize.compare_exchange_weak(", "Phase 90 thread-data accounting does not yet update the counted size with an atomic compare-exchange loop.");
 
             AssertContains(handleGuard, "typedef UniqueHandleBase<HANDLE, HandleCloseTraits> UniqueWinHandle;", "Phase 90 WinHandleGuard does not yet expose UniqueWinHandle.");
             AssertContains(legacyShell, "std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", "Phase 90 legacy shell extension does not yet use a safe CreateProcess buffer.");

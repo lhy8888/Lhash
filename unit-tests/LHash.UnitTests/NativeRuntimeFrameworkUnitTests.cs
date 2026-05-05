@@ -9,11 +9,15 @@ public sealed class NativeRuntimeFrameworkUnitTests
         string filters = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj.filters");
         string solution = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash15.sln");
         string gitignore = RepositoryTestContext.ReadUtf8File(@".gitignore");
+        string nativeUtf8Targets = RepositoryTestContext.ReadUtf8File(@"NativeUtf8.targets");
 
         Assert.Contains("<ProjectName>LHash.NativeRuntimeTests</ProjectName>", project, StringComparison.Ordinal);
         Assert.Contains("<ConfigurationType>Application</ConfigurationType>", project, StringComparison.Ordinal);
         Assert.Contains("<UseOfMfc>Static</UseOfMfc>", project, StringComparison.Ordinal);
         Assert.Contains(@"$(ProjectDir)..\..\trunk\source\", project, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", project, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\..\third_party\xxhash\0.8.3", project, StringComparison.Ordinal);
+        Assert.Contains(@"$(ProjectDir)..\..\third_party\crc32c\1.1.2\include", project, StringComparison.Ordinal);
         Assert.Contains(@"..\..\sub-proj\LHashNativeCore\LHashNativeCore.vcxproj", project, StringComparison.Ordinal);
         Assert.Contains("<LinkLibraryDependencies>true</LinkLibraryDependencies>", project, StringComparison.Ordinal);
         Assert.Contains("Version.lib;%(AdditionalDependencies)", project, StringComparison.Ordinal);
@@ -27,6 +31,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
 
         Assert.Contains("LHash.NativeRuntimeTests", solution, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests/**/x64/", gitignore, StringComparison.Ordinal);
+        Assert.Contains("NativeOpenSslVendor.targets", nativeUtf8Targets, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -76,6 +81,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);

@@ -3,6 +3,7 @@
 #include "Common/HashEngineInternal.h"
 #include "Common/ThreadPool.h"
 
+#include <exception>
 #include <future>
 
 namespace HashEngineInternal
@@ -103,9 +104,26 @@ namespace HashEngineInternal
 			return true;
 		});
 
+		std::exception_ptr firstException;
+
 		for (size_t taskIndex = 0; taskIndex < digestUpdateTasks.size(); ++taskIndex)
 		{
-			digestUpdateTasks[taskIndex].wait();
+			try
+			{
+				digestUpdateTasks[taskIndex].get();
+			}
+			catch (...)
+			{
+				if (!firstException)
+				{
+					firstException = std::current_exception();
+				}
+			}
+		}
+
+		if (firstException)
+		{
+			std::rethrow_exception(firstException);
 		}
 	}
 }

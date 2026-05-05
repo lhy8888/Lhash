@@ -65,22 +65,46 @@ static inline bool ShouldStopHashExecution(const HashExecutionContext& execution
 
 static inline uint64_t GetHashExecutionTotalSize(const HashExecutionContext& executionContext)
 {
-	return executionContext.jobState.countedSize;
+	return executionContext.jobState.countedSize.load(std::memory_order_relaxed);
 }
 
 static inline void ResetHashExecutionTotalSize(HashExecutionContext& executionContext)
 {
-	executionContext.jobState.countedSize = 0;
+	executionContext.jobState.countedSize.store(0, std::memory_order_relaxed);
 }
 
 static inline void AddHashExecutionTotalSize(HashExecutionContext& executionContext, uint64_t sizeDelta)
 {
-	executionContext.jobState.countedSize = SaturatingAddUInt64(executionContext.jobState.countedSize, sizeDelta);
+	uint64_t current = executionContext.jobState.countedSize.load(std::memory_order_relaxed);
+	for (;;)
+	{
+		uint64_t desired = SaturatingAddUInt64(current, sizeDelta);
+		if (executionContext.jobState.countedSize.compare_exchange_weak(
+			current,
+			desired,
+			std::memory_order_relaxed,
+			std::memory_order_relaxed))
+		{
+			return;
+		}
+	}
 }
 
 static inline void ReplaceHashExecutionCountedFileSize(HashExecutionContext& executionContext, uint64_t previousSize, uint64_t currentSize)
 {
-	executionContext.jobState.countedSize = ReplaceSizedValueUInt64(GetHashExecutionTotalSize(executionContext), previousSize, currentSize);
+	uint64_t current = executionContext.jobState.countedSize.load(std::memory_order_relaxed);
+	for (;;)
+	{
+		uint64_t desired = ReplaceSizedValueUInt64(current, previousSize, currentSize);
+		if (executionContext.jobState.countedSize.compare_exchange_weak(
+			current,
+			desired,
+			std::memory_order_relaxed,
+			std::memory_order_relaxed))
+		{
+			return;
+		}
+	}
 }
 
 static inline HashResult& AppendHashExecutionResult(HashExecutionContext& executionContext)

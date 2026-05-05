@@ -276,6 +276,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> stopRequested;", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> working;", global, StringComparison.Ordinal);
+        Assert.Contains("std::atomic<uint64_t> countedSize;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("uint64_t countedSize;", global, StringComparison.Ordinal);
         Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
         Assert.Contains("struct ThreadDataInputState", legacyThreadData, StringComparison.Ordinal);
         Assert.Contains("struct ThreadDataExecutionState", legacyThreadData, StringComparison.Ordinal);
@@ -292,6 +294,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashJobState& jobState;", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashCancellationState& cancellationState;", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", executionContext, StringComparison.Ordinal);
+        Assert.Contains("compare_exchange_weak(", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = SaturatingAddUInt64", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = ReplaceSizedValueUInt64", executionContext, StringComparison.Ordinal);
         Assert.False(File.Exists(threadExecutionAccessPath));
         Assert.False(File.Exists(threadEntryProjectionPath));
         Assert.False(File.Exists(legacyCommonThreadEntryHeaderPath));
@@ -301,6 +308,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataHashCancellationState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("GetThreadDataHashJobState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("compare_exchange_weak(", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = SaturatingAddUInt64", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = ReplaceSizedValueUInt64", legacyThreadExecutionAccess, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionContext;", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
@@ -520,6 +532,11 @@ public sealed class HashContractUnitTests
         Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("std::vector<std::future<void>> digestUpdateTasks;", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("digestUpdateTasks.push_back(threadPool->enqueue([&hashContexts, data, dataLen, operationDescriptor]()", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::exception_ptr firstException;", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("digestUpdateTasks[taskIndex].get();", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("catch (...)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::rethrow_exception(firstException);", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("digestUpdateTasks[taskIndex].wait();", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", progressTracker, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", progressTracker, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", progressTracker, StringComparison.Ordinal);

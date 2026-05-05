@@ -1,9 +1,11 @@
 #include "..\..\trunk\source\stdafx.h"
 
+#include <chrono>
 #include <future>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 #include "NativeTestHarness.h"
@@ -14,6 +16,8 @@
 #include "Common/HashDigestOperationRegistry.h"
 #include "Common/HashDigestUpdater.h"
 #include "Common/HashEngine.h"
+#include "Common/HashEngineInternal.h"
+#include "Common/ThreadPool.h"
 #include "LegacyCompat/HashThreadEntry.h"
 #include "Runtime/HashExecutionContext.h"
 #include "Runtime/HashProgressSink.h"
@@ -61,6 +65,55 @@ namespace
 			HashRuntime::ResetOpenSslEvpFailureInjection();
 		}
 	};
+
+	struct HashDigestUpdaterParallelExceptionState
+	{
+		HashDigestUpdaterParallelExceptionState()
+			: startedCount(0),
+			finishedCount(0),
+			releaseSignal()
+		{
+		}
+
+		std::atomic<int> startedCount;
+		std::atomic<int> finishedCount;
+		std::shared_future<void> releaseSignal;
+	};
+
+	static HashDigestUpdaterParallelExceptionState *g_hashDigestUpdaterParallelExceptionState = NULL;
+
+	class ScopedHashDigestUpdaterParallelExceptionState
+	{
+	public:
+		explicit ScopedHashDigestUpdaterParallelExceptionState(HashDigestUpdaterParallelExceptionState& state)
+		{
+			g_hashDigestUpdaterParallelExceptionState = &state;
+		}
+
+		~ScopedHashDigestUpdaterParallelExceptionState()
+		{
+			g_hashDigestUpdaterParallelExceptionState = NULL;
+		}
+	};
+
+	static void ThrowHashDigestUpdaterParallelException(HashEngineInternal::FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		(void)hashContexts;
+		(void)data;
+		(void)dataLen;
+		g_hashDigestUpdaterParallelExceptionState->startedCount.fetch_add(1, std::memory_order_relaxed);
+		throw std::runtime_error("expected parallel digest update failure");
+	}
+
+	static void WaitHashDigestUpdaterParallelRelease(HashEngineInternal::FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen)
+	{
+		(void)hashContexts;
+		(void)data;
+		(void)dataLen;
+		g_hashDigestUpdaterParallelExceptionState->startedCount.fetch_add(1, std::memory_order_relaxed);
+		g_hashDigestUpdaterParallelExceptionState->releaseSignal.wait();
+		g_hashDigestUpdaterParallelExceptionState->finishedCount.fetch_add(1, std::memory_order_relaxed);
+	}
 
 	class CapturingProgressSink : public HashProgressSink
 	{
@@ -1779,6 +1832,66 @@ namespace
 		NativeAssertEqual(GetHashAlgorithmId(RESULT_DIGEST_MD5), NormalizeHashAlgorithmId(digestUpdateRequest.operationDescriptors[0].algorithmId), "Supported digest planning should remain intact when descriptor-only algorithms are present.");
 	}
 
+	static void HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete()
+	{
+		HashEngineInternal::FileHashContexts hashContexts;
+		ThreadPool threadPool(2);
+
+		HashEngineInternal::DigestUpdateRequest digestUpdateRequest = {};
+		HashEngineInternal::HashDigestOperationDescriptor throwingDescriptor = {};
+		throwingDescriptor.algorithmId = CreateAlgorithmId("unit-test-throwing");
+		throwingDescriptor.updateAction = &ThrowHashDigestUpdaterParallelException;
+		HashEngineInternal::HashDigestOperationDescriptor blockingDescriptor = {};
+		blockingDescriptor.algorithmId = CreateAlgorithmId("unit-test-blocking");
+		blockingDescriptor.updateAction = &WaitHashDigestUpdaterParallelRelease;
+		digestUpdateRequest.operationDescriptors.push_back(throwingDescriptor);
+		digestUpdateRequest.operationDescriptors.push_back(blockingDescriptor);
+
+		HashDigestUpdaterParallelExceptionState state;
+		std::promise<void> releasePromise;
+		state.releaseSignal = releasePromise.get_future().share();
+		ScopedHashDigestUpdaterParallelExceptionState scopedState(state);
+
+		std::future<void> updateFuture = std::async(std::launch::async, [&]()
+		{
+			HashEngineInternal::UpdateDigestContextsParallel(digestUpdateRequest, hashContexts, NULL, 0, &threadPool);
+		});
+
+		for (int spin = 0; spin < 500; ++spin)
+		{
+			if (state.startedCount.load(std::memory_order_relaxed) >= 2)
+			{
+				break;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+
+		NativeAssertEqual(static_cast<int>(2), state.startedCount.load(std::memory_order_relaxed), "Parallel digest update workers should both start before the updater returns.");
+		NativeAssertEqual(static_cast<int>(0), state.finishedCount.load(std::memory_order_relaxed), "The blocking digest update worker should still be waiting for release before the exception is rethrown.");
+		NativeAssertEqual(std::future_status::timeout, updateFuture.wait_for(std::chrono::milliseconds(50)), "The digest updater should wait for all parallel workers before rethrowing exceptions.");
+
+		releasePromise.set_value();
+
+		bool caughtExpectedException = false;
+		try
+		{
+			updateFuture.get();
+		}
+		catch (const std::runtime_error& error)
+		{
+			caughtExpectedException = true;
+			NativeAssertTrue(std::string(error.what()) == "expected parallel digest update failure", "The digest updater should rethrow the first parallel worker exception.");
+		}
+		catch (...)
+		{
+			NativeAssertTrue(false, "The digest updater should rethrow the first parallel worker exception.");
+		}
+
+		NativeAssertTrue(caughtExpectedException, "The digest updater should propagate a parallel worker exception.");
+		NativeAssertEqual(static_cast<int>(1), state.finishedCount.load(std::memory_order_relaxed), "The blocking digest update worker should complete before the updater rethrows.");
+	}
+
 	static void HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms()
 	{
 		ScopedTempDirectory tempDirectory;
@@ -2066,6 +2179,7 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", &HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport });
 	tests.push_back({ "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", &HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms });
 	tests.push_back({ "HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency", &HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency });
+	tests.push_back({ "HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete", &HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete });
 	tests.push_back({ "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", &HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms });
 	tests.push_back({ "HashResultSearch_FindsMatchingRuntimeDigests", &HashResultSearch_FindsMatchingRuntimeDigests });
 	tests.push_back({ "HashResultSearch_MatchesPathAndDigestForRuntimeResults", &HashResultSearch_MatchesPathAndDigestForRuntimeResults });
