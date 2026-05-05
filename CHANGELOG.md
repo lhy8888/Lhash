@@ -1,7 +1,7 @@
 # Changelog
 
 This file only records the current maintained LHash release note. Older version
-entries have been removed, and the historical upstream fHash log is not
+entries have been removed, and the historical upstream release log is not
 duplicated here.
 
 ## 1.12.4 - 2026-04-30

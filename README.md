@@ -166,7 +166,10 @@ NativeCore
 Windows UI
 - WinMFC
 
-LegacyCompat
+Active adapters
+- MfcBridge
+- UiBridge
+
 third_party
 ```
 

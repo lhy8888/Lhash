@@ -156,11 +156,13 @@ NativeCore
 - Algorithms
 - Common
 
-Adapters
+Windows UI
+- WinMFC
+
+Active adapters
+- MfcBridge
 - UiBridge
 
-WinMFC
-LegacyCompat
 third_party
 ```
 
