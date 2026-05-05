@@ -3,10 +3,6 @@
 
 #include "Common/HashTypes.h"
 
-#if defined (_WIN32)
-#include <WinDef.h>
-#endif
-
 struct HashRequest;
 struct HashExecutionContext;
 

@@ -3,10 +3,6 @@
 
 #include "Common/PlatformCompat.h"
 
-#if defined (_WIN32)
-#include <WinDef.h>
-#endif
-
 int WINAPI HashThreadFunc(void *param);
 
 #endif

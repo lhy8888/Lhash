@@ -191,6 +191,7 @@ public sealed class HashContractUnitTests
         string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
         string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.h");
+        string platformCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\PlatformCompat.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.cpp");
         string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntryProjection.h");
@@ -275,6 +276,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinDef.h>", engineHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinDef.h>", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("#define WINAPI __stdcall", platformCompat, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> stopRequested;", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<bool> working;", global, StringComparison.Ordinal);
         Assert.Contains("std::atomic<uint64_t> countedSize;", global, StringComparison.Ordinal);
