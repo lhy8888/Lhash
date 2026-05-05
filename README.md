@@ -19,7 +19,7 @@ The maintained release line turns LHash from a traditional hash utility into a *
 
 ## Current release line
 
-- Current release: [`v1.12.4`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.4)
+- Current release: [`v1.12.5`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.5)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Maintained branch: `future-winui-was2`
 - Windows UI mainline: `MFC`

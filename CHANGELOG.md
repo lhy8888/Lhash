@@ -4,6 +4,29 @@ This file only records the current maintained LHash release note. Older version
 entries have been removed, and the historical upstream release log is not
 duplicated here.
 
+## 1.12.5 - 2026-05-05
+
+Patch release focused on the architecture cleanup pass, release documentation
+refresh, and version metadata alignment.
+
+### Architecture cleanup
+
+- renamed the active MFC bridge layer to clearer adapter names
+- removed dead legacy compatibility and managed bridge islands from the active tree
+- split common headers into clearer domain, runtime, and platform boundary files
+
+### Documentation and release metadata
+
+- updated the current release references to `v1.12.5`
+- refreshed the README, changelog, issue templates, and release metadata tests
+- updated the maintained Windows version metadata to `1.12.5.0`
+
+### Consistency cleanup
+
+- tightened the bridge and source-list consistency checks
+- clarified the OpenSSL provider availability model
+- kept the maintained release line aligned with the current native and CI boundaries
+
 ## 1.12.4 - 2026-04-30
 
 Patch release focused on the pristine OpenSSL 3.5.6 vendor upgrade, release

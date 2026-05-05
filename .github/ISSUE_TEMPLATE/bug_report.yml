@@ -56,7 +56,7 @@ body:
     attributes:
       label: Version or release tag
       description: Which version, tag, or commit are you using?
-      placeholder: v1.12.4
+      placeholder: v1.12.5
 
   - type: input
     id: platform
