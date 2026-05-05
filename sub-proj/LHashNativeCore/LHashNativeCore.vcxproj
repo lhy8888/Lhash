@@ -105,7 +105,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(LHashDynamicRuntime)'=='true'">MultiThreadedDebugDLL</RuntimeLibrary>
@@ -122,7 +122,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary Condition="'$(LHashDynamicRuntime)'=='true'">MultiThreadedDebugDLL</RuntimeLibrary>
@@ -141,7 +141,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary Condition="'$(LHashDynamicRuntime)'=='true'">MultiThreadedDLL</RuntimeLibrary>
@@ -161,7 +161,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\;$(ProjectDir)..\..\third_party\blake3\1.8.4\c;$(ProjectDir)..\..\third_party\xxhash\0.8.3;$(ProjectDir)..\..\third_party\crc32c\1.1.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;LHASH_WIN_UI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary Condition="'$(LHashDynamicRuntime)'=='true'">MultiThreadedDLL</RuntimeLibrary>

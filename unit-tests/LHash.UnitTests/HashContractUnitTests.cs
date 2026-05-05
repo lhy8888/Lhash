@@ -189,6 +189,46 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
+    public void NativeProjectFiles_DoNotDefineLegacyWinUiMacro()
+    {
+        string[] projectFiles =
+        [
+            @"trunk\fileshash.vcxproj",
+            @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj",
+            @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj",
+            @"native-benchmarks\LHash.NativeBenchmarks\LHash.NativeBenchmarks.vcxproj",
+        ];
+
+        foreach (string projectFile in projectFiles)
+        {
+            string projectContents = RepositoryTestContext.ReadTextFile(projectFile);
+            Assert.DoesNotContain("LHASH_WIN_UI", projectContents, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void OpenSslAlgorithms_AreConditionallyRegisteredOnlyInVendorBuilds()
+    {
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string stubProvider = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProviderStub.cpp");
+        string vendorProvider = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+
+        Assert.Contains("OpenSSL algorithms are only registered in vendor-backed builds.", registryCore, StringComparison.Ordinal);
+        RepositoryTestContext.AssertContainsInOrder(
+            registryCore,
+            "#if defined(LHASH_WITH_OPENSSL3_VENDOR)",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-shake256-512\", \"SHAKE256-512\", true, false });",
+            "#endif");
+
+        Assert.Contains("return false;", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_MD_fetch", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_DigestInit_ex2", stubProvider, StringComparison.Ordinal);
+        Assert.Contains("#error \"OpenSslEvpHashProvider.cpp is the vendor-backed implementation.", vendorProvider, StringComparison.Ordinal);
+        Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR", vendorProvider, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashJobState_ResultsAreExecutionThreadOwnedAndPublishedThroughSnapshots()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
@@ -199,6 +239,19 @@ public sealed class HashContractUnitTests
         Assert.Contains("Legacy synchronous bridge only. The execution thread owns the live result", threadDataResultAccess, StringComparison.Ordinal);
         Assert.Contains("UI code must not touch it concurrently.", threadDataResultAccess, StringComparison.Ordinal);
         Assert.Contains("UI code should consume published snapshots", threadDataResultAccess, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MacOsCliMvp_IsAnEngineValidationArtifact_NotAFeatureCompleteEndUserCli()
+    {
+        string cliMain = RepositoryTestContext.ReadTextFile(@"trunk\cli\main.cpp");
+        string macosCoreSupport = RepositoryTestContext.ReadTextFile(@"docs\MACOS_CORE_SUPPORT.md");
+        string coreBuild = RepositoryTestContext.ReadTextFile(@"docs\CORE_BUILD.md");
+
+        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", cliMain, StringComparison.Ordinal);
+        Assert.Contains("engine validation artifact built on the same core entry point", macosCoreSupport, StringComparison.Ordinal);
+        Assert.Contains("engine validation surface", macosCoreSupport, StringComparison.Ordinal);
+        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", coreBuild, StringComparison.Ordinal);
     }
 
     [Fact]

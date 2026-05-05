@@ -105,6 +105,5 @@ the macOS core support is real rather than merely buildable.
 The macOS arm64 CLI MVP workflow, [`macOS CLI MVP Build workflow`](../.github/workflows/macos-cli-build.yml),
 builds `lhash_cli` on top of the core entry point and publishes a `tar.gz`
 validation artifact containing `lhash`, `README.txt`, `BUILD_INFO.txt`, and
-`SHA256.txt`. It is separate from the core matrix workflow and is not part of
-the Windows MFC release line.
+`SHA256.txt`. It is an engine validation artifact, not a feature-complete end-user CLI, and it is separate from the core matrix workflow and the Windows MFC release line.
 
