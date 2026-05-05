@@ -218,9 +218,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);
         Assert.DoesNotContain("make_unique<DigestDataBuffer>(preferredBufferLength)", digestQueue, StringComparison.Ordinal);
 
-        Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", nativeRuntimeTests, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", nativeRuntimeTests, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", nativeRuntimeTests, StringComparison.Ordinal);
         Assert.Contains("std::async(std::launch::async, runSingleRequest)", nativeRuntimeTests, StringComparison.Ordinal);
     }
 

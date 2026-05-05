@@ -1,7 +1,84 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
 namespace LHash.UnitTests;
 
 public sealed class NativeRuntimeFrameworkUnitTests
 {
+    private static readonly string[] ExpectedNativeRuntimeTests = new[]
+    {
+        "HashThreadFunc_ComputesExpectedDigestsForSingleFile",
+        "HashThreadFunc_ProcessesMultipleFilesAndWholeProgress",
+        "HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors",
+        "HashThreadFunc_RespectsSelectedAlgorithms",
+        "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector",
+        "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily",
+        "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered",
+        "HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns",
+        "RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError",
+        "RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError",
+        "HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector",
+        "HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector",
+        "HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector",
+        "HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors",
+        "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants",
+        "RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered",
+        "HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns",
+        "RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered",
+        "HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns",
+        "RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun",
+        "HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns",
+        "RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest",
+        "RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests",
+        "ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection",
+        "HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset",
+        "HashRequest_AlgorithmIdsDriveSelectionAndDeduplication",
+        "HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes",
+        "HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots",
+        "HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry",
+        "HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry",
+        "HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests",
+        "HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport",
+        "HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms",
+        "HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency",
+        "HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete",
+        "HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms",
+        "HashResultSearch_FindsMatchingRuntimeDigests",
+        "HashResultSearch_MatchesPathAndDigestForRuntimeResults",
+        "HashThreadFunc_ComputesExpectedDigestsForEmptyFile",
+        "RunHashRequest_ReportsMissingFileAsErrorResult",
+        "RunHashRequest_ContinuesAfterOpenFileErrorInBatch",
+        "RunHashRequest_CancelsWhenStopRequestedBeforeStart",
+        "RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent",
+        "RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles",
+    };
+
+    private static string[] ExtractRegisteredNativeRuntimeTests(string testSource)
+    {
+        MatchCollection matches = Regex.Matches(testSource, @"tests\.push_back\(\{\s*""([^""]+)""", RegexOptions.CultureInvariant);
+        HashSet<string> testNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match match in matches)
+        {
+            if (match.Success)
+            {
+                testNames.Add(match.Groups[1].Value);
+            }
+        }
+
+        return testNames.OrderBy(testName => testName, StringComparer.Ordinal).ToArray();
+    }
+
+    private static void AssertNativeRuntimeRegistrationMatches(string testSource)
+    {
+        string[] nativeRegisteredTests = ExtractRegisteredNativeRuntimeTests(testSource);
+        string[] expectedRegisteredTests = ExpectedNativeRuntimeTests
+            .OrderBy(testName => testName, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(expectedRegisteredTests, nativeRegisteredTests);
+    }
+
     [Fact]
     public void NativeRuntimeTestProject_BuildsStandaloneAgainstNativeCore()
     {
@@ -43,50 +120,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         string harness = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\LHash.NativeRuntimeTests\NativeTestHarness.h");
 
         Assert.Contains("class CapturingProgressSink : public HashProgressSink", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForSingleFile", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ProcessesMultipleFilesAndWholeProgress", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_RespectsSelectedAlgorithms", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesOfficialBlake3DigestsForKnownVector", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesOfficialXXH3DigestsForKnownVector", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CDigestForKnownVector", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesOfficialCRC32CBoundaryDigestsForKnownVectors", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_OpenSslVariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslDigestUpdateFailureProducesExplicitFileError", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_OpenSslDigestFinalizeFailureProducesExplicitFileError", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_Blake3UnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_Blake3VariantsRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashResultSearch_FindsMatchingRuntimeDigests", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashResultSearch_MatchesPathAndDigestForRuntimeResults", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_ReportsMissingFileAsErrorResult", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_ContinuesAfterOpenFileErrorInBatch", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_IgnoresUnknownAndDuplicateAlgorithmsInRequest", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_DescriptorOnlyAlgorithmDoesNotBreakSupportedDigests", testSource, StringComparison.Ordinal);
-        Assert.Contains("ThreadDataExecutionAccess_IgnoresUnknownAlgorithmSelection", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashAlgorithmRegistry_SupportsDescriptorIdRegistrationAndReset", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashRequest_AlgorithmIdsDriveSelectionAndDeduplication", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashRequest_SelectionStateResolvesByAlgorithmIdForUnknownDigestTypes", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashResult_ProjectsRegistryExtendedDigestValuesWithoutFixedSlots", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestOperationRegistry_StaysConsistentWithAlgorithmRegistry", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestOperationRegistry_BuildsDescriptorSnapshotFromAlgorithmRegistry", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestOperationRegistry_AllowsNullDescriptorProbeForKnownDigests", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestOperationRegistry_ValidatesDescriptorCompletenessAndUnknownSupport", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestUpdater_CreatesRegistryOrderedOperationsForSelectedAlgorithms", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestUpdater_IgnoresDescriptorOnlyAlgorithmsWithoutBreakingConsistency", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashDigestUpdater_PropagatesParallelUpdateExceptionsAfterAllWorkersComplete", testSource, StringComparison.Ordinal);
-        Assert.Contains("HashThreadFunc_AllowsMetadataOnlyRequestsWithoutEnabledAlgorithms", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_CancelsWhenStopRequestedBeforeStart", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_PropagatesUppercasePreferenceInHashReadyEvent", testSource, StringComparison.Ordinal);
-        Assert.Contains("RunHashRequest_CancelsDuringFileProgressAndSkipsRemainingFiles", testSource, StringComparison.Ordinal);
+        AssertNativeRuntimeRegistrationMatches(testSource);
         Assert.Contains("RunHashThreadData(threadData)", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest(&executionContext, request)", testSource, StringComparison.Ordinal);
         Assert.Contains("E1BE4D7A8AB5560AA4199EEA339849BA8E293D55CA0A81006726D184519E647F", testSource, StringComparison.Ordinal);
