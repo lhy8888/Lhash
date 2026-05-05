@@ -2,7 +2,7 @@
 #define _LEGACY_HASH_THREAD_ENTRY_RUNTIME_H_
 
 #include "Common/HashEngine.h"
-#include "Adapters/ThreadDataBridge/HashThreadEntryProjection.h"
+#include "Adapters/MfcBridge/HashThreadEntryProjection.h"
 
 static inline int RunLegacyHashThread(void *param)
 {

@@ -2,7 +2,7 @@
 #define _LEGACY_HASH_REQUEST_TYPE_COMPAT_H_
 
 #include "Domain/HashRequest.h"
-#include "Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
 
 static inline void AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)
 {

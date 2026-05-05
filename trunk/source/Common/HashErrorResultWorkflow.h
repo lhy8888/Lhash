@@ -2,7 +2,7 @@
 #define _HASH_ERROR_RESULT_WORKFLOW_H_
 
 #include "Runtime/HashExecutionContext.h"
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 
 namespace HashEngineInternal
 {

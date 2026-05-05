@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashResultViewController.h"

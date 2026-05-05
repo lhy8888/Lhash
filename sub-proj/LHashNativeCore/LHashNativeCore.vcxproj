@@ -255,7 +255,7 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp" />
-    <ClCompile Include="..\..\trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.cpp" />
+    <ClCompile Include="..\..\trunk\source\Adapters\MfcBridge\HashThreadEntry.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestCompletion.cpp" />
     <ClCompile Include="..\..\trunk\source\Common\HashDigestContextOps.cpp" />

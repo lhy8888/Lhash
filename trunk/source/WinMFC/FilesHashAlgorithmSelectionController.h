@@ -6,7 +6,7 @@
 
 #include "Common/HashTypes.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 
 class FilesHashAlgorithmSelectionController
 {

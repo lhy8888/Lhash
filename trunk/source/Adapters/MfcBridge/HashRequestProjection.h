@@ -2,9 +2,9 @@
 #define _LEGACY_HASH_REQUEST_PROJECTION_H_
 
 #include "Domain/HashRequest.h"
-#include "Adapters/ThreadDataBridge/HashRequestTypeCompat.h"
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
-#include "Adapters/ThreadDataBridge/ThreadDataInputAccess.h"
+#include "Adapters/MfcBridge/HashRequestTypeCompat.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataInputAccess.h"
 
 static inline HashRequest CreateHashRequest(const ThreadData& threadData)
 {

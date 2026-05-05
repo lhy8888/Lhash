@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 #include "Common/ResultDataRender.h"
 #include "Common/ResultDigestRender.h"
 #include "Common/Utils.h"

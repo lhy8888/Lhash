@@ -1,7 +1,7 @@
 #ifndef _LEGACY_THREAD_DATA_INPUT_ACCESS_H_
 #define _LEGACY_THREAD_DATA_INPUT_ACCESS_H_
 
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 
 static inline const ThreadDataInputState& GetThreadDataInputState(const ThreadData& threadData)
 {

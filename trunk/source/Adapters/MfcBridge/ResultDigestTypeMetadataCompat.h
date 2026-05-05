@@ -2,7 +2,7 @@
 #define _LEGACY_RESULT_DIGEST_TYPE_METADATA_COMPAT_H_
 
 #include "Common/ResultDigestMetadataAccess.h"
-#include "Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
 
 static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
 {

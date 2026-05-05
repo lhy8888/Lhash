@@ -2,7 +2,7 @@
 
 #include "FilesHashAlgorithmSelectionController.h"
 
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "resource.h"
 
 namespace

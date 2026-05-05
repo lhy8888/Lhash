@@ -3,8 +3,8 @@
 #include "FilesHashSearchController.h"
 
 #include "Common/HashResultSearch.h"
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
-#include "Adapters/ThreadDataBridge/ThreadDataResultAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataResultAccess.h"
 #include "UIBridgeMFC.h"
 #include "WinCommon/WindowsStrings.h"
 

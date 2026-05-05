@@ -2,7 +2,7 @@
 #define _LEGACY_RESULT_DIGEST_TYPE_STATE_COMPAT_H_
 
 #include "Common/ResultDigestStateAccess.h"
-#include "Adapters/ThreadDataBridge/ResultDigestTypeMetadataCompat.h"
+#include "Adapters/MfcBridge/ResultDigestTypeMetadataCompat.h"
 
 static inline bool TryResolveDigestStorageIndex(ResultDigestType digestType, size_t *digestIndex)
 {

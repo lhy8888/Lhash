@@ -2,7 +2,7 @@
 #define _HASH_FILE_SIZE_ACCOUNTING_H_
 
 #include "Runtime/HashExecutionContext.h"
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 
 namespace sunjwbase
 {

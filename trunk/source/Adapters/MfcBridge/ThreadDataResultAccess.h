@@ -1,9 +1,9 @@
 #ifndef _LEGACY_THREAD_DATA_RESULT_ACCESS_H_
 #define _LEGACY_THREAD_DATA_RESULT_ACCESS_H_
 
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 #include "Common/HashResultSearch.h"
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 
 static inline HashResultList& GetMutableThreadDataResults(ThreadData& threadData)
 {

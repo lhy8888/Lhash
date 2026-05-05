@@ -2,8 +2,8 @@
 #define _LEGACY_THREAD_DATA_EXECUTION_ACCESS_H_
 
 #include "Common/CheckedArithmetic.h"
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
-#include "Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
+#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
 
 static inline void EnsureThreadDataHashAlgorithmSelectionStateSize(HashAlgorithmSelectionState& hashAlgorithmSelectionState)
 {

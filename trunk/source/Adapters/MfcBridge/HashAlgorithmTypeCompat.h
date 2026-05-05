@@ -4,7 +4,7 @@
 #include <string>
 
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "Adapters/ThreadDataBridge/ResultDigestTypeCompat.h"
+#include "Adapters/MfcBridge/ResultDigestTypeCompat.h"
 
 static inline bool TryGetHashAlgorithmId(ResultDigestType digestType, HashAlgorithmId *algorithmId)
 {

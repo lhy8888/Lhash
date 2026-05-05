@@ -56,7 +56,7 @@ public sealed class SecurityHardeningUnitTests
     public void HandleOwnership_UsesRaiiAcrossWorkerAndShellPaths()
     {
         string handleGuard = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\WinHandleGuard.h");
-        string threadLaunch = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadLaunch.h");
+        string threadLaunch = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadLaunch.h");
         string sessionController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSessionController.h");
         string shellCore = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\ShellExplorerCommandCore.h");
         string legacyShell = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShellExt.cpp");
@@ -127,7 +127,7 @@ public sealed class SecurityHardeningUnitTests
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
         string checkedArithmetic = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\CheckedArithmetic.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
-        string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
+        string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ThreadDataExecutionAccess.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string successfulCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");

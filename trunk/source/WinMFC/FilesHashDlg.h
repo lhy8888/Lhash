@@ -12,7 +12,7 @@
 #include "OsUtils/OsThread.h"
 
 #include "Common/HashTypes.h"
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 #include "UIBridgeMFC.h"
 #include "FilesHashAlgorithmSelectionController.h"
 #include "FilesHashCommandController.h"

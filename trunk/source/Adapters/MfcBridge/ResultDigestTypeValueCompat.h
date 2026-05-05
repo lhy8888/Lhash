@@ -2,7 +2,7 @@
 #define _LEGACY_RESULT_DIGEST_TYPE_VALUE_COMPAT_H_
 
 #include "Common/ResultDigestValueAccess.h"
-#include "Adapters/ThreadDataBridge/ResultDigestTypeStateCompat.h"
+#include "Adapters/MfcBridge/ResultDigestTypeStateCompat.h"
 
 static inline const sunjwbase::tstring& GetResultDigest(const ResultData& result, ResultDigestType digestType)
 {

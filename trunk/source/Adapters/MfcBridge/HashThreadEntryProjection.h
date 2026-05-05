@@ -2,8 +2,8 @@
 #define _LEGACY_HASH_THREAD_ENTRY_PROJECTION_H_
 
 #include "Runtime/HashExecutionContext.h"
-#include "Adapters/ThreadDataBridge/HashRequestProjection.h"
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/HashRequestProjection.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 
 static inline HashExecutionContext CreateThreadDataHashExecutionContext(ThreadData& threadData)
 {

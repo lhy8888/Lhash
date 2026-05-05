@@ -4,8 +4,8 @@
 #include <process.h>
 #include <utility>
 
-#include "Adapters/ThreadDataBridge/HashThreadEntry.h"
-#include "Adapters/ThreadDataBridge/LegacyThreadData.h"
+#include "Adapters/MfcBridge/HashThreadEntry.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 #include "WinCommon/WinHandleGuard.h"
 
 #if defined (_WIN32)

@@ -37,7 +37,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string digestMetadataAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
         string digestValueAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
-        string legacyTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
+        string legacyTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\HashAlgorithmTypeCompat.h");
 
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
@@ -74,7 +74,7 @@ public sealed class HashExtensibilityRegressionUnitTests
     public void Blake3Integration_VendorsOfficialFixedVersion_AndAddsThreeDescriptorVariants()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string threadAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
+        string threadAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ThreadDataExecutionAccess.h");
         string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");

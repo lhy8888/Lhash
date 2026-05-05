@@ -29,7 +29,7 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void LegacyCompatibilityForwardingShims_AreRemovedFromCommonBoundary()
+    public void MfcBridgeForwardingShims_AreRemovedFromCommonBoundary()
     {
         string[] removedShimPaths =
         [
@@ -48,7 +48,7 @@ public sealed class CommonSeamUnitTests
         foreach (string relativePath in removedShimPaths)
         {
             string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
-            Assert.False(File.Exists(fullPath), $"{relativePath} should be removed from Common after the LegacyCompat boundary cleanup.");
+            Assert.False(File.Exists(fullPath), $"{relativePath} should be removed from Common after the MfcBridge boundary cleanup.");
         }
     }
 
@@ -98,7 +98,7 @@ public sealed class CommonSeamUnitTests
         // another manifest layer.
         string[] excludedSourcePaths =
         [
-            @"trunk/source/Adapters/ThreadDataBridge/HashThreadEntry.cpp",
+            @"trunk/source/Adapters/MfcBridge/HashThreadEntry.cpp",
             @"trunk/source/Common/Utils.cpp",
             @"trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp",
             @"trunk/source/Runtime/Hash/OpenSslEvpHashProviderStub.cpp",
@@ -175,8 +175,8 @@ public sealed class CommonSeamUnitTests
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
-        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeCompat.h");
+        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\HashAlgorithmTypeCompat.h");
+        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
         string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
@@ -431,15 +431,15 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
+    public void MfcHashStateAccess_OwnsDedicatedThreadDataSessionSurface()
     {
-        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataAccess.h");
+        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ThreadDataAccess.h");
         string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataAccess.h");
 
         Assert.False(File.Exists(legacyCommonShimPath));
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
         Assert.Contains("ResetThreadDataForNewSession(ThreadData& threadData)", access, StringComparison.Ordinal);
         Assert.Contains("ResetThreadDataInputFiles(threadData);", access, StringComparison.Ordinal);
         Assert.Contains("ClearThreadDataResults(threadData);", access, StringComparison.Ordinal);
@@ -461,7 +461,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestMetadataAccess_OwnsMetadataTraversalSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeMetadataCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeMetadataCompat.h");
 
         Assert.Contains("typedef HashAlgorithmDescriptor ResultDigestMetadata;", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestCount()", access, StringComparison.Ordinal);
@@ -477,7 +477,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestStateAccess_OwnsRegistrySizedStorageSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeStateCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeStateCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
 
         Assert.Contains("#include \"Common/HashTypes.h\"", access, StringComparison.Ordinal);
@@ -503,7 +503,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestValueAccess_OwnsReadWriteAndAggregateSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeValueCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestTypeValueCompat.h");
 
         Assert.Contains("GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("return GetStoredResultDigestById(result, algorithmId);", access, StringComparison.Ordinal);
@@ -530,33 +530,28 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void ResultNetProjection_OwnsSharedManagedProjectionPrimitives()
+    public void ZombieManagedProjectionCluster_IsRemovedFromRepo()
     {
-        string resultNetProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultNetProjection.h");
-        string resultDataProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDataProjection.h");
-        string hashResultProjection = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultProjection.h");
+        string[] removedPaths =
+        [
+            @"trunk\source\Common\ManagedBridgeDispatch.h",
+            @"trunk\source\Common\HashResultProjection.h",
+            @"trunk\source\Common\ResultNetProjection.h",
+            @"trunk\source\Common\ResultDataProjection.h",
+            @"trunk\source\Adapters\MfcBridge\ManagedHashMgmtAccess.h"
+        ];
 
-        Assert.Contains("static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
-        Assert.Contains("DispatchResultDigestValueById(const HashAlgorithmId& algorithmId, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultNetProjection, StringComparison.Ordinal);
-        Assert.Contains("static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h\"", resultNetProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultNetProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
-
-        Assert.Contains("#include \"Common/ResultNetProjection.h\"", resultDataProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", resultDataProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultDataProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultDataProjection, StringComparison.Ordinal);
-
-        Assert.Contains("#include \"Common/ResultNetProjection.h\"", hashResultProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Common/ResultDataProjection.h\"", hashResultProjection, StringComparison.Ordinal);
+        foreach (string relativePath in removedPaths)
+        {
+            Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, relativePath)), $"{relativePath} should be removed from the active tree.");
+        }
     }
 
     [Fact]
     public void HashResultSearch_OwnsSharedTraversalAndMatchingPrimitives()
     {
         string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
-        string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataResultAccess.h");
+        string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ThreadDataResultAccess.h");
         string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
 
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
@@ -581,7 +576,7 @@ public sealed class CommonSeamUnitTests
         string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
         Assert.Contains("ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)", resultRender, StringComparison.Ordinal);
         Assert.Contains("return GetResultSizeDisplayInfo(GetResultSize(result));", resultRender, StringComparison.Ordinal);
-        Assert.Contains("#include \"Common/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("GetHashResultSizeDisplayInfo(const HashResult& result)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("return GetResultSizeDisplayInfo(result.meta.size);", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("VisitRenderableHashResultMetaLines(const HashResult& result, TResultMetaLineVisitor visitor)", hashResultRender, StringComparison.Ordinal);
@@ -601,21 +596,6 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.DoesNotContain("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void ResultDataCompatibilityShims_NowLayerOnHashResultProjectionAndSearchSeams()
-    {
-        string resultDataProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDataProjection.h");
-        string resultDataSearch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDataSearch.h");
-
-        Assert.Contains("#include \"Common/HashResultProjection.h\"", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("AssignHashResultCoreToNet<TResultDataNet, TResultStateNet>(resultDataNet, ProjectHashResult(result), convertString);", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("AssignHashResultDigestsToNet(resultDataNet, ProjectHashResult(result), convertString);", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("VisitProjectedHashResults<TResultDataNet, TResultStateNet>(resultList, convertString, visitor);", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("VisitProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet>(resultList, digestText, convertString, visitor);", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedDigestMatchingHashResults<TResultDataNet, TResultStateNet, TResultArray>(resultList, digestText, createResultArray, convertString, setProjectedResult);", resultDataProjection, StringComparison.Ordinal);
-        Assert.Contains("return CountDigestMatchingHashResults(resultList, digestText);", resultDataSearch, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -648,11 +628,11 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void SourceLayerEntryPoints_ExposeDomainRuntimeAndLegacyCompatContracts()
+    public void SourceLayerEntryPoints_ExposeDomainRuntimeAndMfcBridgeContracts()
     {
         string domainContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashDomainContracts.h");
         string runtimeContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\HashRuntimeContracts.h");
-        string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\LegacyCompatibility.h");
+        string mfcBridgeContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\MfcBridge.h");
 
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", domainContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Domain/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
@@ -665,9 +645,9 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);
 
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataAccess.h\"", legacyContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"Adapters/ThreadDataBridge/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/MfcHashState.h\"", mfcBridgeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataAccess.h\"", mfcBridgeContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestProjection.h\"", mfcBridgeContracts, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,9 +1,9 @@
 #ifndef _LEGACY_THREAD_DATA_ACCESS_H_
 #define _LEGACY_THREAD_DATA_ACCESS_H_
 
-#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
-#include "Adapters/ThreadDataBridge/ThreadDataInputAccess.h"
-#include "Adapters/ThreadDataBridge/ThreadDataResultAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataInputAccess.h"
+#include "Adapters/MfcBridge/ThreadDataResultAccess.h"
 
 static inline void ResetThreadDataForNewSession(ThreadData& threadData)
 {

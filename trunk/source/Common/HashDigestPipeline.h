@@ -3,7 +3,7 @@
 
 #include "Runtime/HashExecutionContext.h"
 #include "Domain/HashRequest.h"
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 
 class ThreadPool;
 

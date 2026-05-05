@@ -2,7 +2,7 @@
 #define _LEGACY_HASH_DIGEST_OPERATION_TYPE_COMPAT_H_
 
 #include "Common/HashDigestOperationRegistry.h"
-#include "Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h"
+#include "Adapters/MfcBridge/HashAlgorithmTypeCompat.h"
 
 namespace HashEngineInternal
 {
