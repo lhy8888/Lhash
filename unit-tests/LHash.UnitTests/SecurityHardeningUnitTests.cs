@@ -97,6 +97,11 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle hProcLHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidLHash));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TCHAR[cmdLen]", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("memset(pszCmd, 0, cmdLen);", legacyShell, StringComparison.Ordinal);
+        Assert.DoesNotContain("delete [] pszCmd;", legacyShell, StringComparison.Ordinal);
         Assert.Contains("0, 0, FALSE,", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("0, 0, TRUE,", legacyShell, StringComparison.Ordinal);
 

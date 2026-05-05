@@ -21,7 +21,7 @@ This maintained release line turns LHash from a traditional hash utility into a 
 
 - Current release: [`v1.12.4`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.4)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
-- Main branch: `future-winui-was2`
+- Maintained branch: `future-winui-was2`
 - Windows UI mainline: `MFC`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core Build Matrix workflow`](../.github/workflows/core-m2.yml)

@@ -60,7 +60,8 @@ internal static partial class Program
             AssertContains(workflow, "LHash-windows-arm64", "CI workflow no longer packages the Windows ARM64 desktop artifact.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "The main Windows build workflow should no longer compile the WinUI preview path on routine runs.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Security regression no longer marks MFC as the sole Windows UI mainline.");
-            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Security regression no longer retires the WinUI / CLR bridge from the maintained release line.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", "Security regression no longer records the WinUI / CLR bridge as archived under archive/legacy-platforms.");
+            AssertContains(readme, "WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", "Security regression no longer records the WinUI / CLR bridge trees as reference-only snapshots.");
             AssertContains(archiveReadme, "retired WinUI/UWP/CLR preview surface is kept here for reference only", "Security regression no longer records the WinUI/CLR preview surface as reference-only material.");
             AssertDoesNotContain(workflow, "fHash-legacy-x64", "CI artifact naming still references the old fHash bundle name.");
             AssertDoesNotContain(workflow, "fHash64.exe", "CI packaging still searches for the legacy fHash64.exe output.");
@@ -200,6 +201,11 @@ internal static partial class Program
             AssertDoesNotContain(legacyShell, "CloseHandle(pInfo.hProcess);", "Legacy shell extension still closes the CreateProcess process handle manually.");
             AssertContains(legacyShell, "CopyDraggedPath", "Legacy shell extension still relies on fixed-size drag/drop buffers.");
             AssertContains(legacyShell, "DragQueryFile(hDrop, index, NULL, 0)", "Legacy shell extension no longer queries drag/drop path lengths before copying.");
+            AssertContains(legacyShell, "std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", "Legacy shell extension still uses a manual CreateProcess buffer.");
+            AssertContains(legacyShell, "CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),", "Legacy shell extension no longer launches with the buffered command line.");
+            AssertDoesNotContain(legacyShell, "new TCHAR[cmdLen]", "Legacy shell extension still allocates the CreateProcess buffer manually.");
+            AssertDoesNotContain(legacyShell, "memset(pszCmd, 0, cmdLen);", "Legacy shell extension still zeroes the CreateProcess buffer with the wrong byte count.");
+            AssertDoesNotContain(legacyShell, "delete [] pszCmd;", "Legacy shell extension still manually frees the CreateProcess buffer.");
             AssertContains(shellCore, "BOOL bCreated = CreateProcess", "Shared shell-command core launch hardening is missing.");
             AssertContains(shellCore, "#include \"WinCommon/WinHandleGuard.h\"", "Shared shell-command core does not include the shared HANDLE RAII wrappers.");
             AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Shared shell-command core does not wrap thread handles after CreateProcess.");

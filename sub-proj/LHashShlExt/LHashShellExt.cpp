@@ -1,4 +1,4 @@
-// LHashShellExt.cpp : CLHashShellExt µÄÊµÏÖ
+ï»¿// LHashShellExt.cpp : CLHashShellExt çš„å®žçŽ°
 
 #include "stdafx.h"
 #include "LHashShellExt.h"
@@ -75,7 +75,7 @@ HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 		return E_INVALIDARG;
 	}
 
-	// Sanity check ¨C make sure there is at least one filename.
+	// Sanity check â€“ make sure there is at least one filename.
 	UINT uNumFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 	HRESULT hr = S_OK;
 
@@ -235,24 +235,21 @@ HRESULT CLHashShellExt::LaunchLHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo,
 		return S_OK;
 	}
 
-	TCHAR *pszCmd = new TCHAR[cmdLen];
-	memset(pszCmd, 0, cmdLen);
+	std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));
 #if defined(UNICODE) || defined(_UNICODE)
-	wcscpy_s(pszCmd, cmdLen, tstrCmd.c_str());
+	wcscpy_s(cmdBuffer.data(), cmdBuffer.size(), tstrCmd.c_str());
 #else
-	strcpy_s(pszCmd, cmdLen, tstrCmd.c_str());
+	strcpy_s(cmdBuffer.data(), cmdBuffer.size(), tstrCmd.c_str());
 #endif
 
 	STARTUPINFO sInfo = {0};
 	sInfo.cb = sizeof(sInfo);
 	PROCESS_INFORMATION pInfo = {0};
 
-	BOOL bCreated = CreateProcess(tstrLHashPath.c_str(), pszCmd,
+	BOOL bCreated = CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),
 		0, 0, FALSE,
 		NORMAL_PRIORITY_CLASS,
 		0, 0, &sInfo, &pInfo);
-
-	delete [] pszCmd;
 
 	if (!bCreated)
 	{

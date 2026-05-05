@@ -267,8 +267,14 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("SwitchToThread();", fileAttemptWorkflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Sleep(3);", fileAttemptWorkflow, StringComparison.Ordinal);
 
-        Assert.Contains("GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("#if defined (_WIN32)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("#include \"OsUtils/OsFile.h\"", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <Windows.h>", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("#if defined (_WIN32)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("fileAttributes.nFileSizeHigh", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("uint64_t size = static_cast<uint64_t>(osFile.getLength());", preScanSizeProbe, StringComparison.Ordinal);
 
         Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", bridgeHeader, StringComparison.Ordinal);
@@ -683,7 +689,8 @@ public sealed class CommonSeamUnitTests
 
         Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
-        Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
+        Assert.Contains("Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", readme, StringComparison.Ordinal);
+        Assert.Contains("WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", readme, StringComparison.Ordinal);
         Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -694,7 +701,8 @@ public sealed class CommonSeamUnitTests
         string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
 
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
-        Assert.Contains("Legacy WinUI / CLR bridge: retired from the maintained release line", readme, StringComparison.Ordinal);
+        Assert.Contains("Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", readme, StringComparison.Ordinal);
+        Assert.Contains("WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", readme, StringComparison.Ordinal);
         Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
     }
 

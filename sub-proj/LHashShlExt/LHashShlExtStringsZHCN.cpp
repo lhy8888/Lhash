@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "LHashShlExtStringsZHCN.h"
 
@@ -7,8 +7,8 @@
 LHashShlExtStringsZHCN::LHashShlExtStringsZHCN()
 {
 	// Shell ext
-	m_stringsMap[_T("SHELL_EXT_ITEM")] = _T("Ê¹ÓÃ LHash ¼ÆËã¹þÏ£");
-	m_stringsMap[_T("SHELL_EXT_TOO_MANY_FILES")] = _T("Ñ¡ÔñµÄÎÄ¼þÌ«¶à");
+	m_stringsMap[_T("SHELL_EXT_ITEM")] = _T("ä½¿ç”¨ LHash è®¡ç®—å“ˆå¸Œ");
+	m_stringsMap[_T("SHELL_EXT_TOO_MANY_FILES")] = _T("é€‰æ‹©çš„æ–‡ä»¶å¤ªå¤š");
 }
 
 

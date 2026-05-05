@@ -3491,7 +3491,8 @@ internal static class Program
             AssertContains(clrBridgeProject, @"$(ProjectDir)..\fHashNativeCore\$(Platform)\$(Configuration)\fHashNativeCore\", "Phase 32 CLR bridge does not yet search the LHashNativeCore output directory.");
 
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 32 README no longer marks MFC as the sole Windows UI mainline.");
-            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 32 README no longer retires the WinUI / CLR bridge from the maintained release line.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", "Phase 32 README no longer records the WinUI / CLR bridge as archived under archive/legacy-platforms.");
+            AssertContains(readme, "WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", "Phase 32 README no longer records the WinUI / CLR bridge trees as reference-only snapshots.");
         }, failures);
 
         Run("Phase 33 routes the core hashing entry through RunHashRequest", () =>
@@ -3934,7 +3935,8 @@ internal static class Program
             AssertContains(workflow, "Download OpenSSL vendor x64 artifact", "Phase 47 workflow does not yet download the shared OpenSSL vendor artifact in downstream native jobs.");
             AssertDoesNotContain(workflow, "prepare-openssl-vendor-x64:\r\n    needs:", "Phase 47 shared OpenSSL vendor preparation should start independently instead of waiting for managed gates.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 47 README no longer marks MFC as the sole Windows UI mainline.");
-            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 47 README no longer retires the WinUI / CLR bridge from the maintained release line.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", "Phase 47 README no longer records the WinUI / CLR bridge as archived under archive/legacy-platforms.");
+            AssertContains(readme, "WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", "Phase 47 README no longer records the WinUI / CLR bridge trees as reference-only snapshots.");
             AssertInOrder(
                 workflow,
                 new[]
@@ -5104,9 +5106,16 @@ internal static class Program
 
             AssertContains(hashPreScanSizeProbeHeader, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);", "Phase 73 HashPreScanSizeProbe.h does not yet expose pre-scan size probing.");
             AssertContains(hashPreScanSizeProbe, "uint64_t ResolveHashPreScannedFileSize(const TCHAR *path)", "Phase 73 HashPreScanSizeProbe.cpp does not yet own pre-scan size probing.");
-            AssertContains(hashPreScanSizeProbe, "GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve Win32 pre-scan attribute probing.");
-            AssertContains(hashPreScanSizeProbe, "fileAttributes.nFileSizeHigh", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve Win32 64-bit pre-scan size composition.");
-            AssertContains(hashPreScanSizeProbe, "sunjwbase::OsFile osFile(path);", "Phase 73 HashPreScanSizeProbe.cpp does not yet preserve non-Windows pre-scan file-open fallback.");
+            AssertContains(hashPreScanSizeProbe, "#include \"OsUtils/OsFile.h\"", "Phase 73 HashPreScanSizeProbe.cpp does not yet include the shared OsFile helper.");
+            AssertDoesNotContain(hashPreScanSizeProbe, "#include <Windows.h>", "Phase 73 HashPreScanSizeProbe.cpp still pulls in Windows headers for pre-scan size resolution.");
+            AssertDoesNotContain(hashPreScanSizeProbe, "#if defined (_WIN32)", "Phase 73 HashPreScanSizeProbe.cpp still branches on a Windows-specific pre-scan path.");
+            AssertDoesNotContain(hashPreScanSizeProbe, "GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", "Phase 73 HashPreScanSizeProbe.cpp still uses path-based attribute probing.");
+            AssertDoesNotContain(hashPreScanSizeProbe, "fileAttributes.nFileSizeHigh", "Phase 73 HashPreScanSizeProbe.cpp still composes file size from Windows attribute data.");
+            AssertDoesNotContain(hashPreScanSizeProbe, "fileAttributes.nFileSizeLow", "Phase 73 HashPreScanSizeProbe.cpp still composes file size from Windows attribute data.");
+            AssertContains(hashPreScanSizeProbe, "sunjwbase::OsFile osFile(path);", "Phase 73 HashPreScanSizeProbe.cpp does not yet use the shared OsFile path.");
+            AssertContains(hashPreScanSizeProbe, "if (!osFile.openReadScan())", "Phase 73 HashPreScanSizeProbe.cpp does not yet gate size probing through openReadScan.");
+            AssertContains(hashPreScanSizeProbe, "uint64_t size = static_cast<uint64_t>(osFile.getLength());", "Phase 73 HashPreScanSizeProbe.cpp does not yet read the file size from the opened handle.");
+            AssertContains(hashPreScanSizeProbe, "osFile.close();", "Phase 73 HashPreScanSizeProbe.cpp does not yet close the shared OsFile handle.");
             AssertContains(hashEnginePreparation, "uint64_t fSize = ResolveHashPreScannedFileSize(path);", "Phase 73 HashEnginePreparation.cpp does not yet delegate pre-scan size probing.");
             AssertDoesNotContain(hashEnginePreparation, "OsFile osFile(path);", "Phase 73 HashEnginePreparation.cpp should no longer own pre-scan file-open details.");
             AssertContains(hashEngineInternal, "#include \"Common/HashPreScanSizeProbe.h\"", "Phase 73 HashEngineInternal.h does not yet consume HashPreScanSizeProbe.");
@@ -5800,6 +5809,7 @@ internal static class Program
             string sha1 = ReadRepoFile(repoRoot, @"trunk\source\Algorithms\SHA1.cpp");
             string strhelper = ReadRepoFile(repoRoot, @"trunk\source\Common\strhelper.cpp");
             string uiBridge = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\UIBridgeMFC.cpp");
+            string legacyShell = ReadRepoFile(repoRoot, @"sub-proj\LHashShlExt\LHashShellExt.cpp");
             string handleGuard = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\WinHandleGuard.h");
             string shellCore = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\ShellExplorerCommandCore.h");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
@@ -5850,6 +5860,11 @@ internal static class Program
             AssertContains(threadAccess, "ReplaceSizedValueUInt64(GetThreadDataTotalSize(threadData), previousSize, currentSize)", "Phase 90 thread-data accounting does not yet use bounded replacement math.");
 
             AssertContains(handleGuard, "typedef UniqueHandleBase<HANDLE, HandleCloseTraits> UniqueWinHandle;", "Phase 90 WinHandleGuard does not yet expose UniqueWinHandle.");
+            AssertContains(legacyShell, "std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", "Phase 90 legacy shell extension does not yet use a safe CreateProcess buffer.");
+            AssertContains(legacyShell, "CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),", "Phase 90 legacy shell extension does not yet launch with the buffered command line.");
+            AssertDoesNotContain(legacyShell, "new TCHAR[cmdLen]", "Phase 90 legacy shell extension still allocates the CreateProcess buffer manually.");
+            AssertDoesNotContain(legacyShell, "memset(pszCmd, 0, cmdLen);", "Phase 90 legacy shell extension still zeroes the CreateProcess buffer with the wrong byte count.");
+            AssertDoesNotContain(legacyShell, "delete [] pszCmd;", "Phase 90 legacy shell extension still manually frees the CreateProcess buffer.");
             AssertContains(shellCore, "WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", "Phase 90 shell-core launch path does not yet wrap the thread handle in RAII.");
             AssertContains(shellCore, "0, 0, FALSE,", "Phase 90 shell-core launch path still inherits parent handles.");
             AssertDoesNotContain(shellCore, "0, 0, TRUE,", "Phase 90 shell-core launch path regressed to inheriting parent handles.");
@@ -6266,7 +6281,8 @@ internal static class Program
             AssertContains(workflow, "LHashOpenSslInstallRoot", "Phase 98 Windows build workflow no longer passes the OpenSSL install root.");
             AssertDoesNotContain(workflow, "build-winui-bridge-x64:", "Phase 98 Windows build workflow should no longer keep the WinUI preview build in the mainline pipeline.");
             AssertContains(readme, "Windows UI mainline: `MFC`", "Phase 98 README no longer marks MFC as the sole Windows UI mainline.");
-            AssertContains(readme, "Legacy WinUI / CLR bridge: retired from the maintained release line", "Phase 98 README no longer retires the WinUI / CLR bridge from the maintained release line.");
+            AssertContains(readme, "Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", "Phase 98 README no longer records the WinUI / CLR bridge as archived under archive/legacy-platforms.");
+            AssertContains(readme, "WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", "Phase 98 README no longer records the WinUI / CLR bridge trees as reference-only snapshots.");
             AssertContains(archiveReadme, "reference only", "Phase 98 archive README no longer records the retired preview surface as reference-only material.");
             AssertContains(licenseException, "OpenSSL Linking Exception", "Phase 98 no longer carries the OpenSSL linking exception note.");
             AssertContains(readme, "GPL-2.0-only with an OpenSSL linking exception", "Phase 98 README no longer documents the OpenSSL licensing exception.");
