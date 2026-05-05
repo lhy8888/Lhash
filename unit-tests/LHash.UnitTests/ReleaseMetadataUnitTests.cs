@@ -76,9 +76,17 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("repository owner and release maintainer", signingPolicy, StringComparison.Ordinal);
         Assert.DoesNotContain("LHASH_TRUSTED_SIGNING_", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("Azure Trusted Signing", signingGuide, StringComparison.Ordinal);
+        Assert.DoesNotContain("/p $PfxPassword", signingScript, StringComparison.Ordinal);
 
         Assert.Contains("param(", signingScript, StringComparison.Ordinal);
         Assert.Contains("signtool.exe", signingScript, StringComparison.Ordinal);
+        Assert.Contains("ConvertTo-SecureString", signingScript, StringComparison.Ordinal);
+        Assert.Contains("Import-PfxCertificate", signingScript, StringComparison.Ordinal);
+        Assert.Contains("Cert:\\CurrentUser\\My", signingScript, StringComparison.Ordinal);
+        Assert.Contains("http://timestamp.sectigo.com", signingScript, StringComparison.Ordinal);
+        Assert.Contains("http://timestamp.globalsign.com/tsa/r6advanced1", signingScript, StringComparison.Ordinal);
+        Assert.Contains("/sha1 $cert.Thumbprint", signingScript, StringComparison.Ordinal);
+        Assert.Contains("Remove-Item \"Cert:\\CurrentUser\\My\\$($cert.Thumbprint)\"", signingScript, StringComparison.Ordinal);
         Assert.Contains("sign", signingScript, StringComparison.Ordinal);
         Assert.Contains("verify", signingScript, StringComparison.Ordinal);
     }

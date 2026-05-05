@@ -626,6 +626,7 @@ internal static partial class Program
         Run("Native compiler and linker mitigations are imported consistently", () =>
         {
             string nativeSecurityTargets = ReadRepoFile(repoRoot, @"NativeSecurity.targets");
+            string cmakeLists = ReadRepoFile(repoRoot, @"CMakeLists.txt");
             string[] vcxProjects = Directory.GetFiles(repoRoot, "*.vcxproj", SearchOption.AllDirectories);
 
             AssertContains(nativeSecurityTargets, "<BufferSecurityCheck>true</BufferSecurityCheck>", "Shared native security targets do not enable /GS.");
@@ -636,6 +637,10 @@ internal static partial class Program
             AssertContains(nativeSecurityTargets, "<RandomizedBaseAddress>true</RandomizedBaseAddress>", "Shared native security targets do not enable ASLR.");
             AssertContains(nativeSecurityTargets, "<HighEntropyVA>true</HighEntropyVA>", "Shared native security targets do not enable high-entropy VA.");
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
+            AssertContains(cmakeLists, "message(FATAL_ERROR", "CMake does not fail fast when OpenSSL vendor integration is enabled.");
+            AssertContains(cmakeLists, "CMake OpenSSL vendor integration is not implemented yet.", "CMake does not document the unsupported OpenSSL vendor path.");
+            AssertContains(cmakeLists, "Use the MSBuild Windows release workflow with LHashOpenSslInstallRoot.", "CMake does not direct users to the supported Windows vendor workflow.");
+            AssertDoesNotContain(cmakeLists, "target_compile_definitions(lhash_core PRIVATE LHASH_WITH_OPENSSL3_VENDOR=1)", "CMake still wires the unsupported OpenSSL vendor compile definition instead of failing fast.");
 
             foreach (string projectPath in vcxProjects)
             {

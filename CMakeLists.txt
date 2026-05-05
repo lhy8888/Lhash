@@ -56,7 +56,9 @@ target_compile_definitions(lhash_core PRIVATE
 )
 
 if (LHASH_ENABLE_OPENSSL_VENDOR)
-    target_compile_definitions(lhash_core PRIVATE LHASH_WITH_OPENSSL3_VENDOR=1)
+    message(FATAL_ERROR
+        "CMake OpenSSL vendor integration is not implemented yet. "
+        "Use the MSBuild Windows release workflow with LHashOpenSslInstallRoot.")
 endif()
 
 if (WIN32)
