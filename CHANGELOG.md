@@ -26,6 +26,6 @@ documentation refresh, and a cleanup pass over stale consistency checks.
 
 - aligned algorithm-order assertions with the current registry order
 - tracked the newly registered native runtime tests
-- archived retired Windows OsUtils variants outside the active source tree
+- removed retired Windows OsUtils variants from the active source tree
 - changed `HashDigestRuntimePlan` to own its request and queue-plan state by
   value

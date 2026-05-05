@@ -32,7 +32,7 @@
     <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\trunk\source\LegacyCompat\HashThreadEntry.cpp">
+    <ClCompile Include="..\..\trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp">

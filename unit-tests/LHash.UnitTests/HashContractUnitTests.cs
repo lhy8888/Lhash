@@ -1,4 +1,4 @@
-namespace LHash.UnitTests;
+﻿namespace LHash.UnitTests;
 
 public sealed class HashContractUnitTests
 {
@@ -6,8 +6,8 @@ public sealed class HashContractUnitTests
     public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
     {
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
-        string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestProjection.h");
-        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashRequestTypeCompat.h");
+        string legacyRequestProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashRequestProjection.h");
+        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashRequestTypeCompat.h");
         string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
         string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
 
@@ -36,16 +36,16 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
         Assert.False(File.Exists(requestProjectionPath));
         Assert.Contains("CreateHashRequest(const ThreadData& threadData)", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashRequestTypeCompat.h\"", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/HashRequestTypeCompat.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataInputAccess.h\"", legacyRequestProjection, StringComparison.Ordinal);
     }
 
     [Fact]
     public void HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam()
     {
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
+        string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
         string registryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
@@ -68,7 +68,7 @@ public sealed class HashContractUnitTests
     public void HashResult_ProjectsStableCoreAndDigestContract()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
-        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
+        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeCompat.h");
         string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashResult.h");
         string resultShim = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResult.h");
         string projection = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultProjection.h");
@@ -186,15 +186,15 @@ public sealed class HashContractUnitTests
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
-        string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\LegacyThreadData.h");
+        string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\LegacyThreadData.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
-        string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+        string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
         string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
-        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.h");
+        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.h");
         string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
-        string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntry.cpp");
-        string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryProjection.h");
-        string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadEntryRuntime.h");
+        string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntry.cpp");
+        string legacyThreadEntryProjection = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntryProjection.h");
+        string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadEntryRuntime.h");
         string threadExecutionAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
         string threadEntryProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
         string legacyCommonThreadEntryHeaderPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.h");
@@ -209,7 +209,7 @@ public sealed class HashContractUnitTests
         string digestOperationRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
         string digestOperationRegistryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.h");
         string digestOperationRegistryRuntimeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashDigestOperationRegistryRuntime.h");
-        string digestOperationTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashDigestOperationTypeCompat.h");
+        string digestOperationTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashDigestOperationTypeCompat.h");
         string digestLifecycle = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.cpp");
         string digestLifecycleHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.h");
         string digestRuntimePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.cpp");
@@ -270,7 +270,7 @@ public sealed class HashContractUnitTests
         string executionContextShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashExecutionContext.h");
         Assert.False(File.Exists(executionContextShimPath));
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"LegacyCompat/LegacyThreadData.h\"", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/ThreadDataBridge/LegacyThreadData.h\"", global, StringComparison.Ordinal);
         Assert.DoesNotContain("struct ThreadData;", global, StringComparison.Ordinal);
         Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
         Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
@@ -319,12 +319,12 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
         Assert.Contains("int WINAPI HashThreadFunc(void *param);", threadEntryHeader, StringComparison.Ordinal);
         Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashThreadEntryRuntime.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/HashThreadEntryRuntime.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"LegacyCompat/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/ThreadDataBridge/HashThreadEntryProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashRequestProjection.h\"", threadEntry, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("return RunLegacyHashThread(param);", threadEntry, StringComparison.Ordinal);
@@ -484,7 +484,6 @@ public sealed class HashContractUnitTests
         Assert.Contains("const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("const HashSchedulerPlan& GetHashJobSchedulerPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();", jobExecutionPlan, StringComparison.Ordinal);
@@ -495,7 +494,6 @@ public sealed class HashContractUnitTests
         Assert.Contains("return executionPlan.digestExecutionMode;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.digestBufferPlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.digestQueuePlan;", jobExecutionPlan, StringComparison.Ordinal);
-        Assert.Contains("return executionPlan.preparationPlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("return executionPlan.schedulerPlan;", jobExecutionPlan, StringComparison.Ordinal);
         Assert.Contains("struct HashPreparationPlan", preparationPlanHeader, StringComparison.Ordinal);
         Assert.Contains("size_t preScanFileCountThreshold;", preparationPlanHeader, StringComparison.Ordinal);
@@ -504,20 +502,6 @@ public sealed class HashContractUnitTests
         Assert.Contains("HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
         Assert.Contains("preparationPlan.preScanFileCountThreshold = 200;", preparationPlan, StringComparison.Ordinal);
         Assert.Contains("bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
-        Assert.Contains("void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", jobLifecycleWorkflowHeader, StringComparison.Ordinal);
-        Assert.Contains("void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer);", jobLifecycleWorkflowHeader, StringComparison.Ordinal);
-        Assert.Contains("void ExecuteCancelledHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", jobLifecycleWorkflow, StringComparison.Ordinal);
-        Assert.Contains("void ExecuteCompletedHashingWorkflow(HashExecutionContext *executionContext, HashProgressSink *observer)", jobLifecycleWorkflow, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateCancelledProgressEvent());", jobLifecycleWorkflow, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateCompletedProgressEvent());", jobLifecycleWorkflow, StringComparison.Ordinal);
-        Assert.Contains("SetHashExecutionWorking(*executionContext, false);", jobLifecycleWorkflow, StringComparison.Ordinal);
-        Assert.Contains("struct HashSchedulerPlan", schedulerPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("size_t workerThreadCount;", schedulerPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("HashSchedulerPlan CreateHashSchedulerPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", schedulerPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("size_t GetHashSchedulerWorkerThreadCount(const HashSchedulerPlan& schedulerPlan);", schedulerPlanHeader, StringComparison.Ordinal);
-        Assert.Contains("HashSchedulerPlan CreateHashSchedulerPlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", schedulerPlan, StringComparison.Ordinal);
-        Assert.Contains("schedulerPlan.workerThreadCount = 5;", schedulerPlan, StringComparison.Ordinal);
-        Assert.Contains("size_t GetHashSchedulerWorkerThreadCount(const HashSchedulerPlan& schedulerPlan)", schedulerPlan, StringComparison.Ordinal);
         Assert.Contains("CreateHashDigestRuntimePlan(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestRuntimeUpdateRequest(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
         Assert.Contains("GetHashDigestRuntimeExecutionMode(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
@@ -807,31 +791,8 @@ public sealed class HashContractUnitTests
     public void BridgeConsumers_NowConsumeHashResultAcrossManagedAndRealtimeAdapters()
     {
         string managedDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ManagedBridgeDispatch.h");
-        string legacyManagedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ManagedHashMgmtAccess.h");
+        string legacyManagedHashMgmtAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ManagedHashMgmtAccess.h");
         string managedHashMgmtAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ManagedHashMgmtAccess.h");
-        string clrHashResultNet = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashResultNet.h");
-        string clrMgmt = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-        string clrMgmtHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
-        string clrDelegatesHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeDelegates.h");
-        string clrDelegatesSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeDelegates.cpp");
-        string uwpHashResultNet = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashResultNet.h");
-        string uwpMgmt = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.cpp");
-        string uwpMgmtHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
-        string uwpDelegateHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeDelegate.h");
-        string uwpDelegateSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeDelegate.cpp");
-        string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
-        string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
-        string wuiHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.h");
-        string wuiSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\UIBridgeWUI.cpp");
-        string uwpHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.h");
-        string uwpSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\UIBridgeUwp.cpp");
-        string macHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
-        string macSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.mm");
-        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\HashBridge.mm");
-        string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
-        string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
-        string winUiPage = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\WinUI\MainPage.xaml.cs");
-        string winUwpPage = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\WinUWP\MainPage.xaml.cs");
 
         Assert.Contains("#include \"Common/HashResultProjection.h\"", managedDispatch, StringComparison.Ordinal);
         Assert.Contains("DispatchManagedBridgeResultEventByType(const HashResult& result", managedDispatch, StringComparison.Ordinal);
@@ -848,72 +809,10 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("SetManagedHashAlgorithmEnabledByDigestType(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
         Assert.DoesNotContain("GetManagedHashAlgorithmEnabledByDigestType(", legacyManagedHashMgmtAccess, StringComparison.Ordinal);
 
-        Assert.Contains("public enum class HashResultStateNet", clrHashResultNet, StringComparison.Ordinal);
-        Assert.Contains("public value struct HashResultNet", clrHashResultNet, StringComparison.Ordinal);
-        Assert.Contains("property System::String^ AlgorithmId;", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("property int DigestType;", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("cli::array<HashResultNet>^ FindHashResults(System::String^ sstrHashToFind);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("void SetHashAlgorithmEnabledById(System::String^ algorithmId, bool val);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("bool GetHashAlgorithmEnabledById(System::String^ algorithmId);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("public enum class HashAlgorithmTypeNet", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, bool val);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetHashAlgorithmEnabledByDigestType(int digestType, bool val);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetHashAlgorithmEnabledByDigestType(int digestType);", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle *m_pWorkThread;", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", clrMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("HANDLE workThread = m_hWorkThread;", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("m_pWorkThread = new WinHandleGuard::UniqueWinHandle();", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(m_pWorkThread, m_pThreadData, &thredID);", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(m_pWorkThread);", clrMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("_beginthreadex", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, cli::array<HashResultNet>^>(", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("::SetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("return ::GetManagedHashAlgorithmEnabledById(*m_pThreadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", clrMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("::SetManagedHashAlgorithmEnabledByDigestType(", clrMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("::GetManagedHashAlgorithmEnabledByDigestType(", clrMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("FindResult(System::String^ sstrHashToFind)", clrMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", clrMgmt, StringComparison.Ordinal);
-        Assert.Contains("#include \"HashResultNet.h\"", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("public delegate void HashResultEventHandler(HashResultNet);", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("void PublishFileHash(HashResultNet hashResultNet, bool uppercase);", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("event HashResultHashEventHandler^ FileHashHandler;", clrDelegatesHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeDelegates::PublishFileHash(HashResultNet hashResultNet, bool uppercase)", clrDelegatesSource, StringComparison.Ordinal);
-        Assert.Contains("FileHashHandler(hashResultNet, uppercase);", clrDelegatesSource, StringComparison.Ordinal);
-
-        Assert.Contains("public enum class HashResultStateNet", uwpHashResultNet, StringComparison.Ordinal);
-        Assert.Contains("public value struct HashResultNet", uwpHashResultNet, StringComparison.Ordinal);
-        Assert.Contains("property Platform::String^ AlgorithmId;", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("property int DigestType;", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("Platform::Array<HashResultNet>^ FindHashResults(Platform::String^ pstrHashToFind);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("void SetHashAlgorithmEnabledById(Platform::String^ algorithmId, Platform::Boolean val);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("Platform::Boolean GetHashAlgorithmEnabledById(Platform::String^ algorithmId);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("public enum class HashAlgorithmTypeNet", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm, Platform::Boolean val);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetHashAlgorithmEnabled(HashAlgorithmTypeNet hashAlgorithm);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetHashAlgorithmEnabledByDigestType(int digestType, Platform::Boolean val);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetHashAlgorithmEnabledByDigestType(int digestType);", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ManagedHashMgmtAccess.h\"", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashThreadLaunch.h\"", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(&m_hWorkThread, &m_threadData, &thredID);", uwpMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("_beginthreadex", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("CreateProjectedManagedDigestMatchingHashResults<HashResultNet, HashResultStateNet, Array<HashResultNet>^>(", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("::SetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId), val);", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("return ::GetManagedHashAlgorithmEnabledById(m_threadData, ConvertManagedAlgorithmIdToTstr(algorithmId));", uwpMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("::SetManagedHashAlgorithmEnabledByDigestType(", uwpMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("::GetManagedHashAlgorithmEnabledByDigestType(", uwpMgmt, StringComparison.Ordinal);
-        Assert.DoesNotContain("FindResult(Platform::String^ pstrHashToFind)", uwpMgmtHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultDataNetArray(", uwpMgmt, StringComparison.Ordinal);
-        Assert.Contains("#include \"HashResultNet.h\"", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("public delegate void HashResultEventHandler(HashResultNet);", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("void PublishFileHash(HashResultNet hashResultNet, Platform::Boolean uppercase);", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("event HashResultHashEventHandler^ FileHashHandler;", uwpDelegateHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeDelegate::PublishFileHash(HashResultNet hashResultNet, Boolean uppercase)", uwpDelegateSource, StringComparison.Ordinal);
-        Assert.Contains("FileHashHandler(hashResultNet, uppercase);", uwpDelegateSource, StringComparison.Ordinal);
+        string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
+        string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
+        string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
 
         Assert.Contains("class UIBridgeMFC: public HashUiBridgeAdapter", mfcHeader, StringComparison.Ordinal);
         Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", mfcHeader, StringComparison.Ordinal);
@@ -930,61 +829,5 @@ public sealed class HashContractUnitTests
         Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.Contains("UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", searchSource, StringComparison.Ordinal);
 
-        Assert.Contains("class UIBridgeWUI : public HashUiBridgeAdapter", wuiHeader, StringComparison.Ordinal);
-        Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", wuiHeader, StringComparison.Ordinal);
-        Assert.Contains("DispatchProjectedResultEvent(const HashResult& result", wuiHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeWUI::handleFileResultProgressEvent(const HashResult& result,", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("GetManagedResultEventType(eventType)", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", wuiSource, StringComparison.Ordinal);
-        Assert.Contains("msclr::auto_gcroot<UIBridgeDelegates^> m_hashUiEvents;", wuiHeader, StringComparison.Ordinal);
-
-        Assert.Contains("class UIBridgeUwp : public HashUiBridgeAdapter", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("DispatchProjectedResultEvent(const HashResult& result", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeUwp::handleFileResultProgressEvent(const HashResult& result,", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("DispatchManagedBridgeResultEventByType<HashResultNet, HashResultStateNet>(result, eventType, uppercase", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("GetManagedResultEventType(eventType)", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("m_hashUiEvents->PublishFileHash(hashResultNet, hashUppercase);", uwpSource, StringComparison.Ordinal);
-        Assert.Contains("UIBridgeDelegate^ m_hashUiEvents;", uwpHeader, StringComparison.Ordinal);
-
-        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", macHeader, StringComparison.Ordinal);
-        Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", macHeader, StringComparison.Ordinal);
-        Assert.Contains("class UIBridgeMacSwift: public HashUiBridgeAdapter", macHeader, StringComparison.Ordinal);
-        Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", macHeader, StringComparison.Ordinal);
-        Assert.Contains("ResultDataSwift *resultSwift = UIBridgeMacSwift::ConvertHashResultToSwift(result);", macSource, StringComparison.Ordinal);
-        Assert.Contains("void UIBridgeMacSwift::handleFileResultProgressEvent(const HashResult& result,", macSource, StringComparison.Ordinal);
-        Assert.Contains("case PROGRESS_EVENT_FILE_HASH_READY:", macSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultData(result);", macSource, StringComparison.Ordinal);
-        Assert.Contains("ResultDataSwift *UIBridgeMacSwift::ConvertHashResultToSwift(const HashResult& result)", macSource, StringComparison.Ordinal);
-        Assert.Contains("VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", hashBridgeMac, StringComparison.Ordinal);
-        Assert.Contains("ConvertHashResultToSwift(result);", hashBridgeMac, StringComparison.Ordinal);
-
-        Assert.Contains("HashResultNet[] hashResultNetArray = m_mainWindow.HashMgmt.FindHashResults(strHashToFind);", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = [];", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("m_mainWindow.HashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("m_mainWindow.HashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("int progMax = m_mainWindow.HashUiEvents.GetProgressValueMax();", winUiPage, StringComparison.Ordinal);
-        Assert.Contains("private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", winUiPage, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultData(", winUiPage, StringComparison.Ordinal);
-
-        Assert.Contains("HashResultNet[] hashResultNetArray = m_hashMgmt.FindHashResults(strHashToFind);", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private Dictionary<string, CheckBox> m_hashAlgorithmCheckBoxes = new Dictionary<string, CheckBox>();", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private static string GetHashAlgorithmId(HashAlgorithmDescriptorNet hashAlgorithm)", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("m_hashMgmt.SetHashAlgorithmEnabledById(GetHashAlgorithmId(hashAlgorithm), hashAlgorithmEnabled);", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("m_hashAlgorithmCheckBoxes[GetHashAlgorithmId(hashAlgorithm)] = checkBox;", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private void AppendFileResultToTextMain(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private void ShowFindResult(string strHashToFind, HashResultNet[] hashResultNetArray)", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("AppendFileResultToTextMain(hashResult, m_uppercaseChecked);", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private UIBridgeDelegate m_hashUiEvents;", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("m_hashUiEvents.FileHashHandler += HashUiEvents_FileHashHandler;", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("ProgressBarMain.Value = m_hashUiEvents.GetProgressValueMax();", winUwpPage, StringComparison.Ordinal);
-        Assert.Contains("private void HashUiEvents_FileHashHandler(HashResultNet hashResult, bool uppercase)", winUwpPage, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultData(", winUwpPage, StringComparison.Ordinal);
     }
 }

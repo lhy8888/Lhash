@@ -37,7 +37,7 @@ public sealed class HashExtensibilityRegressionUnitTests
         string digestMetadataAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
         string digestValueAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
-        string legacyTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
+        string legacyTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
 
         Assert.Contains("RegisterHashAlgorithmDescriptor(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
         Assert.Contains("ClearHashAlgorithmDescriptorsForTesting()", registryCore, StringComparison.Ordinal);
@@ -74,11 +74,10 @@ public sealed class HashExtensibilityRegressionUnitTests
     public void Blake3Integration_VendorsOfficialFixedVersion_AndAddsThreeDescriptorVariants()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string threadAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+        string threadAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
         string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string upstreamNote = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\README.LHash.md");
         string upstreamHeader = RepositoryTestContext.ReadUtf8File(@"third_party\blake3\1.8.4\c\blake3.h");
         string nativeRuntimeSource = RepositoryTestContext.ReadUtf8File(@"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
@@ -105,11 +104,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_avx512.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("LHashBlake3SimdProfile", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("Condition=\"'$(LHashBlake3SimdProfile)'=='portable'\">BLAKE3_USE_NEON=0;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\blake3\1.8.4\c", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"Runtime\Hash\BLAKE3HashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\blake3\1.8.4\c\blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1;BLAKE3_NO_SSE2;BLAKE3_NO_SSE41;BLAKE3_NO_AVX2;BLAKE3_NO_AVX512;%(PreprocessorDefinitions)</PreprocessorDefinitions>", uwpNativeProject, StringComparison.Ordinal);
-
         Assert.Contains("Upstream tag: 1.8.4", upstreamNote, StringComparison.Ordinal);
         Assert.Contains("b97a24f8754819755ef78d8016c0391c65c943c5", upstreamNote, StringComparison.Ordinal);
         Assert.Contains("BLAKE3_VERSION_STRING \"1.8.4\"", upstreamHeader, StringComparison.Ordinal);
@@ -129,7 +123,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         string crc32cProviderHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.h");
         string crc32cProviderImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string xxhashNote = RepositoryTestContext.ReadUtf8File(@"third_party\xxhash\0.8.3\README.LHash.md");
         string crc32cNote = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\README.LHash.md");
         string crc32cArm64Check = RepositoryTestContext.ReadUtf8File(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
@@ -156,10 +149,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\XXHash3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"Runtime\Hash\CRC32CHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", uwpNativeProject, StringComparison.Ordinal);
-
         Assert.Contains("Upstream tag: v0.8.3", xxhashNote, StringComparison.Ordinal);
         Assert.Contains("e626a72bc2321cd320e953a0ccf1584cad60f363", xxhashNote, StringComparison.Ordinal);
         Assert.Contains("Upstream tag: 1.1.2", crc32cNote, StringComparison.Ordinal);
@@ -190,7 +179,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         string providerHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.h");
         string providerImplementation = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
         string sourceInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\OPENSSL_3_5_6_SOURCE_INFO.txt");
@@ -241,7 +229,6 @@ public sealed class HashExtensibilityRegressionUnitTests
         Assert.Contains("EVP_DigestFinalXOF", providerImplementation, StringComparison.Ordinal);
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslInstallRoot", workflow, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);

@@ -1,8 +1,8 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "FilesHashAlgorithmSelectionController.h"
 
-#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
 #include "resource.h"
 
 namespace

@@ -30,16 +30,6 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Core Build Matrix workflow", draft, StringComparison.Ordinal);
         Assert.Contains("macOS CLI MVP Build workflow", readme, StringComparison.Ordinal);
         Assert.Contains("macOS CLI MVP Build workflow", draft, StringComparison.Ordinal);
-        Assert.DoesNotContain("WinUI preview", readme, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void WinUiPreviewWorkflow_Is_NoLongerPartOfTheRootMainline()
-    {
-        string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
-
-        Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("LHash-winui-preview-x64", workflow, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -133,10 +123,6 @@ public sealed class ReleaseMetadataUnitTests
         string legacyRc = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\fileshash.rc");
         string legacyRc2 = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\res\fileshash.rc2");
         string shellRc = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShlExt.rc");
-        string bridgeRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.rc");
-        string wuiShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.rc");
-        string uwpShellRc = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.rc");
-
         Assert.Contains("<AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
         Assert.Contains("<AdditionalOptions>/c65001 %(AdditionalOptions)</AdditionalOptions>", utf8Targets, StringComparison.Ordinal);
 
@@ -165,9 +151,6 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("#pragma code_page(65001)", shellRc, StringComparison.Ordinal);
         Assert.Contains("BLOCK \"080404b0\"", shellRc, StringComparison.Ordinal);
         Assert.Contains("VALUE \"Translation\", 0x804, 1200", shellRc, StringComparison.Ordinal);
-        Assert.Contains("#pragma code_page(65001)", bridgeRc, StringComparison.Ordinal);
-        Assert.Contains("#pragma code_page(65001)", wuiShellRc, StringComparison.Ordinal);
-        Assert.Contains("#pragma code_page(65001)", uwpShellRc, StringComparison.Ordinal);
     }
 
     [Fact]

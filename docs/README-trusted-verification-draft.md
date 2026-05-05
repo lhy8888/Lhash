@@ -93,7 +93,7 @@ LHash is a good fit for:
 
 - verifying downloaded software packages before use
 - checking release artifacts from GitHub Releases
-- confirming that archived files or evidence copies did not change
+- confirming that evidence copies did not change
 - batch verification of local directories
 - comparing expected and actual digests during delivery or handover
 

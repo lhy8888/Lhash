@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashResultViewController.h"

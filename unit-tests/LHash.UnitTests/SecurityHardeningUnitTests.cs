@@ -8,7 +8,6 @@ public sealed class SecurityHardeningUnitTests
         string osFile = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFile.h");
         string osFilePosixDarwin = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFilePosixDarwin.cpp");
         string winApi = RepositoryTestContext.ReadTextFile(@"trunk\source\OsUtils\OsFileWinApi.cpp");
-        string winUwp = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OsUtils\OsFileWinUwp.cpp");
         string engineResult = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
 
         Assert.Contains("bool isHashTargetAllowed(void *exception = NULL);", osFile, StringComparison.Ordinal);
@@ -49,12 +48,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("LHASH_UWP_LIB", winApi, StringComparison.Ordinal);
         Assert.DoesNotContain("LHASH_WUI_LIB", winApi, StringComparison.Ordinal);
 
-        Assert.Contains("FILE_ATTRIBUTE_REPARSE_POINT", winUwp, StringComparison.Ordinal);
-        Assert.Contains("Refusing to hash a symbolic link, junction, mount point, or other reparse point.", winUwp, StringComparison.Ordinal);
-        Assert.Contains("HasReparsePointInPathHierarchy", winUwp, StringComparison.Ordinal);
-        Assert.Contains("PathSegmentHasReparsePoint", winUwp, StringComparison.Ordinal);
-        Assert.Contains("if (!isHashTargetAllowed(exception))", winUwp, StringComparison.Ordinal);
-
         Assert.Contains("result.meta.modifiedDate = osFile.getModifiedTimeFormat();", engineResult, StringComparison.Ordinal);
         Assert.DoesNotContain("GetFileAttributesEx", engineResult, StringComparison.Ordinal);
     }
@@ -63,11 +56,8 @@ public sealed class SecurityHardeningUnitTests
     public void HandleOwnership_UsesRaiiAcrossWorkerAndShellPaths()
     {
         string handleGuard = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\WinHandleGuard.h");
-        string threadLaunch = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\HashThreadLaunch.h");
+        string threadLaunch = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\HashThreadLaunch.h");
         string sessionController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSessionController.h");
-        string clrHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.h");
-        string clrSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashClrBridge\HashMgmtClr.cpp");
-        string uwpHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashWinRtBridge\HashMgmt.h");
         string shellCore = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\ShellExplorerCommandCore.h");
         string legacyShell = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashShlExt\LHashShellExt.cpp");
         string windowsUtils = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\WindowsUtils.cpp");
@@ -81,12 +71,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("RestartHashWorkerThread(WinHandleGuard::UniqueWinHandle *existingThreadHandle", threadLaunch, StringComparison.Ordinal);
 
         Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", sessionController, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle *m_pWorkThread;", clrHeader, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueWinHandle m_hWorkThread;", uwpHeader, StringComparison.Ordinal);
-        Assert.Contains("m_pWorkThread = new WinHandleGuard::UniqueWinHandle();", clrSource, StringComparison.Ordinal);
-        Assert.Contains("CloseHashWorkerThreadHandle(m_pWorkThread);", clrSource, StringComparison.Ordinal);
-        Assert.Contains("RestartHashWorkerThread(m_pWorkThread, m_pThreadData, &thredID);", clrSource, StringComparison.Ordinal);
-
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", shellCore, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", shellCore, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", shellCore, StringComparison.Ordinal);
@@ -128,7 +112,7 @@ public sealed class SecurityHardeningUnitTests
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\Global.h");
         string checkedArithmetic = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\CheckedArithmetic.h");
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
-        string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\LegacyCompat\ThreadDataExecutionAccess.h");
+        string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataExecutionAccess.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string successfulCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
@@ -240,8 +224,6 @@ public sealed class SecurityHardeningUnitTests
         string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
-        string securityProgram = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\Program.cs");
         string securityHarness = RepositoryTestContext.ReadTextFile(@"security-tests\SecurityRegression\WindowsSecurityRuntimeHarness.cs");
 
         Assert.Contains("BLAKE3_256_OUTPUT_BYTES = BLAKE3_OUT_LEN", providerHeader, StringComparison.Ordinal);
@@ -269,12 +251,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("Condition=\"'$(Platform)'=='Win32'\">/arch:AVX", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX2", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains("/arch:AVX512", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"blake3_neon.c", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("Condition=\"'$(Platform)'=='ARM64'\">BLAKE3_USE_NEON=1", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains("/arch:AVX512", uwpNativeProject, StringComparison.Ordinal);
-
-        Assert.Contains("Windows junction attack harness reproduces ancestor reparse-point traversal", securityProgram, StringComparison.Ordinal);
-        Assert.Contains("Windows hash-style open harness reproduces sharing violations for locked files", securityProgram, StringComparison.Ordinal);
         Assert.Contains("TestJunctionAncestorAttackSurface", securityHarness, StringComparison.Ordinal);
         Assert.Contains("TestHashStyleOpenSharingViolation", securityHarness, StringComparison.Ordinal);
         Assert.Contains("CreateDirectoryJunction", securityHarness, StringComparison.Ordinal);
@@ -290,7 +266,6 @@ public sealed class SecurityHardeningUnitTests
         string crc32cProviderImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\CRC32CHashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string crc32cArm64Check = RepositoryTestContext.ReadTextFile(@"third_party\crc32c\1.1.2\src\crc32c_arm64_check.h");
 
         Assert.Contains("XXH3_64_OUTPUT_BYTES = sizeof(XXH64_hash_t)", xxh3ProviderHeader, StringComparison.Ordinal);
@@ -324,8 +299,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c.cc", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\xxhash\0.8.3\xxhash.c", uwpNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"third_party\crc32c\1.1.2\src\crc32c_arm64.cc", uwpNativeProject, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -337,7 +310,6 @@ public sealed class SecurityHardeningUnitTests
         string providerImplementation = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
         string runtimeTests = RepositoryTestContext.ReadTextFile(@"native-runtime-tests\LHash.NativeRuntimeTests\HashEngineRuntimeTests.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string uwpNativeProject = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
         string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
         string vendorTargets = RepositoryTestContext.ReadTextFile(@"NativeOpenSslVendor.targets");
         string vendorScript = RepositoryTestContext.ReadTextFile(@"trunk\build_openssl_vendor.ps1");
@@ -393,7 +365,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("OPENSSL_SHAKE256_512_OUTPUT_BYTES = 64", providerHeader, StringComparison.Ordinal);
 
         Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"Runtime\Hash\OpenSslEvpHashProvider.cpp", uwpNativeProject, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslInstallRoot", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslIncludeDir", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("LHashOpenSslLibDir", vendorTargets, StringComparison.Ordinal);

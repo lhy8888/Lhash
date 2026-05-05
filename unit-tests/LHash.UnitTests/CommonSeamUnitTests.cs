@@ -71,8 +71,8 @@ public sealed class CommonSeamUnitTests
     public void HashAlgorithmRegistry_DefinesStableCompatibilityOrder()
     {
         string registryCore = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
-        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\HashAlgorithmTypeCompat.h");
-        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeCompat.h");
+        string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\HashAlgorithmTypeCompat.h");
+        string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
         string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
 
@@ -158,16 +158,6 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void ArchivedSha256Source_DropsDuplicateExtractAndStringMacros()
-    {
-        string sha256Source = RepositoryTestContext.ReadUtf8File(@"archive\legacy-algorithms\trunk\source\Algorithms\sha256.cpp");
-
-        Assert.DoesNotContain("mutils_word8", sha256Source, StringComparison.Ordinal);
-        Assert.Equal(1, CountOccurrences(sha256Source, "#ifndef EXTRACT_UCHAR"));
-        Assert.Equal(1, CountOccurrences(sha256Source, "#define STRING2INT("));
-    }
-
-    [Fact]
     public void LegacyMd5Source_SeparatesStandardInit_FromSeededLegacyVariant()
     {
         string md5Header = RepositoryTestContext.ReadUtf8File(@"trunk\source\Algorithms\MD5.h");
@@ -196,8 +186,7 @@ public sealed class CommonSeamUnitTests
                  path.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
                 !path.Contains(@"\unit-tests\", StringComparison.OrdinalIgnoreCase) &&
                 !path.Contains(@"\security-tests\", StringComparison.OrdinalIgnoreCase) &&
-                !path.Contains(@"\refactor-tests\", StringComparison.OrdinalIgnoreCase) &&
-                !path.Contains(@"\archive\", StringComparison.OrdinalIgnoreCase))
+                !path.Contains(@"\refactor-tests\", StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         List<string> invalidCallSites = [];
@@ -338,13 +327,13 @@ public sealed class CommonSeamUnitTests
     [Fact]
     public void LegacyThreadDataAccess_OwnsDedicatedThreadDataSessionSurface()
     {
-        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataAccess.h");
+        string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataAccess.h");
         string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataAccess.h");
 
         Assert.False(File.Exists(legacyCommonShimPath));
-        Assert.Contains("#include \"LegacyCompat/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataInputAccess.h\"", access, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataResultAccess.h\"", access, StringComparison.Ordinal);
         Assert.Contains("ResetThreadDataForNewSession(ThreadData& threadData)", access, StringComparison.Ordinal);
         Assert.Contains("ResetThreadDataInputFiles(threadData);", access, StringComparison.Ordinal);
         Assert.Contains("ClearThreadDataResults(threadData);", access, StringComparison.Ordinal);
@@ -366,7 +355,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestMetadataAccess_OwnsMetadataTraversalSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestMetadataAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeMetadataCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeMetadataCompat.h");
 
         Assert.Contains("typedef HashAlgorithmDescriptor ResultDigestMetadata;", access, StringComparison.Ordinal);
         Assert.Contains("GetResultDigestCount()", access, StringComparison.Ordinal);
@@ -382,7 +371,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestStateAccess_OwnsRegistrySizedStorageSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestStateAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeStateCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeStateCompat.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\Global.h");
 
         Assert.Contains("#include \"Common/Global.h\"", access, StringComparison.Ordinal);
@@ -408,7 +397,7 @@ public sealed class CommonSeamUnitTests
     public void ResultDigestValueAccess_OwnsReadWriteAndAggregateSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDigestValueAccess.h");
-        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ResultDigestTypeValueCompat.h");
+        string typeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ResultDigestTypeValueCompat.h");
 
         Assert.Contains("GetResultDigestById(const ResultData& result, const HashAlgorithmId& algorithmId)", access, StringComparison.Ordinal);
         Assert.Contains("return GetStoredResultDigestById(result, algorithmId);", access, StringComparison.Ordinal);
@@ -444,7 +433,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("static inline TResultStateNet ConvertResultStateToNet(ResultState resultState)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("DispatchResultDigestValueById(const HashAlgorithmId& algorithmId, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultNetProjection, StringComparison.Ordinal);
         Assert.Contains("static inline TResultDataNet AssignResultDigestToNetById(TResultDataNet resultDataNet, const HashAlgorithmId& algorithmId, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"LegacyCompat/HashAlgorithmTypeCompat.h\"", resultNetProjection, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/ThreadDataBridge/HashAlgorithmTypeCompat.h\"", resultNetProjection, StringComparison.Ordinal);
         Assert.DoesNotContain("DispatchResultDigestValueByType(ResultDigestType digestType, TMd5Action onMd5, TSha1Action onSha1, TSha256Action onSha256, TSha512Action onSha512)", resultNetProjection, StringComparison.Ordinal);
         Assert.DoesNotContain("static inline TResultDataNet AssignResultDigestToNet(TResultDataNet resultDataNet, ResultDigestType digestType, TResultString digestValue)", resultNetProjection, StringComparison.Ordinal);
 
@@ -461,7 +450,7 @@ public sealed class CommonSeamUnitTests
     public void HashResultSearch_OwnsSharedTraversalAndMatchingPrimitives()
     {
         string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
-        string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\ThreadDataResultAccess.h");
+        string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataResultAccess.h");
         string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
 
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
@@ -484,8 +473,6 @@ public sealed class CommonSeamUnitTests
         string resultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\ResultDataRender.h");
         string hashResultRender = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultRender.h");
         string mfcHeader = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\UIBridgeMFC.h");
-        string bridgeMacHeader = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
-
         Assert.Contains("ResultSizeDisplayInfo GetResultSizeDisplayInfo(uint64_t resultSize)", resultRender, StringComparison.Ordinal);
         Assert.Contains("return GetResultSizeDisplayInfo(GetResultSize(result));", resultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
@@ -495,7 +482,6 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", bridgeMacHeader, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -504,21 +490,11 @@ public sealed class CommonSeamUnitTests
         string compatibilityPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultCompatibility.h");
         string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
         string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
-        string bridgeMacHeader = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h");
-        string bridgeMacSource = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.mm");
-        string hashBridgeMac = RepositoryTestContext.ReadTextFile(@"archive\legacy-platforms\trunk\source\OSXUI\HashBridge.mm");
-
         Assert.False(File.Exists(compatibilityPath));
         Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
         Assert.Contains("VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
         Assert.DoesNotContain("AppendResult(ProjectHashResult(result));", searchSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", bridgeMacHeader, StringComparison.Ordinal);
-        Assert.Contains("static ResultDataSwift *ConvertHashResultToSwift(const HashResult& result);", bridgeMacHeader, StringComparison.Ordinal);
-        Assert.DoesNotContain("CreateCompatibilityResultData(result);", bridgeMacSource, StringComparison.Ordinal);
-        Assert.Contains("ConvertHashResultToSwift(const HashResult& result)", bridgeMacSource, StringComparison.Ordinal);
-        Assert.Contains("VisitThreadDataHashResults(*_thrdData, [&](const HashResult& result)", hashBridgeMac, StringComparison.Ordinal);
-        Assert.Contains("ConvertHashResultToSwift(result);", hashBridgeMac, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -566,154 +542,11 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void TrunkRoot_ArchivesLegacySolutionWrappers_And_PlatformTrees_While_KeepingSharedSecurityTargetsAsSingleAuthority()
-    {
-        string[] archivedRelativePaths =
-        [
-            @"archive\legacy-projects\trunk\fHash.xcworkspace\contents.xcworkspacedata",
-            @"archive\legacy-projects\trunk\fHashMacUI.xcodeproj\project.pbxproj",
-            @"archive\legacy-projects\trunk\fhashwui17.sln",
-            @"archive\legacy-projects\trunk\fhashwui18.slnx",
-            @"archive\legacy-projects\trunk\fileshashuwp17.sln",
-            @"archive\legacy-projects\trunk\package_macos_dmg.sh",
-            @"archive\legacy-projects\trunk\package_win_mfc64.py",
-            @"archive\legacy-platforms\sub-proj\fHashClrBridge",
-            @"archive\legacy-platforms\sub-proj\fHashWUINative",
-            @"archive\legacy-platforms\trunk\source\WinUI",
-            @"archive\legacy-platforms\trunk\fHashWUIWap\version.h",
-            @"archive\legacy-platforms\trunk\fHashUwpWap\version.h",
-            @"archive\legacy-platforms\trunk\source\WinUWP\Package.appxmanifest",
-            @"archive\legacy-platforms\trunk\source\OSXUI\UIBridgeMacSwift.h",
-            @"archive\legacy-platforms\sub-proj\fHashWinRtBridge\fHashWinRtBridge.vcxproj",
-            @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj",
-            @"archive\legacy-platforms\sub-proj\fHashUwpShellExt\fHashUwpShellExt.vcxproj",
-            @"archive\legacy-platforms\sub-proj\fHashWUIShellExt\fHashWUIShellExt.vcxproj"
-        ];
-
-        string[] removedFromTrunkRoot =
-        [
-            @"trunk\fHash.xcworkspace",
-            @"trunk\fHashMacUI.xcodeproj",
-            @"trunk\fhashwui17.sln",
-            @"trunk\fhashwui18.slnx",
-            @"trunk\fileshashuwp17.sln",
-            @"trunk\package_macos_dmg.sh",
-            @"trunk\package_win_mfc64.py",
-            @"sub-proj\fHashClrBridge",
-            @"sub-proj\fHashWUINative",
-            @"trunk\fHashWUIWap",
-            @"trunk\fHashUwpWap",
-            @"trunk\source\WinUWP",
-            @"trunk\source\OSXUI",
-            @"trunk\source\WinUI",
-            @"sub-proj\fHashWinRtBridge",
-            @"sub-proj\fHashUwpNative",
-            @"sub-proj\fHashUwpShellExt",
-            @"sub-proj\fHashWUIShellExt",
-            @"sub-proj\LHashClrBridge",
-            @"sub-proj\LHashWUINative"
-        ];
-
-        foreach (string relativePath in archivedRelativePaths)
-        {
-            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
-            Assert.True(File.Exists(fullPath) || Directory.Exists(fullPath), $"{relativePath} should exist in archive after the trunk-root cleanup.");
-        }
-
-        foreach (string relativePath in removedFromTrunkRoot)
-        {
-            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
-            Assert.False(File.Exists(fullPath) || Directory.Exists(fullPath), $"{relativePath} should no longer live in trunk root after archiving.");
-        }
-
-        string archiveReadme = RepositoryTestContext.ReadUtf8File(@"archive\README.md");
-        string legacyProject = RepositoryTestContext.ReadUtf8File(@"trunk\fileshash.vcxproj");
-        string winUiMarker = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\trunk\source\WinUI\NON_MAINLINE.md");
-        string clrBridgeMarker = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashClrBridge\NON_MAINLINE.md");
-
-        Assert.Contains("historical project shells and packaging scripts", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("trunk/fileshash15.sln", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("legacy-platforms/trunk/fHashWUIWap", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("legacy-platforms/sub-proj/fHashWinRtBridge", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("sub-proj/fHashClrBridge", archiveReadme, StringComparison.Ordinal);
-        Assert.Contains("non-mainline", winUiMarker, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("non-mainline", clrBridgeMarker, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("NativeSecurity.targets", legacyProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("<RandomizedBaseAddress>false</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("<RandomizedBaseAddress>true</RandomizedBaseAddress>", legacyProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("<DataExecutionPrevention />", legacyProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("<DataExecutionPrevention>true</DataExecutionPrevention>", legacyProject, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void WinUiPreviewWorkflow_IsRetired_FromTheMainline()
-    {
-        string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
-        string winUiNativeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashWUINative\fHashWUINative.vcxproj");
-        string clrBridgeProject = RepositoryTestContext.ReadUtf8File(@"archive\legacy-platforms\sub-proj\fHashClrBridge\fHashClrBridge.vcxproj");
-        string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
-        string readme = RepositoryTestContext.ReadTextFile(@"README.md");
-        string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
-
-        Assert.Contains("<SolutionDir Condition=\"'$(SolutionDir)'==''\">$(ProjectDir)..\\..\\trunk\\</SolutionDir>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<LHashDynamicRuntime Condition=\"'$(LHashDynamicRuntime)'==''\">false</LHashDynamicRuntime>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<LHashRuntimeSuffix Condition=\"'$(LHashDynamicRuntime)'=='true'\">-md</LHashRuntimeSuffix>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(ProjectDir);$(ProjectDir)..\..\trunk\source\;$(SolutionDir)source\", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(ProjectDir)..\..\third_party\blake3\1.8.4\c", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<UseOfMfc Condition=\"'$(LHashDynamicRuntime)'=='true'\">Dynamic</UseOfMfc>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains("<RuntimeLibrary Condition=\"'$(LHashDynamicRuntime)'=='true'\">MultiThreadedDLL</RuntimeLibrary>", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"$(MSBuildProjectName)$(LHashRuntimeSuffix)", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"..\..\trunk\source\Common\HashFileRunner.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"..\..\trunk\source\Common\HashScheduler.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.Contains(@"..\..\trunk\source\Runtime\Hash\BLAKE3HashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("Debug|Win32", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("Release|Win32", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("Debug|Win32", clrBridgeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain("Release|Win32", clrBridgeProject, StringComparison.Ordinal);
-
-        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\MD5.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\SHA1.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\sha256.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Algorithms\sha512.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEngine.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashFileRunner.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashScheduler.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEnginePreparation.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\HashEngineResult.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\Common\strhelper.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\OsUtils\OsFileWinApi.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\OsUtils\OsThreadWinApi.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.DoesNotContain(@"..\..\trunk\source\WinCommon\WindowsComm.cpp", winUiNativeProject, StringComparison.Ordinal);
-
-        Assert.Contains(@"..\..\trunk\source\WinCommon\AdvTaskbar.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"..\..\trunk\source\WinCommon\ClipboardHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
-        Assert.Contains(@"..\..\trunk\source\WinCommon\FileVersionHelper.cpp", winUiNativeProject, StringComparison.Ordinal);
-
-        Assert.DoesNotContain("build-winui-bridge-x64:", workflow, StringComparison.Ordinal);
-        Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
-        Assert.Contains("Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", readme, StringComparison.Ordinal);
-        Assert.Contains("WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", readme, StringComparison.Ordinal);
-        Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void WinUiProject_IsRetired_FromTheMaintainedMainline()
-    {
-        string readme = RepositoryTestContext.ReadTextFile(@"README.md");
-        string archiveReadme = RepositoryTestContext.ReadTextFile(@"archive\README.md");
-
-        Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
-        Assert.Contains("Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`", readme, StringComparison.Ordinal);
-        Assert.Contains("WinUI / CLR bridge trees: reference-only snapshots and not part of the active build", readme, StringComparison.Ordinal);
-        Assert.Contains("reference only", archiveReadme, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
     public void SourceLayerEntryPoints_ExposeDomainRuntimeAndLegacyCompatContracts()
     {
         string domainContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Domain\HashDomainContracts.h");
         string runtimeContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Runtime\HashRuntimeContracts.h");
-        string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\LegacyCompat\LegacyCompatibility.h");
+        string legacyContracts = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\ThreadDataBridge\LegacyCompatibility.h");
 
         Assert.Contains("#include \"Domain/HashAlgorithmRegistryCore.h\"", domainContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Domain/HashRequest.h\"", domainContracts, StringComparison.Ordinal);
@@ -726,9 +559,9 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", runtimeContracts, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", runtimeContracts, StringComparison.Ordinal);
 
-        Assert.Contains("#include \"LegacyCompat/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/ThreadDataAccess.h\"", legacyContracts, StringComparison.Ordinal);
-        Assert.Contains("#include \"LegacyCompat/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/LegacyThreadData.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/ThreadDataAccess.h\"", legacyContracts, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/ThreadDataBridge/HashRequestProjection.h\"", legacyContracts, StringComparison.Ordinal);
     }
 
     [Fact]

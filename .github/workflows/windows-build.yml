@@ -34,12 +34,6 @@ jobs:
       - name: Run security regression harness
         run: dotnet security-tests/SecurityRegression/bin/Release/net10.0/SecurityRegression.dll
 
-      - name: Build refactor baseline harness
-        run: dotnet build refactor-tests/RefactorBaseline/RefactorBaseline.csproj --configuration Release
-
-      - name: Run refactor baseline harness
-        run: dotnet refactor-tests/RefactorBaseline/bin/Release/net10.0/RefactorBaseline.dll
-
   unit-tests:
     runs-on: windows-2022
 

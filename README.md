@@ -23,8 +23,6 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
 - Maintained branch: `future-winui-was2`
 - Windows UI mainline: `MFC`
-- Legacy WinUI / CLR bridge: archived under `archive/legacy-platforms/`
-- WinUI / CLR bridge trees: reference-only snapshots and not part of the active build
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core Build Matrix workflow`](.github/workflows/core-m2.yml)
 - macOS CLI MVP: [`macOS CLI MVP Build workflow`](.github/workflows/macos-cli-build.yml)
@@ -95,7 +93,7 @@ LHash is a good fit for:
 
 - verifying downloaded software packages before use
 - checking release artifacts from GitHub Releases
-- confirming that archived files or evidence copies did not change
+- confirming that evidence copies did not change
 - batch verification of local directories
 - comparing expected and actual digests during delivery or handover
 
