@@ -151,6 +151,9 @@ struct HashJobState
 
 	std::atomic<bool> working;
 	std::atomic<uint64_t> countedSize;
+	// HashJobState.results is owned by the synchronous HashEngine execution thread.
+	// UI code must consume published snapshots instead of mutating or traversing
+	// this list concurrently.
 	HashResultList results;
 };
 

@@ -7,11 +7,15 @@
 
 static inline HashResultList& GetMutableThreadDataResults(ThreadData& threadData)
 {
+	// Legacy synchronous bridge only. The execution thread owns the live result
+	// list; UI code must not touch it concurrently.
 	return GetMutableThreadDataHashJobState(threadData).results;
 }
 
 static inline const HashResultList& GetThreadDataResults(const ThreadData& threadData)
 {
+	// Legacy synchronous bridge only. UI code should consume published snapshots
+	// instead of traversing the live mutable result list concurrently.
 	return GetThreadDataHashJobState(threadData).results;
 }
 

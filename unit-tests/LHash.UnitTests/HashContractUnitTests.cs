@@ -189,6 +189,19 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
+    public void HashJobState_ResultsAreExecutionThreadOwnedAndPublishedThroughSnapshots()
+    {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
+        string threadDataResultAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\ThreadDataBridge\ThreadDataResultAccess.h");
+
+        Assert.Contains("HashJobState.results is owned by the synchronous HashEngine execution thread.", global, StringComparison.Ordinal);
+        Assert.Contains("UI code must consume published snapshots instead of mutating or traversing", global, StringComparison.Ordinal);
+        Assert.Contains("Legacy synchronous bridge only. The execution thread owns the live result", threadDataResultAccess, StringComparison.Ordinal);
+        Assert.Contains("UI code must not touch it concurrently.", threadDataResultAccess, StringComparison.Ordinal);
+        Assert.Contains("UI code should consume published snapshots", threadDataResultAccess, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
     {
         string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
