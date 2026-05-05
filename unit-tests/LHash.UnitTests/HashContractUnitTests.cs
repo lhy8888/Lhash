@@ -175,9 +175,10 @@ public sealed class HashContractUnitTests
 
         Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
         Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
-        Assert.Contains("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
-        Assert.Contains("sink != NULL ? *sink : GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
-        Assert.Contains("return &executionContext.progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("sink != NULL ? sink : &GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("return executionContext.progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
         Assert.DoesNotContain("HashProgressSink *progressSink;", executionContext, StringComparison.Ordinal);
     }
 

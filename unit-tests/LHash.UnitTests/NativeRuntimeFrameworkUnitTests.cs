@@ -63,6 +63,7 @@ public sealed class NativeRuntimeFrameworkUnitTests
         Assert.Contains("RunHashRequest_XXH3AndCRC32CUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_XXH3AndCRC32CRemainStableAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("RunHashRequest_XXH3AndCRC32CMultiFileConcurrentMatchesSingleRun", testSource, StringComparison.Ordinal);
+        Assert.Contains("HashThreadFunc_ProducesConsistentDigestsAcrossConcurrentRuns", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_FindsMatchingRuntimeDigests", testSource, StringComparison.Ordinal);
         Assert.Contains("HashResultSearch_MatchesPathAndDigestForRuntimeResults", testSource, StringComparison.Ordinal);
         Assert.Contains("HashThreadFunc_ComputesExpectedDigestsForEmptyFile", testSource, StringComparison.Ordinal);

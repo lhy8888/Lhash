@@ -295,6 +295,9 @@ internal static partial class Program
             AssertDoesNotContain(osFileWinApi, "LHASH_WUI_LIB", "Win32 file hashing still carries the retired WinUI open-file macro.");
             AssertContains(osFileWinUwp, "FILE_ATTRIBUTE_REPARSE_POINT", "UWP file hashing no longer checks for reparse points.");
             AssertContains(osFileWinUwp, "HasReparsePointInPathHierarchy", "UWP file hashing no longer walks ancestor path segments when checking for reparse points.");
+            AssertContains(osFilePosixDarwin, "static bool IsSameFileIdentity(const struct stat& lhs, const struct stat& rhs)", "Darwin file hashing no longer centralizes dev/inode identity checks.");
+            AssertContains(osFilePosixDarwin, "IsSameFileIdentity(openedStatus, expectedPathStatus)", "Darwin file hashing no longer compares the opened handle against the validated path identity.");
+            AssertContains(osFilePosixDarwin, "IsSameFileIdentity(reopenedPathStatus, openedStatus)", "Darwin file hashing no longer rechecks the reopened path identity against the opened handle.");
             AssertContains(hashEngineResult, "result.meta.modifiedDate = osFile.getModifiedTimeFormat();", "HashEngine metadata flow no longer relies on the opened file handle.");
             AssertDoesNotContain(hashEngineResult, "GetFileAttributesEx", "HashEngine metadata flow still uses path-based attribute lookup.");
 
@@ -305,8 +308,9 @@ internal static partial class Program
             AssertContains(checkedArithmetic, "ReplaceSizedValueUInt64", "Checked arithmetic helpers no longer expose bounded replace arithmetic.");
             AssertContains(global, "std::atomic<uint64_t> countedSize;", "Hash job state no longer stores counted size as an atomic field.");
             AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "HashExecutionContext no longer exposes a null-object progress sink.");
-            AssertContains(executionContext, "HashProgressSink& progressSinkObserver;", "HashExecutionContext no longer models the progress sink as a non-owning observer reference.");
-            AssertContains(executionContext, "sink != NULL ? *sink : GetNullHashProgressSink()", "HashExecutionContext no longer provides a null-safe progress sink fallback.");
+            AssertContains(executionContext, "HashProgressSink *progressSinkObserver;", "HashExecutionContext no longer models the progress sink as a non-owning observer pointer.");
+            AssertDoesNotContain(executionContext, "HashProgressSink& progressSinkObserver;", "HashExecutionContext regressed to a non-owning observer reference.");
+            AssertContains(executionContext, "sink != NULL ? sink : &GetNullHashProgressSink()", "HashExecutionContext no longer provides a null-safe progress sink fallback.");
             AssertDoesNotContain(executionContext, "HashProgressSink *progressSink;", "HashExecutionContext regressed to a raw stored progress sink pointer.");
             AssertContains(executionContext, "SaturatingAddUInt64", "HashExecutionContext no longer uses saturating size accounting.");
             AssertContains(executionContext, "ReplaceSizedValueUInt64", "HashExecutionContext no longer uses checked replace arithmetic.");

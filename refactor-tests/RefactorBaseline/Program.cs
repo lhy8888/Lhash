@@ -3548,7 +3548,8 @@ internal static class Program
             AssertContains(hashEngineObserver, "typedef HashProgressEventBridge HashEngineObserver;", "Phase 34 HashEngineObserver compatibility alias is missing.");
             AssertContains(hashEngineObserver, "virtual int progressMax()", "Phase 34 HashProgressEventBridge no longer satisfies the progress-max sink contract.");
             AssertContains(hashEngineObserver, "virtual void onProgressEvent(const ProgressEvent& progressEvent)", "Phase 34 HashProgressEventBridge no longer satisfies the semantic progress-event sink contract.");
-            AssertContains(hashExecutionContext, "HashProgressSink& progressSinkObserver;", "Phase 35 hash execution context does not yet carry the neutral progress sink observer.");
+            AssertContains(hashExecutionContext, "HashProgressSink *progressSinkObserver;", "Phase 35 hash execution context does not yet carry the neutral progress sink observer.");
+            AssertDoesNotContain(hashExecutionContext, "HashProgressSink& progressSinkObserver;", "Phase 35 hash execution context still models the sink as a reference.");
             AssertContains(hashExecutionContext, "HashJobState& jobState;", "Phase 35 hash execution context does not yet carry the grouped job-state seam.");
             AssertContains(hashExecutionContext, "HashCancellationState& cancellationState;", "Phase 35 hash execution context does not yet carry the grouped cancellation seam.");
             AssertContains(hashExecutionContext, "HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", "Phase 35 hash execution context does not yet require explicit state dependencies.");
@@ -5989,8 +5990,9 @@ internal static class Program
             string uwpNativeProject = ReadRepoFile(repoRoot, @"archive\legacy-platforms\sub-proj\fHashUwpNative\fHashUwpNative.vcxproj");
 
             AssertContains(executionContext, "class NullHashProgressSink : public HashProgressSink", "Phase 92 execution context does not yet expose the null-object progress sink.");
-            AssertContains(executionContext, "HashProgressSink& progressSinkObserver;", "Phase 92 execution context does not yet model the sink as a non-owning observer reference.");
-            AssertContains(executionContext, "sink != NULL ? *sink : GetNullHashProgressSink()", "Phase 92 execution context does not yet provide a null-safe sink fallback.");
+            AssertContains(executionContext, "HashProgressSink *progressSinkObserver;", "Phase 92 execution context does not yet model the sink as a non-owning observer pointer.");
+            AssertDoesNotContain(executionContext, "HashProgressSink& progressSinkObserver;", "Phase 92 execution context still models the sink as a non-owning observer reference.");
+            AssertContains(executionContext, "sink != NULL ? sink : &GetNullHashProgressSink()", "Phase 92 execution context does not yet provide a null-safe sink fallback.");
             AssertDoesNotContain(executionContext, "HashProgressSink *progressSink;", "Phase 92 execution context regressed to a raw stored sink pointer.");
 
             AssertContains(nativeRuntimeSource, "RunHashRequest_Blake3UppercaseFlagRemainsDeterministicAcrossVariants", "Phase 92 native runtime tests do not yet cover uppercase BLAKE3 behavior.");

@@ -14,6 +14,14 @@
 
 using namespace sunjwbase;
 
+namespace OsFileDarwinInternal
+{
+    bool IsSameFileIdentity(const struct stat& lhs, const struct stat& rhs)
+    {
+        return lhs.st_dev == rhs.st_dev && lhs.st_ino == rhs.st_ino;
+    }
+}
+
 namespace
 {
     bool ExpectTrue(const char *label, bool value)
@@ -77,12 +85,21 @@ int main()
     }
 
     std::string regularPath = root + "/regular.txt";
+    std::string siblingPath = root + "/sibling.txt";
     std::string symlinkPath = root + "/regular-link.txt";
     std::string directoryPath = root + "/subdir";
 
     passed &= ExpectTrue("Create regular file", WriteTextFile(regularPath, "darwin-security"));
+    passed &= ExpectTrue("Create sibling regular file", WriteTextFile(siblingPath, "darwin-security-sibling"));
     passed &= ExpectTrue("Create leaf directory", mkdir(directoryPath.c_str(), 0700) == 0);
     passed &= ExpectTrue("Create symlink to regular file", symlink(regularPath.c_str(), symlinkPath.c_str()) == 0);
+
+    struct stat regularStat = {};
+    struct stat siblingStat = {};
+    passed &= ExpectTrue("lstat regular file", lstat(regularPath.c_str(), &regularStat) == 0);
+    passed &= ExpectTrue("lstat sibling regular file", lstat(siblingPath.c_str(), &siblingStat) == 0);
+    passed &= ExpectTrue("Same file identity matches itself", OsFileDarwinInternal::IsSameFileIdentity(regularStat, regularStat));
+    passed &= ExpectFalse("Distinct files do not share a device/inode identity", OsFileDarwinInternal::IsSameFileIdentity(regularStat, siblingStat));
 
     OsFile regularFile(strtotstr(regularPath));
     passed &= ExpectTrue("Regular file is allowed", regularFile.isHashTargetAllowed());
@@ -100,6 +117,7 @@ int main()
 
     passed &= ExpectTrue("Cleanup symlink", RemoveFileIfExists(symlinkPath));
     passed &= ExpectTrue("Cleanup regular file", RemoveFileIfExists(regularPath));
+    passed &= ExpectTrue("Cleanup sibling file", RemoveFileIfExists(siblingPath));
     passed &= ExpectTrue("Cleanup directory", RemoveDirIfExists(directoryPath));
     passed &= ExpectTrue("Cleanup root", RemoveDirIfExists(root));
 

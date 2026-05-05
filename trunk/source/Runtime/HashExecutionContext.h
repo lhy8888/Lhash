@@ -28,12 +28,12 @@ static inline HashProgressSink& GetNullHashProgressSink()
 struct HashExecutionContext
 {
 	HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)
-		: progressSinkObserver(sink != NULL ? *sink : GetNullHashProgressSink()),
+		: progressSinkObserver(sink != NULL ? sink : &GetNullHashProgressSink()),
 		jobState(state),
 		cancellationState(cancellation)
 	{
 	}
-	HashProgressSink& progressSinkObserver;
+	HashProgressSink *progressSinkObserver; // Non-owning; the caller keeps the sink alive until RunHashRequest returns.
 	HashJobState& jobState;
 	HashCancellationState& cancellationState;
 };
@@ -45,7 +45,7 @@ static inline HashExecutionContext CreateHashExecutionContext(HashProgressSink *
 
 static inline HashProgressSink *GetHashExecutionProgressSink(const HashExecutionContext& executionContext)
 {
-	return &executionContext.progressSinkObserver;
+	return executionContext.progressSinkObserver;
 }
 
 static inline void SetHashExecutionWorking(HashExecutionContext& executionContext, bool working)
