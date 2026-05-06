@@ -1,0 +1,917 @@
+namespace LHash.UnitTests;
+
+public sealed class HashContractUnitTests
+{
+    [Fact]
+    public void HashRequest_DefinesStableFileAlgorithmAndUppercaseContract()
+    {
+        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
+        string requestBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestBridge.h");
+        string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestType.h");
+        string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
+        string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
+
+        Assert.False(File.Exists(requestShimPath));
+        Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
+        Assert.Contains("TStrVector files;", request, StringComparison.Ordinal);
+        Assert.Contains("std::vector<HashAlgorithmId> algorithmIds;", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", request, StringComparison.Ordinal);
+        Assert.Contains("bool uppercaseDigest;", request, StringComparison.Ordinal);
+        Assert.Contains("HashRequestDigestExecutionPolicy digestExecutionPolicy;", request, StringComparison.Ordinal);
+        Assert.Contains("AppendHashRequestAlgorithmId(HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.Contains("GetHashRequestNormalizedAlgorithmIds(const HashRequest& request)", request, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithmIds(const HashRequest& request", request, StringComparison.Ordinal);
+        Assert.Contains("HasHashRequestAlgorithmId(const HashRequest& request, const HashAlgorithmId& algorithmId)", request, StringComparison.Ordinal);
+        Assert.Contains("GetHashRequestDigestExecutionPolicy(const HashRequest& request)", request, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestFiles(const HashRequest& request", request, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequestAlgorithmSelectionState(const HashRequest& request)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("VisitHashRequestAlgorithms(const HashRequest& request", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", request, StringComparison.Ordinal);
+        Assert.Contains("AppendHashRequestAlgorithm(HashRequest& request, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithms(const HashRequest& request", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("IsHashRequestAlgorithmSelected(const HashAlgorithmSelectionState& selectionState, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("HasHashRequestAlgorithm(const HashRequest& request, ResultDigestType digestType)", requestTypeCompat, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashRequest(const ThreadData& threadData)", request, StringComparison.Ordinal);
+        Assert.False(File.Exists(requestProjectionPath));
+        Assert.Contains("CreateHashRequest(const ThreadData& threadData)", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashRequestType.h\"", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", requestBridge, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataInputAccess.h\"", requestBridge, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashAlgorithmRegistry_UsesDescriptorIdLookupAsPrimarySelectionSeam()
+    {
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashAlgorithmType.h");
+        string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
+        string registryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+
+        Assert.False(File.Exists(registryShimPath));
+        Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool requiresDigestOperations;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("bool enabledByDefault;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("DoesHashAlgorithmDescriptorRequireDigestOperations(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("IsHashAlgorithmDescriptorEnabledByDefault(const HashAlgorithmDescriptor& algorithmDescriptor)", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryCore, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndex(ResultDigestType digestType, int *algorithmIndex)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmTypeById(const HashAlgorithmId& algorithmId, ResultDigestType *digestType)", registryTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashAlgorithmIndexById(normalizedAlgorithmIds[algorithmIndex], &registeredIndex)", request, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryGetHashAlgorithmDescriptorById(normalizedAlgorithmIds[algorithmIndex], &algorithmDescriptor)", request, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashResult_ProjectsStableCoreAndDigestContract()
+    {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
+        string legacyDigestType = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ResultDigestType.h");
+        string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashResult.h");
+        string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
+        string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
+
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResult.h")));
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultProjection.h")));
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ResultNetProjection.h")));
+        Assert.DoesNotContain("enum ResultDigestType", global, StringComparison.Ordinal);
+        Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::tstring algorithmId;", global, StringComparison.Ordinal);
+        Assert.Contains("struct HashFileMeta", global, StringComparison.Ordinal);
+        Assert.Contains("struct HashResult", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<sunjwbase::tstring> values;", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("struct ResultDigestCompatibilityFields", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("const ResultData *sourceResult;", result, StringComparison.Ordinal);
+        Assert.Contains("std::vector<HashDigestResult> digests;", global, StringComparison.Ordinal);
+        Assert.Contains("const HashResult& ProjectHashResult(const HashResult& result)", result, StringComparison.Ordinal);
+        Assert.Contains("ProjectHashResult(const ResultData& result)", result, StringComparison.Ordinal);
+        Assert.Contains("digestResult.algorithmId = GetHashAlgorithmDescriptorId(digestMetadata);", result, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", search, StringComparison.Ordinal);
+        Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesDigestText(const HashResult& result, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathText(const HashResult& result, const sunjwbase::tstring& pathText)", search, StringComparison.Ordinal);
+        Assert.Contains("HashResultMatchesPathAndDigestText(const HashResult& result, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText)", search, StringComparison.Ordinal);
+        Assert.Contains("VisitPathAndDigestMatchingHashResults(const HashResultList& resultList, const sunjwbase::tstring& pathText, const sunjwbase::tstring& digestText, THashResultVisitor visitor)", search, StringComparison.Ordinal);
+        Assert.Contains("VisitResultDigestMetadataValues(result", result, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataStableName(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
+        Assert.Contains("GetResultDigestMetadataId(const ResultDigestMetadata& digestMetadata)", metadata, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProgressEvent_DefinesSemanticLifecycleSurface_AndObserverCompatibilityDispatch()
+    {
+        string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\ProgressEvent.h");
+        string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashProgressSink.h");
+        string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
+        string legacyObserverPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineObserver.h");
+        string legacyBridgePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineBridge.h");
+        string legacyUiBridgeBasePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\UIBridgeBase.h");
+
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ProgressEvent.h")));
+        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashProgressSink.h")));
+        Assert.Contains("enum ProgressEventType", progressEvent, StringComparison.Ordinal);
+        Assert.Contains("PROGRESS_EVENT_JOB_PREPARING", progressEvent, StringComparison.Ordinal);
+        Assert.Contains("PROGRESS_EVENT_FILE_HASH_READY", progressEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateResultProgressEvent(ProgressEventType eventType, const ResultData& result)", progressEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFileStartedProgressEvent(const ResultData& result)", progressEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFileMetaReadyProgressEvent(const ResultData& result)", progressEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFileHashReadyProgressEvent(const ResultData& result, bool uppercaseDigest)", progressEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFileFailedProgressEvent(const ResultData& result)", progressEvent, StringComparison.Ordinal);
+        Assert.Contains("CreateFileHashReadyProgressEvent(const HashResult& result, bool uppercaseDigest)", progressEvent, StringComparison.Ordinal);
+        Assert.Contains("CreateResultProgressEvent(ProgressEventType eventType, const HashResult& result)", progressEvent, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Domain/ProgressEvent.h\"", progressSink, StringComparison.Ordinal);
+        Assert.Contains("class HashProgressSink", progressSink, StringComparison.Ordinal);
+        Assert.Contains("virtual int progressMax() = 0;", progressSink, StringComparison.Ordinal);
+        Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent) = 0;", progressSink, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", observer, StringComparison.Ordinal);
+        Assert.Contains("class HashProgressEventBridge: public HashProgressSink", observer, StringComparison.Ordinal);
+        Assert.Contains("typedef HashProgressEventBridge HashEngineObserver;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void onProgressEvent(const ProgressEvent& progressEvent)", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleJobPreparingEvent() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleJobPreparationFinishedEvent() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleJobCancelledEvent() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleJobCompletedEvent() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual int getProgressValueMax() = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleTotalProgressEvent(int value) = 0;", observer, StringComparison.Ordinal);
+        Assert.Contains("handleFileResultProgressEvent(progressEvent.result, progressEvent.type, progressEvent.uppercaseDigest);", observer, StringComparison.Ordinal);
+        Assert.Contains("handleTotalProgressEvent(progressEvent.value);", observer, StringComparison.Ordinal);
+        Assert.DoesNotContain("virtual void showFileName(const HashResult& result) = 0;", observer, StringComparison.Ordinal);
+        Assert.DoesNotContain("virtual void updateProgWhole(int value) = 0;", observer, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateCompatibilityResultData(result);", observer, StringComparison.Ordinal);
+        Assert.False(File.Exists(legacyObserverPath));
+        Assert.False(File.Exists(legacyBridgePath));
+        Assert.False(File.Exists(legacyUiBridgeBasePath));
+    }
+
+    [Fact]
+    public void HashExecutionContext_ModelsProgressSinkAsANonOwningObserverSeam()
+    {
+        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+        string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
+
+        Assert.Contains("HashExecutionContext is a non-owning synchronous execution context.", executionContext, StringComparison.Ordinal);
+        Assert.Contains("The caller must keep the sink, jobState, and cancellationState alive until", executionContext, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest returns.", executionContext, StringComparison.Ordinal);
+        Assert.Contains("class NullHashProgressSink : public HashProgressSink", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink& GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("sink != NULL ? sink : &GetNullHashProgressSink()", executionContext, StringComparison.Ordinal);
+        Assert.Contains("return executionContext.progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashProgressSink& progressSinkObserver;", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashProgressSink *progressSink;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("RunHashRequest is synchronous. The caller must keep the execution context", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("and its observed state alive until this function returns.", engineHeader, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashFileVersionResolver_UsesOpenedHandleAndBuildListsIncludeFileVersionHelper()
+    {
+        string fileVersionResolver = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileVersionResolver.cpp");
+        string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
+        string cmakeCoreSources = RepositoryTestContext.ReadTextFile(@"cmake\LHashCoreSources.cmake");
+        int windowsBranchEnd = fileVersionResolver.IndexOf("#else", StringComparison.Ordinal);
+        string windowsBranch = windowsBranchEnd >= 0
+            ? fileVersionResolver[..windowsBranchEnd]
+            : fileVersionResolver;
+
+        Assert.Contains("#include \"WinCommon/FileVersionHelper.h\"", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("ShouldResolveWindowsFileVersion(path)", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("WindowsComm::FileVersionHelper fileVersionHelper(osFile);", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("return fileVersionHelper.Find();", windowsBranch, StringComparison.Ordinal);
+        Assert.DoesNotContain("WindowsComm::GetExeFileVersion((TCHAR *)path);", windowsBranch, StringComparison.Ordinal);
+        Assert.DoesNotContain("(void)osFile;", windowsBranch, StringComparison.Ordinal);
+        Assert.Contains("FileVersionHelper.cpp", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("FileVersionHelper.h", nativeCoreProject, StringComparison.Ordinal);
+        Assert.Contains("WinCommon/FileVersionHelper.cpp", cmakeCoreSources, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NativeProjectFiles_DoNotDefineLegacyWinUiMacro()
+    {
+        string[] projectFiles =
+        [
+            @"trunk\fileshash.vcxproj",
+            @"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj",
+            @"native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj",
+            @"native-benchmarks\LHash.NativeBenchmarks\LHash.NativeBenchmarks.vcxproj",
+        ];
+
+        foreach (string projectFile in projectFiles)
+        {
+            string projectContents = RepositoryTestContext.ReadTextFile(projectFile);
+            Assert.DoesNotContain("LHASH_WIN_UI", projectContents, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void CoreM2Workflow_PushBranchesIncludeCodexAndClaude()
+    {
+        string coreM2Workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\core-m2.yml");
+
+        Assert.Contains("branches:", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("future-winui-was2", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("codex/**", coreM2Workflow, StringComparison.Ordinal);
+        Assert.Contains("claude/**", coreM2Workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OpenSslAlgorithms_AreConditionallyRegisteredOnlyInVendorBuilds()
+    {
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string stubProvider = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProviderStub.cpp");
+        string vendorProvider = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp");
+
+        Assert.Contains("OpenSSL algorithms are only registered in vendor-backed builds.", registryCore, StringComparison.Ordinal);
+        RepositoryTestContext.AssertContainsInOrder(
+            registryCore,
+            "#if defined(LHASH_WITH_OPENSSL3_VENDOR)",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-sha-256\", \"SHA-256\", true, true });",
+            "RegisterHashAlgorithmDescriptorUnlocked({ \"openssl-shake256-512\", \"SHAKE256-512\", true, false });",
+            "#endif");
+
+        Assert.Contains("return false;", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_MD_fetch", stubProvider, StringComparison.Ordinal);
+        Assert.DoesNotContain("EVP_DigestInit_ex2", stubProvider, StringComparison.Ordinal);
+        Assert.Contains("#error \"OpenSslEvpHashProvider.cpp is the vendor-backed implementation.", vendorProvider, StringComparison.Ordinal);
+        Assert.Contains("LHASH_WITH_OPENSSL3_VENDOR", vendorProvider, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashJobState_ResultsAreExecutionThreadOwnedAndPublishedThroughSnapshots()
+    {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
+        string threadDataResultAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ThreadDataResultAccess.h");
+
+        Assert.Contains("HashJobState.results is owned by the synchronous HashEngine execution thread.", global, StringComparison.Ordinal);
+        Assert.Contains("UI code must consume published snapshots instead of mutating or traversing", global, StringComparison.Ordinal);
+        Assert.Contains("MFC synchronous bridge only. The execution thread owns the live result", threadDataResultAccess, StringComparison.Ordinal);
+        Assert.Contains("UI code must not touch it concurrently.", threadDataResultAccess, StringComparison.Ordinal);
+        Assert.Contains("UI code should consume published snapshots", threadDataResultAccess, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MacOsCliMvp_IsAnEngineValidationArtifact_NotAFeatureCompleteEndUserCli()
+    {
+        string cliMain = RepositoryTestContext.ReadTextFile(@"trunk\cli\main.cpp");
+        string macosCoreSupport = RepositoryTestContext.ReadTextFile(@"docs\MACOS_CORE_SUPPORT.md");
+        string coreBuild = RepositoryTestContext.ReadTextFile(@"docs\CORE_BUILD.md");
+
+        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", cliMain, StringComparison.Ordinal);
+        Assert.Contains("engine validation artifact built on the same core entry point", macosCoreSupport, StringComparison.Ordinal);
+        Assert.Contains("engine validation surface", macosCoreSupport, StringComparison.Ordinal);
+        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", coreBuild, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HashEngine_StartsFromHashRequest_AndEmitsProgressEvents()
+    {
+        string global = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashTypes.h");
+        string legacyThreadData = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\MfcHashState.h");
+        string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
+        string legacyThreadExecutionAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ThreadDataExecutionAccess.h");
+        string engineHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.h");
+        string threadEntryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntry.h");
+        string platformCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\PlatformCompat.h");
+        string engine = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngine.cpp");
+        string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntry.cpp");
+        string threadEntryBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryBridge.h");
+        string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryRuntime.h");
+        string threadExecutionAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
+        string threadEntryProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
+        string legacyCommonThreadEntryHeaderPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.h");
+        string legacyCommonThreadEntrySourcePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
+        string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
+        string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
+        string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
+        string digestExecution = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.cpp");
+        string digestExecutionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecution.h");
+        string digestContextOps = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestContextOps.cpp");
+        string digestContextOpsHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestContextOps.h");
+        string digestOperationRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+        string digestOperationRegistryHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.h");
+        string digestOperationRegistryRuntimeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashDigestOperationRegistryRuntime.h");
+        string digestOperationTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashDigestOperationType.h");
+        string digestLifecycle = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.cpp");
+        string digestLifecycleHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestLifecycle.h");
+        string digestRuntimePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.cpp");
+        string digestRuntimePlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestRuntimePlan.h");
+        string digestCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestCompletion.cpp");
+        string digestCompletionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestCompletion.h");
+        string digestExecutionMode = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecutionMode.cpp");
+        string digestExecutionModeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestExecutionMode.h");
+        string digestBufferPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestBufferPlan.cpp");
+        string digestBufferPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestBufferPlan.h");
+        string digestQueueHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.h");
+        string digestQueuePlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueuePlan.cpp");
+        string digestQueuePlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueuePlan.h");
+        string digestSinglePass = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestSinglePass.cpp");
+        string digestUpdater = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.cpp");
+        string digestUpdaterHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestUpdater.h");
+        string fileAttemptWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptWorkflow.cpp");
+        string fileAttemptCompletionWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp");
+        string fileAttemptCompletionWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptCompletionWorkflow.h");
+        string fileResultWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileResultWorkflow.cpp");
+        string fileResultWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileResultWorkflow.h");
+        string fileAttemptStateOps = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptStateOps.cpp");
+        string fileAttemptStateOpsHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileAttemptStateOps.h");
+        string fileSizeAccounting = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileSizeAccounting.cpp");
+        string fileSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileSizeAccounting.h");
+        string jobExecutionPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.cpp");
+        string jobExecutionPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobExecutionPlan.h");
+        string jobLifecycleWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobLifecycleWorkflow.cpp");
+        string jobLifecycleWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashJobLifecycleWorkflow.h");
+        string preScanSizeProbe = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.cpp");
+        string preScanSizeProbeHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeProbe.h");
+        string preScanSizeAccounting = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.cpp");
+        string preScanSizeAccountingHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanSizeAccounting.h");
+        string preScanWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanWorkflow.cpp");
+        string preScanWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreScanWorkflow.h");
+        string preparationWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationWorkflow.cpp");
+        string preparationWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationWorkflow.h");
+        string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
+        string scheduler = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashScheduler.cpp");
+        string schedulerPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerPlan.cpp");
+        string schedulerPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerPlan.h");
+        string schedulerDispatch = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSchedulerDispatch.cpp");
+        string preparation = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEnginePreparation.cpp");
+        string preparationPlan = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationPlan.cpp");
+        string preparationPlanHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashPreparationPlan.h");
+        string result = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
+        string fileVersionResolver = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileVersionResolver.cpp");
+        string fileVersionResolverHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileVersionResolver.h");
+        string publisher = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultPublisher.cpp");
+        string successfulFileCompletionWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
+        string successfulFileCompletionWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h");
+        string errorResultWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.cpp");
+        string errorResultWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashErrorResultWorkflow.h");
+        string resultEventWorkflow = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.cpp");
+        string resultEventWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.h");
+        string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
+
+        string executionContextShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashExecutionContext.h");
+        Assert.False(File.Exists(executionContextShimPath));
+        Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/MfcHashState.h\"", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("struct ThreadData;", global, StringComparison.Ordinal);
+        Assert.Contains("struct HashExecutionPreferenceState", global, StringComparison.Ordinal);
+        Assert.Contains("struct HashCancellationState", global, StringComparison.Ordinal);
+        Assert.Contains("struct HashJobState", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinDef.h>", engineHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <WinDef.h>", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("#define WINAPI __stdcall", platformCompat, StringComparison.Ordinal);
+        Assert.Contains("std::atomic<bool> stopRequested;", global, StringComparison.Ordinal);
+        Assert.Contains("std::atomic<bool> working;", global, StringComparison.Ordinal);
+        Assert.Contains("std::atomic<uint64_t> countedSize;", global, StringComparison.Ordinal);
+        Assert.DoesNotContain("uint64_t countedSize;", global, StringComparison.Ordinal);
+        Assert.Contains("std::vector<bool> enabled;", global, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadDataInputState", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadDataExecutionState", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("struct ThreadData", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("HashProgressSink *observer;", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("ThreadDataInputState inputState;", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("HashJobState jobState;", legacyThreadData, StringComparison.Ordinal);
+        Assert.Contains("struct HashExecutionContext", executionContext, StringComparison.Ordinal);
+        Assert.Contains("CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateHashExecutionContext(ThreadData& threadData)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("GetHashExecutionProgressSink(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("ShouldStopHashExecution(const HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("AppendHashExecutionResult(HashExecutionContext& executionContext)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashJobState& jobState;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashCancellationState& cancellationState;", executionContext, StringComparison.Ordinal);
+        Assert.Contains("HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", executionContext, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", executionContext, StringComparison.Ordinal);
+        Assert.Contains("compare_exchange_weak(", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = SaturatingAddUInt64", executionContext, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = ReplaceSizedValueUInt64", executionContext, StringComparison.Ordinal);
+        Assert.False(File.Exists(threadExecutionAccessPath));
+        Assert.False(File.Exists(threadEntryProjectionPath));
+        Assert.False(File.Exists(legacyCommonThreadEntryHeaderPath));
+        Assert.False(File.Exists(legacyCommonThreadEntrySourcePath));
+        Assert.Contains("SetThreadDataObserver(ThreadData& threadData, HashProgressSink *observer)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashExecutionPreferenceState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashCancellationState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataHashJobState(const ThreadData& threadData)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.load(std::memory_order_relaxed)", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("compare_exchange_weak(", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = SaturatingAddUInt64", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.DoesNotContain("countedSize = ReplaceSizedValueUInt64", legacyThreadExecutionAccess, StringComparison.Ordinal);
+        Assert.Contains("struct HashExecutionContext;", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request);", engineHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("int WINAPI HashThreadFunc(void *param);", engineHeader, StringComparison.Ordinal);
+        Assert.Contains("int WINAPI HashThreadFunc(void *param);", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)", engine, StringComparison.Ordinal);
+        Assert.Contains("#include \"Adapters/MfcBridge/HashThreadEntryRuntime.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashRequestBridge.h\"", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashRequest request = CreateHashRequest(*thrdData);", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashExecutionContext executionContext = CreateHashExecutionContext(", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashThreadEntryBridge.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Adapters/MfcBridge/HashRequestBridge.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("return RunMfcHashThread(param);", threadEntry, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
+        Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetThreadDataObserver(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashJobState(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("GetMutableThreadDataHashCancellationState(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("CreateHashRequest(threadData)", threadEntryBridge, StringComparison.Ordinal);
+        Assert.Contains("return RunHashRequest(&executionContext, request);", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        Assert.Contains("InitializeHashJobExecutionPlan(request, &executionPlan);", engine, StringComparison.Ordinal);
+        Assert.Contains("ULLongVector fSizes(GetHashRequestFileCount(request));", engine, StringComparison.Ordinal);
+        Assert.Contains("RunHashScheduler(executionContext, request, executionPlan, isSizeCaled, fSizes)", engine, StringComparison.Ordinal);
+        Assert.Contains("ResetHashExecutionTotalSize(*executionContext);", engine, StringComparison.Ordinal);
+        Assert.Contains("ExecuteCancelledHashingWorkflow(executionContext, observer);", engine, StringComparison.Ordinal);
+        Assert.Contains("ExecuteCompletedHashingWorkflow(executionContext, observer);", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileExecutionState executionState = { 0 };", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("static bool ProcessOpenedFileHashing(", engine, StringComparison.Ordinal);
+
+        Assert.Contains("bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes)", scheduler, StringComparison.Ordinal);
+        Assert.Contains("executionState.executionPlan = executionPlan;", scheduler, StringComparison.Ordinal);
+        Assert.Contains("ExecuteScheduledHashRequestFiles(executionContext, request, isSizeCaled, fSizes, &executionState", scheduler, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState executionState;", scheduler, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState()", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("FileHashContexts()", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashSchedulerPlan& schedulerPlan = GetHashJobSchedulerPlan(executionState.executionPlan);", scheduler, StringComparison.Ordinal);
+        Assert.Contains("ThreadPool threadPool(GetHashSchedulerWorkerThreadCount(schedulerPlan));", scheduler, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteScheduledHashRequestFiles(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, ULLongVector& fSizes, FileExecutionState *executionState", schedulerDispatch, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestFiles(request", schedulerDispatch, StringComparison.Ordinal);
+        Assert.Contains("RunFileHashAttempt(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes", schedulerDispatch, StringComparison.Ordinal);
+
+        Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const tstring& fullPath", fileRunner, StringComparison.Ordinal);
+        Assert.Contains("ExecuteFileHashAttemptWorkflow(executionContext, request, fileIndex, fullPath, isSizeCaled, fSizes, executionState", fileRunner, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileExecutionState executionState = { 0 };", fileRunner, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteFileHashAttemptWorkflow(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("YieldHashThread();", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("ShouldStopHashExecution(*executionContext)", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("bool wasStopped = ProcessOpenedFileHashing(executionContext, request, result, fileIndex, isSizeCaled, fSizes, executionState", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("CompleteFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, *executionState);", fileAttemptWorkflow, StringComparison.Ordinal);
+        Assert.Contains("struct FileAttemptState;", fileAttemptStateOpsHeader, StringComparison.Ordinal);
+        Assert.Contains("struct FileProgressState;", fileAttemptStateOpsHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState);", fileAttemptStateOpsHeader, StringComparison.Ordinal);
+        Assert.Contains("bool OpenFileForHashing(FileAttemptState *fileAttemptState, void *openErrorBuffer);", fileAttemptStateOpsHeader, StringComparison.Ordinal);
+        Assert.Contains("void ResetFileProgressState(FileProgressState *progressState);", fileAttemptStateOpsHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileAttemptState(const TCHAR *path, sunjwbase::OsFile *osFile, FileAttemptState *fileAttemptState)", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("fileAttemptState->path = path;", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("fileAttemptState->osFile = osFile;", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("fileAttemptState->fileVersion.clear();", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("fileAttemptState->isFileOpened = fileAttemptState->osFile->openReadScan(openErrorBuffer);", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("void ResetFileProgressState(FileProgressState *progressState)", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("progressState->finishedSize = 0;", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("progressState->position = 0;", fileAttemptStateOps, StringComparison.Ordinal);
+        Assert.Contains("bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("HashDigestRuntimePlan digestRuntimePlan = CreateHashDigestRuntimePlan(executionState->executionPlan);", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,", digestExecutionHeader, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestQueuePlan& digestQueuePlan = GetHashDigestRuntimeQueuePlan(digestRuntimePlan);", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("if (IsParallelHashDigestExecutionMode(digestExecutionMode))", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestQueuePlan& digestQueuePlan", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("bool ProcessOpenedFileHashingSinglePass(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fsize, bool isSizeCaled,", digestSinglePass, StringComparison.Ordinal);
+        Assert.Contains("bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength);", digestQueueHeader, StringComparison.Ordinal);
+        Assert.Contains("unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength)", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength)", digestQueue, StringComparison.Ordinal);
+        Assert.DoesNotContain("static unsigned int preflen;", digestQueueHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("void SetDigestDataBufferPreferredLength(unsigned int preferredLength);", digestQueueHeader, StringComparison.Ordinal);
+        Assert.Contains("UpdateDigestContextsParallel(digestUpdateRequest", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("UpdateDigestContextsParallel(digestUpdateRequest", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("vector<unique_ptr<DigestDataBuffer>> digestBufferPool;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queue<size_t> availableBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("queue<size_t> queuedBufferIndices;", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("taskHash.get();", digestQueue, StringComparison.Ordinal);
+        Assert.DoesNotContain("taskHash.wait();", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("UpdateDigestContextsSequential(digestUpdateRequest", digestSinglePass, StringComparison.Ordinal);
+        Assert.Contains("struct FileHashContexts;", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts);", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", digestLifecycleHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext, FileHashContexts *hashContexts)", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("bool FinalizeDigestStrings(const HashRequest& request, FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", digestLifecycle, StringComparison.Ordinal);
+        Assert.True(
+            digestContextOpsHeader.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType);", StringComparison.Ordinal) ||
+            digestContextOpsHeader.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId);", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOpsHeader.Contains("bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", StringComparison.Ordinal) ||
+            digestContextOpsHeader.Contains("bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("void InitializeHashDigestContext(FileHashContexts *hashContexts, ResultDigestType digestType)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("void InitializeHashDigestContextById(FileHashContexts *hashContexts, const HashAlgorithmId& algorithmId)", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("bool FinalizeHashDigestContext(FileHashContexts& hashContexts, ResultDigestType digestType, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("bool FinalizeHashDigestContextById(FileHashContexts& hashContexts, const HashAlgorithmId& algorithmId, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText)", StringComparison.Ordinal));
+        Assert.True(
+            digestContextOps.Contains("TryGetHashDigestOperationDescriptor(digestType, &operationDescriptor)", StringComparison.Ordinal) ||
+            digestContextOps.Contains("TryGetHashDigestOperationDescriptorById(algorithmId, &operationDescriptor)", StringComparison.Ordinal));
+        Assert.Contains("#include \"Runtime/HashDigestOperationRegistryRuntime.h\"", digestOperationRegistryHeader, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestOperationDescriptor", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashDigestOperationDescriptor(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptorById(const HashAlgorithmId& algorithmId, HashDigestOperationDescriptor *operationDescriptor);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("bool IsHashDigestOperationDescriptorComplete(const HashDigestOperationDescriptor& operationDescriptor);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("bool IsHashDigestOperationDescriptorSupportedById(const HashAlgorithmId& algorithmId);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("bool IsHashDigestOperationRegistryConsistent();", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("typedef bool (*HashDigestFinalizeAction)(FileHashContexts& hashContexts, ResultDigestStorage& digestBundle, sunjwbase::tstring *errorText);", digestOperationRegistryRuntimeHeader, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptor(ResultDigestType digestType, HashDigestOperationDescriptor *operationDescriptor)", digestOperationTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("IsHashDigestOperationDescriptorSupported(ResultDigestType digestType)", digestOperationTypeCompat, StringComparison.Ordinal);
+        Assert.Contains("GetMutableHashDigestOperationDescriptorStorage()", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked({", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("EnsureDefaultHashDigestOperationDescriptorsRegistered()", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("if (!DoesHashAlgorithmDescriptorRequireDigestOperations(algorithmDescriptor))", digestOperationRegistry, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestAlgorithmIds(request, [&](const HashAlgorithmId& algorithmId)", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("InitializeHashDigestContextById(hashContexts, algorithmId);", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("FinalizeHashDigestContextById(hashContexts, algorithmId, digestBundle, errorText)", digestLifecycle, StringComparison.Ordinal);
+        Assert.DoesNotContain("switch (digestType)", digestLifecycle, StringComparison.Ordinal);
+        Assert.Contains("DigestUpdateRequest CreateDigestUpdateRequest(const HashRequest& request)", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("std::vector<ResultDigestType> algorithms;", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("VisitDigestUpdateRequestAlgorithms(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitRegisteredHashAlgorithms([&](int index, const HashAlgorithmDescriptor& algorithmDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("const std::vector<HashAlgorithmId> normalizedAlgorithmIds = GetHashRequestNormalizedAlgorithmIds(request);", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("if (!IsRequestedDigestAlgorithmId(normalizedAlgorithmIds, algorithmId))", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("if (!IsHashDigestOperationRegistryConsistent())", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("TryResolveDigestUpdateOperationDescriptor(algorithmId, &operationDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("TryGetHashDigestOperationDescriptorById(algorithmId, operationDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("digestUpdateRequest.algorithms.push_back(digestType);", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("enum HashDigestExecutionMode", digestExecutionModeHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request);", digestExecutionModeHeader, StringComparison.Ordinal);
+        Assert.Contains("bool IsParallelHashDigestExecutionMode(HashDigestExecutionMode executionMode);", digestExecutionModeHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestExecutionMode ResolveHashDigestExecutionMode(const HashRequest& request)", digestExecutionMode, StringComparison.Ordinal);
+        Assert.Contains("return HASH_DIGEST_EXECUTION_MODE_PARALLEL;", digestExecutionMode, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestBufferPlan", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("unsigned int preferredBufferLength;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("static constexpr unsigned int kDefaultHashBufferLength = 4u * 1024u * 1024u;", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan();", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan);", digestBufferPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan CreateDefaultHashDigestBufferPlan()", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("digestBufferPlan.preferredBufferLength = kDefaultHashBufferLength;", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("unsigned int GetHashDigestBufferPreferredLength(const HashDigestBufferPlan& digestBufferPlan)", digestBufferPlan, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestQueuePlan", digestQueuePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("size_t maxBufferedChunkCount;", digestQueuePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestQueuePlan CreateHashDigestQueuePlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode);", digestQueuePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("size_t GetHashDigestQueueMaxBufferedChunkCount(const HashDigestQueuePlan& digestQueuePlan);", digestQueuePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestQueuePlan CreateHashDigestQueuePlan(const HashRequest& request, HashDigestExecutionMode digestExecutionMode)", digestQueuePlan, StringComparison.Ordinal);
+        Assert.Contains("digestQueuePlan.maxBufferedChunkCount = 4;", digestQueuePlan, StringComparison.Ordinal);
+        Assert.Contains("size_t GetHashDigestQueueMaxBufferedChunkCount(const HashDigestQueuePlan& digestQueuePlan)", digestQueuePlan, StringComparison.Ordinal);
+        Assert.Contains("struct HashJobExecutionPlan", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestExecutionMode digestExecutionMode;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestBufferPlan digestBufferPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestQueuePlan digestQueuePlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashPreparationPlan preparationPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashSchedulerPlan schedulerPlan;", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("void InitializeHashJobExecutionPlan(const HashRequest& request, HashJobExecutionPlan *executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const DigestUpdateRequest& GetHashJobDigestUpdateRequest(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestExecutionMode GetHashJobDigestExecutionMode(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestBufferPlan& GetHashJobDigestBufferPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashDigestQueuePlan& GetHashJobDigestQueuePlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashPreparationPlan& GetHashJobPreparationPlan(const HashJobExecutionPlan& executionPlan);", jobExecutionPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestUpdateRequest = CreateDigestUpdateRequest(request);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestExecutionMode = ResolveHashDigestExecutionMode(request);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestBufferPlan = CreateDefaultHashDigestBufferPlan();", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->digestQueuePlan = CreateHashDigestQueuePlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->preparationPlan = CreateHashPreparationPlan(request);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("executionPlan->schedulerPlan = CreateHashSchedulerPlan(request, executionPlan->digestExecutionMode);", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestUpdateRequest;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestExecutionMode;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestBufferPlan;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.digestQueuePlan;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("return executionPlan.schedulerPlan;", jobExecutionPlan, StringComparison.Ordinal);
+        Assert.Contains("struct HashPreparationPlan", preparationPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("size_t preScanFileCountThreshold;", preparationPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request);", preparationPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request);", preparationPlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashPreparationPlan CreateHashPreparationPlan(const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
+        Assert.Contains("preparationPlan.preScanFileCountThreshold = 200;", preparationPlan, StringComparison.Ordinal);
+        Assert.Contains("bool ShouldPreScanHashRequestFileSizes(const HashPreparationPlan& preparationPlan, const HashRequest& request)", preparationPlan, StringComparison.Ordinal);
+        Assert.Contains("CreateHashDigestRuntimePlan(executionState->executionPlan)", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestRuntimeUpdateRequest(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestRuntimeExecutionMode(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestRuntimeQueuePlan(digestRuntimePlan)", digestExecution, StringComparison.Ordinal);
+        Assert.Contains("std::vector<HashDigestOperationDescriptor> operationDescriptors;", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitDigestUpdateRequestOperations(const DigestUpdateRequest& digestUpdateRequest", digestUpdaterHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("DigestUpdateRequest digestUpdateRequest = { 0 };", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("static const DigestUpdateRequest emptyDigestUpdateRequest = { 0 };", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("static const HashDigestQueuePlan fallbackQueuePlan = { 1 };", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("HashJobExecutionPlan executionPlan = { 0 };", engine, StringComparison.Ordinal);
+        Assert.Contains("void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::vector<std::future<void>> digestUpdateTasks;", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("digestUpdateTasks.push_back(threadPool->enqueue([&hashContexts, data, dataLen, operationDescriptor]()", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::exception_ptr firstException;", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("digestUpdateTasks[taskIndex].get();", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("catch (...)", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("std::rethrow_exception(firstException);", digestUpdater, StringComparison.Ordinal);
+        Assert.DoesNotContain("digestUpdateTasks[taskIndex].wait();", digestUpdater, StringComparison.Ordinal);
+        Assert.Contains("void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", digestQueue, StringComparison.Ordinal);
+        Assert.Contains("UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", digestSinglePass, StringComparison.Ordinal);
+
+        Assert.Contains("PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", preparation, StringComparison.Ordinal);
+        Assert.Contains("TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", preparation, StringComparison.Ordinal);
+        Assert.Contains("ShouldPreScanHashRequestFileSizes(preparationPlan, request)", preparation, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);", preScanSizeProbeHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashPreScannedFileSize(const TCHAR *path)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("#include \"OsUtils/OsFile.h\"", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include <Windows.h>", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("#if defined (_WIN32)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("fileAttributes.nFileSizeHigh", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("fileAttributes.nFileSizeLow", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("int64_t fileLength = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("return static_cast<uint64_t>(fileLength);", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("osFile.close();", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", preScanSizeAccountingHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", preScanSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("fSizes[fileIndex] = fSize;", preScanSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("AddHashExecutionTotalSize(*executionContext, fSize);", preScanSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled);", preScanWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void RunHashPreScanVisitWorkflow(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, bool *wasCancelled)", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("if (ShouldStopHashExecution(*executionContext))", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("*wasCancelled = true;", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("AccumulatePreScannedFileSize(executionContext, request, fSizes, fileIndex);", preScanWorkflow, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled);", preparationWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("bool ExecuteHashPreparationWorkflow(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreatePreparingProgressEvent());", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("if (*wasCancelled)", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparationWorkflow, StringComparison.Ordinal);
+        Assert.Contains("uint64_t fSize = ResolveHashPreScannedFileSize(path);", preparation, StringComparison.Ordinal);
+        Assert.Contains("TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);", preparation, StringComparison.Ordinal);
+        Assert.Contains("RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
+        Assert.Contains("return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("OsFile osFile(path);", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("fSizes[fileIndex] = fSize;", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddHashExecutionTotalSize(*executionContext, fSize);", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("VisitHashRequestFiles(request, [&](uint32_t fileIndex, const tstring& fullPath)", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("observer->onProgressEvent(CreatePreparingProgressEvent());", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparation, StringComparison.Ordinal);
+        Assert.Contains("void PublishFilePathResult(HashExecutionContext *executionContext, HashResult& result);", fileResultWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("HashResult& ExecuteFileResultBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path);", fileResultWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("HashResult& ExecuteFileHashAttemptBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath);", fileResultWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishFilePathResult(HashExecutionContext *executionContext, HashResult& result)", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("HashResult& ExecuteFileResultBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path)", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("HashResult& ExecuteFileHashAttemptBeginWorkflow(HashExecutionContext *executionContext, const sunjwbase::tstring& path, FileExecutionState *executionState, const TCHAR **resultPath)", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("AppendHashExecutionResult(*executionContext)", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitPathResult(executionContext, result);", fileResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("return ExecuteFileResultBeginWorkflow(executionContext, path);", preparation, StringComparison.Ordinal);
+        Assert.Contains("return ExecuteFileHashAttemptBeginWorkflow(executionContext, path, executionState, resultPath);", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppendHashExecutionResult(*executionContext)", preparation, StringComparison.Ordinal);
+        Assert.DoesNotContain("observer->onProgressEvent(CreateFileStartedProgressEvent(result));", preparation, StringComparison.Ordinal);
+
+        Assert.Contains("PrepareFileMetaResult(HashExecutionContext *executionContext, HashResult& result", result, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashResolvedFileSize(HashExecutionContext *executionContext, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result, uint64_t fsize);", fileSizeAccountingHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result);", fileSizeAccountingHeader, StringComparison.Ordinal);
+        Assert.Contains("uint64_t TrackHashResolvedFileSize(HashExecutionContext *executionContext, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result, uint64_t fsize)", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("uint64_t ResolveHashFileSizeAndTrack(HashExecutionContext *executionContext, sunjwbase::OsFile& osFile, bool isSizeCaled, ULLongVector& fSizes, uint32_t fileIndex, HashResult& result)", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("result.meta.size = fsize;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("AddHashExecutionTotalSize(*executionContext, fsize);", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("fSizes[fileIndex] = fsize;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("return TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, osFile.getLength());", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("result.meta.modifiedDate = osFile.getModifiedTimeFormat();", result, StringComparison.Ordinal);
+        Assert.Contains("fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryResolveWindowsPathFileMeta(path, &resolvedMeta)", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("fsize = TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, resolvedMeta.size);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("uint64_t fsize = osFile.getLength();", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("InitializeFileHashing(const HashRequest& request, HashExecutionContext *executionContext", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("FinalizeDigestStrings(const HashRequest& request", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", result, StringComparison.Ordinal);
+        Assert.Contains("result.meta.version.clear();", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResolveHashFileVersion(osFile, path);", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void CompleteSuccessfulFileHashing(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void CompleteOpenedFileAttempt(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitHashResult(", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitErrorResult(", result, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path);", fileVersionResolverHeader, StringComparison.Ordinal);
+        Assert.Contains("sunjwbase::tstring ResolveHashFileVersion(sunjwbase::OsFile& osFile, const TCHAR *path)", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("#include \"WinCommon/FileVersionHelper.h\"", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("WindowsComm::FileVersionHelper fileVersionHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("return fileVersionHelper.Find();", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("WindowsComm::FileVersionHelper fvHelper(osFile);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_UWP_LIB", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("LHASH_WUI_LIB", fileVersionResolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("return WindowsComm::GetExeFileVersion((TCHAR *)path);", fileVersionResolver, StringComparison.Ordinal);
+        Assert.Contains("struct HashDigestRuntimePlan", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("DigestUpdateRequest digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestQueuePlan digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("const DigestUpdateRequest& digestUpdateRequest;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("const HashDigestQueuePlan& digestQueuePlan;", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("HashDigestRuntimePlan(const DigestUpdateRequest& updateRequest, HashDigestExecutionMode executionMode, unsigned int bufferLength, const HashDigestQueuePlan& queuePlan)", digestRuntimePlanHeader, StringComparison.Ordinal);
+        Assert.Contains("return HashDigestRuntimePlan(", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("GetHashJobDigestQueuePlan(executionPlan));", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("return digestRuntimePlan.digestQueuePlan;", digestRuntimePlan, StringComparison.Ordinal);
+        Assert.Contains("bool CompleteOpenedFileDigestExecution(HashExecutionContext *executionContext, FileExecutionState *executionState, bool wasStopped);", digestCompletionHeader, StringComparison.Ordinal);
+        Assert.Contains("bool CompleteOpenedFileDigestExecution(HashExecutionContext *executionContext, FileExecutionState *executionState, bool wasStopped)", digestCompletion, StringComparison.Ordinal);
+        Assert.Contains("if (CompleteOpenedFileDigestExecution(executionContext, executionState, wasStopped))", digestPipeline, StringComparison.Ordinal);
+        Assert.Contains("if (ShouldStopHashExecution(*executionContext))", digestCompletion, StringComparison.Ordinal);
+
+        Assert.Contains("void ExecuteOpenedFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", fileAttemptCompletionWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", fileAttemptCompletionWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteOpenedFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteFileAttemptCompletionWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("if (executionState.fileAttemptState.readFailed)", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("CompleteSuccessfulFileHashing(executionContext, request, result, fileIndex, isSizeCaled, executionState);", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("CompleteOpenedFileAttempt(executionContext, request, result, fileIndex, isSizeCaled, executionState);", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitOpenFileError(executionContext, result, executionState.fileAttemptState.openErrorText);", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("FinishFileProcessing(executionContext);", fileAttemptCompletionWorkflow, StringComparison.Ordinal);
+
+        Assert.Contains("void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex);", successfulFileCompletionWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", successfulFileCompletionWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileCalculatedProgressEvent());", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, finalizeErrorText);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("PopulateDigestResult(request, result, executionState.digestBundle);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText);", errorResultWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorMessageResult(HashExecutionContext *executionContext, HashResult& result, const sunjwbase::tstring& errorText)", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("result.error = errorText;", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorResult(executionContext, result);", errorResultWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileFinishedEvent(HashExecutionContext *executionContext);", resultEventWorkflowHeader, StringComparison.Ordinal);
+        Assert.Contains("void PublishMetaResultEvent(HashExecutionContext *executionContext, HashResult& result)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishHashResultEvent(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishErrorResultEvent(HashExecutionContext *executionContext, HashResult& result)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("void PublishFileFinishedEvent(HashExecutionContext *executionContext)", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", resultEventWorkflow, StringComparison.Ordinal);
+
+        Assert.Contains("void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", publisher, StringComparison.Ordinal);
+        Assert.Contains("void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
+        Assert.Contains("void CompleteOpenedFileAttempt(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", publisher, StringComparison.Ordinal);
+        Assert.Contains("ExecuteSuccessfulFileHashingWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", publisher, StringComparison.Ordinal);
+        Assert.Contains("ExecuteOpenedFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", publisher, StringComparison.Ordinal);
+        Assert.Contains("ExecuteFileAttemptCompletionWorkflow(executionContext, request, result, fileIndex, isSizeCaled, executionState);", publisher, StringComparison.Ordinal);
+        Assert.Contains("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase)", publisher, StringComparison.Ordinal);
+        Assert.Contains("void EmitErrorResult(HashExecutionContext *executionContext, HashResult& result)", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishErrorMessageResult(executionContext, result, errorText);", publisher, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::tstring(errorText));", publisher, StringComparison.Ordinal);
+        Assert.Contains("EmitErrorMessageResult(executionContext, result, sunjwbase::strtotstr(std::string(\"Failed to read file while hashing.\")));", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishMetaResultEvent(executionContext, result);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishHashResultEvent(executionContext, result, uppercase);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishErrorResultEvent(executionContext, result);", publisher, StringComparison.Ordinal);
+        Assert.Contains("PublishFileFinishedEvent(executionContext);", publisher, StringComparison.Ordinal);
+
+        Assert.Contains("#include \"Common/HashDigestExecution.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestExecutionMode.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestContextOps.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestOperationRegistry.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestLifecycle.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestBufferPlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestCompletion.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestQueue.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestQueuePlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestRuntimePlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestPipeline.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestSinglePass.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashDigestUpdater.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileAttemptCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileAttemptWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileResultWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileAttemptStateOps.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashFileVersionResolver.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashJobExecutionPlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashJobLifecycleWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreparationPlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreScanSizeProbe.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreScanSizeAccounting.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreScanWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashPreparationWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashProgressTracker.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashErrorResultWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultEventWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultPublisher.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashSuccessfulFileCompletionWorkflow.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashExecutionContext.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Runtime/HashProgressSink.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashEngineObserver.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Domain/HashRequest.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashSchedulerDispatch.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashSchedulerPlan.h\"", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("const HashRequest& request", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("bool RunHashScheduler(HashExecutionContext *executionContext, const HashRequest& request, const HashJobExecutionPlan& executionPlan, bool isSizeCaled, ULLongVector& fSizes);", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("bool RunFileHashAttempt(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath, bool isSizeCaled, ULLongVector& fSizes,", internalHeader, StringComparison.Ordinal);
+        Assert.Contains("FileExecutionState *executionState", internalHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("void EmitHashResult(HashExecutionContext *executionContext, HashResult& result, bool uppercase);", internalHeader, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WindowsComm_AndMfcInputPaths_HardenVersionExtraction_CopyData_AndRegistryInitialization()
+    {
+        string windowsComm = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\WindowsComm.cpp");
+        string inputHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashInputController.h");
+        string inputController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashInputController.cpp");
+        string messageControllerHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashMessageController.h");
+        string messageController = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashMessageController.cpp");
+        string dialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashDlg.cpp");
+        string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
+        string digestRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
+
+        Assert.Contains("if (cchver == 0)", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("std::vector<BYTE> pver(cchver, 0);", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("uLen < sizeof(VS_FIXEDFILEINFO)", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("bool IsWindowsVistaOrGreater()", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("TryGetRealWindowsVersion(&osvi)", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetWindowsVersion(OSVERSIONINFOEX& osvi, BOOL& bOsVersionInfoEx)", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetVersionEx(", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProductOptions", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("Q246009", windowsComm, StringComparison.Ordinal);
+        Assert.DoesNotContain("BYTE *pver = new BYTE[cchver];", windowsComm, StringComparison.Ordinal);
+
+        Assert.Contains("enum class FileLoadResult", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("struct FileLoadOutcome", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("struct FolderScanOutcome", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("static size_t GetCopyDataCommandCharLimit();", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("dlgOpen.GetOFN().nMaxFile = static_cast<DWORD>(nameBuffer.size());", inputController, StringComparison.Ordinal);
+        Assert.Contains("charCount > GetCopyDataCommandCharLimit()", inputController, StringComparison.Ordinal);
+        Assert.Contains("szData[charCount - 1] != _T('\\0')", inputController, StringComparison.Ordinal);
+        Assert.Contains("bool sawTerminator = false;", inputController, StringComparison.Ordinal);
+        Assert.Contains("if (sawTerminator)", inputController, StringComparison.Ordinal);
+        Assert.Contains("return sawTerminator;", inputController, StringComparison.Ordinal);
+        Assert.Contains("parameters.size() > kMaxHashFilesPerSession", inputController, StringComparison.Ordinal);
+        Assert.Contains("return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession, true, parameters.size());", inputController, StringComparison.Ordinal);
+        Assert.Contains("scanOutcome.truncated = truncated;", inputController, StringComparison.Ordinal);
+        Assert.Contains("std::deque<sunjwbase::tstring> pendingFolders;", inputController, StringComparison.Ordinal);
+
+        Assert.Contains("bool DispatchFileLoadOutcome(", messageControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("BOOL HandleCopyData(", messageControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("static bool IsTrustedCopyDataSender(const CWnd* pSenderWnd);", messageControllerHeader, StringComparison.Ordinal);
+        Assert.Contains("IsTrustedCopyDataSender(pSenderWnd)", messageController, StringComparison.Ordinal);
+        Assert.Contains("DispatchFileLoadOutcome(", messageController, StringComparison.Ordinal);
+        Assert.Contains("QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable)", messageController, StringComparison.Ordinal);
+        Assert.Contains("GetTrustedExplorerImagePath()", messageController, StringComparison.Ordinal);
+        Assert.Contains("GetCurrentExecutableImagePath()", messageController, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(senderImagePath.c_str(), trustedExplorerPath.c_str()) == 0", messageController, StringComparison.Ordinal);
+        Assert.Contains("_tcsicmp(senderImagePath.c_str(), currentExecutablePath.c_str()) == 0", messageController, StringComparison.Ordinal);
+        Assert.Contains("m_hashMessageController.HandleCopyData(", dialog, StringComparison.Ordinal);
+
+        Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashAlgorithmDescriptorUnlocked", registryCore, StringComparison.Ordinal);
+        Assert.Contains("static inline HashAlgorithmDescriptorRegistry GetHashAlgorithmDescriptorRegistry()", registryCore, StringComparison.Ordinal);
+        Assert.DoesNotContain("thread_local std::vector<HashAlgorithmDescriptor> snapshotStorage;", registryCore, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestOperationRegistryMutex()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("RegisterHashDigestOperationDescriptorUnlocked", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("GetHashDigestOperationDescriptorSnapshot()", digestRegistry, StringComparison.Ordinal);
+        Assert.Contains("thread_local std::vector<HashDigestOperationDescriptor> snapshotStorage;", digestRegistry, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BridgeConsumers_NowConsumeHashResultAcrossManagedAndRealtimeAdapters()
+    {
+        string managedDispatchPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
+        string managedHashMgmtAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Adapters\MfcBridge\ManagedHashMgmtAccess.h");
+
+        string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
+        string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");
+        string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
+        string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
+
+        Assert.False(File.Exists(managedDispatchPath));
+        Assert.False(File.Exists(managedHashMgmtAccessPath));
+        Assert.Contains("class UIBridgeMFC: public HashUiBridgeAdapter", mfcHeader, StringComparison.Ordinal);
+        Assert.Contains("virtual void handleFileResultProgressEvent(const HashResult& result,", mfcHeader, StringComparison.Ordinal);
+        Assert.Contains("#include \"Common/HashResultRender.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.DoesNotContain("#include \"Common/HashResultCompatibility.h\"", mfcHeader, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("case PROGRESS_EVENT_FILE_HASH_READY:", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_HASH, uppercaseDigest);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("VisitHashResultDigestDisplayValues(result, uppercase", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("void UIBridgeMFC::AppendResultToHyperEdit(const HashResult& result,", mfcSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateCompatibilityResultData(result);", mfcSource, StringComparison.Ordinal);
+        Assert.Contains("void AppendResult(const HashResult& result);", searchHeader, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataHashResults(*m_threadData, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
+        Assert.Contains("VisitThreadDataPathAndDigestMatchingHashResults(*m_threadData, tstrFileToFind, tstrHashToFind, [&](const HashResult& result)", searchSource, StringComparison.Ordinal);
+        Assert.Contains("UIBridgeMFC::AppendResultToHyperEdit(result, GetThreadDataUppercase(*m_threadData), m_mainEdit);", searchSource, StringComparison.Ordinal);
+
+    }
+}

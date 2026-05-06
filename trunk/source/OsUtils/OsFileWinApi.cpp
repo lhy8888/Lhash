@@ -393,24 +393,13 @@ bool OsFile::open(void *flag, void *exception)
 		return false;
 	}
 
-	HANDLE openedHandle = INVALID_HANDLE_VALUE;
-#if defined (FHASH_UWP_LIB)
-	openedHandle = CreateFileFromAppW(fixedPath.c_str(), // file to open
+	HANDLE openedHandle = CreateFile(fixedPath.c_str(), // file to open
 		fileFlag->dwDesiredAccess, // open for reading
 		fileFlag->dwShareMode, // share for reading
 		NULL, // default security
 		fileFlag->dwCreationDisposition, // existing file only
 		fileFlag->dwFlagsAndAttributes, // normal file
 		NULL); // no attr. template
-#else
-	openedHandle = CreateFile(fixedPath.c_str(), // file to open
-		fileFlag->dwDesiredAccess, // open for reading
-		fileFlag->dwShareMode, // share for reading
-		NULL, // default security
-		fileFlag->dwCreationDisposition, // existing file only
-		fileFlag->dwFlagsAndAttributes, // normal file
-		NULL); // no attr. template
-#endif
 
 	if (openedHandle == INVALID_HANDLE_VALUE)
 	{
@@ -669,3 +658,4 @@ void OsFile::close()
 		_fileStatus = CLOSED;
 	}
 }
+

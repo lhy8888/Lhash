@@ -1,6 +1,6 @@
 #ifndef _HASH_RESULT_SEARCH_H_
 #define _HASH_RESULT_SEARCH_H_
-#include "Common/HashResult.h"
+#include "Domain/HashResult.h"
 static inline sunjwbase::tstring NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)
 {
 	return sunjwbase::strtotstr(sunjwbase::str_lower(sunjwbase::tstrtostr(pathText)));

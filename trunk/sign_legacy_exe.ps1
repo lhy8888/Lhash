@@ -47,13 +47,48 @@ if (-not (Test-Path $PfxPath)) {
 }
 
 $signToolPath = Find-SignToolPath
+$securePassword = ConvertTo-SecureString $PfxPassword -AsPlainText -Force
+$cert = Import-PfxCertificate `
+    -FilePath $PfxPath `
+    -CertStoreLocation Cert:\CurrentUser\My `
+    -Password $securePassword `
+    -Exportable:$false
 
-& $signToolPath sign /fd $DigestAlgorithm /td $DigestAlgorithm /tr $TimestampUrl /f $PfxPath /p $PfxPassword /v $FilePath
-if ($LASTEXITCODE -ne 0) {
-    throw "signtool sign failed with exit code $LASTEXITCODE."
+if (-not $cert) {
+    throw "Unable to import signing certificate: $PfxPath"
 }
 
-& $signToolPath verify /pa /v $FilePath
-if ($LASTEXITCODE -ne 0) {
-    throw "signtool verify failed with exit code $LASTEXITCODE."
+if ($cert -is [System.Array]) {
+    $cert = $cert | Select-Object -First 1
+}
+
+try {
+    $timestampUrls = @(
+        $TimestampUrl,
+        'http://timestamp.sectigo.com',
+        'http://timestamp.globalsign.com/tsa/r6advanced1'
+    )
+
+    $signed = $false
+    foreach ($timestampUrl in $timestampUrls) {
+        & $signToolPath sign /fd $DigestAlgorithm /td $DigestAlgorithm /tr $timestampUrl /sha1 $cert.Thumbprint /v $FilePath
+        if ($LASTEXITCODE -eq 0) {
+            $signed = $true
+            break
+        }
+
+        Write-Warning "Timestamp server $timestampUrl failed, trying next..."
+    }
+
+    if (-not $signed) {
+        throw 'signtool sign failed: all timestamp servers exhausted.'
+    }
+
+    & $signToolPath verify /pa /v $FilePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "signtool verify failed with exit code $LASTEXITCODE."
+    }
+}
+finally {
+    Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
 }

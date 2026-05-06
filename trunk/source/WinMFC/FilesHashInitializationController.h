@@ -4,7 +4,7 @@
 #include "afxcmn.h"
 
 #include "OsUtils/OsThread.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 struct ThreadData;
 
 class CHyperEditHash;

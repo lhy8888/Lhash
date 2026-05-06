@@ -10,10 +10,11 @@
 
 #include "Common/strhelper.h"
 #include "OsUtils/OsThread.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Common/HashResultRender.h"
 #include "FilesHashTaskUpdate.h"
 #include "HyperEditHash.h"
+#include "WinMFC/WinMFCMessages.h"
 
 class UIBridgeMFC: public HashUiBridgeAdapter
 {

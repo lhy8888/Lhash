@@ -4,9 +4,9 @@
 
 #include "afxwin.h"
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "LegacyCompat/LegacyThreadData.h"
+#include "Adapters/MfcBridge/MfcHashState.h"
 
 class FilesHashAlgorithmSelectionController
 {

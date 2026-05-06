@@ -53,6 +53,11 @@ namespace
         return S_ISLNK(st.st_mode) != 0;
     }
 
+    static bool IsSameFileIdentity(const struct stat& lhs, const struct stat& rhs)
+    {
+        return lhs.st_dev == rhs.st_dev && lhs.st_ino == rhs.st_ino;
+    }
+
     static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)
     {
         if (fileStatus == NULL)
@@ -181,8 +186,7 @@ namespace
             return true;
         }
 
-        if (openedStatus.st_dev != expectedPathStatus.st_dev ||
-            openedStatus.st_ino != expectedPathStatus.st_ino)
+        if (!IsSameFileIdentity(openedStatus, expectedPathStatus))
         {
             CopyOpenErrorText(errorBuffer, "Refusing to hash a path whose resolved handle no longer matches the validated path.");
             return false;
@@ -195,8 +199,7 @@ namespace
             return false;
         }
 
-        if (reopenedPathStatus.st_dev != openedStatus.st_dev ||
-            reopenedPathStatus.st_ino != openedStatus.st_ino)
+        if (!IsSameFileIdentity(reopenedPathStatus, openedStatus))
         {
             CopyOpenErrorText(errorBuffer, "Refusing to hash a path whose resolved handle no longer matches the validated path.");
             return false;

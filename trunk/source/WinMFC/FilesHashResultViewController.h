@@ -5,7 +5,7 @@
 #include "HyperEditHash.h"
 
 #include "OsUtils/OsThread.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 struct ThreadData;
 
 class FilesHashSearchController;

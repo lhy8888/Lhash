@@ -1,0 +1,11 @@
+#ifndef _MFC_RESULT_DIGEST_TYPE_H_
+#define _MFC_RESULT_DIGEST_TYPE_H_
+
+enum ResultDigestType
+{
+	RESULT_DIGEST_UNKNOWN = -1,
+	RESULT_DIGEST_MD5 = 0,
+	RESULT_DIGEST_SHA1
+};
+
+#endif

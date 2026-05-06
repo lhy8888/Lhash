@@ -1,8 +1,10 @@
-﻿// src\HyperEditHash.cpp : 实现文件
+// src\HyperEditHash.cpp : 实现文件
 //
 #include "stdafx.h"
 #include "HyperEditHash.h"
-#include "Common/Global.h"
+
+#include "WinMFC/WinMFCMessages.h"
+#include "Common/HashTypes.h"
 
 // CHyperEditHash
 

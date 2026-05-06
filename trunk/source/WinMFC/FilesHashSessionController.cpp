@@ -4,8 +4,8 @@
 
 #include "FilesHashSessionController.h"
 
-#include "LegacyCompat/HashThreadLaunch.h"
-#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/HashThreadLaunch.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
 
 FilesHashSessionController::FilesHashSessionController()

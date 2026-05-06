@@ -1,7 +1,7 @@
 #ifndef _RESULT_DIGEST_STATE_ACCESS_H_
 #define _RESULT_DIGEST_STATE_ACCESS_H_
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Common/ResultDigestMetadataAccess.h"
 
 static inline bool TryResolveDigestStorageIndexById(const HashAlgorithmId& algorithmId, size_t *digestIndex)

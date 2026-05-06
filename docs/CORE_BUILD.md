@@ -10,7 +10,7 @@ This entry point is intentionally narrower than the maintained Windows MFC relea
 - Windows arm64: core build verification only
 - macOS arm64: core build + baseline smoke run + engine link smoke + Darwin security regression
 
-It does not replace the MFC Windows mainline and it does not bring back WinUI or the CLR bridge as release-path dependencies.
+It does not replace the MFC Windows mainline or add release-path GUI bridge dependencies.
 
 M3 extends this entry point so macOS arm64 is not just buildable, but also has
 an explicit Darwin path-security contract and a macOS-specific security
@@ -34,8 +34,6 @@ still optional and are not required for the macOS support contract.
 
 The core entry point does not include:
 
-- WinUI
-- `fHashClrBridge`
 - MFC UI targets
 - Linux targets
 - macOS GUI targets
@@ -107,5 +105,5 @@ the macOS core support is real rather than merely buildable.
 The macOS arm64 CLI MVP workflow, [`macOS CLI MVP Build workflow`](../.github/workflows/macos-cli-build.yml),
 builds `lhash_cli` on top of the core entry point and publishes a `tar.gz`
 validation artifact containing `lhash`, `README.txt`, `BUILD_INFO.txt`, and
-`SHA256.txt`. It is separate from the core matrix workflow and is not part of
-the Windows MFC release line.
+`SHA256.txt`. It is an engine validation artifact, not a feature-complete end-user CLI, and it is separate from the core matrix workflow and the Windows MFC release line.
+

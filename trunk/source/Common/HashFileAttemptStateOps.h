@@ -1,7 +1,7 @@
 #ifndef _HASH_FILE_ATTEMPT_STATE_OPS_H_
 #define _HASH_FILE_ATTEMPT_STATE_OPS_H_
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "OsUtils/OsFile.h"
 
 namespace HashEngineInternal

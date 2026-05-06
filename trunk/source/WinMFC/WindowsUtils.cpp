@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 
 #include "WindowsUtils.h"
 
@@ -188,7 +188,7 @@ namespace WindowsUtils
 		tstrExeDirPath = tstrExeDirPath.substr(0, idx);
 
 		tstring tstrShlExtDll = tstrExeDirPath;
-		tstrShlExtDll.append(_T("\\fHashShlExt"));
+		tstrShlExtDll.append(_T("\\LHashShlExt"));
 		if(IsWindows64())
 			tstrShlExtDll.append(_T("64"));
 		tstrShlExtDll.append(_T(".dll"));
@@ -378,7 +378,6 @@ namespace WindowsUtils
 		if(lResShellEx == ERROR_SUCCESS)
 		{
 			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("LHashShellExt")));
-			deleteSucceeded = deleteSucceeded && IsAcceptableContextMenuDeleteResult(keyShellEx.RecurseDeleteKey(_T("fHashShellExt")));
 			keyShellEx.Close();
 		}
 
@@ -421,5 +420,6 @@ namespace WindowsUtils
 	}
 
 }
+
 
 

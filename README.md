@@ -19,12 +19,10 @@ The maintained release line turns LHash from a traditional hash utility into a *
 
 ## Current release line
 
-- Current release: [`v1.12.3`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.3)
+- Current release: [`v1.12.5`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.5)
 - Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
-- Main branch: `future-winui-was2`
+- Maintained branch: `future-winui-was2`
 - Windows UI mainline: `MFC`
-- Legacy WinUI / CLR bridge: retired from the maintained release line
-- WinUI / CLR bridge source trees: reference-only and marked `NON_MAINLINE.md`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core Build Matrix workflow`](.github/workflows/core-m2.yml)
 - macOS CLI MVP: [`macOS CLI MVP Build workflow`](.github/workflows/macos-cli-build.yml)
@@ -95,7 +93,7 @@ LHash is a good fit for:
 
 - verifying downloaded software packages before use
 - checking release artifacts from GitHub Releases
-- confirming that archived files or evidence copies did not change
+- confirming that evidence copies did not change
 - batch verification of local directories
 - comparing expected and actual digests during delivery or handover
 
@@ -135,7 +133,7 @@ Together, those make the project more useful as a trusted verification tool inst
 - BLAKE3-512
 - BLAKE3 on macOS arm64 uses the native NEON path in the core build
 
-### OpenSSL 3 extended algorithms
+### OpenSSL 3.5 LTS extended algorithms
 
 - SHA-256
 - SHA-384
@@ -168,7 +166,10 @@ NativeCore
 Windows UI
 - WinMFC
 
-LegacyCompat
+Active adapters
+- MfcBridge
+- UiBridge
+
 third_party
 ```
 

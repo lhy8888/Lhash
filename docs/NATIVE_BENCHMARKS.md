@@ -16,13 +16,13 @@ Algorithm sets:
 - `hybrid-4` (`openssl-sha-256`, `blake3-256`, `blake3-512`, `blake3-xof`)
 
 Profiles:
-- `portable`: forces the vendored BLAKE3 C code onto the portable path by disabling SIMD translation units through `FHashBlake3SimdProfile=portable`
+- `portable`: forces the vendored BLAKE3 C code onto the portable path by disabling SIMD translation units through `LHashBlake3SimdProfile=portable`
 - `current`: builds the current desktop native-core configuration with the checked-in platform-specific BLAKE3 settings
 
 ## Workflow
 
 The benchmark workflow lives at:
-- [native-benchmarks.yml](D:\hash\fhash\.github\workflows\native-benchmarks.yml)
+- [native-benchmarks.yml](../.github/workflows/native-benchmarks.yml)
 
 It runs both profiles per platform and uploads one artifact per platform:
 - `LHash-native-benchmarks-x64`

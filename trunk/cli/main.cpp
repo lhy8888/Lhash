@@ -50,6 +50,9 @@ int main(int argc, char **argv)
     HashRequest request;
     for (int i = 1; i < argc; ++i)
     {
+        // macOS CLI MVP: this is an engine validation artifact, not a feature-complete end-user CLI.
+        // It expects UTF-8 command-line path arguments.
+        // Linux/non-UTF-8 locale support requires std::filesystem::path migration.
         request.files.push_back(sunjwbase::strtotstr(argv[i]));
     }
 

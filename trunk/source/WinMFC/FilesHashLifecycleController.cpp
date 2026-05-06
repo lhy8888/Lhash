@@ -2,14 +2,14 @@
 
 #include "FilesHashLifecycleController.h"
 
-#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashProgressController.h"
 #include "FilesHashResultViewController.h"
 #include "FilesHashSearchController.h"
 #include "FilesHashSessionController.h"
 #include "UIBridgeMFC.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
-#include "LegacyCompat/ThreadDataInputAccess.h"
+#include "Adapters/MfcBridge/ThreadDataInputAccess.h"
 
 namespace
 {

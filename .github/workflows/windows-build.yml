@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - future-winui-was2
-      - codex/**
     tags:
       - v*
   pull_request:
@@ -35,12 +34,6 @@ jobs:
       - name: Run security regression harness
         run: dotnet security-tests/SecurityRegression/bin/Release/net10.0/SecurityRegression.dll
 
-      - name: Build refactor baseline harness
-        run: dotnet build refactor-tests/RefactorBaseline/RefactorBaseline.csproj --configuration Release
-
-      - name: Run refactor baseline harness
-        run: dotnet refactor-tests/RefactorBaseline/bin/Release/net10.0/RefactorBaseline.dll
-
   unit-tests:
     runs-on: windows-2022
 
@@ -54,7 +47,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore unit test project
-        run: dotnet restore unit-tests/FHash.UnitTests/FHash.UnitTests.csproj
+        run: dotnet restore unit-tests/LHash.UnitTests/LHash.UnitTests.csproj
 
       - name: Run unit tests
         shell: powershell
@@ -62,10 +55,10 @@ jobs:
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
 
-          & dotnet test unit-tests/FHash.UnitTests/FHash.UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=FHash.UnitTests.trx" --results-directory $artifactRoot
+          & dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=LHash.UnitTests.trx" --results-directory $artifactRoot
 
           if ($LASTEXITCODE -ne 0) {
-            throw "dotnet test failed with exit code $LASTEXITCODE. See artifacts/FHash.UnitTests.trx for details."
+            throw "dotnet test failed with exit code $LASTEXITCODE. See artifacts/LHash.UnitTests.trx for details."
           }
 
       - name: Upload unit test artifacts
@@ -74,7 +67,7 @@ jobs:
         with:
           name: LHash-unit-tests
           path: |
-            artifacts/FHash.UnitTests.trx
+            artifacts/LHash.UnitTests.trx
           if-no-files-found: warn
 
   prepare-openssl-vendor-x64:
@@ -84,12 +77,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Verify pristine OpenSSL vendor source
+        shell: powershell
+        run: |
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -151,16 +149,16 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild native-runtime-tests/FHash.NativeRuntimeTests/FHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild native-runtime-tests/LHash.NativeRuntimeTests/LHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
 
           if ($LASTEXITCODE -ne 0) {
-            throw "MSBuild failed while building FHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
+            throw "MSBuild failed while building LHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
           }
 
-          $exePath = 'native-runtime-tests\FHash.NativeRuntimeTests\x64\Release\FHash.NativeRuntimeTests.exe'
+          $exePath = 'native-runtime-tests\LHash.NativeRuntimeTests\x64\Release\LHash.NativeRuntimeTests.exe'
           if (-not (Test-Path $exePath)) {
-            throw 'Native runtime test executable was not produced in native-runtime-tests\\FHash.NativeRuntimeTests\\x64\\Release.'
+            throw 'Native runtime test executable was not produced in native-runtime-tests\\LHash.NativeRuntimeTests\\x64\\Release.'
           }
 
           & $exePath 2>&1 | Tee-Object -FilePath $runLogPath
@@ -227,7 +225,7 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -313,6 +311,11 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           "@
 
             Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
@@ -353,12 +356,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Verify pristine OpenSSL vendor source
+        shell: powershell
+        run: |
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+
       - name: Restore cached OpenSSL vendor arm64
         id: restore-openssl-vendor-arm64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-arm64
-          key: ${{ runner.os }}-openssl-vendor-arm64-v1-${{ hashFiles('third_party/openssl/3.0.20/**', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -434,7 +442,7 @@ jobs:
             throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
           }
 
-          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:FHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=ARM64 /p:PlatformToolset=v143 /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $logPath
 
           if ($LASTEXITCODE -ne 0) {
@@ -520,6 +528,11 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           "@
 
             Set-Content -Path (Join-Path $bundleRoot 'SHA256.txt') -Value ("$exeHash  LHash.exe") -Encoding ASCII
@@ -581,7 +594,17 @@ jobs:
             echo "Expected packaged lightweight native release zip was not downloaded into release-assets." >&2
             exit 1
           fi
+          if ! compgen -G "$artifact_root/LHash-windows-arm64-*.zip" > /dev/null; then
+            echo "Expected packaged Windows ARM64 release zip was not downloaded into release-assets." >&2
+            exit 1
+          fi
 
+          version_header="trunk/source/WinMFC/version.h"
+          version_rc2="trunk/source/WinMFC/fileshash.rc2"
+          app_version=$(grep -oP '(?<=LHASH_VERSION_STRING\s")[^"]+' "$version_header" \
+                        || grep -oP '(?<=STR_VERSION_LEGACY\s")[^"]+' "$version_header" \
+                        || grep -oP '(?<="FileVersion", ")[^"]+' "$version_rc2" \
+                        || echo "unknown")
           short_sha="${GITHUB_SHA::7}"
           release_mode="rehearsal"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
@@ -593,7 +616,13 @@ jobs:
           ref=$GITHUB_REF
           commit=$GITHUB_SHA
           short_sha=$short_sha
+          lhash_application_version=$app_version
           frontend=windows-mfc
+          openssl_vendor_version=3.5.6
+          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_static=true
+          openssl_vendor_policy=pristine-upstream-source
+          openssl_vendor_local_patches=none
           workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
           windows_arm64=$(basename $(ls "$artifact_root"/LHash-windows-arm64-*.zip | head -n 1))
@@ -629,4 +658,3 @@ jobs:
             release-assets/LHash-windows-arm64-*.zip
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
-

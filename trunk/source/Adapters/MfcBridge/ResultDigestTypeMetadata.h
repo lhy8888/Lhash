@@ -1,0 +1,60 @@
+#ifndef _MFC_RESULT_DIGEST_TYPE_METADATA_H_
+#define _MFC_RESULT_DIGEST_TYPE_METADATA_H_
+
+#include "Common/ResultDigestMetadataAccess.h"
+#include "Adapters/MfcBridge/HashAlgorithmType.h"
+
+static inline ResultDigestType GetResultDigestMetadataType(const ResultDigestMetadata& digestMetadata)
+{
+	ResultDigestType digestType = RESULT_DIGEST_UNKNOWN;
+	TryGetHashAlgorithmTypeById(GetResultDigestMetadataId(digestMetadata), &digestType);
+	return digestType;
+}
+
+static inline int GetResultDigestIndex(ResultDigestType digestType)
+{
+	return GetHashAlgorithmIndex(digestType);
+}
+
+static inline bool TryGetResultDigestIndex(ResultDigestType digestType, int *index)
+{
+	return TryGetHashAlgorithmIndex(digestType, index);
+}
+
+static inline ResultDigestType GetResultDigestTypeAt(int index)
+{
+	return GetHashAlgorithmTypeAt(index);
+}
+
+static inline ResultDigestMetadata GetResultDigestMetadata(ResultDigestType digestType)
+{
+	return GetHashAlgorithmDescriptor(digestType);
+}
+
+static inline bool TryGetResultDigestMetadata(ResultDigestType digestType, ResultDigestMetadata *digestMetadata)
+{
+	return TryGetHashAlgorithmDescriptor(digestType, digestMetadata);
+}
+
+static inline sunjwbase::tstring GetResultDigestLabel(ResultDigestType digestType)
+{
+	return GetResultDigestLabel(GetResultDigestMetadata(digestType));
+}
+
+template<typename TResultDigestVisitor>
+static inline bool VisitResultDigests(TResultDigestVisitor visitor)
+{
+	return VisitResultDigestMetadata([&](int index, const ResultDigestMetadata& digestMetadata)
+	{
+		(void)index;
+		ResultDigestType digestType = GetResultDigestMetadataType(digestMetadata);
+		if (digestType == RESULT_DIGEST_UNKNOWN)
+		{
+			return true;
+		}
+
+		return visitor(digestType);
+	});
+}
+
+#endif

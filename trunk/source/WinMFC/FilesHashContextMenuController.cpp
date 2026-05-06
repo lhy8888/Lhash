@@ -62,7 +62,7 @@ BOOL FilesHashContextMenuController::HandleButtonClick(BOOL limited,
 
 	if (buttonText.Compare(addText) == 0)
 	{
-		WindowsUtils::RemoveContextMenu(); // Try to delete all items related to fHash
+		WindowsUtils::RemoveContextMenu(); // Try to delete all items related to LHash
 		if (WindowsUtils::AddContextMenu())
 		{
 			SetStatusText(addSucceededText);

@@ -1,12 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashPreScanSizeProbe.h"
-
-#if defined (_WIN32)
-#include <Windows.h>
-#else
 #include "OsUtils/OsFile.h"
-#endif
 
 namespace HashEngineInternal
 {
@@ -17,25 +12,20 @@ namespace HashEngineInternal
 			return 0;
 		}
 
-#if defined (_WIN32)
-		WIN32_FILE_ATTRIBUTE_DATA fileAttributes = {};
-		if (!GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttributes))
+		sunjwbase::OsFile osFile(path);
+		if (!osFile.openReadScan())
 		{
 			return 0;
 		}
 
-		return (static_cast<uint64_t>(fileAttributes.nFileSizeHigh) << 32) |
-			static_cast<uint64_t>(fileAttributes.nFileSizeLow);
-#else
-		uint64_t fSize = 0;
-		sunjwbase::OsFile osFile(path);
-		if (osFile.openRead())
+		int64_t fileLength = osFile.getLength();
+		osFile.close();
+
+		if (fileLength <= 0)
 		{
-			fSize = osFile.getLength();
-			osFile.close();
+			return 0;
 		}
 
-		return fSize;
-#endif
+		return static_cast<uint64_t>(fileLength);
 	}
 }

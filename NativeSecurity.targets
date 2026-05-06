@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <FHashEnableControlFlowGuard>true</FHashEnableControlFlowGuard>
-    <FHashEnableControlFlowGuard Condition="'$(CLRSupport)'!=''">false</FHashEnableControlFlowGuard>
+    <LHashEnableControlFlowGuard>true</LHashEnableControlFlowGuard>
+    <LHashEnableControlFlowGuard Condition="'$(CLRSupport)'!=''">false</LHashEnableControlFlowGuard>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SDLCheck>true</SDLCheck>
-      <ControlFlowGuard Condition="'$(FHashEnableControlFlowGuard)'=='true'">Guard</ControlFlowGuard>
+      <ControlFlowGuard Condition="'$(LHashEnableControlFlowGuard)'=='true'">Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
-      <ControlFlowGuard Condition="'$(FHashEnableControlFlowGuard)'=='true'">Guard</ControlFlowGuard>
+      <ControlFlowGuard Condition="'$(LHashEnableControlFlowGuard)'=='true'">Guard</ControlFlowGuard>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">

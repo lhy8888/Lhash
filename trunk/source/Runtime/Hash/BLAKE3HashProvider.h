@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "blake3.h"
 
 namespace HashRuntime

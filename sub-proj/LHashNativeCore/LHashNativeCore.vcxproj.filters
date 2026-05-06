@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="算法">
+      <UniqueIdentifier>{D30D1E8B-EF7A-4D9F-8E25-4A0D74D9D688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{4F7BEF83-6B5D-4D60-98DD-6E1E68F475D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OsUtils">
+      <UniqueIdentifier>{868815FB-B43B-41E4-8E31-7E8D83B4AC12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinCommon">
+      <UniqueIdentifier>{7F9EF8EF-F95E-470A-A9FB-9A1085699D17}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\trunk\source\Algorithms\MD5.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Algorithms\SHA1.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEngine.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Adapters\MfcBridge\HashThreadEntry.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestBufferPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestCompletion.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestContextOps.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestExecution.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestExecutionMode.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestOperationRegistry.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
+  <ClCompile Include="..\..\trunk\source\Common\HashDigestLifecycle.cpp">
+    <Filter>Common</Filter>
+  </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestQueue.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestQueuePlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestRuntimePlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestPipeline.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestSinglePass.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashDigestUpdater.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileResultWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileAttemptStateOps.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileSizeAccounting.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileVersionResolver.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashJobExecutionPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreparationPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeProbe.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreScanWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashPreparationWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashProgressTracker.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashFileRunner.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSchedulerDispatch.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSchedulerPlan.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashScheduler.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEnginePreparation.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashEngineResult.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashErrorResultWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashResultEventWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashResultPublisher.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\Common\strhelper.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\OsUtils\OsFileWinApi.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\OsUtils\OsThreadWinApi.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\trunk\source\WinCommon\WindowsComm.cpp">
+      <Filter>WinCommon</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\trunk\source\Algorithms\endianness.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\MD5.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Algorithms\SHA1.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashTypes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\PlatformCompat.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestBufferPlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestCompletion.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestContextOps.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestExecution.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestExecutionMode.h">
+    <Filter>Common</Filter>
+  </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestOperationRegistry.h">
+    <Filter>Common</Filter>
+  </ClInclude>
+  <ClInclude Include="..\..\trunk\source\Common\HashDigestLifecycle.h">
+    <Filter>Common</Filter>
+  </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestQueue.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestQueuePlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestRuntimePlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestPipeline.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestSinglePass.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashDigestUpdater.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptCompletionWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileResultWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileAttemptStateOps.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileSizeAccounting.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashFileVersionResolver.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashJobExecutionPlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashJobLifecycleWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreparationPlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeProbe.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreScanSizeAccounting.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreScanWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashPreparationWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashProgressTracker.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashEngine.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashEngineInternal.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashErrorResultWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashResultEventWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashResultPublisher.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSuccessfulFileCompletionWorkflow.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSchedulerDispatch.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\HashSchedulerPlan.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\strhelper.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Common\ThreadPool.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\Adapters\UiBridge\HashEngineBridge.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\OsUtils\OsFile.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\OsUtils\OsThread.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\trunk\source\WinCommon\WindowsComm.h">
+      <Filter>WinCommon</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

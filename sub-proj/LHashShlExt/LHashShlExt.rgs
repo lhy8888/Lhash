@@ -1,0 +1,12 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		'%APPID%' = s 'LHashShlExt'
+		'LHashShlExt.DLL'
+		{
+			val AppID = s '%APPID%'
+		}
+	}
+}
+

@@ -727,7 +727,7 @@ namespace HashEngineInternal
 			UpdateCRC32CDigestContext,
 			FinalizeCRC32CDigestContext
 		});
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 		RegisterHashDigestOperationDescriptorUnlocked({
 			GetOpenSslSha256AlgorithmId(),
 			InitializeOpenSslSha256DigestContext,

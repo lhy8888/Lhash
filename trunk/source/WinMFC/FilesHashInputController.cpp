@@ -6,7 +6,7 @@
 
 #include "FilesHashInputController.h"
 
-#include "LegacyCompat/ThreadDataInputAccess.h"
+#include "Adapters/MfcBridge/ThreadDataInputAccess.h"
 #include "Common/strhelper.h"
 
 using namespace sunjwbase;

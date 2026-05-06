@@ -6,6 +6,7 @@ on:
     branches:
       - future-winui-was2
       - codex/**
+      - claude/**
   pull_request:
 
 permissions:

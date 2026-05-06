@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
 
 namespace HashEngineInternal

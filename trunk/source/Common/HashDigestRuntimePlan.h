@@ -19,10 +19,10 @@ namespace HashEngineInternal
 		{
 		}
 
-		const DigestUpdateRequest& digestUpdateRequest;
+		DigestUpdateRequest digestUpdateRequest;
 		HashDigestExecutionMode digestExecutionMode;
 		unsigned int preferredBufferLength;
-		const HashDigestQueuePlan& digestQueuePlan;
+		HashDigestQueuePlan digestQueuePlan;
 	};
 
 	HashDigestRuntimePlan CreateHashDigestRuntimePlan(const HashJobExecutionPlan& executionPlan);

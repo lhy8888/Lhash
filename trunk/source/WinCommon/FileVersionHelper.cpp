@@ -174,7 +174,7 @@ int FileVersionHelper::FindVsFixedFileInfo(LPCBYTE version, int offs, LPVOID fix
         WORD c = ReadWORD(version + offs);
         offs += 2;
 
-        info[i] = c;
+        info[i] = static_cast<CHAR>(c);
         if (!c)
             break;
     }

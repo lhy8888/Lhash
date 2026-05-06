@@ -3,9 +3,9 @@
 
 #include <stddef.h>
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/evp.h>
 #else
 typedef struct evp_md_ctx_st EVP_MD_CTX;

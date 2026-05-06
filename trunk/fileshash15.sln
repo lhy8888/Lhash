@@ -7,11 +7,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHash", "fileshash.vcxproj"
 		{E500D56F-3EE3-403C-A24C-034822AE3DF5} = {E500D56F-3EE3-403C-A24C-034822AE3DF5}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashNativeCore", "..\sub-proj\fHashNativeCore\fHashNativeCore.vcxproj", "{E500D56F-3EE3-403C-A24C-034822AE3DF5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashNativeCore", "..\sub-proj\LHashNativeCore\LHashNativeCore.vcxproj", "{E500D56F-3EE3-403C-A24C-034822AE3DF5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashShlExt", "..\sub-proj\fHashShlExt\fHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHashShlExt", "..\sub-proj\LHashShlExt\LHashShlExt.vcxproj", "{853488C2-0156-427B-BD20-FD6ECF3782EC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHash.NativeRuntimeTests", "..\native-runtime-tests\FHash.NativeRuntimeTests\FHash.NativeRuntimeTests.vcxproj", "{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LHash.NativeRuntimeTests", "..\native-runtime-tests\LHash.NativeRuntimeTests\LHash.NativeRuntimeTests.vcxproj", "{C3D2A65F-2A96-4E0C-B2C4-7A9A4B0D2D11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

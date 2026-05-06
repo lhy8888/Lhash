@@ -2,21 +2,13 @@
 
 #include "Common/HashEngineInternal.h"
 
-#if defined (__APPLE__) || defined (__unix)
-#include <unistd.h>
-#include <sys/types.h>
-#include <sched.h>
-#endif
+#include <thread>
 
 namespace HashEngineInternal
 {
 	static void YieldHashThread()
 	{
-#if defined (_WIN32)
-		SwitchToThread();
-#else
-		sched_yield();
-#endif
+		std::this_thread::yield();
 	}
 
 	bool ExecuteFileHashAttemptWorkflow(HashExecutionContext *executionContext, const HashRequest& request, uint32_t fileIndex, const sunjwbase::tstring& fullPath,

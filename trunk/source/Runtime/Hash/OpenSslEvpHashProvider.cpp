@@ -1,5 +1,9 @@
 #include "stdafx.h"
 
+#if !defined(LHASH_WITH_OPENSSL3_VENDOR)
+#error "OpenSslEvpHashProvider.cpp is the vendor-backed implementation. Use OpenSslEvpHashProviderStub.cpp in default builds."
+#endif
+
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -8,7 +12,7 @@
 
 #include "Runtime/Hash/OpenSslEvpHashProvider.h"
 
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/core_names.h>
 #include <openssl/params.h>
 #endif
@@ -69,7 +73,7 @@ namespace
 		return renderedHex;
 	}
 
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 	struct OpenSslDigestImplementationCache
 	{
 		std::mutex mutex;
@@ -128,7 +132,7 @@ namespace HashRuntime
 		bool xofMode,
 		size_t digestOutputBytes)
 	{
-#if !defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if !defined(LHASH_WITH_OPENSSL3_VENDOR)
 		(void)hashContext;
 		(void)algorithmNames;
 		(void)algorithmNameCount;
@@ -191,7 +195,7 @@ namespace HashRuntime
 
 	void UpdateOpenSslEvpHashContext(OpenSslEvpHashContext& hashContext, const unsigned char *data, size_t dataLen)
 	{
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 		if (hashContext.updateFailed)
 		{
 			return;
@@ -217,7 +221,7 @@ namespace HashRuntime
 	OpenSslEvpHashFinalizeResult FinalizeOpenSslEvpHashContextHex(OpenSslEvpHashContext& hashContext, size_t outputBytes)
 	{
 		OpenSslEvpHashFinalizeResult finalizeResult;
-#if !defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if !defined(LHASH_WITH_OPENSSL3_VENDOR)
 		(void)hashContext;
 		(void)outputBytes;
 		return finalizeResult;
@@ -260,7 +264,7 @@ namespace HashRuntime
 
 	void CleanupOpenSslEvpHashContext(OpenSslEvpHashContext *hashContext)
 	{
-#if defined(FHASH_WITH_OPENSSL3_VENDOR)
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
 		if (hashContext == NULL)
 		{
 			return;

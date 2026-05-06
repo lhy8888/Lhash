@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "Common/strhelper.h"
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 
 namespace WindowsUtils
 {

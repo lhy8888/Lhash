@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <FHashOpenSslInstallRoot Condition="'$(FHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</FHashOpenSslInstallRoot>
-    <FHashOpenSslIncludeDir Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)\include</FHashOpenSslIncludeDir>
-    <FHashOpenSslLibDir Condition="'$(FHashOpenSslInstallRoot)'!=''">$(FHashOpenSslInstallRoot)\lib</FHashOpenSslLibDir>
+    <LHashOpenSslInstallRoot Condition="'$(LHashOpenSslInstallRoot)'=='' and '$(OPENSSL_VENDOR_INSTALL_ROOT)'!=''">$(OPENSSL_VENDOR_INSTALL_ROOT)</LHashOpenSslInstallRoot>
+    <LHashOpenSslIncludeDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\include</LHashOpenSslIncludeDir>
+    <LHashOpenSslLibDir Condition="'$(LHashOpenSslInstallRoot)'!=''">$(LHashOpenSslInstallRoot)\lib</LHashOpenSslLibDir>
   </PropertyGroup>
 
-  <ItemDefinitionGroup Condition="'$(FHashOpenSslInstallRoot)'!=''">
+  <Target Name="FailNonReleaseOpenSslVendor"
+          BeforeTargets="ClCompile"
+          Condition="'$(LHashOpenSslInstallRoot)'!='' and '$(Configuration)'!='Release'">
+    <Error Text="LHash OpenSSL vendor is built for Release only. Do not link it into non-Release builds." />
+  </Target>
+
+  <ItemDefinitionGroup Condition="'$(LHashOpenSslInstallRoot)'!=''">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(FHashOpenSslIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>FHASH_WITH_OPENSSL3_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LHashOpenSslIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LHASH_WITH_OPENSSL3_VENDOR=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(FHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(LHashOpenSslLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcrypto.lib;WS2_32.lib;GDI32.lib;ADVAPI32.lib;CRYPT32.lib;USER32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

@@ -2,7 +2,7 @@
 
 #include "afxwin.h"
 
-#include "Common/Global.h"
+#include "Common/HashTypes.h"
 struct ThreadData;
 
 class FilesHashInputController;

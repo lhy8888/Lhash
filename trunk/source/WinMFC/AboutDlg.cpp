@@ -37,16 +37,16 @@ BOOL CAboutDlg::OnInitDialog()
 	pWnd = GetDlgItem(IDC_SYSLINK_SITE);
 	pWnd->SetWindowText(GetStringByKey(ABOUTDLG_PROJECT_SITE));
 
-	CString fHashVersion = _T(STR_VERSION_LEGACY); //GetExeFileVersion(exeFullPath);
-	if (fHashVersion.Right(2) == _T(".0"))
+	CString LHashVersion = _T(STR_VERSION_LEGACY); //GetExeFileVersion(exeFullPath);
+	if (LHashVersion.Right(2) == _T(".0"))
 	{
-		fHashVersion = fHashVersion.Left(fHashVersion.GetLength() - 2);
+		LHashVersion = LHashVersion.Left(LHashVersion.GetLength() - 2);
 	}
 
 	sunjwbase::tstring tstrOsinfo = WindowsComm::GetWindowsInfo();
 	m_about = GetStringByKey(ABOUTDLG_INFO_TITLE);
 	m_about.Append(_T(" "));
-	m_about.Append(fHashVersion);
+	m_about.Append(LHashVersion);
 	if (sizeof(void*) == 8)
 	{
 		m_about.Append(_T(" x64"));

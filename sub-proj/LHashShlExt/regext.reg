@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\LHashShellExt]
+@="{2B1ADB34-87ED-40E4-84E2-012D298F5370}"
+
+

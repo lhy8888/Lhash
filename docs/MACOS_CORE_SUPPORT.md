@@ -4,13 +4,10 @@
 
 This document defines the macOS core support contract. The contract covers the
 macOS arm64 core runtime and its security boundaries. A separate macOS CLI MVP
-workflow exists and is tracked independently as a workflow artifact built on the
-same core entry point.
+workflow exists and is tracked independently as an engine validation artifact built on the same core entry point.
 
 This is intentionally narrower than a full macOS product line:
 
-- no WinUI
-- no `fHashClrBridge`
 - no Linux
 - no macOS GUI
 - no OpenSSL 4.0 upgrade work
@@ -32,7 +29,7 @@ The separate macOS CLI MVP workflow:
 
 - builds `lhash` from the shared core entry point
 - packages a `tar.gz` workflow artifact
-- is useful as a lightweight validation surface
+- is useful as a lightweight engine validation surface
 - does not change the macOS core support contract above
 
 ## Darwin path policy
@@ -60,8 +57,4 @@ M3 does not claim:
 
 Those items remain for later phases.
 
-## Non-mainline reference trees
 
-The retired WinUI and CLR bridge trees remain in the repository for reference
-and auditability, but they are marked as non-mainline and are not part of the
-macOS core support contract.

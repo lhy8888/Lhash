@@ -1,4 +1,4 @@
-﻿// MD5SUM03Dlg.cpp : dialog implementation
+// MD5SUM03Dlg.cpp : dialog implementation
 //
 #include "stdafx.h"
 
@@ -12,8 +12,8 @@
 
 #include "FilesHash.h"
 #include "FilesHashDlg.h"
-#include "Common/Global.h"
-#include "LegacyCompat/ThreadDataAccess.h"
+#include "Common/HashTypes.h"
+#include "Adapters/MfcBridge/ThreadDataAccess.h"
 #include "Common/Utils.h"
 #include "WindowsUtils.h"
 #include "UIBridgeMFC.h"

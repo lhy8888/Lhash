@@ -2,9 +2,11 @@
 
 #include "FilesHashMessageController.h"
 
+#include "WinMFC/WinMFCMessages.h"
+
 #include <vector>
 
-#include "LegacyCompat/ThreadDataExecutionAccess.h"
+#include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashResultViewController.h"
