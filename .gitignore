@@ -11,8 +11,6 @@ browser-submit-tmp/
 security-tests/ISSUE_REPORT_lhy8888_lhash.md
 security-tests/**/bin/
 security-tests/**/obj/
-refactor-tests/**/bin/
-refactor-tests/**/obj/
 unit-tests/**/bin/
 unit-tests/**/obj/
 native-runtime-tests/**/Debug/

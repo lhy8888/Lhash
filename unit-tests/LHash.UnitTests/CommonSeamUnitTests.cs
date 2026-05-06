@@ -289,8 +289,7 @@ public sealed class CommonSeamUnitTests
                  path.EndsWith(".cc", StringComparison.OrdinalIgnoreCase) ||
                  path.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
                 !path.Contains(@"\unit-tests\", StringComparison.OrdinalIgnoreCase) &&
-                !path.Contains(@"\security-tests\", StringComparison.OrdinalIgnoreCase) &&
-                !path.Contains(@"\refactor-tests\", StringComparison.OrdinalIgnoreCase))
+                !path.Contains(@"\security-tests\", StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         List<string> invalidCallSites = [];
