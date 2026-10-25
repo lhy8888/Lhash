@@ -6,6 +6,10 @@ This document defines the macOS core support contract. The contract covers the
 macOS arm64 core runtime and its security boundaries. A separate macOS CLI MVP
 workflow exists and is tracked independently as an engine validation artifact built on the same core entry point.
 
+macOS support targets Apple Silicon M-series Macs using the generic `arm64`
+architecture. The build does not require a particular M-series model. CI validates
+the selected hosted arm64 runner; it does not establish testing on every model.
+
 This is intentionally narrower than a full macOS product line:
 
 - no Linux

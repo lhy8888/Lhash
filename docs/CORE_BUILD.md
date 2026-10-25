@@ -7,7 +7,7 @@ M2 introduces a core-only cross-platform build entry point for LHash.
 This entry point is intentionally narrower than the maintained Windows MFC release line:
 
 - Windows x64 and native Windows arm64: core build + baseline smoke run + engine link smoke + real-file runtime tests
-- macOS arm64 and x64: the same core tests + Darwin security regression
+- macOS arm64 (Apple Silicon M-series): the same core tests + Darwin security regression
 
 It does not replace the MFC Windows mainline or add release-path GUI bridge dependencies.
 
@@ -74,7 +74,8 @@ cmake --build build/core/macos-arm64 --config Release --parallel
 ctest --test-dir build/core/macos-arm64 --output-on-failure --no-tests=error -C Release
 ```
 
-For an Intel Mac, use `x86_64` instead of `arm64` and a separate build directory.
+Use native arm64 development tools on an Apple Silicon Mac. All M-series
+generations use this generic arm64 target; no per-model build is required.
 
 ## Real-file runtime coverage
 

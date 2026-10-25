@@ -3,7 +3,7 @@
 This standalone CMake project compiles Lhash's actual
 `OpenSslEvpHashProvider.cpp` and `strhelper.cpp` against static OpenSSL **3.5.9**.
 Both the headers and linked runtime must report that version. It supports native
-Windows x64/ARM64, macOS x64/ARM64, and Linux; it does not require MFC or the full
+Windows x64/ARM64, macOS arm64 (Apple Silicon), and Linux; it does not require MFC or the full
 hash engine's platform file backend.
 
 The six CTest groups cover:

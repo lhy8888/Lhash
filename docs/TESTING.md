@@ -9,8 +9,7 @@
 | --- | --- | --- |
 | Windows x64 | `windows-2022`，VS2022 | Core smoke、真实文件 engine、49 项 Windows native、OpenSSL provider、digest queue、MFC 应用构建 |
 | Windows ARM64 | `windows-11-arm`，VS2026 | 原生执行 Core smoke、真实文件 engine、49 项 Windows native、OpenSSL provider、digest queue；MFC 发布目标另由 x64 runner 交叉编译 |
-| macOS ARM64 | `macos-14` | Core smoke、真实文件 engine、Darwin 文件检查、CLI、OpenSSL provider、digest queue |
-| macOS x64 | `macos-15-intel` | 与 macOS ARM64 相同的测试 |
+| macOS ARM64（Apple Silicon） | `macos-14` | Core smoke、真实文件 engine、Darwin 文件检查、CLI、OpenSSL provider、digest queue |
 | macOS ARM64 + ASan/UBSan | `macos-14` | 重新编译 OpenSSL、engine 和测试代码并执行 provider、queue、engine、Darwin、CLI 检查 |
 | Linux x64 | `ubuntu-24.04` | 实际 OpenSSL provider、digest queue、67 项源码约束和 4 项源码回归；不构建 Windows/Darwin 文件后端 |
 
@@ -19,6 +18,10 @@
 [Portable Runtime Tests](../.github/workflows/portable-runtime-tests.yml)。
 Windows 工作流还执行 .NET 仓库约束测试和源码回归检查，并构建 x64/ARM64 MFC 应用。
 Native 测试可执行文件检查自身架构及 OpenSSL 版本，ARM64 作业会实际运行程序。
+
+macOS 统一面向 Apple Silicon M 系列的通用 `arm64` 架构，不绑定某一代芯片。
+M5/M6 的兼容目标同样是 `arm64`；CI 结果代表所用托管 ARM64 机器，
+不等于已经逐一在各型号实机上验证。
 
 ## 各套测试证明什么
 
@@ -54,7 +57,7 @@ VS2022/x64 和 VS2026/ARM64 的 MSBuild 命令。
 macOS engine 和 CLI：
 
 ```sh
-cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_OSX_ARCHITECTURES=arm64 \
   -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON
 cmake --build build/runtime --parallel 3
 ctest --test-dir build/runtime -V --output-on-failure --no-tests=error

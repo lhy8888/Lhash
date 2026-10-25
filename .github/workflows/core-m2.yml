@@ -47,15 +47,6 @@ jobs:
             run_smoke: true
             run_security: true
 
-          - name: macos-x64
-            os: macos-15-intel
-            generator: Xcode
-            configure_args: -DCMAKE_OSX_ARCHITECTURES=x86_64
-            build_dir: build/core/macos-x64
-            build_target: lhash_core_smoke
-            run_smoke: true
-            run_security: true
-
     defaults:
       run:
         shell: pwsh

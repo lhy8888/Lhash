@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(LHash LANGUAGES C CXX)
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/LHashAppleSilicon.cmake")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -78,7 +80,7 @@ if (MSVC)
     )
 endif()
 
-if (_LHASH_TARGET_ARCH_LOWER MATCHES "^(x86_64|amd64|x64)$")
+if (NOT APPLE AND _LHASH_TARGET_ARCH_LOWER MATCHES "^(x86_64|amd64|x64)$")
     if (MSVC)
         set(_LHASH_CRC32C_SSE_OPTION "/arch:AVX")
     else()

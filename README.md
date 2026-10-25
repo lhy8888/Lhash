@@ -175,7 +175,8 @@ third_party
 
 This makes it easier to reason about trust boundaries, execution behavior, and future interface expansion.
 
-macOS arm64 now has a baseline-only core support contract with Darwin-specific
+macOS support targets Apple Silicon M-series Macs through a generic arm64 build.
+This baseline-only core support contract includes Darwin-specific
 path security checks and a dedicated security regression target. It is part of
 the core bring-up, not a full macOS product line.
 

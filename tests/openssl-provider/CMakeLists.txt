@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(LHashOpenSslProviderTests LANGUAGES CXX)
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/LHashAppleSilicon.cmake")
+
 # This standalone target exercises the production EVP adapter on platforms where
 # the full desktop application cannot be built (including a Linux cloud runner).
 set(CMAKE_CXX_STANDARD 17)
@@ -59,8 +61,8 @@ target_compile_definitions(lhash_openssl_provider_tests PRIVATE
     LHASH_CORE_BUILD=1 LHASH_WITH_OPENSSL3_VENDOR=1
 )
 target_include_directories(lhash_openssl_provider_tests PRIVATE "${LHASH_SOURCE_ROOT}")
-# Imported targets normally use -isystem. CPATH (for example Homebrew OpenSSL
-# headers on Intel macOS runners) precedes -isystem and can mix newer headers
+# Imported targets normally use -isystem. CPATH (for example system OpenSSL
+# headers) precedes -isystem and can mix newer headers
 # with our pinned archive. Keep vendor headers as explicit, leading -I paths.
 set_property(TARGET lhash_openssl_provider_tests PROPERTY NO_SYSTEM_FROM_IMPORTED TRUE)
 target_include_directories(lhash_openssl_provider_tests BEFORE PRIVATE ${LHASH_PROVIDER_OPENSSL_INCLUDES})

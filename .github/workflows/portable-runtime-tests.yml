@@ -26,9 +26,6 @@ jobs:
           - name: macos-arm64
             os: macos-14
             sanitizer: false
-          - name: macos-x64
-            os: macos-15-intel
-            sanitizer: false
           - name: macos-arm64-sanitizers
             os: macos-14
             sanitizer: true
@@ -80,9 +77,13 @@ jobs:
       - name: Build and run provider and queue regressions
         run: |
           set -o pipefail
+          architecture_args=()
+          if [[ "$RUNNER_OS" == 'macOS' ]]; then
+            architecture_args=(-DCMAKE_OSX_ARCHITECTURES=arm64)
+          fi
           for suite in openssl-provider digest_queue; do
             cmake -S "tests/$suite" -B "build/$suite" -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-              -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" 2>&1 | tee "artifacts/portable/$suite-configure.log"
+              "${architecture_args[@]}" -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" 2>&1 | tee "artifacts/portable/$suite-configure.log"
             cmake --build "build/$suite" --parallel 3 2>&1 | tee "artifacts/portable/$suite-build.log"
             ctest --test-dir "build/$suite" -V --output-on-failure --no-tests=error \
               --output-junit "$GITHUB_WORKSPACE/artifacts/portable/$suite.xml" 2>&1 | tee "artifacts/portable/$suite-tests.log"
@@ -93,6 +94,7 @@ jobs:
         run: |
           set -o pipefail
           cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON 2>&1 | tee artifacts/portable/engine-configure.log
           cmake --build build/runtime --parallel 3 2>&1 | tee artifacts/portable/engine-build.log
           ctest --test-dir build/runtime -V --output-on-failure --no-tests=error \
