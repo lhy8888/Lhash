@@ -1,0 +1,3 @@
+# Preserve the exact upstream archive bytes, including fixtures that deliberately
+# contain CRLF. Windows core.autocrlf must not rewrite the verified vendor tree.
+/third_party/openssl/3.5.9/** -text

@@ -8,6 +8,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+try {
+
 if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
     $RepoRoot = Split-Path -Parent $PSScriptRoot
 }
@@ -187,3 +189,14 @@ if ($null -ne $forbiddenMatches) {
 }
 
 Write-Host "OpenSSL vendor source $Version is pristine."
+
+}
+catch {
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        # Preserve the precise failure in public job annotations without allowing
+        # multiline/vendor text to be interpreted as additional workflow commands.
+        $annotation = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+        Write-Host "::error::$annotation"
+    }
+    throw
+}
