@@ -17,6 +17,11 @@ desktop. A service-only/headless or locked desktop is an explicit failure, never
 a skipped test reported as successful. Preserve `ui-smoke-results.json` with the
 CI artifacts, including failed runs.
 
+CI runs this suite on Windows x64 and on a native Windows ARM64 runner. The ARM64
+job downloads the packaged application from the same run and verifies its checksum,
+commit/version metadata and ARM64 PE machine type before launch. Both jobs gate
+release publication. The crash debugger described below is currently x64 only.
+
 For each of two iterations it creates independent application processes. The
 idle control has no file argument; other cases use a private 512 MiB temporary
 file. It performs:

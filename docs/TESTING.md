@@ -7,8 +7,8 @@ API替身、原生执行和GUI交互是不同的证据。
 
 | 平台 | Runner | 覆盖 |
 | --- | --- | --- |
-| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle |
-| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译 |
+| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及10例真实窗口退出测试 |
+| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行10例窗口退出测试 |
 | macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测 |
 | macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
@@ -39,7 +39,8 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
 - `tests/engine_failure`：真实入口working状态清理、部分线程池构造失败回收、派发摘要
   任务时失败后等待已启动任务。测试依赖替身隔离这些分支，不等于完整平台集成。
 - `tests/ui_lifecycle`：实际session所有权gate、请求快照、退出通知顺序、启动失败与
-  完整hex摘要匹配；Windows另运行真实线程handle，验证活线程不能丢失/重启。
+  完整hex摘要匹配；COM初始化失败、已有初始化引用和异常退出时的客户对象析构顺序；
+  Windows另运行真实线程handle，验证活线程不能丢失/重启。
 - `tests/windows-inputs`：从当前生产函数生成探针，验证250024个COPYDATA样本、数量
   边界、带空格exe引用、目录预算/取消、剪贴板所有权与失败、版本API返回边界。
   MFC/WinAPI为显式替身，不代表自动运行了原生窗口、Explorer或UIPI。

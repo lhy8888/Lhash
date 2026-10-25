@@ -2,6 +2,7 @@
 #include "Adapters/MfcBridge/HashWorkerSessionLifecycle.h"
 #include "Adapters/MfcBridge/HashThreadLaunchContext.h"
 #include "Common/HashResultSearch.h"
+#include "WinCommon/ComApartmentScope.h"
 #include <condition_variable>
 #include <deque>
 #include <iostream>
@@ -12,6 +13,62 @@
 static void Require(bool condition, const char* message)
 {
     if (!condition) throw std::runtime_error(message);
+}
+
+struct FakeComApi
+{
+    static inline std::int32_t result = 0;
+    static inline int initializations = 0;
+    static inline int uninitializations = 0;
+    static inline int references = 0;
+    static std::int32_t Initialize()
+    {
+        ++initializations;
+        if (result >= 0) ++references;
+        return result;
+    }
+    static void Uninitialize() { ++uninitializations; --references; }
+};
+
+static void TestComApartmentClientLifetime()
+{
+    // This simulates the dialog's taskbar client, whose Release crashed in CI
+    // after DoModal. Its entire lifetime must stay inside the apartment scope.
+    bool clientReleasedWhileInitialized = false;
+    struct Client {
+        bool& validRelease;
+        ~Client() { validRelease = FakeComApi::references > 0; }
+    };
+    for (const std::int32_t result : {0, 1, static_cast<std::int32_t>(0x80010106u)}) {
+        FakeComApi::result = result;
+        FakeComApi::initializations = FakeComApi::uninitializations = FakeComApi::references = 0;
+        const int existingReferences = result == 1 ? 1 : 0;
+        FakeComApi::references = existingReferences;
+        bool called = false;
+        clientReleasedWhileInitialized = false;
+        const bool ran = RunInComApartment<FakeComApi>([&] {
+            called = true;
+            Client dialog{clientReleasedWhileInitialized};
+            Require(FakeComApi::references == existingReferences + 1, "COM clients must be constructed inside an initialized apartment");
+        });
+        Require(FakeComApi::initializations == 1, "COM initialization must happen exactly once");
+        Require(ran == (result >= 0) && called == ran, "COM initialization failure must not construct clients");
+        Require(FakeComApi::uninitializations == (ran ? 1 : 0) && FakeComApi::references == existingReferences,
+                "S_OK/S_FALSE must balance once; failed initialization must never uninitialize");
+        Require(clientReleasedWhileInitialized == ran, "COM clients must be released before apartment shutdown");
+    }
+    FakeComApi::result = 0;
+    FakeComApi::uninitializations = 0;
+    clientReleasedWhileInitialized = false;
+    bool caught = false;
+    try {
+        RunInComApartment<FakeComApi>([&] {
+            Client dialog{clientReleasedWhileInitialized};
+            throw std::runtime_error("injected dialog construction/run failure");
+        });
+    } catch (const std::runtime_error&) { caught = true; }
+    Require(caught && clientReleasedWhileInitialized && FakeComApi::uninitializations == 1 && FakeComApi::references == 0,
+            "exception unwinding must release clients before balancing COM initialization");
 }
 
 static void TestLaunchFailureAndRetry()
@@ -142,7 +199,8 @@ int main()
         TestCallbackIsNotThreadExit();
         TestFullDigestVerification();
         TestFinalizationQueueAndSnapshot();
-        std::cout << "PASS: launch failure/retry, real-thread ownership barrier, strict digest verification, queued finalization, immutable request\n";
+        TestComApartmentClientLifetime();
+        std::cout << "PASS: launch failure/retry, real-thread ownership barrier, strict digest verification, queued finalization, immutable request, COM client lifetime and failures\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "FAIL: " << error.what() << '\n';

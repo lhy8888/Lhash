@@ -6,6 +6,7 @@
 #include "fileshashdlg.h"
 #include "WindowsUtils.h"
 #include "WinCommon/WindowsStrings.h"
+#include "WinCommon/ComApartmentScope.h"
 #include "UIStringsBase.h"
 #include "UIStringsZHCN.h"
 
@@ -22,6 +23,18 @@
 
 
 using namespace WindowsStrings;
+
+namespace
+{
+    struct UiComApartmentApi
+    {
+        static HRESULT Initialize()
+        {
+            return CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        }
+        static void Uninitialize() { CoUninitialize(); }
+    };
+}
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,22 +86,22 @@ BOOL CFILESHASHApp::InitInstance()
 	RegisterStringsForLang(-1, new UIStringsBase());
 	RegisterStringsForLang(2052, new UIStringsZHCN());
 
-	CFilesHashDlg dlg;
-	m_pMainWnd = &dlg;
-
-	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
+	// COM must outlive the dialog itself, including its taskbar controller's
+	// destructor after DoModal returns. The callback scope enforces that order.
+	if (!RunInComApartment<UiComApartmentApi>([this] {
+		CFilesHashDlg dlg;
+		struct MainWindowReset {
+			CWnd*& window;
+			~MainWindowReset() { window = NULL; }
+		} resetMainWindow{m_pMainWnd};
+		m_pMainWnd = &dlg;
+		dlg.DoModal();
+	}))
 	{
-		// TODO：在此放置处理何时用“确定”来关闭
-		//对话框的代码
+		AfxMessageBox(_T("Cannot initialize the Windows COM apartment."), MB_OK | MB_ICONERROR);
 	}
-	else if (nResponse == IDCANCEL)
-	{
-		// TODO：在此放置处理何时用“取消”来关闭
-		//对话框的代码
-	}
+	m_pMainWnd = NULL;
 
-	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
-	// 而不是启动应用程序的消息泵。
+	// The modal dialog owns the message loop; the application should now exit.
 	return FALSE;
 }

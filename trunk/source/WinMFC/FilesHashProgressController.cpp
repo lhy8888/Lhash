@@ -216,12 +216,21 @@ void FilesHashProgressController::PrepareAdvTaskbar()
 	CloseTaskbarList();
 	m_bAdvTaskbar = FALSE;
 #ifndef _DEBUG
-	VERIFY(CoCreateInstance(
+	ITaskbarList3* taskbarList = NULL;
+	const HRESULT created = CoCreateInstance(
 		CLSID_TaskbarList, NULL, CLSCTX_ALL,
-		IID_ITaskbarList3, (void**)&m_taskbarList));
-	if (m_taskbarList != NULL)
+		IID_ITaskbarList3, reinterpret_cast<void**>(&taskbarList));
+	if (SUCCEEDED(created) && taskbarList != NULL)
 	{
-		m_bAdvTaskbar = TRUE;
+		if (SUCCEEDED(taskbarList->HrInit()))
+		{
+			m_taskbarList = taskbarList;
+			m_bAdvTaskbar = TRUE;
+		}
+		else
+		{
+			taskbarList->Release();
+		}
 	}
 #endif
 }
@@ -479,10 +488,8 @@ CString FilesHashProgressController::BuildProgressText(int progress)
 
 void FilesHashProgressController::CloseTaskbarList()
 {
-	if (m_taskbarList != NULL)
-	{
-		m_taskbarList->Release();
-		m_taskbarList = NULL;
-	}
+	ITaskbarList3* taskbarList = m_taskbarList;
+	m_taskbarList = NULL;
 	m_bAdvTaskbar = FALSE;
+	if (taskbarList != NULL) taskbarList->Release();
 }

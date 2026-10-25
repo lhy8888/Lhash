@@ -670,6 +670,76 @@ jobs:
             artifacts/LHash-windows-arm64-*.zip
           if-no-files-found: warn
 
+  windows-arm64-gui:
+    name: Native ARM64 GUI lifecycle
+    needs: build-windows-arm64
+    runs-on: windows-11-arm
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Download packaged ARM64 application
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: LHash-windows-arm64
+          path: artifacts/arm64-package
+
+      - name: Verify and test the native ARM64 GUI
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString() -ne 'Arm64') {
+            throw 'This test requires a native ARM64 operating system.'
+          }
+          $artifactRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          $archives = @(Get-ChildItem (Join-Path $artifactRoot 'arm64-package') -Filter 'LHash-windows-arm64-*.zip' -File)
+          if ($archives.Count -ne 1) { throw 'Expected exactly one packaged ARM64 ZIP.' }
+          $packageRoot = Join-Path $artifactRoot 'arm64-gui-package'
+          Expand-Archive -LiteralPath $archives[0].FullName -DestinationPath $packageRoot
+          $exePath = Join-Path $packageRoot 'LHash.exe'
+          $checksum = (Get-Content (Join-Path $packageRoot 'SHA256.txt') -Raw).Trim()
+          if ($checksum -notmatch '^([0-9a-fA-F]{64})  LHash\.exe$') { throw 'Invalid packaged checksum.' }
+          $expectedHash = $Matches[1]
+          if ((Get-FileHash $exePath -Algorithm SHA256).Hash -ne $expectedHash) { throw 'Packaged executable checksum mismatch.' }
+          $metadata = @{}
+          foreach ($line in Get-Content (Join-Path $packageRoot 'BUILD_INFO.txt')) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            $parts = $line.Split('=', 2)
+            if ($parts.Count -ne 2 -or $metadata.ContainsKey($parts[0])) { throw 'Invalid build metadata.' }
+            $metadata[$parts[0]] = $parts[1]
+          }
+          if ($metadata.commit -ne $env:GITHUB_SHA -or $metadata.sha256 -ne $expectedHash -or
+              $metadata.openssl_vendor_version -ne '3.5.9' -or $metadata.openssl_vendor_static -ne 'true' -or
+              $metadata.application_version -ne [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath).FileVersion) {
+            throw 'Packaged executable metadata does not match this commit, version and static OpenSSL build.'
+          }
+          $stream = [System.IO.File]::OpenRead($exePath)
+          $reader = [System.IO.BinaryReader]::new($stream)
+          try {
+            if ($stream.Length -lt 64 -or $reader.ReadUInt16() -ne 0x5a4d) { throw 'Invalid executable DOS header.' }
+            $stream.Position = 0x3c
+            $peOffset = $reader.ReadUInt32()
+            if ($peOffset -gt $stream.Length - 6) { throw 'Invalid PE header offset.' }
+            $stream.Position = $peOffset
+            if ($reader.ReadUInt32() -ne 0x4550 -or $reader.ReadUInt16() -ne 0xaa64) {
+              throw 'The tested executable must be native ARM64, not an emulated x64 application.'
+            }
+          } finally { $reader.Dispose() }
+          & pwsh -NoProfile -File tests/windows-ui/Invoke-LHashUiSmoke.ps1 -Executable $exePath -ReportDirectory (Join-Path $artifactRoot 'windows-ui-smoke-arm64') 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'windows-ui-smoke-arm64.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Real ARM64 application GUI smoke failed.' }
+
+      - name: Upload native ARM64 GUI results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: LHash-ui-smoke-arm64
+          path: |
+            artifacts/windows-ui-smoke-arm64.log
+            artifacts/windows-ui-smoke-arm64/**
+          if-no-files-found: warn
+
   delivery-regression:
     runs-on: ubuntu-latest
     steps:
@@ -685,6 +755,7 @@ jobs:
       - build-windows-x64
       - build-windows-arm64
       - native-runtime-tests
+      - windows-arm64-gui
       - delivery-regression
     runs-on: ubuntu-latest
     permissions:

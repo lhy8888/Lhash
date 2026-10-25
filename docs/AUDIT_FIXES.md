@@ -9,6 +9,7 @@
 | 审计方向 | 本轮修复 | 回归入口 |
 | --- | --- | --- |
 | worker 生命周期、关闭/ESC、启动失败 | 用实际 worker/session 所有权管理退出，线程结束前保留状态和对象；统一关闭与取消路径，回收失败启动状态 | `tests/ui_lifecycle`；真实 MFC 程序的 `tests/windows-ui` |
+| 任务栏 COM 接口退出崩溃 | 原生 PDB 栈定位到析构时 `ITaskbarList3::Release`；用 STA 初始化覆盖对话框完整寿命，检查创建和 `HrInit`，先释放接口再结束初始化作用域 | `tests/ui_lifecycle` 的成功/失败/异常析构顺序；Windows x64/ARM64 真实窗口测试 |
 | Copy 和 Verify | Copy 在同步保护下取得结果快照；摘要匹配检查完整长度、十六进制字符和等值，不再接受短子串 | `tests/ui_lifecycle`、Windows native suite；真实 Copy 交互仍需原生验证 |
 | 队列、线程池与异常恢复 | 生产者/消费者异常触发终止与唤醒；等待已启动任务后再释放状态，处理部分线程创建失败；入口异常也清理 working 状态 | `tests/digest_queue`、`tests/engine_failure` |
 | 短读、EINTR、文件变化 | 正数短读继续累积，只有零字节读取视为 EOF；处理 EINTR；比较前后文件身份/metadata 和实际读取量，拒绝明显变化 | `tests/file_integrity`、`tests/core_runtime` |
@@ -60,19 +61,28 @@ vendor 专用 Git attributes 保留官方原始字节，包括原本采用 CRLF 
 Actionlint 1.7.12、Python 语法和定向差异检查通过。
 
 真实 MFC GUI 脚本已完成 PowerShell 解析及嵌入 C# 编译检查，并接入 Windows x64
-构建后、签名/打包前。它只操作自己启动的进程，检查 close、ESC/cancel 和快速
+构建后、签名/打包前。ARM64 成品另在 `windows-11-arm` 下载、解包并校验 SHA256、
+提交、版本和 PE 架构后执行，两个平台都作为发布门禁。它只操作自己启动的进程，检查 close、ESC/cancel 和快速
 start/close 和空闲关闭；活动场景须观察到真实读取进度后再关闭/取消。
 超时或没有交互桌面都失败，不跳过后标绿，保留逐例 JSON、故障进程事件和日志。
 **本地 Linux 没有执行这些真实 Windows GUI 场景。**
 
-首次真实 MFC 回归发现哈希中关闭会以 `0xC0000005` 退出。后续退出顺序探针
-确认：仅创建私有 `OSSL_LIB_CTX` 并不足以提前注册 OpenSSL 全局退出处理，首次
-fetch 的较晚注册会让全局清理先于应用缓存析构。修复显式初始化和线程资源清理，
-并保留独立进程、实际窗口及空闲/读取中关闭对照；原生结果须核对相应修复提交。
+首次真实 MFC 回归发现哈希中关闭会以 `0xC0000005` 退出。独立退出顺序探针发现
+OpenSSL 全局清理早于应用缓存析构的问题，已修复显式初始化和线程资源清理；
+这项修复没有消除 GUI 崩溃。随后原生调试器和匹配 PDB 精确定位主线程故障到
+`FilesHashProgressController::CloseTaskbarList` 的 `ITaskbarList3::Release`。
+代码缺少覆盖整个对话框寿命的 COM 初始化作用域，也没有调用必要的 `HrInit`。
+本次一并修复这些 API 合约，并在 COM 清理前清空主窗口指针。
+栈证明了接口释放故障点，没有证明 MFC 内部某个 `CoUninitialize` 调用顺序。
+保留空闲、活动读取、ESC、取消和快速关闭对照；新的 COM 修复仍须由原生运行验证。
+
+提交 `c5d4927f` 已取得 Windows x64/ARM64 原生核心、macOS ARM64 CLI、Linux/macOS
+sanitizer 及 C++/C# CodeQL 成功记录。新的 COM 修复及 ARM64 GUI 门禁需核对新提交，
+不能把这些既有结果算作新 GUI 修复已经通过。
 
 当前修复提交仍需取得以下运行证据：
 
-- Windows x64/ARM64 原生 engine、provider、queue 与完整 CMake 回归；x64 真实 GUI。
+- Windows x64/ARM64 原生 engine、provider、queue 与完整 CMake 回归；两架构真实 GUI。
 - macOS ARM64 的完整 CLI、文件策略和 sanitizer 回归。
 - 当前提交的 C++/C# CodeQL 分析。
 - 手工 benchmark 冷缓存流程，以及实际 tag 发布时的 SBOM/attestation 服务。
