@@ -21,10 +21,17 @@ namespace HashEngineInternal
 static thread_local bool failLargeDescriptorCopy = false;
 static std::shared_future<void>* firstUpdateStarted = nullptr;
 static std::atomic<bool> injectionReached(false);
+static constexpr std::size_t descriptorCharacters = 8192;
+static constexpr std::size_t descriptorAllocationBytes =
+    (descriptorCharacters + 1) * sizeof(HashAlgorithmId::value_type);
 
 void* operator new(std::size_t size)
 {
-    if (failLargeDescriptorCopy && size >= 4096)
+    // libc++ allocates a 4096-byte deque block on the first task enqueue.
+    // Do not intercept that allocation: no update exists to signal the barrier
+    // yet. Restrict injection to the long ID copy (allow string capacity rounding).
+    if (failLargeDescriptorCopy && size >= descriptorAllocationBytes &&
+        size <= descriptorAllocationBytes + 256)
     {
         failLargeDescriptorCopy = false;
         // Ensure an earlier dispatched task is still using its buffer/context
@@ -68,8 +75,14 @@ int main()
         contexts.release = &releaseFuture;
         DigestUpdateRequest request;
         request.operationDescriptors.push_back({_T("first"), nullptr, &BlockingUpdate, nullptr});
-        request.operationDescriptors.push_back({HashAlgorithmId(8192, _T('x')), nullptr, &UnreachableUpdate, nullptr});
+        request.operationDescriptors.push_back({HashAlgorithmId(descriptorCharacters, _T('x')), nullptr, &UnreachableUpdate, nullptr});
         unsigned char data[] = {42};
+        // Check the libc++ deque-sized allocation explicitly on every platform.
+        failLargeDescriptorCopy = true;
+        void* unrelatedBlock = ::operator new(4096);
+        static_cast<volatile unsigned char*>(unrelatedBlock)[0] = 0;
+        ::operator delete(unrelatedBlock);
+        failLargeDescriptorCopy = false;
         auto dispatch = std::async(std::launch::async, [&]
         {
             failLargeDescriptorCopy = true;
@@ -93,7 +106,7 @@ int main()
         const bool propagated = dispatch.get();
         if (!injectionReached.load() || !waited || !propagated || contexts.completed != 1)
             throw std::runtime_error("dispatch failure did not drain existing updates before propagating");
-        std::cout << "PASS dispatch_failure_waits_for_inflight_update=1\n";
+        std::cout << "PASS unrelated_4096_allocation=1 dispatch_failure_waits_for_inflight_update=1\n";
         return 0;
     }
     catch (const std::exception& error)

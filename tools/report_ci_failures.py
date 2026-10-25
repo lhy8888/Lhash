@@ -10,7 +10,9 @@ FAILURE_PATTERN = re.compile(
     r"ERROR: AddressSanitizer|\bException\b|\bTimeout\b|\bTimed out\b|\bAborted\b|"
     r"\bcannot\b|not found|ParserError|AssertionError|Traceback)", re.I
 )
-SUCCESS_SUMMARY = re.compile(r"\b0 (?:tests? )?failed\b|100% tests passed", re.I)
+SUCCESS_SUMMARY = re.compile(
+    r"\b0 (?:tests? )?failed\b|100% tests passed|\bTest timeout computed to be:", re.I
+)
 
 
 def junit_failures(path):
