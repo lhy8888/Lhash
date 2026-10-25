@@ -140,9 +140,15 @@ if (-not (Test-Path $vswhere)) {
     throw 'Unable to locate vswhere.exe to resolve the Visual Studio toolchain.'
 }
 
-$vsInstallDir = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+$requiredVcComponent = if ($Platform -eq 'ARM64') {
+    'Microsoft.VisualStudio.Component.VC.Tools.ARM64'
+}
+else {
+    'Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
+}
+$vsInstallDir = & $vswhere -latest -products * -requires $requiredVcComponent -property installationPath
 if ([string]::IsNullOrWhiteSpace($vsInstallDir)) {
-    throw 'Unable to locate a Visual Studio installation with VC tools.'
+    throw "Unable to locate a Visual Studio installation with $requiredVcComponent."
 }
 
 $vcvarsall = Join-Path $vsInstallDir 'VC\Auxiliary\Build\vcvarsall.bat'
@@ -152,6 +158,12 @@ if (-not (Test-Path $vcvarsall)) {
 
 $configureTarget = ''
 $vcvarsArch = ''
+# PROCESSOR_ARCHITEW6432 identifies the native host even when PowerShell runs
+# under emulation. It is absent in a native process (including Windows ARM64).
+$hostArchitecture = $env:PROCESSOR_ARCHITEW6432
+if ([string]::IsNullOrWhiteSpace($hostArchitecture)) {
+    $hostArchitecture = $env:PROCESSOR_ARCHITECTURE
+}
 switch ($Platform) {
     'x64' {
         $configureTarget = 'VC-WIN64A'
@@ -159,12 +171,13 @@ switch ($Platform) {
     }
     'ARM64' {
         $configureTarget = 'VC-WIN64-ARM'
-        $vcvarsArch = 'amd64_arm64'
+        $vcvarsArch = if ($hostArchitecture -eq 'ARM64') { 'arm64' } else { 'amd64_arm64' }
     }
     default {
         throw "Unsupported OpenSSL vendor platform: $Platform"
     }
 }
+Write-Host "OpenSSL toolchain: host=$hostArchitecture target=$Platform vcvarsall=$vcvarsArch"
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("lhash-openssl-build-{0}-{1}" -f $Platform.ToLowerInvariant(), [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null

@@ -16,6 +16,7 @@ jobs:
   core-matrix:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -35,13 +36,22 @@ jobs:
             configure_args: -A ARM64
             build_dir: build/core/windows-arm64
             build_target: lhash_core_smoke
-            run_smoke: false
+            run_smoke: true
             run_security: false
           - name: macos-arm64
             os: macos-14
             generator: Xcode
             configure_args: -DCMAKE_OSX_ARCHITECTURES=arm64
             build_dir: build/core/macos-arm64
+            build_target: lhash_core_smoke
+            run_smoke: true
+            run_security: true
+
+          - name: macos-x64
+            os: macos-15-intel
+            generator: Xcode
+            configure_args: -DCMAKE_OSX_ARCHITECTURES=x86_64
+            build_dir: build/core/macos-x64
             build_target: lhash_core_smoke
             run_smoke: true
             run_security: true
@@ -62,7 +72,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $buildRoot, $artifactRoot | Out-Null
 
           $configureLog = Join-Path $artifactRoot 'cmake-configure.log'
-          & cmake -S $repoRoot -B $buildRoot -G "${{ matrix.generator }}" ${{ matrix.configure_args }} -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_ENABLE_OPENSSL_VENDOR=OFF 2>&1 |
+          & cmake -S $repoRoot -B $buildRoot -G "${{ matrix.generator }}" ${{ matrix.configure_args }} -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_ENABLE_OPENSSL_VENDOR=OFF 2>&1 |
             Tee-Object -FilePath $configureLog
 
           if ($LASTEXITCODE -ne 0) {
@@ -106,7 +116,7 @@ jobs:
           $artifactRoot = Join-Path $repoRoot 'artifacts/core-m2/${{ matrix.name }}'
           $smokeLog = Join-Path $artifactRoot 'core-smoke.log'
 
-          & ctest --test-dir $buildRoot --output-on-failure -C Release -R "^(lhash_core_smoke|lhash_engine_link_smoke)$" 2>&1 |
+          & ctest --test-dir $buildRoot --output-on-failure --no-tests=error -C Release -R "^(lhash_core_smoke|lhash_engine_link_smoke)$" 2>&1 |
             Tee-Object -FilePath $smokeLog
 
           if ($LASTEXITCODE -ne 0) {
@@ -128,12 +138,29 @@ jobs:
             throw "Darwin security build failed with exit code $LASTEXITCODE. See artifacts/core-m2/${{ matrix.name }}/darwin-security-build.log for details."
           }
 
-          & ctest --test-dir $buildRoot --output-on-failure -C Release -R lhash_darwin_security 2>&1 |
+          & ctest --test-dir $buildRoot --output-on-failure --no-tests=error -C Release -R lhash_darwin_security 2>&1 |
             Tee-Object -FilePath $securityLog
 
           if ($LASTEXITCODE -ne 0) {
             throw "Darwin security test failed with exit code $LASTEXITCODE. See $securityLog for details."
           }
+
+      - name: Build and run real-file engine regressions
+        run: |
+          $buildRoot = Join-Path $env:GITHUB_WORKSPACE '${{ matrix.build_dir }}'
+          $artifactRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/core-m2/${{ matrix.name }}'
+          & cmake --build $buildRoot --config Release --target lhash_core_runtime --parallel 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'runtime-build.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Engine runtime build failed.' }
+          & ctest --test-dir $buildRoot -C Release --output-on-failure --no-tests=error -V -R '^lhash_core_runtime$' --output-junit (Join-Path $artifactRoot 'runtime.xml') 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'runtime-tests.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Engine runtime tests failed.' }
+
+      - name: Annotate test failures
+        if: failure()
+        run: |
+          $python = if ($IsWindows) { 'python' } else { 'python3' }
+          & $python tools/report_ci_failures.py "artifacts/core-m2/${{ matrix.name }}"
 
       - name: Upload core matrix artifacts
         if: always()

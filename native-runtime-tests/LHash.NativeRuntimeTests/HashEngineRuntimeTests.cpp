@@ -36,7 +36,7 @@
 
 namespace
 {
-	static const size_t kHashEngineBufferSize = 1048576;
+	static const size_t kHashEngineBufferSize = HashEngineInternal::kDefaultHashBufferLength;
 
 	class ScopedHashAlgorithmRegistryReset
 	{
@@ -1857,7 +1857,7 @@ namespace
 			HashEngineInternal::UpdateDigestContextsParallel(digestUpdateRequest, hashContexts, NULL, 0, &threadPool);
 		});
 
-		for (int spin = 0; spin < 500; ++spin)
+		for (int spin = 0; spin < 5000; ++spin)
 		{
 			if (state.startedCount.load(std::memory_order_relaxed) >= 2)
 			{
@@ -1867,11 +1867,15 @@ namespace
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 
-		NativeAssertEqual(static_cast<int>(2), state.startedCount.load(std::memory_order_relaxed), "Parallel digest update workers should both start before the updater returns.");
-		NativeAssertEqual(static_cast<int>(0), state.finishedCount.load(std::memory_order_relaxed), "The blocking digest update worker should still be waiting for release before the exception is rethrown.");
-		NativeAssertTrue(updateFuture.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout, "The digest updater should wait for all parallel workers before rethrowing exceptions.");
-
+		const int startedBeforeRelease = state.startedCount.load(std::memory_order_relaxed);
+		const int finishedBeforeRelease = state.finishedCount.load(std::memory_order_relaxed);
+		const std::future_status statusBeforeRelease = updateFuture.wait_for(std::chrono::milliseconds(50));
+		// Release the worker before any assertion can throw. Otherwise a failing
+		// assertion makes the async future's destructor wait forever on this promise.
 		releasePromise.set_value();
+		NativeAssertEqual(static_cast<int>(2), startedBeforeRelease, "Parallel digest update workers should both start before the updater returns.");
+		NativeAssertEqual(static_cast<int>(0), finishedBeforeRelease, "The blocking digest update worker should still be waiting for release before the exception is rethrown.");
+		NativeAssertTrue(statusBeforeRelease == std::future_status::timeout, "The digest updater should wait for all parallel workers before rethrowing exceptions.");
 
 		bool caughtExpectedException = false;
 		try
@@ -2139,6 +2143,150 @@ namespace
 		NativeAssertTrue(FindHashResultByPath(jobState.results, secondFilePath) == NULL, "Cancellation during the first file should prevent later file results from being appended.");
 		NativeAssertTrue(!jobState.working.load(), "A mid-run cancellation should clear the working flag.");
 	}
+
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
+	static void RunHashRequest_Sha256MatchesIndependentFileBoundaryVectorsInEveryPolicy()
+	{
+		// Frozen SHA-256 values generated independently with Python hashlib for
+		// bytes [0, 1, ..., 255] repeated to the requested length. The 4 MiB cases
+		// exercise the engine's read boundary, including a nonempty final chunk.
+		struct FileVector { size_t length; const char *sha256; };
+		static const FileVector vectors[] = {
+			{ 0, "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855" },
+			{ 1, "6E340B9CFFB37A989CA544E6BB780A2C78901D3FB33738768511A30617AFA01D" },
+			{ 55, "463EB28E72F82E0A96C0A4CC53690C571281131F672AA229E0D45AE59B598B59" },
+			{ 56, "DA2AE4D6B36748F2A318F23E7AB1DFDF45ACDC9D049BD80E59DE82A60895F562" },
+			{ 63, "29AF2686FD53374A36B0846694CC342177E428D1647515F078784D69CDB9E488" },
+			{ 64, "FDEAB9ACF3710362BD2658CDC9A29E8F9C757FCF9811603A8C447CD1D9151108" },
+			{ 65, "4BFD2C8B6F1EEC7A2AFEB48B934EE4B2694182027E6D0FC075074F2FABB31781" },
+			{ 4095, "02EB925AB7D50A3333ADC330CE64D365F863E21A4C9605B5455211C65F600CB1" },
+			{ 4096, "C8F5D0341D54D951A71B136E6E2AFCB14D11ED8489A7AE126A8FEE0DF6ECF193" },
+			{ 4097, "1E973D029DF2B2C66CB42A942C5EDB45966F02ABAFF29FE99410E44D271D0EFC" },
+			{ 1048575, "D8222D77AC43A9391CB348CE3A3BB3C0221A4A666E907B5BC77DE56A41F37848" },
+			{ 1048576, "FBBAB289F7F94B25736C58BE46A994C441FD02552CC6022352E3D86D2FAB7C83" },
+			{ 1048577, "607DEB6ECCBC844880B9D7B523751A4CDBA0452727B885C74264BFE1FB7843E2" },
+			{ 4194303, "11101319163409239993A0789F923C8273BB4A0F7C03FE2F65F65E6A7C1334A3" },
+			{ 4194304, "2B07811057DF887086F06A67EDC6EBF911DE8B6741156E7A2EB1416A4B8B1B2E" },
+			{ 4194305, "531EF95C6EDCA947DA4EAF0D44847656D65DE39C406D1CF4B2E003C112228773" },
+			{ 8388625, "E31B61E09BC1FC5A20361509E968A8FB77F2F4B299A2ABC3E40B881B5E889FFC" },
+		};
+		static const HashRequestDigestExecutionPolicy policies[] = {
+			HASH_REQUEST_DIGEST_EXECUTION_POLICY_AUTO,
+			HASH_REQUEST_DIGEST_EXECUTION_POLICY_SINGLE_THREADED,
+			HASH_REQUEST_DIGEST_EXECUTION_POLICY_PARALLEL
+		};
+		ScopedTempDirectory tempDirectory;
+		for (size_t vectorIndex = 0; vectorIndex < sizeof(vectors) / sizeof(vectors[0]); ++vectorIndex)
+		{
+			const FileVector& vector = vectors[vectorIndex];
+			const std::string contents = CreateAscendingByteInput(vector.length);
+			std::basic_ostringstream<TCHAR> fileName;
+			fileName << _T("sha256-boundary-") << vector.length << _T(".bin");
+			const sunjwbase::tstring filePath = tempDirectory.WriteTextFile(fileName.str(), contents);
+			for (size_t policyIndex = 0; policyIndex < sizeof(policies) / sizeof(policies[0]); ++policyIndex)
+			{
+				CapturingProgressSink progressSink;
+				HashJobState jobState;
+				HashCancellationState cancellationState;
+				HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+				HashRequest request;
+				request.files.push_back(filePath);
+				request.algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+				request.algorithmIds.push_back(CreateAlgorithmId("md5"));
+				request.digestExecutionPolicy = policies[policyIndex];
+				const std::string label = "SHA-256 bytes=" + NativeTestToString(vector.length)
+					+ " policy=" + NativeTestToString(static_cast<int>(policies[policyIndex]));
+				std::cout << "CASE: " << label << std::endl;
+				NativeAssertEqual(0, RunHashRequest(&executionContext, request), label + " should complete.");
+				NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), label + " should emit one result.");
+				const HashResult& result = jobState.results.front();
+				NativeAssertEqual(RESULT_ALL, result.state, label + " should succeed.");
+				NativeAssertEqual(static_cast<uint64_t>(vector.length), result.meta.size, label + " size mismatch.");
+				NativeAssertEqual(static_cast<size_t>(2), result.digests.size(), label + " algorithm count mismatch.");
+				NativeAssertEqual(sunjwbase::strtotstr(std::string(vector.sha256)),
+					FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-256")), label + " digest mismatch.");
+				NativeAssertEqual(ComputeMd5Hex(contents), FindDigestValue(result, RESULT_DIGEST_MD5), label + " MD5 mismatch.");
+				NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), label + " duplicate or missing hash event.");
+				NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_JOB_COMPLETED), label + " completion event mismatch.");
+				NativeAssertTrue(!jobState.working.load(), label + " should clear working state.");
+			}
+		}
+	}
+
+	static void RunHashRequest_Sha256PreservesUnicodeAndSpaceFileNames()
+	{
+		ScopedTempDirectory tempDirectory;
+		const sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("\u54C8\u5E0C \u6821\u9A8C (\u00E9).bin"), CreateAscendingByteInput(257));
+		CapturingProgressSink progressSink;
+		HashJobState jobState;
+		HashCancellationState cancellationState;
+		HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+		HashRequest request;
+		request.files.push_back(filePath);
+		request.algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+		NativeAssertEqual(0, RunHashRequest(&executionContext, request), "Unicode-path SHA-256 request should complete.");
+		NativeAssertEqual(static_cast<size_t>(1), jobState.results.size(), "Unicode path should produce exactly one result.");
+		const HashResult& result = jobState.results.front();
+		NativeAssertEqual(RESULT_ALL, result.state, "Unicode path should be readable.");
+		NativeAssertEqual(filePath, result.path, "The full Unicode file path should be preserved.");
+		NativeAssertEqual(sunjwbase::strtotstr(std::string("54ACFBFEDC4D8DA40F76F275E1A98F10AF8EF1FB9FB39E5A67A00AABCBE6597C")),
+			FindDigestValueByAlgorithmId(result, CreateAlgorithmId("openssl-sha-256")), "Unicode-path binary contents should hash without text conversion.");
+	}
+
+	static void RunHashRequest_CancelledSha256DoesNotPublishPartialDigestAndCanRestart()
+	{
+		ScopedTempDirectory tempDirectory;
+		const sunjwbase::tstring filePath = tempDirectory.WriteTextFile(_T("cancel-sha256.bin"), CreateAscendingByteInput((kHashEngineBufferSize * 3) + 17));
+		const sunjwbase::tstring nextPath = tempDirectory.WriteTextFile(_T("after-cancel.txt"), "abc");
+		static const HashRequestDigestExecutionPolicy policies[] = {
+			HASH_REQUEST_DIGEST_EXECUTION_POLICY_SINGLE_THREADED,
+			HASH_REQUEST_DIGEST_EXECUTION_POLICY_PARALLEL
+		};
+		for (size_t policyIndex = 0; policyIndex < sizeof(policies) / sizeof(policies[0]); ++policyIndex)
+		{
+			HashRequest request;
+			request.files.push_back(filePath);
+			request.files.push_back(nextPath);
+			request.algorithmIds.push_back(CreateAlgorithmId("openssl-sha-256"));
+			request.algorithmIds.push_back(CreateAlgorithmId("md5"));
+			request.digestExecutionPolicy = policies[policyIndex];
+			CapturingProgressSink progressSink;
+			HashJobState jobState;
+			HashCancellationState cancellationState;
+			progressSink.ConfigureStopOnEvent(&cancellationState.stopRequested, PROGRESS_EVENT_FILE_PROGRESS, 1);
+			HashExecutionContext executionContext = CreateExecutionContext(progressSink, jobState, cancellationState);
+			NativeAssertEqual(0, RunHashRequest(&executionContext, request), "SHA-256 cancellation should complete cooperatively.");
+			NativeAssertEqual(static_cast<size_t>(1), progressSink.CountEvents(PROGRESS_EVENT_JOB_CANCELLED), "Cancellation should have one terminal cancelled event.");
+			NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_FILE_HASH_READY), "A partial SHA-256 must never be published as a complete digest.");
+			NativeAssertEqual(static_cast<size_t>(0), progressSink.CountEvents(PROGRESS_EVENT_JOB_COMPLETED), "A cancelled job must not also complete.");
+			NativeAssertTrue(FindHashResultByPath(jobState.results, nextPath) == NULL, "Cancellation must skip the remaining file.");
+			NativeAssertTrue(!jobState.working.load(), "Cancellation must clear working state before returning.");
+			for (HashResultList::const_iterator result = jobState.results.begin(); result != jobState.results.end(); ++result)
+			{
+				NativeAssertTrue(result->state != RESULT_ALL, "Cancelled work must not leave a successful result.");
+				NativeAssertTrue(result->digests.empty(), "Cancelled work must not retain a partial digest.");
+			}
+			{
+				WinHandleGuard::UniqueWinHandle exclusive(::CreateFile(filePath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+				NativeAssertTrue(exclusive.isValid(), "Cancellation should release its file handle before RunHashRequest returns.");
+			}
+			CapturingProgressSink retrySink;
+			HashJobState retryState;
+			cancellationState.stopRequested.store(false);
+			HashExecutionContext retryContext = CreateExecutionContext(retrySink, retryState, cancellationState);
+			NativeAssertEqual(0, RunHashRequest(&retryContext, request), "A fresh request after cancellation should complete.");
+			NativeAssertEqual(static_cast<size_t>(2), retryState.results.size(), "The restarted request should process both files.");
+			const HashResult *retriedLarge = FindHashResultByPath(retryState.results, filePath);
+			const HashResult *retriedSmall = FindHashResultByPath(retryState.results, nextPath);
+			NativeAssertTrue(retriedLarge != NULL && retriedSmall != NULL, "The restarted request must retain both file results.");
+			NativeAssertEqual(RESULT_ALL, retriedLarge->state, "The restarted large file should succeed.");
+			NativeAssertEqual(sunjwbase::strtotstr(std::string("2035167438838A59533E30D07FDDA4ECD0EA8A3F14FA41FA255761761FA6AD76")),
+				FindDigestValueByAlgorithmId(*retriedLarge, CreateAlgorithmId("openssl-sha-256")), "A restarted request must hash the complete large file.");
+			NativeAssertEqual(GetOfficialOpenSslSha256Vector(), FindDigestValueByAlgorithmId(*retriedSmall, CreateAlgorithmId("openssl-sha-256")), "A restarted request must process the second file.");
+		}
+	}
+#endif
+
 }
 
 void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
@@ -2148,6 +2296,9 @@ void RegisterHashEngineRuntimeTests(std::vector<NativeTestCase>& tests)
 	tests.push_back({ "HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors", &HashThreadFunc_ComputesStandardMd5AndSha1KnownAnswerVectors });
 	tests.push_back({ "HashThreadFunc_RespectsSelectedAlgorithms", &HashThreadFunc_RespectsSelectedAlgorithms });
 #if defined(LHASH_WITH_OPENSSL3_VENDOR)
+		tests.push_back({ "RunHashRequest_Sha256MatchesIndependentFileBoundaryVectorsInEveryPolicy", &RunHashRequest_Sha256MatchesIndependentFileBoundaryVectorsInEveryPolicy });
+		tests.push_back({ "RunHashRequest_Sha256PreservesUnicodeAndSpaceFileNames", &RunHashRequest_Sha256PreservesUnicodeAndSpaceFileNames });
+		tests.push_back({ "RunHashRequest_CancelledSha256DoesNotPublishPartialDigestAndCanRestart", &RunHashRequest_CancelledSha256DoesNotPublishPartialDigestAndCanRestart });
 	tests.push_back({ "HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector", &HashThreadFunc_ComputesOfficialOpenSslDigestsForKnownVector });
 		tests.push_back({ "RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily", &RunHashRequest_OpenSslSha2VariantsStayDistinctWithinOpenSslFamily });
 	tests.push_back({ "RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered", &RunHashRequest_OpenSslUnknownIdsAreIgnoredAndKnownVariantsStayOrdered });

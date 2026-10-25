@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(LHASH_BUILD_M2_SMOKE "Build the M2 core smoke executable" ON)
+option(LHASH_BUILD_RUNTIME_TESTS "Build real-file engine regression tests" OFF)
 option(LHASH_BUILD_CLI "Build the LHash CLI executable" OFF)
 option(LHASH_ENABLE_OPENSSL_VENDOR "Enable the OpenSSL vendor backend in the CMake core build" OFF)
 
@@ -77,10 +78,15 @@ if (MSVC)
     )
 endif()
 
-if (WIN32 AND _LHASH_TARGET_ARCH_LOWER MATCHES "^(x86_64|amd64|x64)$")
+if (_LHASH_TARGET_ARCH_LOWER MATCHES "^(x86_64|amd64|x64)$")
+    if (MSVC)
+        set(_LHASH_CRC32C_SSE_OPTION "/arch:AVX")
+    else()
+        set(_LHASH_CRC32C_SSE_OPTION "-msse4.2")
+    endif()
     set_source_files_properties(
         "${LHASH_THIRD_PARTY_ROOT}/crc32c/1.1.2/src/crc32c_sse42.cc"
-        PROPERTIES COMPILE_OPTIONS "/arch:AVX"
+        PROPERTIES COMPILE_OPTIONS "${_LHASH_CRC32C_SSE_OPTION}"
     )
 endif()
 
@@ -136,6 +142,27 @@ if (LHASH_BUILD_M2_SMOKE)
         target_include_directories(lhash_darwin_security PRIVATE "${LHASH_SOURCE_ROOT}")
         add_test(NAME lhash_darwin_security COMMAND lhash_darwin_security)
     endif()
+endif()
+
+if (LHASH_BUILD_RUNTIME_TESTS)
+    if (NOT WIN32 AND NOT APPLE)
+        message(FATAL_ERROR "Engine runtime tests require a Windows or macOS OS backend.")
+    endif()
+    enable_testing()
+    find_package(Threads REQUIRED)
+    add_executable(lhash_core_runtime tests/core_runtime/lhash_core_runtime.cpp)
+    target_link_libraries(lhash_core_runtime PRIVATE lhash_core Threads::Threads)
+    target_compile_definitions(lhash_core_runtime PRIVATE LHASH_CORE_BUILD=1)
+    if (WIN32)
+        target_compile_definitions(lhash_core_runtime PRIVATE UNICODE _UNICODE WIN32)
+    else()
+        target_include_directories(lhash_core_runtime BEFORE PRIVATE "${LHASH_REPO_ROOT}/cmake/posix-stubs")
+    endif()
+    if (MSVC)
+        target_compile_options(lhash_core_runtime PRIVATE /utf-8)
+    endif()
+    add_test(NAME lhash_core_runtime COMMAND lhash_core_runtime)
+    set_tests_properties(lhash_core_runtime PROPERTIES TIMEOUT 180)
 endif()
 
 if (LHASH_BUILD_CLI)

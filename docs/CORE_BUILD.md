@@ -6,9 +6,8 @@ M2 introduces a core-only cross-platform build entry point for LHash.
 
 This entry point is intentionally narrower than the maintained Windows MFC release line:
 
-- Windows x64: core build + baseline smoke run + engine link smoke
-- Windows arm64: core build verification only
-- macOS arm64: core build + baseline smoke run + engine link smoke + Darwin security regression
+- Windows x64 and native Windows arm64: core build + baseline smoke run + engine link smoke + real-file runtime tests
+- macOS arm64 and x64: the same core tests + Darwin security regression
 
 It does not replace the MFC Windows mainline or add release-path GUI bridge dependencies.
 
@@ -27,8 +26,10 @@ The core build target is centered around:
 
 The M2 entry point intentionally keeps OpenSSL optional so the core can still build even when the vendor backend is not enabled.
 
-For M3, the macOS bring-up remains baseline-only. OpenSSL extension backends are
-still optional and are not required for the macOS support contract.
+The current CMake core uses the OpenSSL stub; setting
+`LHASH_ENABLE_OPENSSL_VENDOR=ON` reports that integration is not implemented.
+The standalone provider tests link the actual OpenSSL 3.5.9 static library on
+each supported test platform. See [Testing](TESTING.md) for the separate coverage.
 
 ## What it does not build
 
@@ -44,9 +45,9 @@ The core entry point does not include:
 ### Windows x64
 
 ```powershell
-cmake -S . -B build/core/windows-x64 -G "Visual Studio 17 2022" -A x64 -DLHASH_BUILD_M2_SMOKE=ON
-cmake --build build/core/windows-x64 --config Release --target lhash_core_smoke lhash_engine_link_smoke --parallel
-ctest --test-dir build/core/windows-x64 --output-on-failure -C Release -R "^(lhash_core_smoke|lhash_engine_link_smoke)$"
+cmake -S . -B build/core/windows-x64 -G "Visual Studio 17 2022" -A x64 -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON
+cmake --build build/core/windows-x64 --config Release --parallel
+ctest --test-dir build/core/windows-x64 --output-on-failure --no-tests=error -C Release
 ```
 
 ### Windows arm64
@@ -56,20 +57,36 @@ require Visual Studio 2026 and CMake 4.2 or newer. For a local Visual Studio 202
 installation, use the `Visual Studio 17 2022` generator instead.
 
 ```powershell
-cmake -S . -B build/core/windows-arm64 -G "Visual Studio 18 2026" -A ARM64 -DLHASH_BUILD_M2_SMOKE=ON
-cmake --build build/core/windows-arm64 --config Release --target lhash_core_smoke --parallel
+cmake -S . -B build/core/windows-arm64 -G "Visual Studio 18 2026" -A ARM64 -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON
+cmake --build build/core/windows-arm64 --config Release --parallel
+ctest --test-dir build/core/windows-arm64 --output-on-failure --no-tests=error -C Release
 ```
 
-This path is build-verification only in CI: the smoke target is compiled on
-Windows arm64, but it is not executed there yet.
+CI executes the smoke and real-file runtime tests on the native ARM64 runner.
+For local execution, use an ARM64 Windows machine; cross-compilation alone does
+not exercise ARM64 runtime behavior.
 
 ### macOS arm64
 
 ```powershell
-cmake -S . -B build/core/macos-arm64 -G Xcode -DCMAKE_OSX_ARCHITECTURES=arm64 -DLHASH_BUILD_M2_SMOKE=ON
-cmake --build build/core/macos-arm64 --config Release --target lhash_core_smoke lhash_engine_link_smoke --parallel
-ctest --test-dir build/core/macos-arm64 --output-on-failure -C Release -R "^(lhash_core_smoke|lhash_engine_link_smoke)$"
+cmake -S . -B build/core/macos-arm64 -G Xcode -DCMAKE_OSX_ARCHITECTURES=arm64 -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON
+cmake --build build/core/macos-arm64 --config Release --parallel
+ctest --test-dir build/core/macos-arm64 --output-on-failure --no-tests=error -C Release
 ```
+
+For an Intel Mac, use `x86_64` instead of `arm64` and a separate build directory.
+
+## Real-file runtime coverage
+
+`LHASH_BUILD_RUNTIME_TESTS=ON` adds `lhash_core_runtime`: 43 cases covering actual
+file reads, fixed digest vectors, buffer boundaries, Unicode paths, error
+continuation, cancellation and concurrent requests. The tests exercise AUTO,
+single-threaded and parallel execution. Details are in
+[the runtime suite README](../tests/core_runtime/README.md).
+
+The standalone OpenSSL provider suite and Windows native suite provide separate
+SHA256 coverage; passing core tests with the stub does not establish that the
+OpenSSL backend works.
 
 ## Smoke coverage
 

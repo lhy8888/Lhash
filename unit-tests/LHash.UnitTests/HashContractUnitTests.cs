@@ -8,8 +8,8 @@ public sealed class HashContractUnitTests
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
         string requestBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestBridge.h");
         string requestTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashRequestType.h");
-        string requestProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequestProjection.h");
-        string requestShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashRequest.h");
+        string requestProjectionPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashRequestProjection.h");
+        string requestShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashRequest.h");
 
         Assert.False(File.Exists(requestShimPath));
         Assert.Contains("struct HashRequest", request, StringComparison.Ordinal);
@@ -47,7 +47,7 @@ public sealed class HashContractUnitTests
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string registryTypeCompat = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashAlgorithmType.h");
         string request = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashRequest.h");
-        string registryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+        string registryShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashAlgorithmRegistry.h");
 
         Assert.False(File.Exists(registryShimPath));
         Assert.Contains("GetHashAlgorithmIndexById(const HashAlgorithmId& algorithmId)", registryCore, StringComparison.Ordinal);
@@ -73,9 +73,9 @@ public sealed class HashContractUnitTests
         string search = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultSearch.h");
         string metadata = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\ResultDigestMetadataAccess.h");
 
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResult.h")));
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultProjection.h")));
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ResultNetProjection.h")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashResult.h")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashResultProjection.h")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ResultNetProjection.h")));
         Assert.DoesNotContain("enum ResultDigestType", global, StringComparison.Ordinal);
         Assert.Contains("enum ResultDigestType", legacyDigestType, StringComparison.Ordinal);
         Assert.Contains("struct HashDigestResult", global, StringComparison.Ordinal);
@@ -108,12 +108,12 @@ public sealed class HashContractUnitTests
         string progressEvent = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\ProgressEvent.h");
         string progressSink = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashProgressSink.h");
         string observer = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\UiBridge\HashEngineObserver.h");
-        string legacyObserverPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineObserver.h");
-        string legacyBridgePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashEngineBridge.h");
-        string legacyUiBridgeBasePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\UIBridgeBase.h");
+        string legacyObserverPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashEngineObserver.h");
+        string legacyBridgePath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashEngineBridge.h");
+        string legacyUiBridgeBasePath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\UIBridgeBase.h");
 
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ProgressEvent.h")));
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashProgressSink.h")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ProgressEvent.h")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashProgressSink.h")));
         Assert.Contains("enum ProgressEventType", progressEvent, StringComparison.Ordinal);
         Assert.Contains("PROGRESS_EVENT_JOB_PREPARING", progressEvent, StringComparison.Ordinal);
         Assert.Contains("PROGRESS_EVENT_FILE_HASH_READY", progressEvent, StringComparison.Ordinal);
@@ -284,10 +284,10 @@ public sealed class HashContractUnitTests
         string threadEntry = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntry.cpp");
         string threadEntryBridge = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryBridge.h");
         string legacyThreadEntryRuntime = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadEntryRuntime.h");
-        string threadExecutionAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataExecutionAccess.h");
-        string threadEntryProjectionPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntryProjection.h");
-        string legacyCommonThreadEntryHeaderPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.h");
-        string legacyCommonThreadEntrySourcePath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashThreadEntry.cpp");
+        string threadExecutionAccessPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ThreadDataExecutionAccess.h");
+        string threadEntryProjectionPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashThreadEntryProjection.h");
+        string legacyCommonThreadEntryHeaderPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashThreadEntry.h");
+        string legacyCommonThreadEntrySourcePath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashThreadEntry.cpp");
         string fileRunner = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileRunner.cpp");
         string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string digestPipeline = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestPipeline.cpp");
@@ -356,7 +356,7 @@ public sealed class HashContractUnitTests
         string resultEventWorkflowHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashResultEventWorkflow.h");
         string internalHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineInternal.h");
 
-        string executionContextShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashExecutionContext.h");
+        string executionContextShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashExecutionContext.h");
         Assert.False(File.Exists(executionContextShimPath));
         Assert.Contains("class HashProgressSink;", global, StringComparison.Ordinal);
         Assert.DoesNotContain("#include \"Adapters/MfcBridge/MfcHashState.h\"", global, StringComparison.Ordinal);
@@ -888,8 +888,8 @@ public sealed class HashContractUnitTests
     [Fact]
     public void BridgeConsumers_NowConsumeHashResultAcrossManagedAndRealtimeAdapters()
     {
-        string managedDispatchPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ManagedBridgeDispatch.h");
-        string managedHashMgmtAccessPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Adapters\MfcBridge\ManagedHashMgmtAccess.h");
+        string managedDispatchPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ManagedBridgeDispatch.h");
+        string managedHashMgmtAccessPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Adapters\MfcBridge\ManagedHashMgmtAccess.h");
 
         string mfcHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.h");
         string mfcSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\UIBridgeMFC.cpp");

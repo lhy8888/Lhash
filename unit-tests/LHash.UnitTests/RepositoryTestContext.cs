@@ -52,15 +52,9 @@ internal static class RepositoryTestContext
         throw new DirectoryNotFoundException("Unable to locate the repository root for unit tests.");
     }
 
-    private static string ResolveRepoPath(string relativePath)
+    public static string ResolveRepoPath(string relativePath)
     {
-        string livePath = Path.Combine(RepoRoot, relativePath);
-        if (File.Exists(livePath) || Directory.Exists(livePath))
-        {
-            return livePath;
-        }
-
-        return livePath;
+        return Path.Combine(RepoRoot, relativePath.Replace('\\', Path.DirectorySeparatorChar));
     }
 
     private static Encoding DetectEncoding(string path)

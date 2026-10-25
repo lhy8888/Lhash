@@ -1,0 +1,112 @@
+name: Portable Runtime Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - future-winui-was2
+      - codex/**
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  provider-and-queue:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-24.04
+            sanitizer: false
+          - name: macos-arm64
+            os: macos-14
+            sanitizer: false
+          - name: macos-x64
+            os: macos-15-intel
+            sanitizer: false
+          - name: macos-arm64-sanitizers
+            os: macos-14
+            sanitizer: true
+    defaults:
+      run:
+        shell: bash
+    env:
+      ASAN_OPTIONS: halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET for source-contract checks
+        if: runner.os == 'Linux'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check source contracts on Linux
+        if: runner.os == 'Linux'
+        run: |
+          dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release
+          dotnet run --project security-tests/SecurityRegression/SecurityRegression.csproj --configuration Release
+
+      - name: Configure test environment
+        run: |
+          mkdir -p artifacts/portable
+          echo "OPENSSL_ROOT_DIR=$GITHUB_WORKSPACE/build/openssl-install" >> "$GITHUB_ENV"
+          if [[ '${{ matrix.sanitizer }}' == 'true' ]]; then
+            echo 'CFLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' >> "$GITHUB_ENV"
+            echo 'CXXFLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' >> "$GITHUB_ENV"
+            echo 'LDFLAGS=-fsanitize=address,undefined' >> "$GITHUB_ENV"
+          fi
+
+      - name: Cache static OpenSSL
+        id: openssl-cache
+        uses: actions/cache@v4
+        with:
+          path: build/openssl-install
+          key: openssl-3.5.9-${{ matrix.name }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/build_openssl_vendor_posix.sh', '.github/workflows/portable-runtime-tests.yml') }}
+
+      - name: Build vendored OpenSSL 3.5.9
+        if: steps.openssl-cache.outputs.cache-hit != 'true'
+        run: |
+          set -o pipefail
+          bash tools/build_openssl_vendor_posix.sh "$OPENSSL_ROOT_DIR" 2>&1 | tee artifacts/portable/openssl-build.log
+
+      - name: Build and run provider and queue regressions
+        run: |
+          set -o pipefail
+          for suite in openssl-provider digest_queue; do
+            cmake -S "tests/$suite" -B "build/$suite" -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" 2>&1 | tee "artifacts/portable/$suite-configure.log"
+            cmake --build "build/$suite" --parallel 3 2>&1 | tee "artifacts/portable/$suite-build.log"
+            ctest --test-dir "build/$suite" -V --output-on-failure --no-tests=error \
+              --output-junit "$GITHUB_WORKSPACE/artifacts/portable/$suite.xml" 2>&1 | tee "artifacts/portable/$suite-tests.log"
+          done
+
+      - name: Run macOS engine and CLI regressions
+        if: runner.os == 'macOS'
+        run: |
+          set -o pipefail
+          cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON 2>&1 | tee artifacts/portable/engine-configure.log
+          cmake --build build/runtime --parallel 3 2>&1 | tee artifacts/portable/engine-build.log
+          ctest --test-dir build/runtime -V --output-on-failure --no-tests=error \
+            --output-junit "$GITHUB_WORKSPACE/artifacts/portable/engine.xml" 2>&1 | tee artifacts/portable/engine-tests.log
+          python3 tests/cli/test_cli.py build/runtime/bin/lhash 2>&1 | tee artifacts/portable/cli-tests.log
+
+      - name: Annotate test failures
+        if: failure()
+        run: python3 tools/report_ci_failures.py "artifacts/portable"
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: portable-tests-${{ matrix.name }}
+          path: artifacts/portable/**
+          if-no-files-found: error

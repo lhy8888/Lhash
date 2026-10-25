@@ -190,7 +190,7 @@ internal static partial class Program
 
     private static string ReadRepoFile(string repoRoot, string relativePath)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = Path.Combine(repoRoot, relativePath.Replace('\\', Path.DirectorySeparatorChar));
         return File.ReadAllText(path, DetectEncoding(path));
     }
     private static Encoding DetectEncoding(string path)
@@ -302,7 +302,7 @@ internal static partial class Program
 
     private static void AssertPngAsset(string repoRoot, string relativePath, int expectedWidth, int expectedHeight, int minBytes)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = Path.Combine(repoRoot, relativePath.Replace('\\', Path.DirectorySeparatorChar));
         byte[] bytes = File.ReadAllBytes(path);
         if (bytes.Length < minBytes)
         {
@@ -330,7 +330,7 @@ internal static partial class Program
 
     private static void AssertNonEmptyFile(string repoRoot, string relativePath)
     {
-        string path = Path.Combine(repoRoot, relativePath);
+        string path = Path.Combine(repoRoot, relativePath.Replace('\\', Path.DirectorySeparatorChar));
         var info = new FileInfo(path);
         if (!info.Exists || info.Length <= 0)
         {

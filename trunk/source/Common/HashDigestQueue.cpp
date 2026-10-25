@@ -163,11 +163,12 @@ namespace HashEngineInternal
 			DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
 			if (ReadDigestDataBuffer(executionState, digestDataBuffer))
 			{
-				isFileFinished.store(digestDataBuffer.datalen < digestDataBuffer.capacity);
-
 				{
 					unique_lock<mutex> lock(mtxQueue);
 					queuedBufferIndices.push(bufferIndex);
+					// Publish the last chunk and EOF together. Otherwise the consumer
+					// can see an empty queue plus EOF and exit before hashing this chunk.
+					isFileFinished.store(digestDataBuffer.datalen < digestDataBuffer.capacity);
 				}
 			}
 			else
@@ -179,7 +180,12 @@ namespace HashEngineInternal
 		}
 		while (!isFileFinished.load() && !executionState->fileAttemptState.readFailed);
 
-		isFileFinished.store(true);
+		{
+			// The wait predicate must change under the same mutex as cvCalc.wait,
+			// including the read-error and cancellation paths, to avoid a lost wakeup.
+			unique_lock<mutex> lock(mtxQueue);
+			isFileFinished.store(true);
+		}
 		cvCalc.notify_all();
 		taskHash.get();
 

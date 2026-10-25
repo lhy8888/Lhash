@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - future-winui-was2
+      - codex/openssl-3.5.9-vendor
     tags:
       - v*
   pull_request:
@@ -122,7 +123,29 @@ jobs:
       - security-regression
       - unit-tests
       - prepare-openssl-vendor-x64
-    runs-on: windows-2022
+      - prepare-openssl-vendor-arm64
+    name: Native runtime (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            os: windows-2022
+            toolset: v143
+            generator: Visual Studio 17 2022
+            artifact_arch: x64
+            executable: native-runtime-tests\LHash.NativeRuntimeTests\x64\Release\LHash.NativeRuntimeTests.exe
+          - platform: ARM64
+            os: windows-11-arm
+            toolset: v145
+            generator: Visual Studio 18 2026
+            artifact_arch: arm64
+            executable: native-runtime-tests\LHash.NativeRuntimeTests\ARM64\Release\LHash.NativeRuntimeTests.exe
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout
@@ -130,54 +153,63 @@ jobs:
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: ${{ matrix.artifact_arch }}
 
-      - name: Download OpenSSL vendor x64 artifact
+      - name: Download prepared OpenSSL vendor artifact
         uses: actions/download-artifact@v8
         with:
-          name: LHash-openssl-vendor-x64
+          name: LHash-openssl-vendor-${{ matrix.artifact_arch }}
           path: artifacts
 
       - name: Build and run native runtime tests
-        shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
-          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
-          $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-x64.log'
-          $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-x64.log'
-          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
-          if (-not (Test-Path (Join-Path $openSslRoot 'lib\\libcrypto.lib'))) {
-            throw 'Expected the prepared OpenSSL vendor artifact to contain lib\\libcrypto.lib.'
+          $buildLogPath = Join-Path $artifactRoot 'build-native-runtime-tests-${{ matrix.artifact_arch }}.log'
+          $runLogPath = Join-Path $artifactRoot 'run-native-runtime-tests-${{ matrix.artifact_arch }}.log'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-${{ matrix.artifact_arch }}'
+          if (-not (Test-Path (Join-Path $openSslRoot 'lib/libcrypto.lib'))) {
+            throw 'Prepared OpenSSL static library is missing.'
           }
-
-          & msbuild native-runtime-tests/LHash.NativeRuntimeTests/LHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:BuildProjectReferences=true /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
+          & msbuild native-runtime-tests/LHash.NativeRuntimeTests/LHash.NativeRuntimeTests.vcxproj /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:PlatformToolset=${{ matrix.toolset }} /p:BuildProjectReferences=true /p:LHashOpenSslInstallRoot=$openSslRoot 2>&1 |
             Tee-Object -FilePath $buildLogPath
+          if ($LASTEXITCODE -ne 0) { throw "Native build failed; see $buildLogPath" }
+          $exePath = '${{ matrix.executable }}'
+          if (-not (Test-Path $exePath)) { throw "Missing test executable: $exePath" }
+          & $exePath --expected-architecture ${{ matrix.platform }} --require-openssl 2>&1 | Tee-Object -FilePath $runLogPath
+          if ($LASTEXITCODE -ne 0) { throw "Native runtime tests failed; see $runLogPath" }
+          Get-Content $runLogPath | Select-Object -Last 1 | Add-Content $env:GITHUB_STEP_SUMMARY
 
-          if ($LASTEXITCODE -ne 0) {
-            throw "MSBuild failed while building LHash.NativeRuntimeTests. See artifacts/build-native-runtime-tests-x64.log for details."
+      - name: Test OpenSSL provider and digest queue
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-${{ matrix.artifact_arch }}'
+          foreach ($suite in @('openssl-provider', 'digest_queue')) {
+            $buildRoot = Join-Path $pwd "build/$suite"
+            & cmake -S "tests/$suite" -B $buildRoot -G '${{ matrix.generator }}' -A '${{ matrix.platform }}' "-DOPENSSL_ROOT_DIR=$openSslRoot" 2>&1 |
+              Tee-Object -FilePath (Join-Path $artifactRoot "$suite-configure.log")
+            if ($LASTEXITCODE -ne 0) { throw "$suite configure failed" }
+            & cmake --build $buildRoot --config Release --parallel 2>&1 |
+              Tee-Object -FilePath (Join-Path $artifactRoot "$suite-build.log")
+            if ($LASTEXITCODE -ne 0) { throw "$suite build failed" }
+            & ctest --test-dir $buildRoot -C Release -V --output-on-failure --no-tests=error --output-junit (Join-Path $artifactRoot "$suite.xml") 2>&1 |
+              Tee-Object -FilePath (Join-Path $artifactRoot "$suite-tests.log")
+            if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
 
-          $exePath = 'native-runtime-tests\LHash.NativeRuntimeTests\x64\Release\LHash.NativeRuntimeTests.exe'
-          if (-not (Test-Path $exePath)) {
-            throw 'Native runtime test executable was not produced in native-runtime-tests\\LHash.NativeRuntimeTests\\x64\\Release.'
-          }
-
-          & $exePath 2>&1 | Tee-Object -FilePath $runLogPath
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "Native runtime tests failed with exit code $LASTEXITCODE. See artifacts/run-native-runtime-tests-x64.log for details."
-          }
+      - name: Annotate test failures
+        if: failure()
+        run: python tools/report_ci_failures.py "artifacts"
 
       - name: Upload native runtime test artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: LHash-native-runtime-tests
+          name: LHash-native-runtime-tests-${{ matrix.artifact_arch }}
           path: |
-            artifacts/build-openssl-vendor-x64.log
-            artifacts/openssl-vendor-x64/*.log
-            artifacts/build-native-runtime-tests-x64.log
-            artifacts/run-native-runtime-tests-x64.log
-          if-no-files-found: warn
+            artifacts/*.log
+            artifacts/*.xml
+          if-no-files-found: error
 
   build-windows-x64:
     needs:
@@ -571,6 +603,7 @@ jobs:
     needs:
       - build-windows-x64
       - build-windows-arm64
+      - native-runtime-tests
     runs-on: ubuntu-latest
 
     steps:

@@ -7,7 +7,7 @@ public sealed class CommonSeamUnitTests
     [Fact]
     public void CoreCommonSurface_ContainsNoThreadDataLeakage()
     {
-        string commonRoot = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common");
+        string commonRoot = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common");
 
         List<string> threadDataLeakFiles = [];
         string[] candidates = Directory.GetFiles(commonRoot, "*.*", SearchOption.AllDirectories)
@@ -47,7 +47,7 @@ public sealed class CommonSeamUnitTests
 
         foreach (string relativePath in removedShimPaths)
         {
-            string fullPath = Path.Combine(RepositoryTestContext.RepoRoot, relativePath);
+            string fullPath = RepositoryTestContext.ResolveRepoPath(relativePath);
             Assert.False(File.Exists(fullPath), $"{relativePath} should be removed from Common after the MfcBridge boundary cleanup.");
         }
     }
@@ -178,7 +178,7 @@ public sealed class CommonSeamUnitTests
         string registryTypeCompat = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\HashAlgorithmType.h");
         string legacyDigestType = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ResultDigestType.h");
         string global = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashTypes.h");
-        string legacyRegistryShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashAlgorithmRegistry.h");
+        string legacyRegistryShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashAlgorithmRegistry.h");
 
         Assert.False(File.Exists(legacyRegistryShimPath));
         RepositoryTestContext.AssertContainsInOrder(
@@ -433,7 +433,7 @@ public sealed class CommonSeamUnitTests
     public void MfcHashStateAccess_OwnsDedicatedThreadDataSessionSurface()
     {
         string access = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ThreadDataAccess.h");
-        string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataAccess.h");
+        string legacyCommonShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ThreadDataAccess.h");
 
         Assert.False(File.Exists(legacyCommonShimPath));
         Assert.Contains("#include \"Adapters/MfcBridge/ThreadDataExecutionAccess.h\"", access, StringComparison.Ordinal);
@@ -542,7 +542,7 @@ public sealed class CommonSeamUnitTests
 
         foreach (string relativePath in removedPaths)
         {
-            Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, relativePath)), $"{relativePath} should be removed from the active tree.");
+            Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(relativePath)), $"{relativePath} should be removed from the active tree.");
         }
     }
 
@@ -551,7 +551,7 @@ public sealed class CommonSeamUnitTests
     {
         string hashResultSearch = RepositoryTestContext.ReadUtf8File(@"trunk\source\Common\HashResultSearch.h");
         string legacyThreadResultAccess = RepositoryTestContext.ReadUtf8File(@"trunk\source\Adapters\MfcBridge\ThreadDataResultAccess.h");
-        string legacyCommonShimPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\ThreadDataResultAccess.h");
+        string legacyCommonShimPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\ThreadDataResultAccess.h");
 
         Assert.Contains("NormalizeHashResultPathSearchText(const sunjwbase::tstring& pathText)", hashResultSearch, StringComparison.Ordinal);
         Assert.Contains("NormalizeHashResultDigestSearchText(const sunjwbase::tstring& digestText)", hashResultSearch, StringComparison.Ordinal);
@@ -587,7 +587,7 @@ public sealed class CommonSeamUnitTests
     [Fact]
     public void HashResultCompatibility_IsRemoved_AfterRealtimeAndHistoryConsumersSwitchToHashResult()
     {
-        string compatibilityPath = Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\Common\HashResultCompatibility.h");
+        string compatibilityPath = RepositoryTestContext.ResolveRepoPath(@"trunk\source\Common\HashResultCompatibility.h");
         string searchHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.h");
         string searchSource = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashSearchController.cpp");
         Assert.False(File.Exists(compatibilityPath));

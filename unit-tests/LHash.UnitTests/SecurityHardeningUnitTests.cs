@@ -11,8 +11,8 @@ public sealed class SecurityHardeningUnitTests
         string engineResult = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashEngineResult.cpp");
 
         Assert.Contains("bool isHashTargetAllowed(void *exception = NULL);", osFile, StringComparison.Ordinal);
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\OsUtils\OsFileWinAfx.cpp")));
-        Assert.False(File.Exists(Path.Combine(RepositoryTestContext.RepoRoot, @"trunk\source\OsUtils\OsFileWinUwp.cpp")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\OsUtils\OsFileWinAfx.cpp")));
+        Assert.False(File.Exists(RepositoryTestContext.ResolveRepoPath(@"trunk\source\OsUtils\OsFileWinUwp.cpp")));
 
         Assert.Contains("static const int kNoFollowFlag = O_NOFOLLOW;", osFilePosixDarwin, StringComparison.Ordinal);
         Assert.Contains("static bool TryGetPathStatus(const std::string& filePath, bool allowMissingPath, struct stat *fileStatus, bool *pathExists)", osFilePosixDarwin, StringComparison.Ordinal);
