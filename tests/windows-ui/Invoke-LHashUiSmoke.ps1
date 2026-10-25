@@ -245,5 +245,32 @@ finally {
     $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $reportRoot 'ui-smoke-results.json') -Encoding utf8
 }
 
-if ($suiteFailure) { throw $suiteFailure }
+if ($suiteFailure) {
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        function Write-GitHubUiFailure {
+            param([string]$Message)
+            if ($Message.Length -gt 3500) { $Message = $Message.Substring(0, 3500) + ' [truncated]' }
+            # Escape workflow-command data in this order; never interpolate
+            # an unescaped error or path into a public annotation command.
+            $encoded = $Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Host "::error::$encoded"
+        }
+        Write-GitHubUiFailure -Message "LHash GUI smoke: $suiteFailure"
+        foreach ($failedCase in ($results | Where-Object { -not $_.passed } | Select-Object -First 3)) {
+            $details = [ordered]@{
+                case = $failedCase.case
+                iteration = $failedCase.iteration
+                processId = $failedCase.processId
+                busyObserved = $failedCase.busyObserved
+                actionPosted = $failedCase.actionPosted
+                exitCode = $failedCase.exitCode
+                elapsedMs = $failedCase.elapsedMs
+                terminatedByTest = $failedCase.terminatedByTest
+                error = $failedCase.error
+            } | ConvertTo-Json -Compress
+            Write-GitHubUiFailure -Message $details
+        }
+    }
+    throw $suiteFailure
+}
 Write-Host "All $($results.Count) real application GUI smoke cases passed."
