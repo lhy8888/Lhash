@@ -4,6 +4,11 @@ This file only records the current maintained LHash release note. Older version
 entries have been removed, and the historical upstream release log is not
 duplicated here.
 
+## Unreleased
+
+- Update the pristine OpenSSL vendor source to 3.5.9 for Windows x64/ARM64, with the official archive SHA-256 recorded alongside the import.
+- Align build, test and release metadata with 3.5.9; validate versioned build markers before reusing local libcrypto outputs.
+
 ## 1.12.5 - 2026-05-05
 
 Patch release focused on the architecture cleanup pass, release documentation

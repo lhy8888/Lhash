@@ -124,11 +124,21 @@ $textFileNames = @(
 # Only match markers that are introduced by our local vendor integration.
 # Do not match upstream OpenSSL "lhash" implementation identifiers.
 $forbiddenPattern = '(fHash|Codex|ChatGPT|local patch|LHash vendor|LHash integration|LHash-specific)'
+# OpenSSL 3.5.9's upstream contribution guide contains this literal AI-credit
+# example. Allow only that complete line in that document; keep all other
+# local-marker checks, including ChatGPT references in other files.
+$upstreamContributingPath = Join-Path (Resolve-Path -LiteralPath $sourceRoot).ProviderPath 'CONTRIBUTING.md'
+$upstreamAssistedByExample = '        Assisted-by: ChatGPT:gpt-4o'
 $forbiddenMatches = Get-ChildItem -Path $sourceRoot -Recurse -File |
     Where-Object {
         $_.Extension -in $textExtensions -or $_.Name -in $textFileNames
     } |
-    Select-String -Pattern $forbiddenPattern
+    Select-String -Pattern $forbiddenPattern |
+    Where-Object {
+        -not ($Version -eq '3.5.9' -and
+            $_.Path -ceq $upstreamContributingPath -and
+            $_.Line -ceq $upstreamAssistedByExample)
+    }
 
 if ($null -ne $forbiddenMatches) {
     $matchSummary = $forbiddenMatches | ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" }

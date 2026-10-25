@@ -12,8 +12,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$openSslVersion = 'openssl-3.5.6'
-$openSslSourceDirectory = 'third_party\openssl\3.5.6'
+$openSslVersion = 'openssl-3.5.9'
+$openSslSourceDirectory = 'third_party\openssl\3.5.9'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $repoRoot $openSslSourceDirectory
@@ -56,7 +56,7 @@ foreach ($requiredVendorFile in $requiredVendorFiles) {
 }
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
-    $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}-{1}" -f $Platform, $Configuration)
+    $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}\{1}-{2}" -f $openSslVersion, $Platform, $Configuration)
 }
 
 if ([string]::IsNullOrWhiteSpace($CombinedLogPath)) {
@@ -102,7 +102,18 @@ function Append-OpenSslStepLog {
 
 $libPath = Join-Path $InstallRoot 'lib\libcrypto.lib'
 $pdbPath = Join-Path $InstallRoot 'lib\ossl_static.pdb'
-if ((Test-Path $libPath) -and (Test-Path $pdbPath)) {
+$configurationHeaderPath = Join-Path $InstallRoot 'include\openssl\configuration.h'
+$versionHeaderPath = Join-Path $InstallRoot 'include\openssl\opensslv.h'
+$buildIdentityPath = Join-Path $InstallRoot 'lhash-openssl-build-identity.txt'
+$buildScriptHash = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash
+$expectedBuildIdentity = '{0}|{1}|{2}|{3}' -f $openSslVersion, $Platform, $Configuration, $buildScriptHash
+$hasMatchingBuildIdentity = (Test-Path $buildIdentityPath -PathType Leaf) -and
+    (([string](Get-Content -LiteralPath $buildIdentityPath -Raw)).Trim() -eq $expectedBuildIdentity)
+
+# Older versioned libraries and incomplete installs must never satisfy this cache.
+if ($hasMatchingBuildIdentity -and
+    (Test-Path $libPath -PathType Leaf) -and (Test-Path $pdbPath -PathType Leaf) -and
+    (Test-Path $configurationHeaderPath -PathType Leaf) -and (Test-Path $versionHeaderPath -PathType Leaf)) {
     Reset-CombinedOpenSslLog -Path $CombinedLogPath
     Add-Content -Path $CombinedLogPath -Value ("Reusing existing OpenSSL vendor build at {0}" -f $InstallRoot) -Encoding UTF8
     Add-Content -Path $CombinedLogPath -Value ("OPENSSL_VENDOR_INSTALL_ROOT={0}" -f $InstallRoot) -Encoding UTF8
@@ -111,7 +122,12 @@ if ((Test-Path $libPath) -and (Test-Path $pdbPath)) {
     exit 0
 }
 elseif (Test-Path $libPath) {
-    Write-Host "Existing OpenSSL vendor build at $InstallRoot is missing ossl_static.pdb; rebuilding to restore full debug companion assets."
+    if (-not (Test-Path $pdbPath -PathType Leaf)) {
+        Write-Host "Existing OpenSSL vendor build at $InstallRoot is missing ossl_static.pdb; rebuilding to restore full debug companion assets."
+    }
+    else {
+        Write-Host "Existing OpenSSL vendor build at $InstallRoot has a different build identity or incomplete headers; rebuilding for $openSslVersion ($Platform, $Configuration)."
+    }
 }
 
 $perl = Get-Command perl -ErrorAction SilentlyContinue
@@ -224,6 +240,10 @@ function Invoke-OpenSslBuildStep {
 }
 
 try {
+    # Only a fully completed build may be reused on the next invocation.
+    if (Test-Path $buildIdentityPath) {
+        Remove-Item -LiteralPath $buildIdentityPath -Force
+    }
     Copy-Item -Path $sourceRoot -Destination $buildRoot -Recurse -Force
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
     Reset-CombinedOpenSslLog -Path $CombinedLogPath
@@ -275,7 +295,11 @@ try {
     if (-not (Test-Path $libPath)) {
         throw "OpenSSL vendor build did not produce $libPath."
     }
+    if (-not (Test-Path $versionHeaderPath)) {
+        throw "OpenSSL vendor build did not produce the public version header $versionHeaderPath."
+    }
 
+    Set-Content -LiteralPath $buildIdentityPath -Value $expectedBuildIdentity -Encoding UTF8
     Add-Content -Path $CombinedLogPath -Value "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot" -Encoding UTF8
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"
 }

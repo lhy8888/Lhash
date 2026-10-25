@@ -328,7 +328,7 @@ public sealed class SecurityHardeningUnitTests
         string workflow = RepositoryTestContext.ReadTextFile(@".github\workflows\windows-build.yml");
         string vendorTargets = RepositoryTestContext.ReadTextFile(@"NativeOpenSslVendor.targets");
         string vendorScript = RepositoryTestContext.ReadTextFile(@"trunk\build_openssl_vendor.ps1");
-        string sourceInfo = RepositoryTestContext.ReadTextFile(@"third_party\openssl\OPENSSL_3_5_6_SOURCE_INFO.txt");
+        string sourceInfo = RepositoryTestContext.ReadTextFile(@"third_party\openssl\OPENSSL_3_5_9_SOURCE_INFO.txt");
         string vendorPolicy = RepositoryTestContext.ReadTextFile(@"third_party\openssl\POLICY.md");
         string licenseException = RepositoryTestContext.ReadTextFile(@"LICENSE-OPENSSL-EXCEPTION.md");
 
@@ -392,22 +392,22 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("libcrypto.lib", vendorTargets, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
-        Assert.Contains("openssl-3.5.6", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("openssl-3.5.9", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64A", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);
         Assert.Contains("build_openssl_vendor.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("Verify pristine OpenSSL vendor source", workflow, StringComparison.Ordinal);
         Assert.Contains("tools/verify_openssl_vendor_pristine.ps1", workflow, StringComparison.Ordinal);
-        Assert.Contains("openssl_vendor_version=3.5.6", workflow, StringComparison.Ordinal);
-        Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.6", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_version=3.5.9", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.9", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
         Assert.Contains("/p:LHashOpenSslInstallRoot=$openSslRoot", workflow, StringComparison.Ordinal);
 
         Assert.Contains("OpenSSL Linking Exception", licenseException, StringComparison.Ordinal);
-        Assert.Contains("version=openssl-3.5.6", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("version=openssl-3.5.9", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("source_policy=pristine upstream tarball extraction", sourceInfo, StringComparison.Ordinal);
-        Assert.Contains("vendor_directory=third_party/openssl/3.5.6", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("vendor_directory=third_party/openssl/3.5.9", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("imported_for=LHash Windows x64/ARM64 static libcrypto vendor build", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("pristine upstream OpenSSL source tree", vendorPolicy, StringComparison.Ordinal);
         Assert.Contains("temporary build copy", vendorPolicy, StringComparison.Ordinal);

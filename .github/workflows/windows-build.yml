@@ -80,14 +80,14 @@ jobs:
       - name: Verify pristine OpenSSL vendor source
         shell: powershell
         run: |
-          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
 
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -311,8 +311,8 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
-          openssl_vendor_version=3.5.6
-          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_version=3.5.9
+          openssl_vendor_source=third_party/openssl/3.5.9
           openssl_vendor_static=true
           openssl_vendor_policy=pristine-upstream-source
           openssl_vendor_local_patches=none
@@ -359,14 +359,14 @@ jobs:
       - name: Verify pristine OpenSSL vendor source
         shell: powershell
         run: |
-          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.6
+          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
 
       - name: Restore cached OpenSSL vendor arm64
         id: restore-openssl-vendor-arm64-cache
         uses: actions/cache@v4
         with:
           path: artifacts/openssl-vendor-arm64
-          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.6/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -528,8 +528,8 @@ jobs:
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
-          openssl_vendor_version=3.5.6
-          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_version=3.5.9
+          openssl_vendor_source=third_party/openssl/3.5.9
           openssl_vendor_static=true
           openssl_vendor_policy=pristine-upstream-source
           openssl_vendor_local_patches=none
@@ -618,8 +618,8 @@ jobs:
           short_sha=$short_sha
           lhash_application_version=$app_version
           frontend=windows-mfc
-          openssl_vendor_version=3.5.6
-          openssl_vendor_source=third_party/openssl/3.5.6
+          openssl_vendor_version=3.5.9
+          openssl_vendor_source=third_party/openssl/3.5.9
           openssl_vendor_static=true
           openssl_vendor_policy=pristine-upstream-source
           openssl_vendor_local_patches=none

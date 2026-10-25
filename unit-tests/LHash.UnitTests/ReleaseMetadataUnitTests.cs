@@ -159,16 +159,16 @@ public sealed class ReleaseMetadataUnitTests
         string workflow = RepositoryTestContext.ReadUtf8File(@".github\workflows\windows-build.yml");
         string vendorTargets = RepositoryTestContext.ReadUtf8File(@"NativeOpenSslVendor.targets");
         string vendorScript = RepositoryTestContext.ReadUtf8File(@"trunk\build_openssl_vendor.ps1");
-        string sourceInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\OPENSSL_3_5_6_SOURCE_INFO.txt");
+        string sourceInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\OPENSSL_3_5_9_SOURCE_INFO.txt");
         string vendorPolicy = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\POLICY.md");
-        string vendorModules = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\external\perl\MODULES.txt");
-        string textTemplate = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\external\perl\Text-Template-1.56\lib\Text\Template.pm");
-        string textTemplatePreprocess = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm");
-        string appLink = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\ms\applink.c");
-        string appsConfig = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\apps\openssl.cnf");
-        string demosReadme = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\demos\README.txt");
-        string sslBuildInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\ssl\build.info");
-        string testBuildInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\test\build.info");
+        string vendorModules = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\external\perl\MODULES.txt");
+        string textTemplate = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\external\perl\Text-Template-1.56\lib\Text\Template.pm");
+        string textTemplatePreprocess = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\external\perl\Text-Template-1.56\lib\Text\Template\Preprocess.pm");
+        string appLink = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\ms\applink.c");
+        string appsConfig = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\apps\openssl.cnf");
+        string demosReadme = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\demos\README.txt");
+        string sslBuildInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\ssl\build.info");
+        string testBuildInfo = RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\test\build.info");
         string exceptionNote = RepositoryTestContext.ReadUtf8File(@"LICENSE-OPENSSL-EXCEPTION.md");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
 
@@ -186,8 +186,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);
         Assert.Contains("artifacts/openssl-vendor-x64/*.log", workflow, StringComparison.Ordinal);
-        Assert.Contains("openssl_vendor_version=3.5.6", workflow, StringComparison.Ordinal);
-        Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.6", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_version=3.5.9", workflow, StringComparison.Ordinal);
+        Assert.Contains("openssl_vendor_source=third_party/openssl/3.5.9", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_policy=pristine-upstream-source", workflow, StringComparison.Ordinal);
         Assert.Contains("openssl_vendor_local_patches=none", workflow, StringComparison.Ordinal);
 
@@ -205,7 +205,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.DoesNotContain("VC-WIN32", vendorScript, StringComparison.Ordinal);
         Assert.Contains("VC-WIN64-ARM", vendorScript, StringComparison.Ordinal);
         Assert.Contains("ValidateSet('x64', 'ARM64')", vendorScript, StringComparison.Ordinal);
-        Assert.Contains("openssl-3.5.6", vendorScript, StringComparison.Ordinal);
+        Assert.Contains("openssl-3.5.9", vendorScript, StringComparison.Ordinal);
         Assert.Contains("external\\perl\\MODULES.txt", vendorScript, StringComparison.Ordinal);
         Assert.Contains("configdata.pm.in", vendorScript, StringComparison.Ordinal);
         Assert.Contains("LICENSE.txt", vendorScript, StringComparison.Ordinal);
@@ -237,10 +237,10 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("'ssl'", vendorScript, StringComparison.Ordinal);
         Assert.Contains("'test'", vendorScript, StringComparison.Ordinal);
 
-        Assert.Contains("version=openssl-3.5.6", sourceInfo, StringComparison.Ordinal);
-        Assert.Contains("source=https://www.openssl.org/source/openssl-3.5.6.tar.gz", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("version=openssl-3.5.9", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("source=https://www.openssl.org/source/openssl-3.5.9.tar.gz", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("source_policy=pristine upstream tarball extraction", sourceInfo, StringComparison.Ordinal);
-        Assert.Contains("vendor_directory=third_party/openssl/3.5.6", sourceInfo, StringComparison.Ordinal);
+        Assert.Contains("vendor_directory=third_party/openssl/3.5.9", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("local_patches=none", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("imported_for=LHash Windows x64/ARM64 static libcrypto vendor build", sourceInfo, StringComparison.Ordinal);
         Assert.Contains("pristine upstream OpenSSL source tree", vendorPolicy, StringComparison.Ordinal);
@@ -254,7 +254,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("OpenSSL Demonstration Applications", demosReadme, StringComparison.Ordinal);
         Assert.Contains("SOURCE[../libssl]=", sslBuildInfo, StringComparison.Ordinal);
         Assert.Contains("$INITSRC=../ms/applink.c", testBuildInfo, StringComparison.Ordinal);
-        Assert.Contains("PATCH=6", RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.6\VERSION.dat"), StringComparison.Ordinal);
+        Assert.Contains("PATCH=9", RepositoryTestContext.ReadUtf8File(@"third_party\openssl\3.5.9\VERSION.dat"), StringComparison.Ordinal);
         Assert.Contains("OpenSSL Linking Exception", exceptionNote, StringComparison.Ordinal);
         Assert.Contains("GPL-2.0-only with an OpenSSL linking exception", readme, StringComparison.Ordinal);
     }
