@@ -184,6 +184,19 @@ static std::wstring FilePath(HANDLE file)
     return path;
 }
 
+static DWORD RemoteImageSize(HANDLE process, const void* base)
+{
+    IMAGE_DOS_HEADER dos = {};
+    SIZE_T read = 0;
+    if (!ReadProcessMemory(process, base, &dos, sizeof(dos), &read) || read != sizeof(dos) ||
+        dos.e_magic != IMAGE_DOS_SIGNATURE || dos.e_lfanew <= 0 || dos.e_lfanew > 1024 * 1024) return 0;
+    IMAGE_NT_HEADERS64 nt = {};
+    const auto* ntAddress = static_cast<const unsigned char*>(base) + dos.e_lfanew;
+    if (!ReadProcessMemory(process, ntAddress, &nt, sizeof(nt), &read) || read != sizeof(nt) ||
+        nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) return 0;
+    return nt.OptionalHeader.SizeOfImage;
+}
+
 static void Frame(HANDLE process, DWORD64 address, size_t index, Log& log, bool raw = false)
 {
     std::ostringstream text;
@@ -316,9 +329,17 @@ int wmain(int argc, wchar_t** argv)
             DWORD continuation = DBG_CONTINUE;
             if (event.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT) {
                 const auto& info = event.u.CreateProcessInfo;
-                if (symbols && SymLoadModuleExW(child.process.hProcess, nullptr, executable.c_str(), nullptr,
-                        reinterpret_cast<DWORD64>(info.lpBaseOfImage), 0, nullptr, 0) == 0)
-                    log.Write("[symbols] executable load returned 0, error=" + std::to_string(GetLastError()), true);
+                const DWORD imageSize = RemoteImageSize(child.process.hProcess, info.lpBaseOfImage);
+                if (symbols) {
+                    if (SymLoadModuleExW(child.process.hProcess, info.hFile, executable.c_str(), nullptr,
+                            reinterpret_cast<DWORD64>(info.lpBaseOfImage), imageSize, nullptr, 0) == 0)
+                        log.Write("[symbols] executable load returned 0, error=" + std::to_string(GetLastError()), true);
+                    IMAGEHLP_MODULE64 module = {};
+                    module.SizeOfStruct = sizeof(module);
+                    if (SymGetModuleInfo64(child.process.hProcess, reinterpret_cast<DWORD64>(info.lpBaseOfImage), &module))
+                        log.Write("[symbols] main PE size=" + Hex(imageSize) + " registered size=" + Hex(module.ImageSize) +
+                            " symbol type=" + std::to_string(module.SymType) + " initial TID=" + std::to_string(child.process.dwThreadId), true);
+                }
                 if (info.hFile != nullptr) CloseHandle(info.hFile);
                 if (info.hThread != child.process.hThread) CloseHandle(info.hThread);
                 if (info.hProcess != child.process.hProcess) CloseHandle(info.hProcess);
@@ -329,8 +350,8 @@ int wmain(int argc, wchar_t** argv)
             else if (event.dwDebugEventCode == LOAD_DLL_DEBUG_EVENT) {
                 const auto& info = event.u.LoadDll;
                 const auto path = FilePath(info.hFile);
-                if (symbols && !path.empty()) SymLoadModuleExW(child.process.hProcess, nullptr, path.c_str(), nullptr,
-                    reinterpret_cast<DWORD64>(info.lpBaseOfDll), 0, nullptr, 0);
+                if (symbols && !path.empty()) SymLoadModuleExW(child.process.hProcess, info.hFile, path.c_str(), nullptr,
+                    reinterpret_cast<DWORD64>(info.lpBaseOfDll), RemoteImageSize(child.process.hProcess, info.lpBaseOfDll), nullptr, 0);
                 if (info.hFile != nullptr) CloseHandle(info.hFile);
             }
             else if (event.dwDebugEventCode == UNLOAD_DLL_DEBUG_EVENT) {
