@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import sys
 
-pattern = re.compile(r"(?:fatal error|error [A-Z]+\d+|CMake Error|FAIL[: ]|FAILED|runtime error:|ERROR: AddressSanitizer)", re.I)
+pattern = re.compile(r"(?:fatal error|error [A-Z]+\d+|CMake Error|FAIL[: ]|FAILED|runtime error:|ERROR: AddressSanitizer|Exception|cannot|not found|ParserError|failed)", re.I)
 remaining = 12
 for directory in sys.argv[1:]:
     for path in sorted(Path(directory).rglob("*.log")):

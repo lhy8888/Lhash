@@ -79,9 +79,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Verify pristine OpenSSL vendor source
-        shell: powershell
+        shell: pwsh
         run: |
-          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
+          & pwsh -NoProfile -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
 
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
@@ -94,19 +94,24 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build OpenSSL vendor x64 once
-        shell: powershell
+        shell: pwsh
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
           $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
-            Tee-Object -FilePath $openSslLogPath
+          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'build-openssl-vendor-x64-console.log')
 
           if ($LASTEXITCODE -ne 0) {
             throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-x64.log for details."
           }
+
+      - name: Annotate OpenSSL build failures
+        if: failure()
+        shell: pwsh
+        run: python tools/report_ci_failures.py artifacts
 
       - name: Upload OpenSSL vendor x64 artifacts
         if: always()
@@ -114,7 +119,7 @@ jobs:
         with:
           name: LHash-openssl-vendor-x64
           path: |
-            artifacts/build-openssl-vendor-x64.log
+            artifacts/build-openssl-vendor-x64*.log
             artifacts/openssl-vendor-x64/**
           if-no-files-found: warn
 
@@ -389,9 +394,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Verify pristine OpenSSL vendor source
-        shell: powershell
+        shell: pwsh
         run: |
-          & powershell -ExecutionPolicy Bypass -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
+          & pwsh -NoProfile -File 'tools/verify_openssl_vendor_pristine.ps1' -Version 3.5.9
 
       - name: Restore cached OpenSSL vendor arm64
         id: restore-openssl-vendor-arm64-cache
@@ -404,19 +409,24 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build OpenSSL vendor arm64 once
-        shell: powershell
+        shell: pwsh
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
           $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-arm64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-arm64'
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform ARM64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
-            Tee-Object -FilePath $openSslLogPath
+          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform ARM64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'build-openssl-vendor-arm64-console.log')
 
           if ($LASTEXITCODE -ne 0) {
             throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-arm64.log for details."
           }
+
+      - name: Annotate OpenSSL build failures
+        if: failure()
+        shell: pwsh
+        run: python tools/report_ci_failures.py artifacts
 
       - name: Upload OpenSSL vendor arm64 artifacts
         if: always()
@@ -424,7 +434,7 @@ jobs:
         with:
           name: LHash-openssl-vendor-arm64
           path: |
-            artifacts/build-openssl-vendor-arm64.log
+            artifacts/build-openssl-vendor-arm64*.log
             artifacts/openssl-vendor-arm64/**
           if-no-files-found: warn
 
