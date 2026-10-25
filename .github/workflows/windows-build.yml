@@ -294,6 +294,7 @@ jobs:
           }
 
       - name: Test real Windows x64 GUI close and cancellation
+        id: windows_ui_smoke
         shell: pwsh
         timeout-minutes: 5
         run: |
@@ -306,6 +307,31 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw 'Real application GUI smoke failed. See windows-ui-smoke-x64.log and ui-smoke-results.json.'
           }
+
+      - name: Capture the failed owned GUI process stack
+        if: ${{ failure() && steps.windows_ui_smoke.outcome == 'failure' }}
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $artifactRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          $reportRoot = Join-Path $artifactRoot 'windows-ui-diagnostic-x64'
+          $buildRoot = Join-Path $env:GITHUB_WORKSPACE 'build/windows-ui-debug'
+          New-Item -ItemType Directory -Force -Path $reportRoot | Out-Null
+          & cmake -S tests/windows-ui -B $buildRoot -G 'Visual Studio 17 2022' -A x64 2>&1 |
+            Tee-Object -FilePath (Join-Path $reportRoot 'configure.log')
+          if ($LASTEXITCODE -ne 0) { throw 'GUI diagnostic driver configure failed.' }
+          & cmake --build $buildRoot --config Release --target lhash_windows_crash_driver --parallel 2>&1 |
+            Tee-Object -FilePath (Join-Path $reportRoot 'build.log')
+          if ($LASTEXITCODE -ne 0) { throw 'GUI diagnostic driver build failed.' }
+          $driver = Join-Path $buildRoot 'Release/lhash_windows_crash_driver.exe'
+          $exePath = Join-Path $env:GITHUB_WORKSPACE 'trunk/x64/Release/LHash.exe'
+          # The driver starts only its own child with a minimal environment;
+          # signing secrets from this job must not enter the captured process.
+          & $driver $exePath $reportRoot 2>&1 |
+            Tee-Object -FilePath (Join-Path $reportRoot 'run.log')
+          if ($LASTEXITCODE -ne 0) { throw 'The owned GUI diagnostic process failed; inspect crash-stack.txt and run.log.' }
+          # The preceding GUI smoke failure remains a failed job even if this
+          # diagnostic attempt exits normally. Signing and packaging stay blocked.
 
       - name: Sign Windows MFC app with PFX certificate (optional)
         if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
@@ -415,6 +441,7 @@ jobs:
             artifacts/build-windows-x64.log
             artifacts/windows-ui-smoke-x64.log
             artifacts/windows-ui-smoke-x64/**
+            artifacts/windows-ui-diagnostic-x64/**
             artifacts/windows-x64-*
             artifacts/LHash-windows-x64-*.zip
           if-no-files-found: warn

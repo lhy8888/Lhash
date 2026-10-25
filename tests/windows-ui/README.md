@@ -57,3 +57,19 @@ This is a lifecycle smoke, not a replacement for PageHeap/ASan or deterministic
 worker-barrier tests in `tests/ui_lifecycle`. A zero exit code alone cannot prove
 the absence of every memory error. No native Windows execution is implied by
 the script's availability or by Linux syntax checking.
+
+When that smoke fails, CI builds `lhash_windows_crash_driver` from this directory
+and runs it against the same x64 EXE. Its arguments are the absolute EXE path and
+the diagnostic output directory. This separate Windows Debug API process starts
+only its own child, waits for positive hashing progress, then posts `WM_CLOSE`.
+It records second-chance exceptions with up to 20 DbgHelp stack frames, using the
+EXE's adjacent PDB for function and source-line information. If an instruction
+pointer is null, raw stack candidates are explicitly labeled as unverified.
+
+The child receives only a small Windows environment allowlist and a System32
+PATH; CI signing variables and tokens are not inherited. A crash produces a
+normal/thread-information minidump, never a full-memory dump, plus the matching
+EXE/PDB when available. Diagnostics are saved in `crash-stack.txt` and safely
+escaped annotations. The driver terminates only its own child after a bounded
+timeout and removes its private 512 MiB input on all exit paths. A clean debugger
+run does not change the original smoke's failed result.
