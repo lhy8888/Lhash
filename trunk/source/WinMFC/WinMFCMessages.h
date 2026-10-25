@@ -7,9 +7,14 @@
 #ifndef WM_USER
 #define WM_USER 0x0400
 #endif
+#ifndef WM_APP
+#define WM_APP 0x8000
+#endif
 #endif
 
-#define WM_THREAD_INFO		(WM_USER + 1)
+// WM_USER + 1 is DM_SETDEFID on the dialog class. Worker notifications must
+// not consume the dialog manager's default-button messages.
+#define WM_THREAD_INFO		(WM_APP + 1)
 #define WP_WORKING			(WM_USER + 2)
 #define WP_FINISHED			(WM_USER + 3)
 #define WP_STOPPED			(WM_USER + 4)
