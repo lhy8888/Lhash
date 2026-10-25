@@ -76,10 +76,41 @@ namespace
 	}
 
 #if defined(LHASH_WITH_OPENSSL3_VENDOR)
+	struct OpenSslThreadCleanup
+	{
+		~OpenSslThreadCleanup()
+		{
+			// Static libcrypto on Windows receives no DLL_THREAD_DETACH.
+			// This guard never accesses or initializes the implementation cache.
+			OPENSSL_thread_stop();
+		}
+	};
+
+	static void RegisterOpenSslThreadCleanup()
+	{
+		// Call only after successful runtime initialization, or with a live EVP
+		// context proving it has already occurred. Local EVP owners are destroyed
+		// before this thread-exit callback.
+		static thread_local OpenSslThreadCleanup cleanup;
+		(void)cleanup;
+	}
+
+	static OSSL_LIB_CTX* CreateOpenSslLibraryContext()
+	{
+		// A nonzero initialization option is essential: OpenSSL 3.5 can return
+		// immediately for opts=0 without registering its process-exit cleanup.
+		// Register cleanup before the C++ cache destructor, so the cache dies first.
+		// This standalone checksum application does not use openssl.cnf.
+		if (OPENSSL_init_crypto(OPENSSL_INIT_NO_LOAD_CONFIG, NULL) != 1)
+			return NULL;
+		RegisterOpenSslThreadCleanup();
+		return OSSL_LIB_CTX_new();
+	}
+
 	struct OpenSslDigestImplementationCache
 	{
 		OpenSslDigestImplementationCache()
-			: libraryContext(OSSL_LIB_CTX_new()),
+			: libraryContext(CreateOpenSslLibraryContext()),
 			defaultProvider(libraryContext == NULL ? NULL : OSSL_PROVIDER_load(libraryContext, "default"))
 		{
 		}
@@ -101,7 +132,13 @@ namespace
 			}
 			if (defaultProvider != NULL)
 				OSSL_PROVIDER_unload(defaultProvider);
-			OSSL_LIB_CTX_free(libraryContext);
+			if (libraryContext != NULL)
+			{
+				OSSL_LIB_CTX_free(libraryContext);
+				// The main thread's C++ TLS destructors precede static destructors.
+				// Free TLS recreated by the cache teardown without rearming its guard.
+				OPENSSL_thread_stop();
+			}
 		}
 	};
 
@@ -119,17 +156,17 @@ namespace
 		}
 
 		OpenSslDigestImplementationCache& digestImplementationCache = GetOpenSslDigestImplementationCache();
+		if (digestImplementationCache.defaultProvider == NULL)
+		{
+			return NULL;
+		}
+		RegisterOpenSslThreadCleanup();
 		std::lock_guard<std::mutex> lock(digestImplementationCache.mutex);
 		std::unordered_map<std::string, EVP_MD*>::iterator cachedDigest =
 			digestImplementationCache.digestImplementations.find(algorithmName);
 		if (cachedDigest != digestImplementationCache.digestImplementations.end())
 		{
 			return cachedDigest->second;
-		}
-
-		if (digestImplementationCache.defaultProvider == NULL)
-		{
-			return NULL;
 		}
 
 		std::unique_ptr<EVP_MD, decltype(&EVP_MD_free)> digestImplementation(
@@ -257,6 +294,7 @@ namespace HashRuntime
 			hashContext.updateFailed = true;
 			return;
 		}
+		RegisterOpenSslThreadCleanup();
 
 		if (ShouldInjectDigestUpdateFailure() ||
 			EVP_DigestUpdate(hashContext.mdContext, data, dataLen) != 1)
@@ -287,6 +325,7 @@ namespace HashRuntime
 		}
 		// EVP_DigestFinal_ex has no capacity argument: validate before it writes.
 		// Checking finalizedBytes afterwards cannot prevent an undersized buffer.
+		RegisterOpenSslThreadCleanup();
 		if (!hashContext.xofMode && (EVP_MD_CTX_get_size(hashContext.mdContext) <= 0 ||
 			static_cast<size_t>(EVP_MD_CTX_get_size(hashContext.mdContext)) != outputBytes))
 		{
@@ -334,6 +373,7 @@ namespace HashRuntime
 
 		if (hashContext->mdContext != NULL)
 		{
+			RegisterOpenSslThreadCleanup();
 			EVP_MD_CTX_free(hashContext->mdContext);
 			hashContext->mdContext = NULL;
 		}

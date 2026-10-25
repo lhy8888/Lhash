@@ -17,29 +17,42 @@ desktop. A service-only/headless or locked desktop is an explicit failure, never
 a skipped test reported as successful. Preserve `ui-smoke-results.json` with the
 CI artifacts, including failed runs.
 
-For each of two iterations it creates a new application process with a private
-512 MiB temporary file argument, then performs:
+For each of two iterations it creates independent application processes. The
+idle control has no file argument; other cases use a private 512 MiB temporary
+file. It performs:
 
-1. `WM_CLOSE` after observing the UI's active hashing controls.
-2. A posted `WM_KEYDOWN(VK_ESCAPE)` / `WM_KEYUP` pair to the dialog thread's own
+1. An idle `WM_CLOSE` without initializing a hash worker, to distinguish dialog
+   teardown failures from hashing/OpenSSL-related exit failures.
+2. `WM_CLOSE` after observing the UI's active hashing controls **and positive
+   whole-file progress while still busy**, ensuring actual hashing/crypto use
+   rather than only the pre-launch disabled controls.
+3. A posted `WM_KEYDOWN(VK_ESCAPE)` / `WM_KEYUP` pair to the dialog thread's own
    focused child (or the dialog). This exercises the MFC modal message pump's
    `IsDialogMessage` / `OnCancel` route. If that route does not close the app, this
    case fails; there is no fallback to a different cancellation method.
-3. `WM_COMMAND(IDCANCEL)` separately, which tests the actual dialog cancellation
+4. `WM_COMMAND(IDCANCEL)` separately, which tests the actual dialog cancellation
    command without depending on keyboard focus or message preprocessing.
-4. `WM_CLOSE` immediately after discovering the main dialog, without waiting for
+5. `WM_CLOSE` immediately after discovering the main dialog, without waiting for
    the startup hashing timer. This stresses rapid launch/close; exact scheduling
    of the worker is not claimed deterministic.
 
 Each owned process has a total 10-second budget, including discovery and waiting
 for the busy state. A timeout, inability to observe busy controls, missing main
 dialog, failed PostMessage, or nonzero process exit fails the suite. On failure
-the script terminates only the process instance it just created, records that
-forced termination, and removes its own temporary input. No success is inferred
-from a forced kill.
+the script terminates only the process instance it just created and records that
+forced termination. It continues independent cases to preserve useful controls,
+but any failure still fails the entire suite. No success is inferred from a
+forced kill. Abnormal natural exits additionally wait up to 2.5 seconds for a
+PID-matched Windows Application Error event (1000), with WER event 1001 associated
+only by the exact report GUID. The module/offset/exception fields are saved and
+published as safely escaped GitHub annotations. Its own temporary input is
+removed when the suite ends.
 
-The busy check uses current resource IDs `IDC_OPEN=1003`, `IDC_FIND=1025`,
-`IDC_SETTINGS=1034`; update it if these IDs or session control behavior change.
+The three active cancellation cases all require positive progress before their
+action. The busy check uses current resource IDs `IDC_OPEN=1003`, `IDC_FIND=1025`,
+`IDC_SETTINGS=1034`, and the progress check uses `IDC_PROG_WHOLE=1014` with
+`PBM_GETPOS` through a PID-checked `SendMessageTimeout` capped at 100 ms. Update
+these checks if the resource IDs or session control behavior change.
 This is a lifecycle smoke, not a replacement for PageHeap/ASan or deterministic
 worker-barrier tests in `tests/ui_lifecycle`. A zero exit code alone cannot prove
 the absence of every memory error. No native Windows execution is implied by

@@ -95,10 +95,10 @@ if (LHASH_PROVIDER_SANITIZERS)
 endif()
 
 enable_testing()
-foreach (test_group IN ITEMS version vectors files failures lifecycle concurrent bounds isolation)
+foreach (test_group IN ITEMS version vectors files failures lifecycle concurrent bounds isolation no_config worker_exit)
     add_test(NAME "openssl_provider_${test_group}" COMMAND lhash_openssl_provider_tests "${test_group}")
     set_tests_properties("openssl_provider_${test_group}" PROPERTIES TIMEOUT 120)
 endforeach()
-set_tests_properties(openssl_provider_isolation PROPERTIES ENVIRONMENT
+set_tests_properties(openssl_provider_isolation openssl_provider_no_config PROPERTIES ENVIRONMENT
     "OPENSSL_CONF=${CMAKE_CURRENT_SOURCE_DIR}/restrictive-openssl.cnf;OPENSSL_MODULES=${CMAKE_CURRENT_BINARY_DIR}/nonexistent-provider-modules"
 )

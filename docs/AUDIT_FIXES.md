@@ -15,7 +15,7 @@
 | 路径与时间格式化 | POSIX 打开阶段防止特殊文件竞争导致阻塞，打开后检查类型和身份；时间格式化不再共享 `localtime` 静态结果 | `tests/file_integrity`；Linux wrap 注入不冒充 macOS 原生注入 |
 | Windows 输入、Shell 与资源限制 | 修正含空格程序路径引用；收紧 IPC 入口；统一数量限制，增加目录遍历预算/取消；修正剪贴板所有权和版本查询边界 | `tests/windows-inputs`；原生 Explorer/UIPI/剪贴板仍需相应平台确认 |
 | 字符串、SHA1 和编码 | SHA1 用固定偏移编码，避免重叠格式化；修正字符转换容量和失败处理、非法编码及 ctype 参数问题 | `tests/string_safety`、CLI 独立向量、provider 套件 |
-| OpenSSL 适配器 | 加强模式/长度/空参数校验、失败后状态与复用；用专用上下文隔离外部 OpenSSL 配置 | `tests/openssl-provider`，含限制性配置 fixture |
+| OpenSSL 适配器 | 加强模式/长度/空参数校验、失败后状态与复用；用专用上下文隔离外部 OpenSSL 配置；保证应用缓存先于 OpenSSL 全局清理释放，并清理静态链接库的线程资源 | `tests/openssl-provider`，含限制性配置和独立进程退出回归；实际 MFC 关闭测试 |
 | CLI 输出与算法覆盖 | 特殊文件名安全显示/JSON 编码，统一错误和数量限制；复用 Windows 的 18 个注册算法、默认选择及稳定标识 | `tests/cli/test_cli.py`、`tests/cli/test_large_file.py` |
 
 读取前后 metadata 检查用于拒绝可观察到的不稳定文件，不承诺提供文件系统快照。
@@ -54,13 +54,21 @@ artifact，不能混同于 Windows tagged release。
 本轮最后一次 Linux 集成 **ASan/UBSan CTest 17/17 通过**；关闭 vendor 和 CLI
 的基线配置 **CTest 16/16 通过**。它们使用显式 POSIX
 诊断后端验证共享逻辑；不能替代 Darwin/APFS 和 Win32/MFC 的实际行为。
-交付回归另有 **13 项 release 测试和 1 项完整性测试通过**；完整性测试包含正确树、
-修改、增加和删除四种检查。Actionlint 1.7.12、Python 语法和定向差异检查通过。
+交付回归另有 **13 项 release 测试和 2 项完整性测试通过**；完整性测试包含正确树、
+修改、增加和删除检查，以及 `core.autocrlf=true` 检出后的 5779 文件逐字节核验。
+vendor 专用 Git attributes 保留官方原始字节，包括原本采用 CRLF 的测试文件。
+Actionlint 1.7.12、Python 语法和定向差异检查通过。
 
 真实 MFC GUI 脚本已完成 PowerShell 解析及嵌入 C# 编译检查，并接入 Windows x64
 构建后、签名/打包前。它只操作自己启动的进程，检查 close、ESC/cancel 和快速
-start/close；超时或没有交互桌面都失败，不跳过后标绿，保留逐例 JSON 和日志。
+start/close 和空闲关闭；活动场景须观察到真实读取进度后再关闭/取消。
+超时或没有交互桌面都失败，不跳过后标绿，保留逐例 JSON、故障进程事件和日志。
 **本地 Linux 没有执行这些真实 Windows GUI 场景。**
+
+首次真实 MFC 回归发现哈希中关闭会以 `0xC0000005` 退出。后续退出顺序探针
+确认：仅创建私有 `OSSL_LIB_CTX` 并不足以提前注册 OpenSSL 全局退出处理，首次
+fetch 的较晚注册会让全局清理先于应用缓存析构。修复显式初始化和线程资源清理，
+并保留独立进程、实际窗口及空闲/读取中关闭对照；原生结果须核对相应修复提交。
 
 当前修复提交仍需取得以下运行证据：
 

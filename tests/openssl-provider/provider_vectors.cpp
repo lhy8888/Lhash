@@ -3,6 +3,7 @@
 #include <openssl/opensslv.h>
 #include <algorithm>
 #include <atomic>
+#include <exception>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -337,15 +338,75 @@ static void verifyConfigurationIsolation()
     std::cout << "PASS private_context_algorithms=10 external_config_and_module_path_ignored\n";
 }
 
+static void verifyNoConfigurationLoading()
+{
+    // Unlike isolation, the production adapter is the first OpenSSL user here.
+    // It must suppress the restrictive openssl.cnf before any default-context
+    // fetch. Keeping the two tests in separate processes checks both orders.
+    require(matches(digest(specs[0], "abc"), specs[0].expected[1]), "provider-first SHA256 failed");
+    EVP_MD* available = EVP_MD_fetch(nullptr, "SHA256", nullptr);
+    const bool configurationNotLoaded = available != nullptr;
+    EVP_MD_free(available);
+    require(configurationNotLoaded, "provider-first initialization loaded external configuration");
+    std::cout << "PASS provider_first_configuration_suppressed\n";
+}
+
+static void verifyWorkerFirstExit()
+{
+    // Intentionally no libcrypto use on the main thread before worker startup.
+    // Returning from this fresh process also tests static-cache teardown after
+    // Windows static-libcrypto worker TLS cleanup and main-thread TLS teardown.
+    HashRuntime::OpenSslEvpHashContext handoff;
+    const auto onWorker = [](auto action) {
+        std::exception_ptr failure;
+        std::thread worker([&] {
+            try { action(); }
+            catch (...) { failure = std::current_exception(); }
+        });
+        worker.join();
+        if (failure) std::rethrow_exception(failure);
+    };
+    onWorker([&] {
+        for (const auto& spec : specs)
+        {
+            require(matches(digest(spec, "abc"), spec.expected[1]), "worker-first digest mismatch");
+            HashRuntime::OpenSslEvpHashContext cancelled;
+            const char* names[] = { spec.name };
+            require(HashRuntime::InitializeOpenSslEvpHashContext(&cancelled, names, 1, spec.xof, spec.bytes),
+                "unfinished worker context initialization");
+            HashRuntime::UpdateOpenSslEvpHashContext(cancelled, reinterpret_cast<const unsigned char*>("abc"), 3);
+            // Cancellation destroys the active context without finalizing it.
+        }
+        const char* names[] = { "SHA256" };
+        require(HashRuntime::InitializeOpenSslEvpHashContext(&handoff, names, 1, false, 32), "handoff init");
+        HashRuntime::UpdateOpenSslEvpHashContext(handoff, reinterpret_cast<const unsigned char*>("a"), 1);
+    });
+    onWorker([&] {
+        HashRuntime::UpdateOpenSslEvpHashContext(handoff, reinterpret_cast<const unsigned char*>("bc"), 2);
+        require(matches(HashRuntime::FinalizeOpenSslEvpHashContextHex(handoff, 32), specs[0].expected[1]),
+            "different-thread update/finalize failed");
+        const char* names[] = { "SHA256" };
+        require(HashRuntime::InitializeOpenSslEvpHashContext(&handoff, names, 1, false, 32), "cleanup handoff init");
+    });
+    onWorker([&] { HashRuntime::CleanupOpenSslEvpHashContext(&handoff); });
+    require(handoff.mdContext == nullptr, "different-thread cleanup did not release context");
+    std::cout << "PASS worker_first_algorithms=10 cancelled_contexts=10 handoff_threads=3; process teardown follows\n";
+}
+
 int main(int argc, char** argv)
 {
     try
     {
+        require(argc == 2, "usage: lhash_openssl_provider_tests version|vectors|files|failures|lifecycle|concurrent|bounds|isolation|no_config|worker_exit");
+        const std::string group = argv[1];
+        if (group == "worker_exit")
+        {
+            verifyWorkerFirstExit();
+            return 0;
+        }
         const std::string version = OpenSSL_version(OPENSSL_VERSION);
         std::cout << "runtime=" << version << '\n';
         require(version.find("OpenSSL 3.5.9 ") == 0, "wrong runtime version");
-        require(argc == 2, "usage: lhash_openssl_provider_tests version|vectors|files|failures|lifecycle|concurrent|bounds|isolation");
-        const std::string group = argv[1];
         if (group == "version") std::cout << "PASS headers_and_runtime=3.5.9\n";
         else if (group == "vectors") verifyVectors();
         else if (group == "files") verifyFiles();
@@ -354,6 +415,7 @@ int main(int argc, char** argv)
         else if (group == "concurrent") verifyConcurrent();
         else if (group == "bounds") verifyInputBounds();
         else if (group == "isolation") verifyConfigurationIsolation();
+        else if (group == "no_config") verifyNoConfigurationLoading();
         else throw std::runtime_error("unknown test group: " + group);
     }
     catch (const std::exception& error)
