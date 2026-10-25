@@ -49,7 +49,7 @@ END_MESSAGE_MAP()
 
 // CFILESHASHApp 构造
 
-CFILESHASHApp::CFILESHASHApp()
+CFILESHASHApp::CFILESHASHApp() : m_exitCode(1)
 {
 	// TODO: 在此处添加构造代码，
 	// 将所有重要的初始化放置在 InitInstance 中
@@ -80,7 +80,7 @@ BOOL CFILESHASHApp::InitInstance()
 	INITCOMMONCONTROLSEX initCommonControls = { sizeof(INITCOMMONCONTROLSEX), ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_PROGRESS_CLASS };
 	InitCommonControlsEx(&initCommonControls);
 
-	CWinApp::InitInstance();
+	if (!CWinApp::InitInstance()) return FALSE;
 
 	// Register multi-lang.
 	RegisterStringsForLang(-1, new UIStringsBase());
@@ -95,7 +95,7 @@ BOOL CFILESHASHApp::InitInstance()
 			~MainWindowReset() { window = NULL; }
 		} resetMainWindow{m_pMainWnd};
 		m_pMainWnd = &dlg;
-		dlg.DoModal();
+		m_exitCode = dlg.DoModal() == -1 ? 1 : 0;
 	}))
 	{
 		AfxMessageBox(_T("Cannot initialize the Windows COM apartment."), MB_OK | MB_ICONERROR);
@@ -104,4 +104,12 @@ BOOL CFILESHASHApp::InitInstance()
 
 	// The modal dialog owns the message loop; the application should now exit.
 	return FALSE;
+}
+
+int CFILESHASHApp::ExitInstance()
+{
+	// Preserve MFC cleanup, but a modal application must not use the last
+	// dispatched message wParam (for example WP_WORKER_JOINED) as its exit code.
+	CWinApp::ExitInstance();
+	return m_exitCode;
 }

@@ -21,6 +21,10 @@ public:
 // 重写
 	public:
 	virtual BOOL InitInstance();
+	virtual int ExitInstance();
+
+private:
+	int m_exitCode;
 
 // 实现
 
