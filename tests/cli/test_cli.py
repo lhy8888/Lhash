@@ -27,11 +27,18 @@ def main():
             path = root / f"摘要 file {size}.bin"
             path.write_bytes(payload)
             result = run([path], 0)
-            lines = [line.split() for line in result.stdout.splitlines()[1:]]
-            actual = {parts[0].replace("-", "").lower(): parts[1].lower()
-                      for parts in lines if len(parts) == 2}
-            assert actual == {"md5": hashlib.md5(payload).hexdigest(),
-                              "sha1": hashlib.sha1(payload).hexdigest()}, result.stdout
+            lines = result.stdout.splitlines()
+            assert len(lines) == 3 and lines[0] == str(path), result.stdout
+            # Display labels contain spaces, e.g. "MD5 (Deprecated)".
+            # Split only before the digest and require both complete labels;
+            # silently dropping an unexpected line would conceal CLI changes.
+            actual = {}
+            for line in lines[1:]:
+                parts = line.strip().rsplit(None, 1)
+                assert len(parts) == 2 and parts[0] not in actual, result.stdout
+                actual[parts[0]] = parts[1].lower()
+            assert actual == {"MD5 (Deprecated)": hashlib.md5(payload).hexdigest(),
+                              "SHA1 (Deprecated)": hashlib.sha1(payload).hexdigest()}, result.stdout
             assert not result.stderr, result.stderr
         missing = root / "missing.bin"
         assert "ERROR:" in run([missing], 1).stderr
