@@ -224,7 +224,30 @@ function Invoke-OpenSslBuildStep {
         Remove-Item $stderrLogPath -Force
     }
 
-    $process = Start-Process -FilePath 'cmd.exe' -ArgumentList '/d', '/s', '/c', "`"$commandScriptPath`"" -NoNewWindow -Wait -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $stderrLogPath
+    $stepTimer = [System.Diagnostics.Stopwatch]::StartNew()
+    Write-Host "Starting OpenSSL vendor $StepName ($Platform)."
+    $process = Start-Process -FilePath 'cmd.exe' -ArgumentList '/d', '/s', '/c', "`"$commandScriptPath`"" -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $stderrLogPath
+    # Start-Process -Wait waits for every descendant on Windows, including
+    # compiler helper processes that can outlive a completed nmake command.
+    # The command script runs each build command synchronously. Wait for that
+    # command, and keep its handle open so PS 5.1 can still retrieve ExitCode.
+    [void]$process.Handle
+    while (-not $process.WaitForExit(30000)) {
+        $progressMessage = "OpenSSL vendor $StepName ($Platform): command still running after $([int]$stepTimer.Elapsed.TotalSeconds)s."
+        if ($env:GITHUB_ACTIONS -eq 'true') {
+            Write-Host "::notice::$progressMessage"
+        }
+        else {
+            Write-Host $progressMessage
+        }
+        if (Test-Path $LogPath) {
+            Get-Content -LiteralPath $LogPath -Tail 1 | Write-Host
+        }
+    }
+    $process.WaitForExit()
+    $process.Refresh()
+    $stepTimer.Stop()
+    Write-Host "Finished OpenSSL vendor $StepName ($Platform) in $([int]$stepTimer.Elapsed.TotalSeconds)s; exit code $($process.ExitCode)."
 
     if (Test-Path $stderrLogPath) {
         if (-not (Test-Path $LogPath)) {
