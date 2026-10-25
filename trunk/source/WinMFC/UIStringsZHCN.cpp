@@ -78,6 +78,11 @@ UIStringsZHCN::UIStringsZHCN()
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("验证");
+	m_stringsMap[_T("MAINDLG_VERIFY_INVALID")] = _T("请输入完整的十六进制校验值，不接受部分前缀。");
+	m_stringsMap[_T("MAINDLG_COPY_FAILED")] = _T("无法将结果复制到剪贴板，请重试。");
+	m_stringsMap[_T("MAINDLG_EXPORT_FAILED")] = _T("无法导出结果，请检查文件名、文本编码和可用磁盘空间。");
+	m_stringsMap[_T("MAINDLG_WORKER_START_FAILED")] = _T("无法启动计算，请重试。");
+	m_stringsMap[_T("MAINDLG_WORKER_FAILED")] = _T("计算未能完成，请重试。");
 
 	// About Dialog Strings
 	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("关于 LHash");

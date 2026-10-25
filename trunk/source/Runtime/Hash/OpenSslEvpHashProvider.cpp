@@ -5,6 +5,7 @@
 #endif
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -15,6 +16,7 @@
 #if defined(LHASH_WITH_OPENSSL3_VENDOR)
 #include <openssl/core_names.h>
 #include <openssl/params.h>
+#include <openssl/provider.h>
 #endif
 
 namespace
@@ -76,8 +78,18 @@ namespace
 #if defined(LHASH_WITH_OPENSSL3_VENDOR)
 	struct OpenSslDigestImplementationCache
 	{
+		OpenSslDigestImplementationCache()
+			: libraryContext(OSSL_LIB_CTX_new()),
+			defaultProvider(libraryContext == NULL ? NULL : OSSL_PROVIDER_load(libraryContext, "default"))
+		{
+		}
+
 		std::mutex mutex;
 		std::unordered_map<std::string, EVP_MD*> digestImplementations;
+		// A private context does not load the process's openssl.cnf. The builtin
+		// default provider supplies every digest exposed by Lhash.
+		OSSL_LIB_CTX *libraryContext;
+		OSSL_PROVIDER *defaultProvider;
 
 		~OpenSslDigestImplementationCache()
 		{
@@ -87,6 +99,9 @@ namespace
 			{
 				EVP_MD_free(itr->second);
 			}
+			if (defaultProvider != NULL)
+				OSSL_PROVIDER_unload(defaultProvider);
+			OSSL_LIB_CTX_free(libraryContext);
 		}
 	};
 
@@ -112,19 +127,31 @@ namespace
 			return cachedDigest->second;
 		}
 
-		EVP_MD *digestImplementation = EVP_MD_fetch(NULL, algorithmName, NULL);
-		if (digestImplementation != NULL)
+		if (digestImplementationCache.defaultProvider == NULL)
 		{
-			digestImplementationCache.digestImplementations[algorithmName] = digestImplementation;
+			return NULL;
 		}
 
-		return digestImplementation;
+		std::unique_ptr<EVP_MD, decltype(&EVP_MD_free)> digestImplementation(
+			EVP_MD_fetch(digestImplementationCache.libraryContext, algorithmName, "provider=default"),
+			&EVP_MD_free);
+		if (!digestImplementation)
+		{
+			return NULL;
+		}
+		digestImplementationCache.digestImplementations.emplace(algorithmName, digestImplementation.get());
+		return digestImplementation.release();
 	}
 #endif
 }
 
 namespace HashRuntime
 {
+	OpenSslEvpHashContext::~OpenSslEvpHashContext()
+	{
+		CleanupOpenSslEvpHashContext(this);
+	}
+
 	bool InitializeOpenSslEvpHashContext(
 		OpenSslEvpHashContext *hashContext,
 		const char *const *algorithmNames,
@@ -140,12 +167,17 @@ namespace HashRuntime
 		(void)digestOutputBytes;
 		return false;
 #else
-		if (hashContext == NULL || algorithmNames == NULL || algorithmNameCount == 0)
+		if (hashContext == NULL)
 		{
 			return false;
 		}
 
 		CleanupOpenSslEvpHashContext(hashContext);
+		if (algorithmNames == NULL || algorithmNameCount == 0 || digestOutputBytes == 0 ||
+			digestOutputBytes > std::string().max_size() / 2)
+		{
+			return false;
+		}
 		for (size_t algorithmIndex = 0; algorithmIndex < algorithmNameCount; ++algorithmIndex)
 		{
 			const char *algorithmName = algorithmNames[algorithmIndex];
@@ -156,6 +188,15 @@ namespace HashRuntime
 
 			EVP_MD *digestImplementation = GetCachedDigestImplementation(algorithmName);
 			if (digestImplementation == NULL)
+			{
+				continue;
+			}
+			if (((EVP_MD_get_flags(digestImplementation) & EVP_MD_FLAG_XOF) != 0) != xofMode)
+			{
+				continue;
+			}
+			if (!xofMode && (EVP_MD_get_size(digestImplementation) <= 0 ||
+				static_cast<size_t>(EVP_MD_get_size(digestImplementation)) != digestOutputBytes))
 			{
 				continue;
 			}
@@ -181,6 +222,12 @@ namespace HashRuntime
 				EVP_MD_CTX_free(mdContext);
 				continue;
 			}
+			if (!xofMode && (EVP_MD_CTX_get_size(mdContext) <= 0 ||
+				static_cast<size_t>(EVP_MD_CTX_get_size(mdContext)) != resolvedDigestOutputBytes))
+			{
+				EVP_MD_CTX_free(mdContext);
+				continue;
+			}
 
 			hashContext->mdContext = mdContext;
 			hashContext->mdImplementation = digestImplementation;
@@ -201,8 +248,13 @@ namespace HashRuntime
 			return;
 		}
 
-		if (hashContext.mdContext == NULL || data == NULL || dataLen == 0)
+		if (dataLen == 0)
 		{
+			return;
+		}
+		if (hashContext.mdContext == NULL || data == NULL)
+		{
+			hashContext.updateFailed = true;
 			return;
 		}
 
@@ -226,7 +278,17 @@ namespace HashRuntime
 		(void)outputBytes;
 		return finalizeResult;
 #else
-		if (hashContext.updateFailed || hashContext.mdContext == NULL || hashContext.mdImplementation == NULL || outputBytes == 0)
+		if (hashContext.updateFailed || hashContext.mdContext == NULL || hashContext.mdImplementation == NULL ||
+			outputBytes == 0 || outputBytes != hashContext.digestOutputBytes ||
+			outputBytes > std::string().max_size() / 2)
+		{
+			CleanupOpenSslEvpHashContext(&hashContext);
+			return finalizeResult;
+		}
+		// EVP_DigestFinal_ex has no capacity argument: validate before it writes.
+		// Checking finalizedBytes afterwards cannot prevent an undersized buffer.
+		if (!hashContext.xofMode && (EVP_MD_CTX_get_size(hashContext.mdContext) <= 0 ||
+			static_cast<size_t>(EVP_MD_CTX_get_size(hashContext.mdContext)) != outputBytes))
 		{
 			CleanupOpenSslEvpHashContext(&hashContext);
 			return finalizeResult;

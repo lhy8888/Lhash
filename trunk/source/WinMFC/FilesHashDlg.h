@@ -32,12 +32,15 @@ class CFilesHashDlg : public CDialog
 {
 public:
 	CFilesHashDlg(CWnd* pParent = NULL);
+	virtual ~CFilesHashDlg();
 	enum { IDD = IDD_MAIN_DIALOG };
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
 
 	virtual BOOL OnInitDialog();
+	virtual void OnCancel();
+	virtual void OnOK();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()

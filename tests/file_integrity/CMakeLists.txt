@@ -1,0 +1,13 @@
+if (UNIX)
+    find_package(Threads REQUIRED)
+    add_executable(lhash_file_integrity file_integrity_tests.cpp)
+    target_link_libraries(lhash_file_integrity PRIVATE lhash_core Threads::Threads)
+    target_compile_definitions(lhash_file_integrity PRIVATE LHASH_CORE_BUILD=1)
+    target_include_directories(lhash_file_integrity BEFORE PRIVATE
+        "${PROJECT_SOURCE_DIR}/cmake/posix-stubs")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_options(lhash_file_integrity PRIVATE "-Wl,--wrap=read" "-Wl,--wrap=lstat")
+    endif()
+    add_test(NAME lhash_file_integrity COMMAND lhash_file_integrity)
+    set_tests_properties(lhash_file_integrity PROPERTIES TIMEOUT 60)
+endif()

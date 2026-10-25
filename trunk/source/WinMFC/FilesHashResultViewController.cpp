@@ -7,6 +7,8 @@
 #include "Adapters/MfcBridge/ThreadDataResultAccess.h"
 #include "FilesHashSearchController.h"
 #include "WindowsUtils.h"
+#include "WinCommon/WindowsStrings.h"
+#include <mutex>
 
 using namespace sunjwbase;
 
@@ -29,13 +31,12 @@ void FilesHashResultViewController::ShowInitialInfo(LPCTSTR initInfo)
 		return;
 	}
 
-	m_mainMutex->lock();
 	{
+		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->ClearTextBuffer();
 		m_mainEdit->AppendTextToBuffer(initInfo);
 		m_mainEdit->ShowTextBuffer();
 	}
-	m_mainMutex->unlock();
 }
 
 void FilesHashResultViewController::ClearResults(ThreadData& threadData)
@@ -45,13 +46,12 @@ void FilesHashResultViewController::ClearResults(ThreadData& threadData)
 		return;
 	}
 
-	m_mainMutex->lock();
 	{
+		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->ClearTextBuffer();
 		ClearThreadDataResults(threadData);
 		m_mainEdit->ShowTextBuffer();
 	}
-	m_mainMutex->unlock();
 }
 
 void FilesHashResultViewController::RefreshMainText(BOOL scrollToEnd /*= TRUE*/)
@@ -61,8 +61,8 @@ void FilesHashResultViewController::RefreshMainText(BOOL scrollToEnd /*= TRUE*/)
 		return;
 	}
 
-	m_mainMutex->lock();
 	{
+		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		if (scrollToEnd)
 		{
 			m_mainEdit->ShowTextBufferScrollEnd();
@@ -72,7 +72,6 @@ void FilesHashResultViewController::RefreshMainText(BOOL scrollToEnd /*= TRUE*/)
 			m_mainEdit->ShowTextBuffer();
 		}
 	}
-	m_mainMutex->unlock();
 }
 
 void FilesHashResultViewController::RebuildCurrentViewPreservingScroll(FilesHashSearchController& searchController)
@@ -106,12 +105,11 @@ void FilesHashResultViewController::AppendLineBreakAndScrollEnd()
 		return;
 	}
 
-	m_mainMutex->lock();
 	{
+		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->AppendTextToBuffer(_T("\r\n"));
 		m_mainEdit->ShowTextBufferScrollEnd();
 	}
-	m_mainMutex->unlock();
 }
 
 void FilesHashResultViewController::ShowHyperEditMenu(CWnd* ownerWnd)
@@ -206,7 +204,10 @@ void FilesHashResultViewController::CopyLastHyperlink() const
 		return;
 	}
 
-	WindowsUtils::CopyCString(m_mainEdit->GetLastHyperlink());
+	if (!WindowsUtils::CopyCString(m_mainEdit->GetLastHyperlink(), m_mainEdit->GetSafeHwnd()))
+	{
+		AfxMessageBox(GetStringByKey(MAINDLG_COPY_FAILED), MB_OK | MB_ICONERROR);
+	}
 }
 
 void FilesHashResultViewController::CopyAllResults() const
@@ -216,7 +217,11 @@ void FilesHashResultViewController::CopyAllResults() const
 		return;
 	}
 
-	WindowsUtils::CopyCString(m_mainEdit->GetTextBuffer());
+	const CString text = GetCurrentText();
+	if (!WindowsUtils::CopyCString(text, m_mainEdit->GetSafeHwnd()))
+	{
+		AfxMessageBox(GetStringByKey(MAINDLG_COPY_FAILED), MB_OK | MB_ICONERROR);
+	}
 }
 
 CString FilesHashResultViewController::GetCurrentText() const
@@ -227,15 +232,14 @@ CString FilesHashResultViewController::GetCurrentText() const
 	}
 
 	CString currentText;
-	m_mainMutex->lock();
 	{
+		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		currentText = m_mainEdit->GetTextBuffer();
 		if (currentText.IsEmpty())
 		{
 			m_mainEdit->GetWindowText(currentText);
 		}
 	}
-	m_mainMutex->unlock();
 
 	return currentText;
 }

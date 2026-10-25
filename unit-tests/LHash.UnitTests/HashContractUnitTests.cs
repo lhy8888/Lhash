@@ -172,7 +172,7 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
-    public void HashFileVersionResolver_UsesOpenedHandleAndBuildListsIncludeFileVersionHelper()
+    public void HashFileVersionResolver_DelegatesToBoundedWindowsVersionApi()
     {
         string fileVersionResolver = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashFileVersionResolver.cpp");
         string nativeCoreProject = RepositoryTestContext.ReadTextFile(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
@@ -186,6 +186,9 @@ public sealed class HashContractUnitTests
         Assert.Contains("ShouldResolveWindowsFileVersion(path)", windowsBranch, StringComparison.Ordinal);
         Assert.Contains("WindowsComm::FileVersionHelper fileVersionHelper(osFile);", windowsBranch, StringComparison.Ordinal);
         Assert.Contains("return fileVersionHelper.Find();", windowsBranch, StringComparison.Ordinal);
+        string versionHelper = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\FileVersionHelper.cpp");
+        Assert.Contains("GetExeFileVersion", versionHelper, StringComparison.Ordinal);
+        Assert.DoesNotContain("FindVsFixedFileInfo", versionHelper, StringComparison.Ordinal);
         Assert.DoesNotContain("WindowsComm::GetExeFileVersion((TCHAR *)path);", windowsBranch, StringComparison.Ordinal);
         Assert.DoesNotContain("(void)osFile;", windowsBranch, StringComparison.Ordinal);
         Assert.Contains("FileVersionHelper.cpp", nativeCoreProject, StringComparison.Ordinal);
@@ -258,16 +261,18 @@ public sealed class HashContractUnitTests
     }
 
     [Fact]
-    public void MacOsCliMvp_IsAnEngineValidationArtifact_NotAFeatureCompleteEndUserCli()
+    public void MacOsCli_UsesSharedAlgorithmsAndRequiresThePinnedVendorBackend()
     {
         string cliMain = RepositoryTestContext.ReadTextFile(@"trunk\cli\main.cpp");
         string macosCoreSupport = RepositoryTestContext.ReadTextFile(@"docs\MACOS_CORE_SUPPORT.md");
-        string coreBuild = RepositoryTestContext.ReadTextFile(@"docs\CORE_BUILD.md");
-
-        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", cliMain, StringComparison.Ordinal);
-        Assert.Contains("engine validation artifact built on the same core entry point", macosCoreSupport, StringComparison.Ordinal);
-        Assert.Contains("engine validation surface", macosCoreSupport, StringComparison.Ordinal);
-        Assert.Contains("engine validation artifact, not a feature-complete end-user CLI", coreBuild, StringComparison.Ordinal);
+        string cmake = RepositoryTestContext.ReadTextFile("CMakeLists.txt");
+        Assert.Contains("GetRegisteredHashAlgorithmDescriptors()", cliMain, StringComparison.Ordinal);
+        Assert.Contains("descriptor.enabledByDefault", cliMain, StringComparison.Ordinal);
+        Assert.Contains("--list-algorithms", cliMain, StringComparison.Ordinal);
+        Assert.Contains("--all", cliMain, StringComparison.Ordinal);
+        Assert.Contains("--json", cliMain, StringComparison.Ordinal);
+        Assert.Contains("LHASH_BUILD_CLI AND NOT LHASH_ENABLE_OPENSSL_VENDOR", cmake, StringComparison.Ordinal);
+        Assert.Contains("18", macosCoreSupport, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -422,7 +427,9 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("#include \"Common/ThreadDataExecutionAccess.h\"", threadEntry, StringComparison.Ordinal);
         Assert.Contains("return RunMfcHashThread(param);", threadEntry, StringComparison.Ordinal);
         Assert.Contains("#include \"Common/PlatformCompat.h\"", threadEntryHeader, StringComparison.Ordinal);
-        Assert.Contains("HashRequest request = CreateThreadDataHashRequest(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        Assert.Contains("const HashRequest& request = launchContext->request;", legacyThreadEntryRuntime, StringComparison.Ordinal);
+        string launchContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\HashThreadLaunchContext.h");
+        Assert.Contains("request(CreateThreadDataHashRequest(state))", launchContext, StringComparison.Ordinal);
         Assert.Contains("HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);", legacyThreadEntryRuntime, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashExecutionContext(ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
         Assert.Contains("CreateThreadDataHashRequest(const ThreadData& threadData)", threadEntryBridge, StringComparison.Ordinal);
@@ -837,7 +844,7 @@ public sealed class HashContractUnitTests
         string registryCore = RepositoryTestContext.ReadTextFile(@"trunk\source\Domain\HashAlgorithmRegistryCore.h");
         string digestRegistry = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestOperationRegistry.cpp");
 
-        Assert.Contains("if (cchver == 0)", windowsComm, StringComparison.Ordinal);
+        Assert.Contains("if (cchver == 0 || cchver > 16u * 1024u * 1024u)", windowsComm, StringComparison.Ordinal);
         Assert.Contains("std::vector<BYTE> pver(cchver, 0);", windowsComm, StringComparison.Ordinal);
         Assert.Contains("uLen < sizeof(VS_FIXEDFILEINFO)", windowsComm, StringComparison.Ordinal);
         Assert.Contains("bool IsWindowsVistaOrGreater()", windowsComm, StringComparison.Ordinal);
@@ -860,19 +867,16 @@ public sealed class HashContractUnitTests
         Assert.Contains("return sawTerminator;", inputController, StringComparison.Ordinal);
         Assert.Contains("parameters.size() > kMaxHashFilesPerSession", inputController, StringComparison.Ordinal);
         Assert.Contains("return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession, true, parameters.size());", inputController, StringComparison.Ordinal);
-        Assert.Contains("scanOutcome.truncated = truncated;", inputController, StringComparison.Ordinal);
-        Assert.Contains("std::deque<sunjwbase::tstring> pendingFolders;", inputController, StringComparison.Ordinal);
+        Assert.Contains("budget.VisitEntry()", inputController, StringComparison.Ordinal);
+        Assert.Contains("progress->HasUserCancelled()", inputController, StringComparison.Ordinal);
+        Assert.Contains("FileLoadResult::EnumerationLimit", inputController, StringComparison.Ordinal);
+        Assert.Contains("std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", inputController, StringComparison.Ordinal);
 
         Assert.Contains("bool DispatchFileLoadOutcome(", messageControllerHeader, StringComparison.Ordinal);
         Assert.Contains("BOOL HandleCopyData(", messageControllerHeader, StringComparison.Ordinal);
-        Assert.Contains("static bool IsTrustedCopyDataSender(const CWnd* pSenderWnd);", messageControllerHeader, StringComparison.Ordinal);
-        Assert.Contains("IsTrustedCopyDataSender(pSenderWnd)", messageController, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsTrustedCopyDataSender", messageControllerHeader + messageController, StringComparison.Ordinal);
+        Assert.Contains("WindowsUtils::CanAcceptUntrustedFileInput()", messageController, StringComparison.Ordinal);
         Assert.Contains("DispatchFileLoadOutcome(", messageController, StringComparison.Ordinal);
-        Assert.Contains("QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable)", messageController, StringComparison.Ordinal);
-        Assert.Contains("GetTrustedExplorerImagePath()", messageController, StringComparison.Ordinal);
-        Assert.Contains("GetCurrentExecutableImagePath()", messageController, StringComparison.Ordinal);
-        Assert.Contains("_tcsicmp(senderImagePath.c_str(), trustedExplorerPath.c_str()) == 0", messageController, StringComparison.Ordinal);
-        Assert.Contains("_tcsicmp(senderImagePath.c_str(), currentExecutablePath.c_str()) == 0", messageController, StringComparison.Ordinal);
         Assert.Contains("m_hashMessageController.HandleCopyData(", dialog, StringComparison.Ordinal);
 
         Assert.Contains("GetHashAlgorithmDescriptorRegistryMutex()", registryCore, StringComparison.Ordinal);

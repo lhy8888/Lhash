@@ -88,23 +88,32 @@ namespace HashEngineInternal
 	void UpdateDigestContextsParallel(const DigestUpdateRequest& digestUpdateRequest, FileHashContexts& hashContexts, unsigned char *data, unsigned int dataLen, ThreadPool *threadPool)
 	{
 		std::vector<std::future<void>> digestUpdateTasks;
-
-		VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)
-		{
-			if (operationDescriptor.updateAction == NULL)
-			{
-				return true;
-			}
-
-			digestUpdateTasks.push_back(threadPool->enqueue([&hashContexts, data, dataLen, operationDescriptor]()
-			{
-				operationDescriptor.updateAction(hashContexts, data, dataLen);
-			}));
-
-			return true;
-		});
-
+		// Once an update is dispatched, its buffer and contexts must stay alive
+		// until it finishes, even if dispatching a subsequent update fails.
+		digestUpdateTasks.reserve(digestUpdateRequest.operationDescriptors.size());
 		std::exception_ptr firstException;
+
+		try
+		{
+			VisitDigestUpdateRequestOperations(digestUpdateRequest, [&](const HashDigestOperationDescriptor& operationDescriptor)
+			{
+				if (operationDescriptor.updateAction == NULL)
+				{
+					return true;
+				}
+
+				digestUpdateTasks.push_back(threadPool->enqueue([&hashContexts, data, dataLen, operationDescriptor]()
+				{
+					operationDescriptor.updateAction(hashContexts, data, dataLen);
+				}));
+
+				return true;
+			});
+		}
+		catch (...)
+		{
+			firstException = std::current_exception();
+		}
 
 		for (size_t taskIndex = 0; taskIndex < digestUpdateTasks.size(); ++taskIndex)
 		{

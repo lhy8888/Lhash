@@ -28,8 +28,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", draft, StringComparison.Ordinal);
-        Assert.Contains("macOS CLI MVP Build workflow", readme, StringComparison.Ordinal);
-        Assert.Contains("macOS CLI MVP Build workflow", draft, StringComparison.Ordinal);
+        Assert.Contains("macOS CLI Build workflow", readme, StringComparison.Ordinal);
+        Assert.Contains("macOS CLI Build workflow", draft, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -93,21 +93,22 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("pattern: LHash-windows-*", workflow, StringComparison.Ordinal);
         Assert.Contains("merge-multiple: true", workflow, StringComparison.Ordinal);
         Assert.Contains("Stage release rehearsal bundle", workflow, StringComparison.Ordinal);
-        Assert.Contains("release_mode=\"rehearsal\"", workflow, StringComparison.Ordinal);
-        Assert.Contains("release_mode=\"tagged-release\"", workflow, StringComparison.Ordinal);
-        Assert.Contains("RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
-        Assert.Contains("lhash_application_version=$app_version", workflow, StringComparison.Ordinal);
-        Assert.Contains("Expected packaged Windows ARM64 release zip was not downloaded into release-assets.", workflow, StringComparison.Ordinal);
-        Assert.Contains("windows_arm64=$(basename $(ls \"$artifact_root\"/LHash-windows-arm64-*.zip | head -n 1))", workflow, StringComparison.Ordinal);
+        Assert.Contains("Checkout the exact build commit for release metadata", workflow, StringComparison.Ordinal);
+        Assert.Contains("tools/release_assets.py stage", workflow, StringComparison.Ordinal);
+        Assert.Contains("tools/release_assets.py finalize", workflow, StringComparison.Ordinal);
+        Assert.Contains("sha256sum --check SHA256SUMS.txt", workflow, StringComparison.Ordinal);
         Assert.Contains("LHash-release-rehearsal", workflow, StringComparison.Ordinal);
-        Assert.Contains("tar -czf \"$PWD/LHash-release-rehearsal-$short_sha.tar.gz\"", workflow, StringComparison.Ordinal);
-        Assert.Contains("if: startsWith(github.ref, 'refs/tags/v')", workflow, StringComparison.Ordinal);
-        Assert.Contains("softprops/action-gh-release@v2", workflow, StringComparison.Ordinal);
-        Assert.Contains("release-assets/LHash-windows-x64-*.zip", workflow, StringComparison.Ordinal);
-        Assert.Contains("release-assets/LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/LHash-windows-x64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/SHA256SUMS.txt", workflow, StringComparison.Ordinal);
-        Assert.Contains("shasum -a 256 LHash-windows-x64-*.zip LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("subject-path: release-staging/LHash-windows-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Matches(@"softprops/action-gh-release@[0-9a-f]{40}", workflow);
+        Assert.Matches(@"actions/attest-build-provenance@[0-9a-f]{40}", workflow);
+        Assert.Matches(@"actions/attest-sbom@[0-9a-f]{40}", workflow);
+        string releaseTool = RepositoryTestContext.ReadUtf8File(@"tools\release_assets.py");
+        Assert.Contains("lhash_application_version", releaseTool, StringComparison.Ordinal);
+        Assert.Contains("Refusing to overwrite an existing authoritative checksum manifest", releaseTool, StringComparison.Ordinal);
         Assert.DoesNotContain("artifacts/winui-x64-*", workflow, StringComparison.Ordinal);
     }
 
@@ -181,7 +182,7 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Verify pristine OpenSSL vendor source", workflow, StringComparison.Ordinal);
         Assert.Contains("tools/verify_openssl_vendor_pristine.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
+        Assert.Matches(@"actions/cache@[0-9a-f]{40}", workflow);
         Assert.Contains("name: LHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("-CombinedLogPath $openSslLogPath", workflow, StringComparison.Ordinal);

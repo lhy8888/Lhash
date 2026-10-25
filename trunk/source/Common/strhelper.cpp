@@ -10,7 +10,8 @@
  */
 #include "stdafx.h"
 
-#include <math.h>
+#include <climits>
+#include <cctype>
 #include <string>
 
 #if defined (_WIN32)
@@ -37,28 +38,38 @@ namespace sunjwbase
 	// Windows convert
 	static std::string _wstrtostr(const std::wstring& wstr, UINT codePage)
 	{
-		// Convert a wstring to a specified code page encoded string
-		size_t strLen = WideCharToMultiByte(codePage, 0, wstr.c_str(), (int)wstr.length(), NULL, 0, NULL, NULL);
-		std::string strTo;
-		char *szTo = new char[strLen + 1];
-		szTo[strLen] = '\0';
-		WideCharToMultiByte(codePage, 0, wstr.c_str(), -1, szTo, (int)strLen, NULL, NULL);
-		strTo = szTo;
-		delete[] szTo;
-		return strTo;
+		if (wstr.empty() || wstr.size() > static_cast<size_t>(INT_MAX))
+			return std::string();
+
+		const int inputLength = static_cast<int>(wstr.size());
+		const DWORD flags = codePage == CP_UTF8 ? WC_ERR_INVALID_CHARS : 0;
+		const int outputLength = WideCharToMultiByte(codePage, flags, wstr.data(), inputLength, NULL, 0, NULL, NULL);
+		if (outputLength <= 0)
+			return std::string();
+
+		std::string result(static_cast<size_t>(outputLength), '\0');
+		if (WideCharToMultiByte(codePage, flags, wstr.data(), inputLength,
+			&result[0], outputLength, NULL, NULL) != outputLength)
+			return std::string();
+		return result;
 	}
 
 	static std::wstring _strtowstr(const std::string& str, UINT codePage)
 	{
-		// Convert a specified code page encoded string to a wstring
-		size_t wstrLen = MultiByteToWideChar(codePage, 0, str.c_str(), -1, NULL, 0);
-		std::wstring wstrTo;
-		wchar_t *wszTo = new wchar_t[wstrLen + 1];
-		wszTo[wstrLen] = L'\0';
-		MultiByteToWideChar(codePage, 0, str.c_str(), -1, wszTo, (int)wstrLen);
-		wstrTo = wszTo;
-		delete[] wszTo;
-		return wstrTo;
+		if (str.empty() || str.size() > static_cast<size_t>(INT_MAX))
+			return std::wstring();
+
+		const int inputLength = static_cast<int>(str.size());
+		const DWORD flags = codePage == CP_UTF8 ? MB_ERR_INVALID_CHARS : 0;
+		const int outputLength = MultiByteToWideChar(codePage, flags, str.data(), inputLength, NULL, 0);
+		if (outputLength <= 0)
+			return std::wstring();
+
+		std::wstring result(static_cast<size_t>(outputLength), L'\0');
+		if (MultiByteToWideChar(codePage, flags, str.data(), inputLength,
+			&result[0], outputLength) != outputLength)
+			return std::wstring();
+		return result;
 	}
 #endif
 }
@@ -66,12 +77,25 @@ namespace sunjwbase
 #if defined (__APPLE__) || defined (__unix)
 namespace
 {
+	static bool ContainsOnlyUnicodeScalars(const std::wstring& input)
+	{
+		for (wchar_t value : input)
+		{
+			if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF))
+				return false;
+		}
+		return true;
+	}
+
 	static std::string ConvertWideToUtf8(const std::wstring& input)
 	{
+		if (!ContainsOnlyUnicodeScalars(input))
+			return std::string();
 		try
 		{
 			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-			return converter.to_bytes(input);
+			std::string result = converter.to_bytes(input);
+			return converter.converted() == input.size() ? result : std::string();
 		}
 		catch (const std::range_error&)
 		{
@@ -84,7 +108,8 @@ namespace
 		try
 		{
 			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-			return converter.from_bytes(input);
+			std::wstring result = converter.from_bytes(input);
+			return converter.converted() == input.size() && ContainsOnlyUnicodeScalars(result) ? result : std::wstring();
 		}
 		catch (const std::range_error&)
 		{
@@ -196,48 +221,6 @@ std::wstring sunjwbase::strtowstr(const std::string& str)
 #endif
 }
 
-std::string sunjwbase::asciiconvjson(std::string& strJsonUtf16)
-{
-	std::wstring wstrTemp;
-
-	std::string::size_type i = 0;
-	for (; i + 5 < strJsonUtf16.length(); ++i)
-	{
-		if (strJsonUtf16[i] == '\\' &&
-			strJsonUtf16[i + 1] == 'u')
-		{
-			char n[4];
-			n[0] = strJsonUtf16[i + 2];
-			n[1] = strJsonUtf16[i + 3];
-			n[2] = strJsonUtf16[i + 4];
-			n[3] = strJsonUtf16[i + 5];
-
-			i += 5;
-
-			int utf16 = 0;
-			for (int j = 0; j < 4; ++j)
-			{
-				int num = 0;
-				if (n[j] > 'a')
-				{
-					num = n[j] - 'a' + 10;
-				}
-				else if (n[j] > '0')
-				{
-					num = n[j] - '0';
-				}
-
-				utf16 += (int)(num * pow(16.0, 3.0 - j));
-			}
-
-			wchar_t wch = utf16;
-			wstrTemp += wch;
-		}
-	}
-
-	return sunjwbase::wstrtostr(wstrTemp);
-}
-
 std::string sunjwbase::strtrim_right(const std::string& s, const std::string& spaces)
 {
 	std::string d(s);
@@ -280,6 +263,8 @@ std::wstring sunjwbase::strtrim_left(const std::wstring& s, const std::wstring& 
 
 std::string sunjwbase::strreplace(const std::string& base, const std::string& src, const std::string& des)
 {
+	if (src.empty())
+		return base;
 	std::string ret(base);
 	std::string::size_type pos = 0;
 	std::string::size_type srcLen = src.size();
@@ -296,6 +281,8 @@ std::string sunjwbase::strreplace(const std::string& base, const std::string& sr
 
 std::wstring sunjwbase::strreplace(const std::wstring& base, const std::wstring& src, const std::wstring& des)
 {
+	if (src.empty())
+		return base;
 	std::wstring ret(base);
 	std::wstring::size_type pos = 0;
 	std::wstring::size_type srcLen = src.size();
@@ -340,45 +327,37 @@ std::string sunjwbase::fixnewline(const std::string& str)
 std::string sunjwbase::str_upper(const std::string& str)
 {
 	std::string ret(str);
-	std::transform(ret.begin(), ret.end(), ret.begin(), ::toupper);
+	std::transform(ret.begin(), ret.end(), ret.begin(),
+		[](unsigned char value) { return static_cast<char>(std::toupper(value)); });
 	return ret;
 }
 
 std::string sunjwbase::str_lower(const std::string& str)
 {
 	std::string ret(str);
-	std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+	std::transform(ret.begin(), ret.end(), ret.begin(),
+		[](unsigned char value) { return static_cast<char>(std::tolower(value)); });
 	return ret;
 }
 
 std::string sunjwbase::itostr(int num, int idx /* = 10 */)
 {
-	if (idx > 16)
-	{
-		idx = 16;
-	}
-	char temp[2] = {0};
-	std::string ret;
-	while (1)
-	{
-		int n = num % idx;
-		if (n < 10)
-		{
-			temp[0] = n + '0';
-		}
-		else
-		{
-			temp[0] = n - 10 + 'A';
-		}
-		ret = temp + ret;
-		num /= idx;
-		if (num == 0)
-		{
-			break;
-		}
-	}
+	if (idx < 2 || idx > 16)
+		return std::string();
 
-	return ret;
+	static const char digits[] = "0123456789ABCDEF";
+	const bool negative = num < 0;
+	unsigned int magnitude = negative ? 0u - static_cast<unsigned int>(num) : static_cast<unsigned int>(num);
+	std::string result;
+	do
+	{
+		result.push_back(digits[magnitude % static_cast<unsigned int>(idx)]);
+		magnitude /= static_cast<unsigned int>(idx);
+	} while (magnitude != 0);
+	if (negative)
+		result.push_back('-');
+	std::reverse(result.begin(), result.end());
+	return result;
 }
 
 std::string sunjwbase::strappendformat(std::string& str, const char *format, ...)

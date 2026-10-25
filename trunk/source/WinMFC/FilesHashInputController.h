@@ -13,6 +13,8 @@ enum class FileLoadResult
 	SuccessPossiblyTruncated,
 	SuccessWithTruncation,
 	RejectedOverLimit,
+	EnumerationLimit,
+	Cancelled,
 	Empty,
 	Error
 };
@@ -37,16 +39,14 @@ struct FileLoadOutcome
 
 struct FolderScanOutcome
 {
-	FolderScanOutcome()
-		: truncated(false),
-		limit(kMaxHashFilesPerSession)
-	{
-	}
-
 	TStrVector files;
-	bool truncated;
-	size_t limit;
+	bool overFileLimit = false;
+	bool budgetExceeded = false;
+	bool cancelled = false;
+	bool failed = false;
 };
+
+struct IProgressDialog;
 
 class FilesHashInputController
 {
@@ -54,6 +54,8 @@ public:
 	FilesHashInputController();
 
 	void Initialize(ThreadData* threadData, CWnd* parentWnd);
+	bool IsLoadingFiles() const { return m_loadingFiles; }
+	void CancelPendingLoad(bool closeAfterLoading = false);
 
 	void LoadCommandLineFiles(LPTSTR filesCmdLine);
 	FileLoadOutcome LoadOpenFileDialogSelection(LPCTSTR fileFilter);
@@ -62,14 +64,26 @@ public:
 	FileLoadOutcome LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct);
 
 private:
+	class PendingLoadGuard
+	{
+	public:
+		explicit PendingLoadGuard(FilesHashInputController& owner);
+		~PendingLoadGuard();
+	private:
+		FilesHashInputController& m_owner;
+	};
+
 	static size_t GetCopyDataCommandCharLimit();
 	static bool CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath);
 	static bool IsValidCopyDataString(const COPYDATASTRUCT* pCopyDataStruct);
 	static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);
-	static FolderScanOutcome AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath);
+	static FolderScanOutcome AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath, IProgressDialog* progress, const bool* cancelRequested = NULL);
 
 	void ClearFilePaths();
 
 	ThreadData* m_threadData;
 	CWnd* m_parentWnd;
+	bool m_loadingFiles;
+	bool m_cancelLoad;
+	bool m_closeAfterLoading;
 };

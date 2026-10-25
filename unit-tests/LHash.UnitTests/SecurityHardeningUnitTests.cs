@@ -81,8 +81,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("WinHandleGuard::UniqueWinHandle threadHandle(pInfo.hThread);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle processHandle(pInfo.hProcess);", legacyShell, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueWinHandle hProcLHash(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPidLHash));", legacyShell, StringComparison.Ordinal);
-        Assert.Contains("TCHAR szPath[MAX_PATH + 1] = {};", legacyShell, StringComparison.Ordinal);
-        Assert.Contains("ULONG nChars = static_cast<ULONG>(_countof(szPath));", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("std::vector<TCHAR> exePath(32768, 0);", legacyShell, StringComparison.Ordinal);
+        Assert.Contains("QueryFullProcessImageName(hProcLHash.get(), 0, exePath.data(), &cchExecutable)", legacyShell, StringComparison.Ordinal);
         Assert.Contains("std::vector<TCHAR> cmdBuffer(cmdLen, static_cast<TCHAR>(0));", legacyShell, StringComparison.Ordinal);
         Assert.Contains("CreateProcess(tstrLHashPath.c_str(), cmdBuffer.data(),", legacyShell, StringComparison.Ordinal);
         Assert.DoesNotContain("new TCHAR[cmdLen]", legacyShell, StringComparison.Ordinal);
@@ -96,7 +96,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.DoesNotContain("0, 0, TRUE,", legacyShell, StringComparison.Ordinal);
 
         Assert.Contains("#include \"WinCommon/WinHandleGuard.h\"", windowsUtils, StringComparison.Ordinal);
-        Assert.Contains("WinHandleGuard::UniqueFindHandle hFind", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("GetExecutablePath(tstring& path)", windowsUtils, StringComparison.Ordinal);
+        Assert.Contains("TryBuildHashShellCommand", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("WinHandleGuard::UniqueModuleHandle hModule", windowsUtils, StringComparison.Ordinal);
         Assert.DoesNotContain("FreeLibrary(hModule);", windowsUtils, StringComparison.Ordinal);
         Assert.Contains("return LoadLibraryEx(pszDllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);", windowsUtils, StringComparison.Ordinal);

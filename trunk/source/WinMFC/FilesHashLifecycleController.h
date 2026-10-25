@@ -30,9 +30,13 @@ public:
 	void HandleTimer(UINT_PTR nIDEvent, LPCTSTR secondText, LPCTSTR clearButtonText, LPCTSTR noSelectionMessage);
 	LRESULT HandleThreadMessage(WPARAM wParam, LPARAM lParam, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);
 	BOOL HandleClose();
+	void Shutdown();
 
 private:
 	void ReleaseBridge();
+	void PollWorkerExit();
+	void FinalizeWorkerExit();
+	void StopWorkerPoll();
 
 	ThreadData* m_threadData;
 	CDialog* m_parentWnd;
@@ -43,4 +47,7 @@ private:
 	FilesHashProgressController* m_hashProgressController;
 	FilesHashResultViewController* m_hashResultViewController;
 	BOOL m_waitingExit;
+	UINT_PTR m_workerPollTimer;
+	WPARAM m_terminalMessage;
+	bool m_sessionSetupFailed;
 };

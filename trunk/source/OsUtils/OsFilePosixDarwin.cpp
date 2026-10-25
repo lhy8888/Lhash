@@ -18,6 +18,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string>
+#include <limits>
+#include <stdio.h>
 
 #include "Common/strhelper.h"
 
@@ -26,15 +28,40 @@ using namespace sunjwbase;
 
 #define GET_FD_FROM_POINTER(pointer) ((int *)(pointer))
 
+struct OsFile::ReadConsistencyState
+{
+    struct stat initialStatus = {};
+    uint64_t bytesRead = 0;
+    bool valid = false;
+};
+
 namespace
 {
     static const int kNoFollowFlag = O_NOFOLLOW;
+
+    static timespec GetModificationTime(const struct stat& status)
+    {
+#if defined(__APPLE__)
+        return status.st_mtimespec;
+#else
+        return status.st_mtim;
+#endif
+    }
+
+    static timespec GetChangeTime(const struct stat& status)
+    {
+#if defined(__APPLE__)
+        return status.st_ctimespec;
+#else
+        return status.st_ctim;
+#endif
+    }
 
     static void CopyOpenErrorText(char *errorBuffer, const char *errorText)
     {
         if (errorBuffer != NULL)
         {
-            strlcpy(errorBuffer, errorText, OsFile::ERR_MSG_BUFFER_LEN);
+            snprintf(errorBuffer, OsFile::ERR_MSG_BUFFER_LEN, "%s", errorText);
         }
     }
 
@@ -149,7 +176,7 @@ namespace
             return fstat(*fd, fileStatus) == 0;
         }
 
-        int temporaryFd = ::open(filePath.c_str(), O_RDONLY | kNoFollowFlag);
+        int temporaryFd = ::open(filePath.c_str(), O_RDONLY | O_NONBLOCK | kNoFollowFlag);
         if (temporaryFd == -1)
         {
             return false;
@@ -211,6 +238,7 @@ namespace
 
 OsFile::OsFile(tstring filePath):
     _filePath(filePath),
+    _readConsistency(new ReadConsistencyState),
     _osfileData(new int(-1)),
     _fileStatus(CLOSED)
 {
@@ -240,6 +268,8 @@ bool OsFile::isHashTargetAllowed(void *exception)
 
 bool OsFile::open(void *flag, void *exception)
 {
+    close();
+    *_readConsistency = ReadConsistencyState();
     string strFilePath = tstrtostr(_filePath);
     char *pFileExc = (char *)exception;
     int *fd = GET_FD_FROM_POINTER(_osfileData);
@@ -255,6 +285,12 @@ bool OsFile::open(void *flag, void *exception)
     }
 
     int openFlags = posixFlag | kNoFollowFlag;
+    // A path can become a FIFO after lstat. Do not block before fstat can
+    // reject the opened object. O_NONBLOCK does not change regular-file reads.
+    if ((posixFlag & O_ACCMODE) == O_RDONLY)
+    {
+        openFlags |= O_NONBLOCK;
+    }
     if (IsOpenModeCreate(posixFlag))
     {
         *fd = ::open(strFilePath.c_str(), openFlags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -305,6 +341,11 @@ bool OsFile::openRead(void *exception/* = NULL*/)
     if (ret == true)
     {
         _fileStatus = OPEN_READ;
+        if (!captureReadConsistency(exception))
+        {
+            close();
+            return false;
+        }
     }
 
     return ret;
@@ -364,7 +405,7 @@ bool OsFile::getModifiedTime(void *modifiedTime)
     struct stat st;
     if (TryGetCurrentFileStatus(fd, strFilePath, &st))
     {
-        *darwinfileModTime = st.st_mtimespec;
+        *darwinfileModTime = GetModificationTime(st);
 
         return true;
     }
@@ -379,13 +420,16 @@ tstring OsFile::getModifiedTimeFormat()
     if (this->getModifiedTime((void *)&ctModifedTime))
     {
         time_t ttModifiedTime;
-        struct tm *tmModifiedTime;
+        struct tm tmModifiedTime = {};
 
         ttModifiedTime = ctModifedTime.tv_sec;
-        tmModifiedTime = localtime(&ttModifiedTime);
+        if (localtime_r(&ttModifiedTime, &tmModifiedTime) == NULL)
+        {
+            return tstring();
+        }
 
         char szTmBuf[1024] = {0};
-        strftime(szTmBuf, 1024, "%Y-%m-%d %H:%M", tmModifiedTime);
+        strftime(szTmBuf, 1024, "%Y-%m-%d %H:%M", &tmModifiedTime);
 
         tstrLastModifiedTime = strtotstr(string(szTmBuf));
     }
@@ -415,6 +459,7 @@ uint64_t OsFile::seek(uint64_t offset, OsFileSeekFrom from)
         return static_cast<uint64_t>(-1);
     }
 
+    _readConsistency->valid = false;
     off_t seekResult = ::lseek(*fd, static_cast<off_t>(offset), posixSeekFlag);
     return seekResult == static_cast<off_t>(-1) ? static_cast<uint64_t>(-1) : static_cast<uint64_t>(seekResult);
 }
@@ -427,7 +472,63 @@ int64_t OsFile::read(void *readBuffer, uint32_t bytes)
         return -1;
     }
 
-    return ::read(*fd, readBuffer, bytes);
+    ssize_t result;
+    do
+    {
+        result = ::read(*fd, readBuffer, bytes);
+    } while (result < 0 && errno == EINTR);
+
+    if (result < 0)
+    {
+        _readConsistency->valid = false;
+    }
+    if (result > 0 && _readConsistency->valid)
+    {
+        const uint64_t count = static_cast<uint64_t>(result);
+        if (count > std::numeric_limits<uint64_t>::max() - _readConsistency->bytesRead)
+        {
+            _readConsistency->valid = false;
+            return -1;
+        }
+        _readConsistency->bytesRead += count;
+    }
+    return result;
+}
+
+bool OsFile::captureReadConsistency(void *exception)
+{
+    struct stat status = {};
+    int *fd = GET_FD_FROM_POINTER(_osfileData);
+    if (fd == NULL || *fd == -1 || fstat(*fd, &status) != 0 ||
+        !IsRegularFile(status) || status.st_size < 0)
+    {
+        CopyOpenErrorText(static_cast<char *>(exception), "Cannot inspect this file.");
+        return false;
+    }
+    _readConsistency->initialStatus = status;
+    _readConsistency->bytesRead = 0;
+    _readConsistency->valid = true;
+    return true;
+}
+
+bool OsFile::validateReadConsistency(tstring *errorText) const
+{
+    struct stat current = {};
+    const int *fd = GET_FD_FROM_POINTER(_osfileData);
+    const struct stat& initial = _readConsistency->initialStatus;
+    const bool unchanged = _readConsistency->valid && fd != NULL && *fd != -1 &&
+        fstat(*fd, &current) == 0 && IsRegularFile(current) &&
+        IsSameFileIdentity(initial, current) && current.st_size == initial.st_size &&
+        GetModificationTime(current).tv_sec == GetModificationTime(initial).tv_sec &&
+        GetModificationTime(current).tv_nsec == GetModificationTime(initial).tv_nsec &&
+        GetChangeTime(current).tv_sec == GetChangeTime(initial).tv_sec &&
+        GetChangeTime(current).tv_nsec == GetChangeTime(initial).tv_nsec &&
+        _readConsistency->bytesRead == static_cast<uint64_t>(initial.st_size);
+    if (!unchanged && errorText != NULL)
+    {
+        *errorText = strtotstr("File changed or could not be read completely while hashing. Please try again.");
+    }
+    return unchanged;
 }
 
 int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
@@ -443,6 +544,7 @@ int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
 
 void OsFile::close()
 {
+    _readConsistency->valid = false;
     int *fd = GET_FD_FROM_POINTER(_osfileData);
 
     if (_fileStatus != CLOSED)

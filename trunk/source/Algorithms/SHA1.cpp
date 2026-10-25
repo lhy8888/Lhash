@@ -158,25 +158,35 @@ void CSHA1::Final()
 // Get the final hash as a pre-formatted string
 void CSHA1::ReportHash(char *szReport, unsigned char uReportType)
 {
-	unsigned char i = 0;
+	if (szReport == NULL)
+		return;
 
-	if(uReportType == REPORT_HEX)
+	if (uReportType == REPORT_HEX)
 	{
-		sprintf(szReport, "%02X", m_digest[0]);
-
-		for(i = 1; i < 20; i++)
-			sprintf(szReport, "%s%02X", szReport, m_digest[i]);
-	}
-	else if(uReportType == REPORT_DIGIT)
-	{
-		sprintf(szReport, "%u", m_digest[0]);
-
-		for(i = 1; i < 20; i++)
+		static const char digits[] = "0123456789ABCDEF";
+		for (unsigned int i = 0; i < 20; ++i)
 		{
-			sprintf(szReport, "%s%u", szReport, m_digest[i]);
+			szReport[i * 2] = digits[m_digest[i] >> 4];
+			szReport[i * 2 + 1] = digits[m_digest[i] & 0x0F];
 		}
+		szReport[40] = '\0';
 	}
-	else sprintf(szReport, "Error: Unknown report type!");
+	else if (uReportType == REPORT_DIGIT)
+	{
+		char *output = szReport;
+		for (unsigned int i = 0; i < 20; ++i)
+		{
+			const unsigned int value = m_digest[i];
+			if (value >= 100)
+				*output++ = static_cast<char>('0' + value / 100);
+			if (value >= 10)
+				*output++ = static_cast<char>('0' + (value / 10) % 10);
+			*output++ = static_cast<char>('0' + value % 10);
+		}
+		*output = '\0';
+	}
+	else
+		strcpy(szReport, "Error: Unknown report type!");
 }
 
 // Get the raw message digest

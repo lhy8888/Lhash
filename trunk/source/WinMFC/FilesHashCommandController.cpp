@@ -15,6 +15,7 @@
 #include "FilesHashSessionController.h"
 #include "FindDlg.h"
 #include "Common/strhelper.h"
+#include "WinCommon/WindowsStrings.h"
 #include <afxdlgs.h>
 
 FilesHashCommandController::FilesHashCommandController()
@@ -190,23 +191,46 @@ void FilesHashCommandController::HandleExportButtonClick(LPCTSTR exportFilter, L
 		return;
 	}
 
-	CString currentText = m_hashResultViewController->GetCurrentText();
 	CFile outputFile;
-	if (!outputFile.Open(saveDialog.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeBinary))
+	try
 	{
-		return;
+		// Validate encoding before modeCreate can truncate the selected file.
+		const CString currentText = m_hashResultViewController->GetCurrentText();
+		const sunjwbase::tstring exportText = currentText.GetString();
+		const std::string utf8Text = sunjwbase::tstrtostrutf8(exportText);
+		if (!exportText.empty() && utf8Text.empty())
+		{
+			AfxMessageBox(GetStringByKey(MAINDLG_EXPORT_FAILED), MB_OK | MB_ICONERROR);
+			return;
+		}
+		if (!outputFile.Open(saveDialog.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeBinary))
+		{
+			AfxMessageBox(GetStringByKey(MAINDLG_EXPORT_FAILED), MB_OK | MB_ICONERROR);
+			return;
+		}
+		static const BYTE utf8Bom[] = { 0xEF, 0xBB, 0xBF };
+		outputFile.Write(utf8Bom, sizeof(utf8Bom));
+		for (size_t offset = 0; offset < utf8Text.size(); )
+		{
+			const size_t remaining = utf8Text.size() - offset;
+			const UINT chunk = static_cast<UINT>(remaining > 1024 * 1024 ? 1024 * 1024 : remaining);
+			outputFile.Write(utf8Text.data() + offset, chunk);
+			offset += chunk;
+		}
+		outputFile.Close();
 	}
-
-	static const BYTE utf8Bom[] = { 0xEF, 0xBB, 0xBF };
-	outputFile.Write(utf8Bom, sizeof(utf8Bom));
-
-	sunjwbase::tstring exportText = currentText.GetString();
-	std::string utf8Text = sunjwbase::tstrtostrutf8(exportText);
-	if (!utf8Text.empty())
+	catch (CException* error)
 	{
-		outputFile.Write(utf8Text.data(), static_cast<UINT>(utf8Text.length()));
+		// Includes CFileException from Write/Close and MFC allocation failures.
+		error->Delete();
+		outputFile.Abort();
+		AfxMessageBox(GetStringByKey(MAINDLG_EXPORT_FAILED), MB_OK | MB_ICONERROR);
 	}
-	outputFile.Close();
+	catch (...)
+	{
+		outputFile.Abort();
+		AfxMessageBox(GetStringByKey(MAINDLG_EXPORT_FAILED), MB_OK | MB_ICONERROR);
+	}
 }
 
 void FilesHashCommandController::HandleFindButtonClick(LPCTSTR clearVerifyButtonText) const

@@ -4,7 +4,7 @@
 #include "Common/ThreadPool.h"
 #include "Common/CheckedArithmetic.h"
 
-#include <atomic>
+#include <exception>
 #include <condition_variable>
 #include <future>
 #include <memory>
@@ -67,8 +67,6 @@ namespace HashEngineInternal
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,
 		unsigned int preferredBufferLength, const HashDigestQueuePlan& digestQueuePlan, FileExecutionState *executionState, ThreadPool *threadPool)
 	{
-		std::atomic<bool> isFileFinished(false);
-
 		const size_t maxBufferedChunkCount = GetHashDigestQueueMaxBufferedChunkCount(digestQueuePlan);
 		vector<unique_ptr<DigestDataBuffer>> digestBufferPool;
 		queue<size_t> availableBufferIndices;
@@ -82,112 +80,117 @@ namespace HashEngineInternal
 		mutex mtxQueue;
 		condition_variable cvFile;
 		condition_variable cvCalc;
+		bool isFileFinished = false;
+		exception_ptr pipelineError;
+
+		// Both wait predicates observe terminal failures under the queue mutex.
+		// In particular, a failed consumer must wake a producer waiting for a buffer.
+		auto publishError = [&](exception_ptr error)
+		{
+			{
+				lock_guard<mutex> lock(mtxQueue);
+				if (!pipelineError)
+				{
+					pipelineError = error;
+				}
+			}
+			cvFile.notify_all();
+			cvCalc.notify_all();
+		};
 
 		future<void> taskHash = threadPool->enqueue([&]
 		{
-			while (true)
+			try
 			{
-				size_t bufferIndex = maxBufferedChunkCount;
-
+				while (true)
 				{
-					unique_lock<mutex> lock(mtxQueue);
-					cvCalc.wait(lock, [&]
+					size_t bufferIndex;
 					{
-						return (!queuedBufferIndices.empty() || isFileFinished.load() || ShouldStopHashExecution(*executionContext));
-					});
-
-					if (queuedBufferIndices.empty() && isFileFinished.load())
-					{
-						break;
-					}
-
-					if (!queuedBufferIndices.empty())
-					{
+						unique_lock<mutex> lock(mtxQueue);
+						cvCalc.wait(lock, [&]
+						{
+							return pipelineError || !queuedBufferIndices.empty() || isFileFinished || ShouldStopHashExecution(*executionContext);
+						});
+						if (pipelineError || ShouldStopHashExecution(*executionContext) || queuedBufferIndices.empty())
+						{
+							break;
+						}
 						bufferIndex = queuedBufferIndices.front();
 						queuedBufferIndices.pop();
 					}
-				}
 
-				if (ShouldStopHashExecution(*executionContext))
-				{
-					if (bufferIndex < maxBufferedChunkCount)
+					DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
+					UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, digestDataBuffer.data, digestDataBuffer.datalen, threadPool);
+					UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);
+
 					{
-						unique_lock<mutex> lock(mtxQueue);
+						lock_guard<mutex> lock(mtxQueue);
 						availableBufferIndices.push(bufferIndex);
 					}
 					cvFile.notify_all();
-					break;
 				}
-
-				if (bufferIndex >= maxBufferedChunkCount)
-				{
-					continue;
-				}
-
-				DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
-				UpdateDigestContextsParallel(digestUpdateRequest, executionState->hashContexts, digestDataBuffer.data, digestDataBuffer.datalen, threadPool);
-				UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);
-
-				{
-					unique_lock<mutex> lock(mtxQueue);
-					availableBufferIndices.push(bufferIndex);
-				}
-				cvFile.notify_all();
+			}
+			catch (...)
+			{
+				publishError(current_exception());
 			}
 			cvFile.notify_all();
 		});
 
-		do
+		try
 		{
-			if (ShouldStopHashExecution(*executionContext))
+			while (!ShouldStopHashExecution(*executionContext))
 			{
-				break;
-			}
-
-			size_t bufferIndex = maxBufferedChunkCount;
-			{
-				unique_lock<mutex> lock(mtxQueue);
-				cvFile.wait(lock, [&]
-				{
-					return (!availableBufferIndices.empty() || ShouldStopHashExecution(*executionContext));
-				});
-				if (ShouldStopHashExecution(*executionContext))
-				{
-					break;
-				}
-
-				bufferIndex = availableBufferIndices.front();
-				availableBufferIndices.pop();
-			}
-
-			DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
-			if (ReadDigestDataBuffer(executionState, digestDataBuffer))
-			{
+				size_t bufferIndex;
 				{
 					unique_lock<mutex> lock(mtxQueue);
-					queuedBufferIndices.push(bufferIndex);
-					// Publish the last chunk and EOF together. Otherwise the consumer
-					// can see an empty queue plus EOF and exit before hashing this chunk.
-					isFileFinished.store(digestDataBuffer.datalen < digestDataBuffer.capacity);
+					cvFile.wait(lock, [&]
+					{
+						return pipelineError || !availableBufferIndices.empty() || ShouldStopHashExecution(*executionContext);
+					});
+					if (pipelineError || ShouldStopHashExecution(*executionContext))
+					{
+						break;
+					}
+					bufferIndex = availableBufferIndices.front();
+					availableBufferIndices.pop();
 				}
+
+				DigestDataBuffer& digestDataBuffer = *digestBufferPool[bufferIndex];
+				if (!ReadDigestDataBuffer(executionState, digestDataBuffer) || digestDataBuffer.datalen == 0)
+				{
+					// A short positive read is not EOF. Only a zero-byte read ends
+					// the stream; already queued chunks are still consumed below.
+					break;
+				}
+				{
+					lock_guard<mutex> lock(mtxQueue);
+					if (pipelineError || ShouldStopHashExecution(*executionContext))
+					{
+						break;
+					}
+					queuedBufferIndices.push(bufferIndex);
+				}
+				cvCalc.notify_all();
 			}
-			else
-			{
-				unique_lock<mutex> lock(mtxQueue);
-				availableBufferIndices.push(bufferIndex);
-			}
-			cvCalc.notify_all();
 		}
-		while (!isFileFinished.load() && !executionState->fileAttemptState.readFailed);
+		catch (...)
+		{
+			publishError(current_exception());
+		}
 
 		{
-			// The wait predicate must change under the same mutex as cvCalc.wait,
-			// including the read-error and cancellation paths, to avoid a lost wakeup.
-			unique_lock<mutex> lock(mtxQueue);
-			isFileFinished.store(true);
+			lock_guard<mutex> lock(mtxQueue);
+			isFileFinished = true;
 		}
 		cvCalc.notify_all();
+		// Always wait before destroying the queues, buffers and referenced state,
+		// including when reading or enqueueing a chunk threw on the producer.
 		taskHash.get();
+		if (pipelineError)
+		{
+			rethrow_exception(pipelineError);
+		}
 
 		return ShouldStopHashExecution(*executionContext);
 	}

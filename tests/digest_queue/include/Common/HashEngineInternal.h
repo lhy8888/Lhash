@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <functional>
 #include <thread>
 
 class ThreadPool;
@@ -31,12 +32,17 @@ namespace HashEngineInternal
         size_t offset = 0;
         size_t failAfter = std::numeric_limits<size_t>::max();
         bool yieldAfterRead = false;
+        size_t maxRead = std::numeric_limits<size_t>::max();
+        std::function<void()> beforeRead;
 
         int64_t read(void* output, unsigned int capacity)
         {
+            if (beforeRead)
+                beforeRead();
             if (offset >= failAfter)
                 return -1;
-            const size_t count = length - offset < capacity ? length - offset : capacity;
+            const size_t boundedCapacity = maxRead < capacity ? maxRead : capacity;
+            const size_t count = length - offset < boundedCapacity ? length - offset : boundedCapacity;
             auto* bytes = static_cast<unsigned char*>(output);
             for (size_t i = 0; i < count; ++i)
                 bytes[i] = ExpectedByte(offset + i);
@@ -54,9 +60,10 @@ namespace HashEngineInternal
         bool yieldAfterUpdate = false;
         HashExecutionContext* cancelContext = nullptr;
         size_t cancelAfter = std::numeric_limits<size_t>::max();
+        std::function<void()> beforeUpdate;
     };
 
-    struct FileProgressState { size_t bytes = 0; };
+    struct FileProgressState { size_t bytes = 0; std::function<void()> beforeProgress; };
     struct FileAttemptState { MockFile* osFile = nullptr; bool readFailed = false; };
     struct FileExecutionState
     {
@@ -88,6 +95,8 @@ namespace HashEngineInternal
     inline void UpdateDigestContextsParallel(const DigestUpdateRequest&, FileHashContexts& hash,
         unsigned char* data, unsigned int count, ThreadPool*)
     {
+        if (hash.beforeUpdate)
+            hash.beforeUpdate();
         for (unsigned int i = 0; i < count; ++i)
             hash.contentMatches = hash.contentMatches && data[i] == ExpectedByte(hash.bytes + i);
         hash.bytes += count;
@@ -100,6 +109,8 @@ namespace HashEngineInternal
     inline void UpdateHashExecutionProgress(HashExecutionContext*, uint64_t, bool,
         unsigned int count, FileProgressState* progress)
     {
+        if (progress->beforeProgress)
+            progress->beforeProgress();
         progress->bytes += count;
     }
 

@@ -138,7 +138,7 @@ public sealed class CommonSeamUnitTests
     }
 
     [Fact]
-    public void OpenSslProviderSourceSelection_UsesStubInCMakeAndVendorOnlyRealProviderInNativeCore()
+    public void OpenSslProviderSourceSelection_UsesExplicitVendorSelectionInBothBuildSystems()
     {
         string cmakeSources = RepositoryTestContext.ReadUtf8File(@"cmake\LHashCoreSources.cmake");
         string nativeCoreProject = RepositoryTestContext.ReadUtf8File(@"sub-proj\LHashNativeCore\LHashNativeCore.vcxproj");
@@ -149,7 +149,13 @@ public sealed class CommonSeamUnitTests
         HashSet<string> nativeCoreSourceSet = ExtractNativeCoreSourceManifest(nativeCoreProject);
 
         Assert.Contains("trunk/source/Runtime/Hash/OpenSslEvpHashProviderStub.cpp", cmakeSourceSet);
-        Assert.DoesNotContain("trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp", cmakeSourceSet);
+        Assert.Contains("trunk/source/Runtime/Hash/OpenSslEvpHashProvider.cpp", cmakeSourceSet);
+        RepositoryTestContext.AssertContainsInOrder(cmakeSources,
+            "if (LHASH_ENABLE_OPENSSL_VENDOR)", "OpenSslEvpHashProvider.cpp", "else()", "OpenSslEvpHashProviderStub.cpp");
+        string cmakeOpenSsl = RepositoryTestContext.ReadUtf8File(@"cmake\LHashOpenSSL.cmake");
+        Assert.Contains("find_package(OpenSSL 3.5.9 EXACT REQUIRED COMPONENTS Crypto)", cmakeOpenSsl, StringComparison.Ordinal);
+        Assert.Contains("target_compile_definitions(${target_name} PUBLIC LHASH_WITH_OPENSSL3_VENDOR=1)", cmakeOpenSsl, StringComparison.Ordinal);
+        Assert.Contains("cmake_path(IS_PREFIX requested_root", cmakeOpenSsl, StringComparison.Ordinal);
 
         Assert.Contains(@"..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProviderStub.cpp", nativeCoreProject, StringComparison.Ordinal);
         Assert.Contains(@"..\..\trunk\source\Runtime\Hash\OpenSslEvpHashProvider.cpp", nativeCoreProject, StringComparison.Ordinal);
@@ -607,7 +613,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release --no-restore", workflow, StringComparison.Ordinal);
         Assert.Contains("prepare-openssl-vendor-x64:", workflow, StringComparison.Ordinal);
         Assert.Contains("Restore cached OpenSSL vendor x64", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/cache@v4", workflow, StringComparison.Ordinal);
+        Assert.Matches(@"actions/cache@[0-9a-f]{40}", workflow);
         Assert.Contains("name: LHash-openssl-vendor-x64", workflow, StringComparison.Ordinal);
         Assert.Contains("Download OpenSSL vendor x64 artifact", workflow, StringComparison.Ordinal);
         Assert.Contains("native-runtime-tests:", workflow, StringComparison.Ordinal);

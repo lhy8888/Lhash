@@ -120,6 +120,12 @@ CFilesHashDlg::CFilesHashDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 }
 
+CFilesHashDlg::~CFilesHashDlg()
+{
+	// This body runs before ThreadData, the mutex, and controls are destroyed.
+	m_hashLifecycleController.Shutdown();
+}
+
 void CFilesHashDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
@@ -290,12 +296,29 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 }
 void CFilesHashDlg::OnClose()
 {
+	if (m_hashInputController.IsLoadingFiles())
+	{
+		m_hashInputController.CancelPendingLoad(true);
+		return;
+	}
 	if (m_hashLifecycleController.HandleClose())
 	{
 		return;
 	}
 
-	CDialog::OnClose();
+	// Do not delegate back to the default dialog cancellation path: OnCancel
+	// routes here too, and all exits must pass the worker ownership barrier.
+	EndDialog(IDCANCEL);
+}
+
+void CFilesHashDlg::OnCancel()
+{
+	OnClose();
+}
+
+void CFilesHashDlg::OnOK()
+{
+	OnClose();
 }
 
 void CFilesHashDlg::OnBnClickedOpen()
@@ -391,6 +414,12 @@ void CFilesHashDlg::OnBnClickedUpperHash()
 
 void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
 {
+	if (nIDEvent == 4 && m_hashInputController.IsLoadingFiles())
+	{
+		// File picker / folder enumeration may pump timer messages. Defer the
+		// startup command-line request until the pending input transaction ends.
+		return;
+	}
 	m_hashLifecycleController.HandleTimer(nIDEvent, GetStringByKey(SECOND_STRING), GetStringByKey(MAINDLG_CLEAR), GetStringByKey(MAINDLG_SELECT_HASH_ALGORITHM));
 
 	CDialog::OnTimer(nIDEvent);

@@ -65,6 +65,7 @@ public:
 	void Update(unsigned char* data, unsigned int len);
 
 	void Final();
+	// Caller supplies at least 41 bytes for HEX, 61 for DIGIT (including NUL).
 	void ReportHash(char *szReport, unsigned char uReportType = REPORT_HEX);
 	void GetHash(unsigned char *uDest);
 

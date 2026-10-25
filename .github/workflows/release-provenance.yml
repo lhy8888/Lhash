@@ -1,96 +1,47 @@
-name: Release Provenance
+name: Re-attest Published Release Assets
 
+# Normal releases generate their checksummed SBOM and attestations before
+# publication in windows-build.yml. Recovery never rewrites published assets.
 on:
-  release:
-    types:
-      - published
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to process, for example v1.12.0
+        description: Existing release tag to verify and re-attest
         required: true
         type: string
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
   attestations: write
 
 jobs:
   attest-release-assets:
-    name: Attest release assets
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
-      - name: Resolve release tag
-        id: resolve
-        shell: bash
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Download and verify immutable release assets
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            tag="${{ github.event.release.tag_name }}"
-          else
-            tag="${{ inputs.tag }}"
-          fi
-          if [[ -z "$tag" ]]; then
-            echo "A release tag is required." >&2
-            exit 1
-          fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          test -n "$RELEASE_TAG"
+          git check-ref-format "refs/tags/$RELEASE_TAG"
+          gh release download --repo "$GITHUB_REPOSITORY" --dir release-assets \
+            --pattern 'LHash-windows-*.zip' --pattern RELEASE_MANIFEST.txt \
+            --pattern SHA256SUMS.txt --pattern LHash-release.cyclonedx.json -- "$RELEASE_TAG"
+          python3 tools/release_assets.py verify --directory release-assets
+          (cd release-assets && sha256sum --check SHA256SUMS.txt)
 
-      - name: Download release assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          gh release download "${{ steps.resolve.outputs.tag }}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --dir release-assets
-
-      - name: Prepare attestation subjects
-        id: prepare
-        shell: bash
-        run: |
-          set -euo pipefail
-          bundle_path="$(find release-assets -maxdepth 1 -type f -name 'LHash-windows-x64-*.zip' | head -n 1)"
-          manifest_path="$(find release-assets -maxdepth 1 -type f -name 'RELEASE_MANIFEST.txt' | head -n 1)"
-
-          if [[ -z "$bundle_path" ]]; then
-            echo "Expected a release asset matching LHash-windows-x64-*.zip." >&2
-            exit 1
-          fi
-
-          if [[ -z "$manifest_path" ]]; then
-            echo "Expected RELEASE_MANIFEST.txt in the published release assets." >&2
-            exit 1
-          fi
-
-          sha256sum "$bundle_path" "$manifest_path" > release-assets/SHA256SUMS.txt
-
-          echo "bundle_path=$bundle_path" >> "$GITHUB_OUTPUT"
-          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
-
-      - name: Upload checksum manifest to the release
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh release upload "${{ steps.resolve.outputs.tag }}" \
-            release-assets/SHA256SUMS.txt \
-            --repo "$GITHUB_REPOSITORY" \
-            --clobber
-
-      - name: Generate provenance attestation for release metadata bundle
-        uses: actions/attest-build-provenance@v2
+      - name: Re-attest verified published files
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-path: |
-            ${{ steps.prepare.outputs.bundle_path }}
-            ${{ steps.prepare.outputs.manifest_path }}
+            release-assets/LHash-windows-*.zip
+            release-assets/RELEASE_MANIFEST.txt
             release-assets/SHA256SUMS.txt
-
-# Note:
-# This workflow adds GitHub-native attestations and immutable checksum metadata to
-# published release assets. A later hardening pass can move the provenance step
-# fully inside the primary build job so the attestation is emitted at the exact
-# binary production point.
+            release-assets/LHash-release.cyclonedx.json

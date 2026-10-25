@@ -4,9 +4,9 @@
 
 This document explains what LHash is trying to protect, which trust boundaries matter, and which classes of risk the project is designed to reduce.
 
-LHash is a **local Windows verification tool**. Its main goal is to help users perform repeatable integrity checks on files and release bundles without needing a cloud account, a remote verification service, or a background telemetry channel.
+LHash is a **local file verification tool**. Its main goal is to help users perform repeatable integrity checks on files and release bundles without needing a cloud account, a remote verification service, or a background telemetry channel.
 
-The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.
+The Windows product uses the MFC desktop UI. The macOS Apple Silicon CLI uses the same 18-algorithm registry and static OpenSSL 3.5.9 backend. macOS artifacts are unsigned and unnotarized; there is no macOS GUI or Intel target.
 
 ## Assets the project tries to protect
 

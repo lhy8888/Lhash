@@ -25,7 +25,7 @@ This maintained release line turns LHash from a traditional hash utility into a 
 - Windows UI mainline: `MFC`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core Build Matrix workflow`](../.github/workflows/core-m2.yml)
-- macOS CLI MVP: [`macOS CLI MVP Build workflow`](../.github/workflows/macos-cli-build.yml)
+- macOS Apple Silicon CLI: [`macOS CLI Build workflow`](../.github/workflows/macos-cli-build.yml)
 - macOS core support: [`macOS core support criteria`](MACOS_CORE_SUPPORT.md)
 - Code signing: [CODE_SIGNING.md](../CODE_SIGNING.md)
 - Code signing policy: [CODE_SIGNING_POLICY.md](../CODE_SIGNING_POLICY.md)

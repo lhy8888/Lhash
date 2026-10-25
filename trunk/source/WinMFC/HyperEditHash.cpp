@@ -6,6 +6,20 @@
 #include "WinMFC/WinMFCMessages.h"
 #include "Common/HashTypes.h"
 
+namespace
+{
+class CriticalSectionLock
+{
+public:
+	explicit CriticalSectionLock(CRITICAL_SECTION& section) : m_section(section) { EnterCriticalSection(&m_section); }
+	~CriticalSectionLock() { LeaveCriticalSection(&m_section); }
+	CriticalSectionLock(const CriticalSectionLock&) = delete;
+	CriticalSectionLock& operator=(const CriticalSectionLock&) = delete;
+private:
+	CRITICAL_SECTION& m_section;
+};
+}
+
 // CHyperEditHash
 
 IMPLEMENT_DYNAMIC(CHyperEditHash, CHyperEditHash_BASE_CLASS)
@@ -83,9 +97,10 @@ BOOL CHyperEditHash::PreTranslateMessage(MSG* pMsg)
 
 void CHyperEditHash::ClearTextBuffer()
 {
-	EnterCriticalSection(&m_csLinkOffsets);
-	m_bufferLinkOffsets.clear();
-	LeaveCriticalSection(&m_csLinkOffsets);
+	{
+		CriticalSectionLock lock(m_csLinkOffsets);
+		m_bufferLinkOffsets.clear();
+	}
 	m_cstrTextBuffer = CString(_T(""));
 }
 
@@ -98,9 +113,10 @@ void CHyperEditHash::ShowTextBufferEx(BOOL bScrollToEnd)
 {
 	EnableRedraw(FALSE);
 
-	EnterCriticalSection(&m_csLinkOffsets);
-	m_linkOffsets = m_bufferLinkOffsets;
-	LeaveCriticalSection(&m_csLinkOffsets);
+	{
+		CriticalSectionLock lock(m_csLinkOffsets);
+		m_linkOffsets = m_bufferLinkOffsets;
+	}
 	SetWindowText(m_cstrTextBuffer);
 
 	if (bScrollToEnd)
@@ -123,23 +139,20 @@ void CHyperEditHash::AppendLinkToBuffer(LPCTSTR pszText)
 	INT endPos = m_cstrTextBuffer.GetLength();
 	INT linkLength = endPos - startPos;
 	_TOKEN_OFFSET off = { startPos /* Start offset */, linkLength /* Length */ };
-	EnterCriticalSection(&m_csLinkOffsets);
+	CriticalSectionLock lock(m_csLinkOffsets);
 	m_bufferLinkOffsets.push_back(off);
-	LeaveCriticalSection(&m_csLinkOffsets);
 }
 
 void CHyperEditHash::CopyLinkOffsets(OFFSETS& linkOffsets)
 {
-	EnterCriticalSection(&m_csLinkOffsets);
+	CriticalSectionLock lock(m_csLinkOffsets);
 	linkOffsets = m_bufferLinkOffsets;
-	LeaveCriticalSection(&m_csLinkOffsets);
 }
 
 void CHyperEditHash::SetLinkOffsets(const OFFSETS& linkOffsets)
 {
-	EnterCriticalSection(&m_csLinkOffsets);
+	CriticalSectionLock lock(m_csLinkOffsets);
 	m_bufferLinkOffsets = linkOffsets;
-	LeaveCriticalSection(&m_csLinkOffsets);
 }
 
 void CHyperEditHash::LineScrollEnd()

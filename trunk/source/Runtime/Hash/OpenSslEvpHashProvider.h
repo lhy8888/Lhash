@@ -25,6 +25,10 @@ namespace HashRuntime
 		{
 		}
 
+		~OpenSslEvpHashContext();
+		OpenSslEvpHashContext(const OpenSslEvpHashContext&) = delete;
+		OpenSslEvpHashContext& operator=(const OpenSslEvpHashContext&) = delete;
+
 		EVP_MD_CTX *mdContext;
 		EVP_MD *mdImplementation;
 		bool xofMode;

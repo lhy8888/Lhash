@@ -2,7 +2,7 @@
 
 #include "WindowsStringsInternal.h"
 
-#include "OsUtils/OsThread.h"
+#include <memory>
 
 using namespace sunjwbase;
 
@@ -17,8 +17,6 @@ namespace WindowsStrings
 		return itr->second.c_str();
 	}
 
-	OsMutex WindowsStringsMgr::s_instMtx;
-	WindowsStringsMgr *WindowsStringsMgr::s_winStrsMgrInst = NULL;
 
 	WindowsStringsMgr::WindowsStringsMgr()
 	{
@@ -37,36 +35,31 @@ namespace WindowsStrings
 
 	WindowsStringsMgr *WindowsStringsMgr::getInstance(void)
 	{
-		s_instMtx.lock();
-		if (s_winStrsMgrInst == NULL)
-		{
-			s_winStrsMgrInst = new WindowsStringsMgr();
-		}
-		s_instMtx.unlock();
-
-		return s_winStrsMgrInst;
+		static WindowsStringsMgr instance;
+		return &instance;
 	}
 
 	int WindowsStringsMgr::registerStringsForLang(LANGID langId, WindowsStringsMap *stringsMap)
 	{
-		m_langStrsMap[langId] = stringsMap;
-
-		return 0;
-	}
-
-	void WindowsStringsMgr::resetInstance(void)
-	{
-		s_instMtx.lock();
-		if (s_winStrsMgrInst != NULL)
+		if (stringsMap == NULL) return -1;
+		std::unique_ptr<WindowsStringsMap> incoming(stringsMap);
+		std::lock_guard<std::mutex> lock(m_mutex);
+		const auto found = m_langStrsMap.find(langId);
+		if (found != m_langStrsMap.end())
 		{
-			delete s_winStrsMgrInst;
-			s_winStrsMgrInst = NULL;
+			// Registered maps remain immutable for the process lifetime, so
+			// previously returned string pointers stay valid across COM objects.
+			if (found->second == stringsMap) incoming.release();
+			return 0;
 		}
-		s_instMtx.unlock();
+		m_langStrsMap.emplace(langId, stringsMap);
+		incoming.release();
+		return 0;
 	}
 
 	const TCHAR *WindowsStringsMgr::getStringForLang(LANGID langId, const TCHAR *tzhKey)
 	{
+		std::lock_guard<std::mutex> lock(m_mutex);
 		const TCHAR *tzhRet = NULL;
 
 		// Find string in lang id.

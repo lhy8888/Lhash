@@ -187,7 +187,7 @@ namespace WindowsComm
 	 * 格式化为 主版本号.副版本号.低版本号.编译版本号
 	 * 如果文件没有版本号，返回""
 	 */
-	tstring GetExeFileVersion(TCHAR* path)
+	tstring GetExeFileVersion(const TCHAR* path)
 	{
 		if (path == NULL || path[0] == TEXT('\0'))
 		{
@@ -197,7 +197,7 @@ namespace WindowsComm
 		string strVer("");
 		DWORD dwHandle = 0;
 		DWORD cchver = GetFileVersionInfoSize(path, &dwHandle);
-		if (cchver == 0)
+		if (cchver == 0 || cchver > 16u * 1024u * 1024u)
 		{
 			return _T("");
 		}
@@ -217,12 +217,21 @@ namespace WindowsComm
 			return _T("");
 		}
 
+		const uintptr_t begin = reinterpret_cast<uintptr_t>(pver.data());
+		const uintptr_t value = reinterpret_cast<uintptr_t>(pbuf);
+		if (value < begin || value - begin > pver.size() ||
+			sizeof(VS_FIXEDFILEINFO) > pver.size() - (value - begin))
+		{
+			return _T("");
+		}
+
 		unsigned int MVer = 0;
 		unsigned int SVer = 0;
 		unsigned int LVer = 0;
 		unsigned int BVer = 0;
 		VS_FIXEDFILEINFO pvsf = {};
 		memcpy(&pvsf, pbuf, sizeof(VS_FIXEDFILEINFO));
+		if (pvsf.dwSignature != 0xFEEF04BD) return _T("");
 
 		// 将版本号转换为数字 //
 		MVer = pvsf.dwFileVersionMS / 65536;

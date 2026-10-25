@@ -12,11 +12,33 @@ static inline sunjwbase::tstring NormalizeHashResultDigestSearchText(const sunjw
 	normalizedDigestText = sunjwbase::strtrim(normalizedDigestText);
 	return normalizedDigestText;
 }
+static inline bool IsCompleteHexDigestText(const sunjwbase::tstring& digestText)
+{
+	if (digestText.empty() || digestText.size() % 2 != 0)
+	{
+		return false;
+	}
+	for (const auto character : digestText)
+	{
+		if (!((character >= '0' && character <= '9') ||
+			(character >= 'A' && character <= 'F') || (character >= 'a' && character <= 'f')))
+		{
+			return false;
+		}
+	}
+	return true;
+}
 static inline bool HashResultContainsDigest(const HashResult& result, const sunjwbase::tstring& digestText)
 {
+	if (!IsCompleteHexDigestText(digestText))
+	{
+		return false;
+	}
 	for (size_t digestIndex = 0; digestIndex < result.digests.size(); ++digestIndex)
 	{
-		if (result.digests[digestIndex].value.find(digestText) != sunjwbase::tstring::npos)
+		const sunjwbase::tstring& value = result.digests[digestIndex].value;
+		if (value.size() == digestText.size() &&
+			NormalizeHashResultDigestSearchText(value) == NormalizeHashResultDigestSearchText(digestText))
 		{
 			return true;
 		}

@@ -46,6 +46,10 @@ BOOL FilesHashSearchController::BeginSearch(const CString& findFile,
 	const CString& findHash,
 	LPCTSTR clearVerifyText)
 {
+	if (m_threadData == NULL || IsThreadDataWorking(*m_threadData))
+	{
+		return FALSE;
+	}
 	m_strFindFile = findFile;
 	m_strFindHash = findHash;
 	m_strFindFile.Trim();
@@ -53,6 +57,11 @@ BOOL FilesHashSearchController::BeginSearch(const CString& findFile,
 
 	if (m_strFindHash.IsEmpty())
 	{
+		return FALSE;
+	}
+	if (!IsCompleteHexDigestText(m_strFindHash.GetString()))
+	{
+		AfxMessageBox(GetStringByKey(MAINDLG_VERIFY_INVALID), MB_OK | MB_ICONWARNING);
 		return FALSE;
 	}
 

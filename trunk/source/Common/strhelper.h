@@ -33,16 +33,9 @@ namespace sunjwbase
 	typedef TCHAR _TCHAR;
 #endif
 
-	// converting part
-	/*
-	 * convert ascii encoded wstring to utf8 encoded string
-	 */
+	// UTF-8 conversions preserve embedded NULs and return an empty string on
+	// malformed input. Native-code-page conversions below also check failures.
 	std::string wstrtostrutf8(const std::wstring& wstr);
-	/*
-	 * convert utf8 encoded string to wstring
-	 * 1st, convert utf8 encoded string to native string
-	 * 2nd, call strtowstr
-	 */
 	std::wstring strtowstrutf8(const std::string& str);
 
 	std::string wstrtostr(const std::wstring& wstr);
@@ -77,9 +70,6 @@ namespace sunjwbase
 		return striconv(strUtf8, "GBK", "UTF-8");
 #endif
 	}
-
-	// convert JSON utf16 encoded string to native encoded string
-	std::string asciiconvjson(std::string& strJsonUtf16);
 
 	inline std::string tstrtostr(const tstring& tstr)
 	{
@@ -201,7 +191,7 @@ namespace sunjwbase
 		}
 	}
 
-	// itostr
+	// Bases 2 through 16; invalid bases return an empty string.
 	std::string itostr(int num, int idx = 10);
 
 	// format append for std::string

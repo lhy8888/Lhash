@@ -28,6 +28,15 @@ namespace HashEngineInternal
 	void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,
 		FileExecutionState& executionState)
 	{
+		sunjwbase::tstring consistencyErrorText;
+		const bool hasDigestOperations = !GetHashJobDigestUpdateRequest(executionState.executionPlan).operationDescriptors.empty();
+		if (hasDigestOperations && !executionState.fileAttemptState.osFile->validateReadConsistency(&consistencyErrorText))
+		{
+			executionState.fileAttemptState.osFile->close();
+			EmitErrorMessageResult(executionContext, result, consistencyErrorText);
+			return;
+		}
+
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
 		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
 

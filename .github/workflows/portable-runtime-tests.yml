@@ -23,6 +23,9 @@ jobs:
           - name: linux-x64
             os: ubuntu-24.04
             sanitizer: false
+          - name: linux-x64-sanitizers
+            os: ubuntu-24.04
+            sanitizer: true
           - name: macos-arm64
             os: macos-14
             sanitizer: false
@@ -37,16 +40,16 @@ jobs:
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup .NET for source-contract checks
-        if: runner.os == 'Linux'
-        uses: actions/setup-dotnet@v5
+        if: matrix.name == 'linux-x64'
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
 
       - name: Check source contracts on Linux
-        if: runner.os == 'Linux'
+        if: matrix.name == 'linux-x64'
         run: |
           dotnet test unit-tests/LHash.UnitTests/LHash.UnitTests.csproj --configuration Release
           dotnet run --project security-tests/SecurityRegression/SecurityRegression.csproj --configuration Release
@@ -61,12 +64,15 @@ jobs:
             echo 'LDFLAGS=-fsanitize=address,undefined' >> "$GITHUB_ENV"
           fi
 
+      - name: Verify pristine OpenSSL source
+        run: pwsh -NoProfile -File tools/verify_openssl_vendor_pristine.ps1 -Version 3.5.9
+
       - name: Cache static OpenSSL
         id: openssl-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/openssl-install
-          key: openssl-3.5.9-${{ matrix.name }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/build_openssl_vendor_posix.sh', '.github/workflows/portable-runtime-tests.yml') }}
+          key: openssl-3.5.9-${{ matrix.name }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', '.github/workflows/portable-runtime-tests.yml') }}
 
       - name: Build vendored OpenSSL 3.5.9
         if: steps.openssl-cache.outputs.cache-hit != 'true'
@@ -89,17 +95,22 @@ jobs:
               --output-junit "$GITHUB_WORKSPACE/artifacts/portable/$suite.xml" 2>&1 | tee "artifacts/portable/$suite-tests.log"
           done
 
-      - name: Run macOS engine and CLI regressions
-        if: runner.os == 'macOS'
+      - name: Run full engine and CLI regressions with OpenSSL
         run: |
           set -o pipefail
+          platform_args=()
+          if [[ "$RUNNER_OS" == 'macOS' ]]; then
+            platform_args=(-DCMAKE_OSX_ARCHITECTURES=arm64)
+          else
+            platform_args=(-DLHASH_ENABLE_POSIX_TEST_BACKEND=ON)
+          fi
           cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON 2>&1 | tee artifacts/portable/engine-configure.log
+            "${platform_args[@]}" \
+            -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON \
+            -DLHASH_ENABLE_OPENSSL_VENDOR=ON -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" 2>&1 | tee artifacts/portable/engine-configure.log
           cmake --build build/runtime --parallel 3 2>&1 | tee artifacts/portable/engine-build.log
           ctest --test-dir build/runtime -V --output-on-failure --no-tests=error \
             --output-junit "$GITHUB_WORKSPACE/artifacts/portable/engine.xml" 2>&1 | tee artifacts/portable/engine-tests.log
-          python3 tests/cli/test_cli.py build/runtime/bin/lhash 2>&1 | tee artifacts/portable/cli-tests.log
 
       - name: Annotate test failures
         if: failure()
@@ -107,7 +118,7 @@ jobs:
 
       - name: Upload test logs
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: portable-tests-${{ matrix.name }}
           path: artifacts/portable/**

@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <memory>
 #include "Common/strhelper.h"
 
 namespace sunjwbase
@@ -43,19 +44,25 @@ namespace sunjwbase
 		int64_t getLength();
 		bool getModifiedTime(void *modifiedTime);
 		sunjwbase::tstring getModifiedTimeFormat();
+		const sunjwbase::tstring& getPath() const { return _filePath; }
 
 		// Operation
 		uint64_t seek(uint64_t offset, OsFileSeekFrom from);
 		int64_t read(void *readBuffer, uint32_t bytes);
 		int64_t write(void *writeBuffer, uint32_t bytes);
+		// Verify a complete sequential read before publishing a file digest.
+		bool validateReadConsistency(sunjwbase::tstring *errorText = NULL) const;
 
 		// Close
 		void close();
 
 	private:
 		bool open(void *flag, void *exception);
+		bool captureReadConsistency(void *exception);
+		struct ReadConsistencyState;
 
 		sunjwbase::tstring	_filePath;
+		std::unique_ptr<ReadConsistencyState> _readConsistency;
 		void				*_osfileData;
 		OsFileStatus		_fileStatus;
 	};

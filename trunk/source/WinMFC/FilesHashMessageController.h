@@ -61,7 +61,6 @@ public:
 	void UpdateCopyHashMenuText(CCmdUI* pCmdUI, LPCTSTR copyText) const;
 
 private:
-	static bool IsTrustedCopyDataSender(const CWnd* pSenderWnd);
 	ThreadData* m_threadData;
 	CDialog* m_parentWnd;
 	FilesHashInputController* m_hashInputController;

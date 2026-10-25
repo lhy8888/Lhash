@@ -22,7 +22,7 @@ namespace HashEngineInternal
 				UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);
 			}
 
-			isFileFinished = (databuf.datalen < databuf.capacity);
+			isFileFinished = (databuf.datalen == 0);
 		}
 		while (!isFileFinished && !executionState->fileAttemptState.readFailed);
 

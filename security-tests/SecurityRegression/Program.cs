@@ -30,14 +30,17 @@ internal static partial class Program
             AssertContains(content, "FileLoadResult::RejectedOverLimit", "WM_COPYDATA and drag-drop ingestion no longer surface explicit over-limit outcomes.");
             AssertContains(content, "DispatchFileLoadOutcome(", "WinMFC file-loading outcomes are no longer dispatched through the shared message controller.");
             AssertContains(content, "static_cast<size_t>(droppedFileCount) > kMaxHashFilesPerSession", "Drag-and-drop ingestion no longer rejects oversize batches before loading.");
-            AssertContains(content, "scanOutcome.truncated = truncated;", "Folder recursion no longer preserves explicit truncation state.");
-            AssertContains(content, "IsTrustedCopyDataSender(pSenderWnd)", "WM_COPYDATA handler no longer checks the sender process.");
-            AssertContains(content, "QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable)", "WM_COPYDATA sender validation no longer resolves the sender image path.");
-            AssertContains(content, "GetTrustedExplorerImagePath()", "WM_COPYDATA sender validation no longer resolves the trusted explorer path.");
-            AssertContains(content, "GetCurrentExecutableImagePath()", "WM_COPYDATA sender validation no longer resolves the current executable path.");
+            AssertContains(content, "outcome.overFileLimit = true", "Folder enumeration no longer rejects oversized selections.");
+            AssertContains(content, "budget.VisitEntry()", "Folder enumeration no longer bounds all entries.");
+            AssertContains(content, "progress->HasUserCancelled()", "Folder enumeration no longer checks cancellation.");
+            AssertContains(content, "WindowsUtils::CanAcceptUntrustedFileInput()", "External file input no longer rejects elevated/high-integrity instances.");
+            AssertDoesNotContain(content, "IsTrustedCopyDataSender", "Caller-supplied HWND must not be treated as authenticated sender identity.");
+            string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
+            AssertContains(windowsUtils, "elevation.TokenIsElevated != 0", "External input policy no longer rejects elevated tokens.");
+            AssertContains(windowsUtils, "SECURITY_MANDATORY_HIGH_RID", "External input policy no longer checks integrity level.");
             AssertContains(content, "if (sawTerminator)", "WM_COPYDATA validation no longer rejects non-empty data after the first terminator.");
             AssertContains(content, "return sawTerminator;", "WM_COPYDATA validation no longer accepts a single strict terminator.");
-            AssertContains(content, "std::deque<sunjwbase::tstring> pendingFolders;", "Folder enumeration no longer uses an explicit queue/stack traversal.");
+            AssertContains(content, "std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", "Folder enumeration no longer uses an explicit queue/stack traversal.");
             AssertContains(content, "!IsThreadDataWorking(*m_threadData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>
@@ -61,7 +64,8 @@ internal static partial class Program
             AssertContains(dialogAndSession, "ChangeWindowMessageFilterEx", "Elevated drag-and-drop compatibility handling is missing.");
             AssertContains(dialogAndSession, "ChangeWindowMessageFilter", "Legacy message-filter compatibility fallback is missing.");
             AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);", "WM_DROPFILES is no longer allowed through the window message filter.");
-            AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA is no longer allowed through the window message filter.");
+            AssertDoesNotContain(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);", "WM_COPYDATA must not bypass UIPI integrity checks.");
+            AssertContains(dialogAndSession, "!WindowsUtils::CanAcceptUntrustedFileInput()", "Elevated instances must not accept external drops.");
             AssertContains(dialogAndSession, "AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);", "WM_COPYGLOBALDATA is no longer allowed through the window message filter.");
             AssertDoesNotContain(dialogAndSession, "PCHANGEFILTERSTRUCT", "Drag-and-drop compatibility still depends on SDK-specific ChangeWindowMessageFilterEx declarations.");
             AssertContains(dialogResource, "PUSHBUTTON      \"BUTTON_FIND\",IDC_FIND,154,8,54,18", "Legacy MFC verify button is not positioned in the tightened visible command bar.");
@@ -92,10 +96,12 @@ internal static partial class Program
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
             AssertContains(vendorTargets, "FailNonReleaseOpenSslVendor", "Shared OpenSSL vendor targets do not reject non-Release builds.");
             AssertContains(vendorTargets, "Do not link it into non-Release builds.", "Shared OpenSSL vendor targets do not explain the Release-only restriction.");
-            AssertContains(cmakeLists, "message(FATAL_ERROR", "CMake does not fail fast when OpenSSL vendor integration is enabled.");
-            AssertContains(cmakeLists, "CMake OpenSSL vendor integration is not implemented yet.", "CMake does not document the unsupported OpenSSL vendor path.");
-            AssertContains(cmakeLists, "Use the MSBuild Windows release workflow with LHashOpenSslInstallRoot.", "CMake does not direct users to the supported Windows vendor workflow.");
-            AssertDoesNotContain(cmakeLists, "target_compile_definitions(lhash_core PRIVATE LHASH_WITH_OPENSSL3_VENDOR=1)", "CMake still wires the unsupported OpenSSL vendor compile definition instead of failing fast.");
+            AssertContains(cmakeLists, "LHASH_BUILD_CLI AND NOT LHASH_ENABLE_OPENSSL_VENDOR", "CLI must not silently expose a reduced stub algorithm set.");
+            string cmakeOpenSsl = ReadRepoFile(repoRoot, @"cmake\LHashOpenSSL.cmake");
+            AssertContains(cmakeOpenSsl, "set(OPENSSL_USE_STATIC_LIBS TRUE)", "CMake must select static OpenSSL.");
+            AssertContains(cmakeOpenSsl, "find_package(OpenSSL 3.5.9 EXACT REQUIRED COMPONENTS Crypto)", "CMake must pin the supported OpenSSL version.");
+            AssertContains(cmakeOpenSsl, "cmake_path(IS_PREFIX requested_root", "CMake must reject headers or libraries outside the requested vendor installation.");
+            AssertContains(cmakeOpenSsl, "PUBLIC LHASH_WITH_OPENSSL3_VENDOR=1", "CMake consumers must use the same feature-dependent algorithm registry.");
 
             foreach (string projectPath in vcxProjects)
             {

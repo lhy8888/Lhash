@@ -10,8 +10,12 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <limits>
+#include <type_traits>
 #include <vector>
 static_assert(OPENSSL_VERSION_MAJOR == 3 && OPENSSL_VERSION_MINOR == 5 && OPENSSL_VERSION_PATCH == 9, "Wrong OpenSSL headers");
+static_assert(!std::is_copy_constructible<HashRuntime::OpenSslEvpHashContext>::value, "EVP ownership cannot be copied");
+static_assert(!std::is_copy_assignable<HashRuntime::OpenSslEvpHashContext>::value, "EVP ownership cannot be assigned");
 // Fixed expected values were cross-checked with Python hashlib. Inputs are empty,
 // "abc", and one million 'a' bytes; SHAKE uses the explicitly stated output size.
 struct Spec {const char* name; size_t bytes; bool xof; const char* expected[3];};
@@ -256,6 +260,83 @@ static void verifyConcurrent()
     std::cout << "PASS concurrent_sha256=800 threads=8\n";
 }
 
+static void verifyInputBounds()
+{
+    size_t rejected = 0;
+    for (const auto& spec : specs)
+    {
+        const char* names[] = { spec.name };
+        HashRuntime::OpenSslEvpHashContext context;
+        const auto init = [&]() {
+            return HashRuntime::InitializeOpenSslEvpHashContext(&context, names, 1, spec.xof, spec.bytes);
+        };
+        for (size_t wrongSize : { size_t(0), std::numeric_limits<size_t>::max() })
+        {
+            require(!HashRuntime::InitializeOpenSslEvpHashContext(&context, names, 1, spec.xof, wrongSize),
+                "invalid initial output size accepted");
+            ++rejected;
+        }
+        if (!spec.xof)
+        {
+            for (size_t wrongSize : { size_t(1), spec.bytes - 1, spec.bytes + 1 })
+            {
+                require(!HashRuntime::InitializeOpenSslEvpHashContext(&context, names, 1, false, wrongSize),
+                    "fixed digest initialized with the wrong output size");
+                ++rejected;
+            }
+        }
+        require(!HashRuntime::InitializeOpenSslEvpHashContext(&context, names, 1, !spec.xof, spec.bytes),
+            "incorrect XOF mode accepted");
+        ++rejected;
+        for (size_t wrongSize : { size_t(0), size_t(1), spec.bytes - 1, spec.bytes + 1,
+            std::numeric_limits<size_t>::max() })
+        {
+            require(init(), "init before invalid finalization");
+            HashRuntime::UpdateOpenSslEvpHashContext(context, reinterpret_cast<const unsigned char*>("abc"), 3);
+            const auto result = HashRuntime::FinalizeOpenSslEvpHashContextHex(context, wrongSize);
+            require(!result.success && result.digest.empty() && context.mdContext == nullptr,
+                "mismatched final output size accepted or retained state");
+            ++rejected;
+        }
+        require(init(), "init before null data");
+        HashRuntime::UpdateOpenSslEvpHashContext(context, nullptr, 1);
+        require(!HashRuntime::FinalizeOpenSslEvpHashContextHex(context, spec.bytes).success,
+            "null nonempty input silently omitted");
+        ++rejected;
+        require(init(), "init before invalid reinitialization");
+        require(!HashRuntime::InitializeOpenSslEvpHashContext(&context, nullptr, 1, spec.xof, spec.bytes),
+            "invalid reinitialization succeeded");
+        require(!HashRuntime::FinalizeOpenSslEvpHashContextHex(context, spec.bytes).success,
+            "invalid reinitialization retained a live digest");
+        ++rejected;
+        require(matches(digest(spec, "abc"), spec.expected[1]), "did not recover after rejected input");
+        // Destruction must release an unfinished context, including during an exception.
+        try
+        {
+            HashRuntime::OpenSslEvpHashContext unfinished;
+            require(HashRuntime::InitializeOpenSslEvpHashContext(&unfinished, names, 1, spec.xof, spec.bytes),
+                "unfinished init");
+            throw 1;
+        }
+        catch (int) {}
+    }
+    std::cout << "PASS rejected_inputs=" << rejected << " recovered_algorithms=10 scoped_cleanup=10\n";
+}
+
+static void verifyConfigurationIsolation()
+{
+    // CTest supplies a harmless openssl.cnf excluding all providers from the
+    // process default context. Establish that the fixture actually took effect.
+    EVP_MD* blocked = EVP_MD_fetch(nullptr, "SHA256", nullptr);
+    const bool blockedByConfiguration = blocked == nullptr;
+    EVP_MD_free(blocked);
+    require(blockedByConfiguration, "restrictive default-context configuration was not active");
+    for (const auto& spec : specs)
+        require(matches(digest(spec, "abc"), spec.expected[1]),
+            std::string("local digest affected by external config: ") + spec.name);
+    std::cout << "PASS private_context_algorithms=10 external_config_and_module_path_ignored\n";
+}
+
 int main(int argc, char** argv)
 {
     try
@@ -263,7 +344,7 @@ int main(int argc, char** argv)
         const std::string version = OpenSSL_version(OPENSSL_VERSION);
         std::cout << "runtime=" << version << '\n';
         require(version.find("OpenSSL 3.5.9 ") == 0, "wrong runtime version");
-        require(argc == 2, "usage: lhash_openssl_provider_tests version|vectors|files|failures|lifecycle|concurrent");
+        require(argc == 2, "usage: lhash_openssl_provider_tests version|vectors|files|failures|lifecycle|concurrent|bounds|isolation");
         const std::string group = argv[1];
         if (group == "version") std::cout << "PASS headers_and_runtime=3.5.9\n";
         else if (group == "vectors") verifyVectors();
@@ -271,6 +352,8 @@ int main(int argc, char** argv)
         else if (group == "failures") verifyFailures();
         else if (group == "lifecycle") verifyLifecycle();
         else if (group == "concurrent") verifyConcurrent();
+        else if (group == "bounds") verifyInputBounds();
+        else if (group == "isolation") verifyConfigurationIsolation();
         else throw std::runtime_error("unknown test group: " + group);
     }
     catch (const std::exception& error)

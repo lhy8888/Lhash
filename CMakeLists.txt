@@ -16,6 +16,14 @@ option(LHASH_BUILD_M2_SMOKE "Build the M2 core smoke executable" ON)
 option(LHASH_BUILD_RUNTIME_TESTS "Build real-file engine regression tests" OFF)
 option(LHASH_BUILD_CLI "Build the LHash CLI executable" OFF)
 option(LHASH_ENABLE_OPENSSL_VENDOR "Enable the OpenSSL vendor backend in the CMake core build" OFF)
+option(LHASH_ENABLE_POSIX_TEST_BACKEND "Use the POSIX file backend for Linux diagnostic tests" OFF)
+
+if (LHASH_BUILD_CLI AND NOT LHASH_ENABLE_OPENSSL_VENDOR)
+    message(FATAL_ERROR "The CLI requires LHASH_ENABLE_OPENSSL_VENDOR=ON to provide the Windows algorithm set.")
+endif()
+if (MSVC AND LHASH_ENABLE_OPENSSL_VENDOR)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 set(LHASH_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(LHASH_SOURCE_ROOT "${LHASH_REPO_ROOT}/trunk/source")
@@ -48,7 +56,7 @@ target_include_directories(lhash_core PUBLIC
 )
 
 if (WIN32)
-    target_compile_definitions(lhash_core PRIVATE UNICODE _UNICODE)
+    target_compile_definitions(lhash_core PUBLIC UNICODE _UNICODE)
 endif()
 
 target_compile_definitions(lhash_core PRIVATE LHASH_CORE_BUILD=1)
@@ -59,10 +67,12 @@ target_compile_definitions(lhash_core PRIVATE
 )
 
 if (LHASH_ENABLE_OPENSSL_VENDOR)
-    message(FATAL_ERROR
-        "CMake OpenSSL vendor integration is not implemented yet. "
-        "Use the MSBuild Windows release workflow with LHashOpenSslInstallRoot.")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/LHashOpenSSL.cmake")
+    lhash_link_openssl(lhash_core)
 endif()
+
+find_package(Threads REQUIRED)
+target_link_libraries(lhash_core PUBLIC Threads::Threads)
 
 if (WIN32)
     target_compile_definitions(lhash_core PRIVATE WIN32 _WINDOWS _LIB)
@@ -147,7 +157,7 @@ if (LHASH_BUILD_M2_SMOKE)
 endif()
 
 if (LHASH_BUILD_RUNTIME_TESTS)
-    if (NOT WIN32 AND NOT APPLE)
+    if (NOT WIN32 AND NOT APPLE AND NOT LHASH_ENABLE_POSIX_TEST_BACKEND)
         message(FATAL_ERROR "Engine runtime tests require a Windows or macOS OS backend.")
     endif()
     enable_testing()
@@ -165,9 +175,28 @@ if (LHASH_BUILD_RUNTIME_TESTS)
     endif()
     add_test(NAME lhash_core_runtime COMMAND lhash_core_runtime)
     set_tests_properties(lhash_core_runtime PROPERTIES TIMEOUT 180)
+
+    add_subdirectory(tests/file_integrity)
+    add_subdirectory(tests/engine_failure)
+    add_subdirectory(tests/ui_lifecycle)
+    add_subdirectory(tests/windows-inputs)
+    add_executable(lhash_string_safety tests/string_safety/string_safety_tests.cpp)
+    target_link_libraries(lhash_string_safety PRIVATE lhash_core)
+    target_compile_definitions(lhash_string_safety PRIVATE LHASH_CORE_BUILD=1)
+    if (NOT WIN32)
+        target_include_directories(lhash_string_safety BEFORE PRIVATE "${LHASH_REPO_ROOT}/cmake/posix-stubs")
+    endif()
+    if (MSVC)
+        target_compile_options(lhash_string_safety PRIVATE /utf-8)
+    endif()
+    add_test(NAME lhash_string_safety COMMAND lhash_string_safety)
+    set_tests_properties(lhash_string_safety PROPERTIES TIMEOUT 30)
 endif()
 
 if (LHASH_BUILD_CLI)
+    if (NOT APPLE AND NOT LHASH_ENABLE_POSIX_TEST_BACKEND)
+        message(FATAL_ERROR "The CLI targets Apple Silicon; Linux execution requires LHASH_ENABLE_POSIX_TEST_BACKEND=ON.")
+    endif()
     add_executable(lhash_cli
         "${LHASH_REPO_ROOT}/trunk/cli/main.cpp"
     )
@@ -181,4 +210,9 @@ if (LHASH_BUILD_CLI)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
     )
+    enable_testing()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME lhash_cli_regression COMMAND "${Python3_EXECUTABLE}"
+        "${LHASH_REPO_ROOT}/tests/cli/test_cli.py" "$<TARGET_FILE:lhash_cli>")
+    set_tests_properties(lhash_cli_regression PROPERTIES TIMEOUT 180)
 endif()

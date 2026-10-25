@@ -1,4 +1,4 @@
-// LHashShellExt.h : CLHashShellExt 的声明
+﻿// LHashShellExt.h : CLHashShellExt 的声明
 
 #pragma once
 #include "resource.h"       // 主符号
@@ -62,7 +62,7 @@ public:
 private:
 	HRESULT LaunchLHashByCommandLine(LPCMINVOKECOMMANDINFO, BOOL);
 	HWND FindLHashWindow();
-	void SendFilesToLHash(LPCMINVOKECOMMANDINFO, HWND);
+	HRESULT SendFilesToLHash(LPCMINVOKECOMMANDINFO, HWND);
 
 	sunjwbase::tstring m_LHashPath;
 	TstrList m_pathList;

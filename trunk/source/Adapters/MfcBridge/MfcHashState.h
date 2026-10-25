@@ -2,6 +2,7 @@
 #define _MFC_HASH_STATE_H_
 
 #include "Common/HashTypes.h"
+#include "Adapters/MfcBridge/HashWorkerSessionState.h"
 class HashProgressSink;
 
 struct ThreadDataInputState
@@ -15,10 +16,12 @@ struct ThreadDataExecutionState
 	HashExecutionPreferenceState preferences;
 	HashCancellationState cancellation;
 	HashJobState jobState;
+	HashWorkerSessionState workerSession;
 };
 
 struct ThreadData
 {
+	ThreadData() : observer(NULL) { inputState.fileCount = 0; }
 	HashProgressSink *observer;
 	ThreadDataInputState inputState;
 	ThreadDataExecutionState executionState;

@@ -1,90 +1,44 @@
-name: Release SBOM
+name: Re-attest Published Release SBOM
 
+# Normal releases generate their checksummed SBOM and attestations before
+# publication in windows-build.yml. Recovery never rewrites published assets.
 on:
-  release:
-    types:
-      - published
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to process, for example v1.12.0
+        description: Existing release tag to verify and re-attest
         required: true
         type: string
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
   attestations: write
 
 jobs:
-  generate-release-sbom:
-    name: Generate and attest release SBOM
+  attest-release-assets:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
-      - name: Resolve release tag
-        id: resolve
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            tag="${{ github.event.release.tag_name }}"
-          else
-            tag="${{ inputs.tag }}"
-          fi
-          if [[ -z "$tag" ]]; then
-            echo "A release tag is required." >&2
-            exit 1
-          fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
-      - name: Download release assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          gh release download "${{ steps.resolve.outputs.tag }}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --dir release-assets
-
-      - name: Locate release bundle
-        id: prepare
-        shell: bash
-        run: |
-          set -euo pipefail
-          bundle_path="$(find release-assets -maxdepth 1 -type f -name 'LHash-windows-x64-*.zip' | head -n 1)"
-          if [[ -z "$bundle_path" ]]; then
-            echo "Expected a release asset matching LHash-windows-x64-*.zip." >&2
-            exit 1
-          fi
-          echo "bundle_path=$bundle_path" >> "$GITHUB_OUTPUT"
-
-      - name: Generate CycloneDX SBOM for release assets
-        uses: anchore/sbom-action@v0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          path: release-assets
-          format: cyclonedx-json
-          output-file: release-assets/LHash-release.cyclonedx.json
+          persist-credentials: false
 
-      - name: Upload SBOM to the release
-        shell: bash
+      - name: Download and verify immutable release assets
         run: |
           set -euo pipefail
-          gh release upload "${{ steps.resolve.outputs.tag }}" \
-            release-assets/LHash-release.cyclonedx.json \
-            --repo "$GITHUB_REPOSITORY" \
-            --clobber
+          test -n "$RELEASE_TAG"
+          git check-ref-format "refs/tags/$RELEASE_TAG"
+          gh release download --repo "$GITHUB_REPOSITORY" --dir release-assets \
+            --pattern 'LHash-windows-*.zip' --pattern RELEASE_MANIFEST.txt \
+            --pattern SHA256SUMS.txt --pattern LHash-release.cyclonedx.json -- "$RELEASE_TAG"
+          python3 tools/release_assets.py verify --directory release-assets
+          (cd release-assets && sha256sum --check SHA256SUMS.txt)
 
-      - name: Attest SBOM against the release bundle
-        uses: actions/attest-sbom@v2
+      - name: Bind the verified SBOM to both architecture bundles
+        uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v2
         with:
-          subject-path: ${{ steps.prepare.outputs.bundle_path }}
+          subject-path: release-assets/LHash-windows-*.zip
           sbom-path: release-assets/LHash-release.cyclonedx.json
-
-# Note:
-# This first pass creates a GitHub-managed SBOM artifact for each published
-# release and binds it to the packaged desktop bundle. A later pass can refine
-# the SBOM scope further once the release workflow emits more per-component
-# metadata directly from the build stage.

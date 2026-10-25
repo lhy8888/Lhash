@@ -4,6 +4,10 @@
 
 #include <stdio.h>
 #include <string>
+#include <vector>
+#include <limits>
+
+#include "Common/HashInputPolicy.h"
 
 #include <atlbase.h>
 
@@ -122,57 +126,89 @@ namespace WindowsUtils
 		return FALSE;
 	}
 
-	BOOL ElevateProcess()
+	bool GetExecutablePath(tstring& path)
 	{
-		BOOL bRet = FALSE;
-
-		TCHAR szExecutable[MAX_PATH + 1] = {0};
-		if(GetModuleFileName(NULL, szExecutable, MAX_PATH) > 0)
+		path.clear();
+		for (size_t capacity = 512; capacity <= 32768; capacity *= 2)
 		{
-			SHELLEXECUTEINFO sei = { sizeof(SHELLEXECUTEINFO) };
-			sei.lpVerb = TEXT("runas");
-			sei.lpFile = szExecutable;
-			sei.lpParameters = NULL;
-			sei.nShow = SW_SHOWNORMAL;
-
-			return ShellExecuteEx(&sei);
+			std::vector<TCHAR> buffer(capacity, 0);
+			DWORD length = GetModuleFileName(NULL, buffer.data(), static_cast<DWORD>(buffer.size()));
+			if (length == 0) return false;
+			if (length < buffer.size())
+			{
+				path.assign(buffer.data(), length);
+				return true;
+			}
 		}
-
-		return bRet;
+		SetLastError(ERROR_FILENAME_EXCED_RANGE);
+		return false;
 	}
 
-	void CopyCString(const CString& cstrToCopy)
+	bool CanAcceptUntrustedFileInput()
 	{
-		HGLOBAL hMoveable;
-		LPTSTR pszArr;
+		HANDLE rawToken = NULL;
+		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &rawToken)) return false;
+		WinHandleGuard::UniqueWinHandle token(rawToken);
+		TOKEN_ELEVATION elevation = {};
+		DWORD bytes = 0;
+		if (!GetTokenInformation(token.get(), TokenElevation, &elevation, sizeof(elevation), &bytes) ||
+			bytes != sizeof(elevation) || elevation.TokenIsElevated != 0) return false;
+		GetTokenInformation(token.get(), TokenIntegrityLevel, NULL, 0, &bytes);
+		if (bytes < sizeof(TOKEN_MANDATORY_LABEL) || bytes > 65536) return false;
+		std::vector<unsigned char> buffer(bytes);
+		if (!GetTokenInformation(token.get(), TokenIntegrityLevel, buffer.data(), bytes, &bytes)) return false;
+		const TOKEN_MANDATORY_LABEL* label = reinterpret_cast<const TOKEN_MANDATORY_LABEL*>(buffer.data());
+		if (!IsValidSid(label->Label.Sid)) return false;
+		const UCHAR count = *GetSidSubAuthorityCount(label->Label.Sid);
+		return count != 0 && *GetSidSubAuthority(label->Label.Sid, count - 1) < SECURITY_MANDATORY_HIGH_RID;
+	}
 
-		if (!::OpenClipboard(NULL))
-			return;
+	BOOL ElevateProcess()
+	{
+		tstring executable;
+		if (!GetExecutablePath(executable)) return FALSE;
+		SHELLEXECUTEINFO sei = { sizeof(SHELLEXECUTEINFO) };
+		sei.lpVerb = TEXT("runas");
+		sei.lpFile = executable.c_str();
+		sei.nShow = SW_SHOWNORMAL;
+		return ShellExecuteEx(&sei);
+	}
 
-		size_t bytes = (cstrToCopy.GetLength() + 1)*sizeof(TCHAR);
-		hMoveable = GlobalAlloc(GMEM_MOVEABLE, bytes);
-		if (hMoveable == NULL)
+	bool CopyCString(const CString& cstrToCopy, HWND owner)
+	{
+		if (owner == NULL || !::IsWindow(owner)) return false;
+		const size_t chars = static_cast<size_t>(cstrToCopy.GetLength()) + 1;
+		if (chars > (std::numeric_limits<size_t>::max)() / sizeof(TCHAR)) return false;
+		const size_t bytes = chars * sizeof(TCHAR);
+		HGLOBAL block = GlobalAlloc(GMEM_MOVEABLE, bytes);
+		if (block == NULL) return false;
+		LPTSTR destination = static_cast<LPTSTR>(GlobalLock(block));
+		if (destination == NULL)
 		{
-			::CloseClipboard();
-			return;
+			GlobalFree(block);
+			return false;
 		}
-		pszArr = (LPTSTR)GlobalLock(hMoveable);
-		if (pszArr == NULL)
+		memcpy(destination, cstrToCopy.GetString(), bytes);
+		GlobalUnlock(block);
+		// Prepare the data before opening/emptying the clipboard so allocation
+		// errors leave the previous clipboard contents intact.
+		if (!::OpenClipboard(owner))
 		{
-			GlobalFree(hMoveable);
-			::CloseClipboard();
-			return;
+			GlobalFree(block);
+			return false;
 		}
-		ZeroMemory(pszArr, bytes);
-		_tcscpy_s(pszArr, cstrToCopy.GetLength() + 1, cstrToCopy);
-		GlobalUnlock(hMoveable);
-
-		::EmptyClipboard();
-		if (::SetClipboardData(CF_UNICODETEXT, hMoveable) == NULL)
+		bool copied = false;
+		if (::EmptyClipboard())
 		{
-			GlobalFree(hMoveable);
+#if defined(UNICODE) || defined(_UNICODE)
+			copied = ::SetClipboardData(CF_UNICODETEXT, block) != NULL;
+#else
+			copied = ::SetClipboardData(CF_TEXT, block) != NULL;
+#endif
 		}
+		if (!copied) GlobalFree(block);
 		::CloseClipboard();
+		return copied;
 	}
 
 	HINSTANCE OpenURL(const TCHAR *pszURL)
@@ -181,37 +217,27 @@ namespace WindowsUtils
 			NULL, NULL, SW_SHOW);
 	}
 
-	bool FindShlExtDll(TCHAR *pszExeFullPath, TCHAR *pszShlDllPath)
+	bool FindShlExtDll(const tstring& exePath, tstring& dllPath)
 	{
-		tstring tstrExeDirPath(pszExeFullPath);
-		tstring::size_type idx = tstrExeDirPath.rfind(_T("\\"));
-		tstrExeDirPath = tstrExeDirPath.substr(0, idx);
-
-		tstring tstrShlExtDll = tstrExeDirPath;
-		tstrShlExtDll.append(_T("\\LHashShlExt"));
-		if(IsWindows64())
-			tstrShlExtDll.append(_T("64"));
-		tstrShlExtDll.append(_T(".dll"));
-
-		WIN32_FIND_DATA ffData;
-		WinHandleGuard::UniqueFindHandle hFind(FindFirstFile(tstrShlExtDll.c_str(), &ffData));
-
-		bool bRet = hFind.isValid();
-
-		if(bRet)
+		dllPath.clear();
+		const tstring::size_type separator = exePath.find_last_of(_T("\\/"));
+		if (separator == tstring::npos) return false;
+		const tstring directory = exePath.substr(0, separator + 1);
+		const TCHAR* names[] = { IsWindows64() ? _T("LHashShlExt64.dll") : _T("LHashShlExt.dll"), _T("LHashShlExt.dll") };
+		for (const TCHAR* name : names)
 		{
-#if defined(UNICODE) || defined(_UNICODE)
-				wcscpy_s(pszShlDllPath, MAX_PATH, tstrShlExtDll.c_str());
-#else
-				strcpy_s(pszShlDllPath, MAX_PATH, tstrShlExtDll.c_str());
-#endif
-
+			const tstring candidate = directory + name;
+			DWORD attributes = GetFileAttributes(candidate.c_str());
+			if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+			{
+				dllPath = candidate;
+				return true;
+			}
 		}
-
-		return bRet;
+		return false;
 	}
 
-	bool RegShellExt(TCHAR *pszShlDllPath)
+	bool RegShellExt(const TCHAR *pszShlDllPath)
 	{
 		WinHandleGuard::UniqueModuleHandle hModule(LoadLibraryWithSecureSearchPath(pszShlDllPath));
 		if(hModule.isValid())
@@ -229,7 +255,7 @@ namespace WindowsUtils
 		return false;
 	}
 
-	bool UnregShellExt(TCHAR *pszShlDllPath)
+	bool UnregShellExt(const TCHAR *pszShlDllPath)
 	{
 		WinHandleGuard::UniqueModuleHandle hModule(LoadLibraryWithSecureSearchPath(pszShlDllPath));
 		if(hModule.isValid())
@@ -248,7 +274,7 @@ namespace WindowsUtils
 	}
 
 
-	bool AddContextMenu(TCHAR *pszExeFullPath)
+	bool AddContextMenu(const TCHAR *pszExeFullPath)
 	{
 		CRegKey key;
 		LONG lResult;
@@ -268,18 +294,9 @@ namespace WindowsUtils
 		if(lResult != ERROR_SUCCESS)
 			return false;
 
-		// 成功打开
-		TCHAR pszCommand[270];
-
-#if defined(UNICODE) || defined(_UNICODE)
-		wcscpy_s(pszCommand, MAX_PATH + 10, pszExeFullPath);
-		wcscat_s(pszCommand, MAX_PATH + 10, _T(" \"%1\""));
-#else
-		strcpy_s(pszCommand, MAX_PATH + 10, pszExeFullPath);
-		strcat_s(pszCommand, MAX_PATH + 10, _T(" \"%1\""));
-#endif
-
-		lResult = key.SetStringValue(NULL, pszCommand);
+		tstring command;
+		if (pszExeFullPath == NULL || !TryBuildHashShellCommand(tstring(pszExeFullPath), command)) return false;
+		lResult = key.SetStringValue(NULL, command.c_str());
 		key.Close();
 
 		if(lResult == ERROR_SUCCESS)
@@ -288,7 +305,7 @@ namespace WindowsUtils
 			return false;
 	}
 
-	bool AddShellExt(TCHAR *pszExeFullPath)
+	bool AddShellExt(const TCHAR *pszExeFullPath)
 	{
 		CRegKey key;
 		LONG lResult;
@@ -320,37 +337,18 @@ namespace WindowsUtils
 
 	bool AddContextMenu()
 	{
-		TCHAR pszExeFullPath[MAX_PATH + 10] = { L'0' };
-		TCHAR pszShlDllPath[MAX_PATH + 10] = { L'0' };
-
-		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // 得到程序模块名称，全路径
-
-		if(FindShlExtDll(pszExeFullPath, pszShlDllPath))
-		{
-			// We found shell extension dll
-			if(RegShellExt(pszShlDllPath) &&
-				AddShellExt(pszExeFullPath))
-				return true;
-			else
-				return AddContextMenu(pszExeFullPath); // fallback
-		}
-		else
-		{
-			// No dll, just add context menu
-			return AddContextMenu(pszExeFullPath);
-		}
+		tstring executable, dllPath;
+		if (!GetExecutablePath(executable)) return false;
+		if (FindShlExtDll(executable, dllPath) && RegShellExt(dllPath.c_str()) && AddShellExt(executable.c_str()))
+			return true;
+		return AddContextMenu(executable.c_str());
 	}
 
 	bool RemoveContextMenu()
 	{
-		TCHAR pszExeFullPath[MAX_PATH + 10] = { L'0' };
-		TCHAR pszShlDllPath[MAX_PATH + 10] = { L'0' };
-
-		GetModuleFileName(NULL, pszExeFullPath, MAX_PATH); // 得到程序模块名称，全路径
-		if(FindShlExtDll(pszExeFullPath, pszShlDllPath))
-		{
-			UnregShellExt(pszShlDllPath);
-		}
+		tstring executable, dllPath;
+		if (!GetExecutablePath(executable)) return false;
+		if (FindShlExtDll(executable, dllPath) && !UnregShellExt(dllPath.c_str())) return false;
 
 		CRegKey keyShell, keyShellEx;
 		LPCTSTR lpszKeyShellName = _T("*\\shell\\");

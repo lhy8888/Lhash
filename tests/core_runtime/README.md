@@ -18,9 +18,11 @@ The 43 cases cover:
   and parallel digest execution, without publishing partial digests.
 - Four simultaneous callers completing 32 independent requests with separate state.
 
-The CMake core currently uses an OpenSSL stub. SHA256 and the other OpenSSL algorithms
-are verified separately by the real-library provider tests; this suite does not claim
-SHA256 engine coverage while linked to that stub.
+CMake can link the pinned static OpenSSL 3.5.9 installation when
+`LHASH_ENABLE_OPENSSL_VENDOR=ON` and `OPENSSL_ROOT_DIR` are set. This suite
+retains its baseline vectors; the full CLI regression exercises all 18 Windows
+algorithms through the same engine and real files, and the provider suite checks
+EVP failure, lifecycle and configuration-isolation behavior.
 
 Build integration: link the executable with `lhash_core` and `Threads::Threads`, define
 `LHASH_CORE_BUILD=1`, and include `cmake/posix-stubs` before `trunk/source` on macOS.
@@ -28,5 +30,6 @@ On Windows also define `UNICODE` and `_UNICODE` to match the core library's stri
 Use `/utf-8` with MSVC. Give the CTest entry a timeout (for example 180 seconds) so a
 queue or cancellation regression cannot leave CI waiting indefinitely.
 
-These tests require the real Windows or Darwin file backend. Compiling their translation
-unit on Linux is a useful API/syntax check, not a substitute for native execution.
+These tests run the Windows or POSIX file backend. Linux requires the explicit
+`LHASH_ENABLE_POSIX_TEST_BACKEND=ON` diagnostic option; Linux execution does not
+substitute for native Windows or Darwin validation.

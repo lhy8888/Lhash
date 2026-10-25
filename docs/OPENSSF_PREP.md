@@ -46,7 +46,7 @@ These areas exist, but are not yet fully mature:
 
 ### Code scanning
 
-- CodeQL currently covers only the managed C# surface
+- CodeQL covers C# and the actual Windows C++/MFC build; confirm successful analysis on the release commit
 - native C/C++ coverage still needs a more stable dedicated path
 
 ### Scorecard usage

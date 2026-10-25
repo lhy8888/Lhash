@@ -49,12 +49,13 @@ set(LHASH_ALGORITHM_SOURCES
 set(LHASH_RUNTIME_HASH_SOURCES
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/BLAKE3HashProvider.cpp"
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/CRC32CHashProvider.cpp"
-    # CMake core uses the no-op OpenSSL provider stub. The vendor-backed
-    # implementation remains MSBuild-only until CMake OpenSSL vendor support
-    # is explicitly added.
-    "${LHASH_SOURCE_ROOT}/Runtime/Hash/OpenSslEvpHashProviderStub.cpp"
     "${LHASH_SOURCE_ROOT}/Runtime/Hash/XXHash3HashProvider.cpp"
 )
+if (LHASH_ENABLE_OPENSSL_VENDOR)
+    list(APPEND LHASH_RUNTIME_HASH_SOURCES "${LHASH_SOURCE_ROOT}/Runtime/Hash/OpenSslEvpHashProvider.cpp")
+else()
+    list(APPEND LHASH_RUNTIME_HASH_SOURCES "${LHASH_SOURCE_ROOT}/Runtime/Hash/OpenSslEvpHashProviderStub.cpp")
+endif()
 
 set(LHASH_PLATFORM_SOURCES "")
 if (WIN32)
@@ -64,7 +65,7 @@ if (WIN32)
         "${LHASH_SOURCE_ROOT}/OsUtils/OsFileWinApi.cpp"
         "${LHASH_SOURCE_ROOT}/OsUtils/OsThreadWinApi.cpp"
     )
-elseif (APPLE)
+elseif (APPLE OR (UNIX AND LHASH_ENABLE_POSIX_TEST_BACKEND))
     list(APPEND LHASH_PLATFORM_SOURCES
         "${LHASH_SOURCE_ROOT}/OsUtils/OsFilePosixDarwin.cpp"
         "${LHASH_SOURCE_ROOT}/OsUtils/OsThreadPosixDarwin.cpp"

@@ -25,7 +25,7 @@ The maintained release line turns LHash from a traditional hash utility into a *
 - Windows UI mainline: `MFC`
 - CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
 - Core CI: [`Core Build Matrix workflow`](.github/workflows/core-m2.yml)
-- macOS CLI MVP: [`macOS CLI MVP Build workflow`](.github/workflows/macos-cli-build.yml)
+- macOS Apple Silicon CLI: [`macOS CLI Build workflow`](.github/workflows/macos-cli-build.yml)
 - Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
 - macOS core support: [`docs/MACOS_CORE_SUPPORT.md`](docs/MACOS_CORE_SUPPORT.md)
 - Security policy: [SECURITY.md](SECURITY.md)
@@ -180,7 +180,7 @@ This baseline-only core support contract includes Darwin-specific
 path security checks and a dedicated security regression target. It is part of
 the core bring-up, not a full macOS product line.
 
-The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.
+The Windows product uses the MFC desktop UI. The macOS Apple Silicon CLI uses the same 18-algorithm registry and static OpenSSL 3.5.9 backend. macOS artifacts are unsigned and unnotarized; there is no macOS GUI or Intel target.
 
 ## Roadmap direction
 

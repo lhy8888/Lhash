@@ -1,0 +1,9 @@
+# A test-only policy that prevents digest fetches in the process default context.
+# No external provider module or executable code is loaded by this fixture.
+openssl_conf = lhash_test_init
+
+[lhash_test_init]
+alg_section = lhash_test_algorithms
+
+[lhash_test_algorithms]
+default_properties = provider=lhash_unavailable

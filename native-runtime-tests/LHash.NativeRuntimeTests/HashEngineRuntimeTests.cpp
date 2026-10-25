@@ -1935,10 +1935,12 @@ namespace
 		NativeAssertEqual(0, exitCode, "HashThreadFunc should succeed for a searchable digest result.");
 
 		const HashResultList& results = GetThreadDataResults(threadData);
-		sunjwbase::tstring digestQuery = NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string(" 90015098 ")));
+		sunjwbase::tstring digestQuery = NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string(" 900150983CD24FB0D6963F7D28E17F72 ")));
 		sunjwbase::tstring missingQuery = NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string(" no-match ")));
 
-		NativeAssertEqual(static_cast<size_t>(1), CountDigestMatchingHashResults(results, digestQuery), "The runtime digest search should find the emitted MD5 prefix.");
+		NativeAssertEqual(static_cast<size_t>(1), CountDigestMatchingHashResults(results, digestQuery), "Verification should match the complete emitted MD5.");
+		NativeAssertEqual(static_cast<size_t>(0), CountDigestMatchingHashResults(results, _T("90015098")), "Verification must reject a digest prefix.");
+		NativeAssertEqual(static_cast<size_t>(0), CountDigestMatchingHashResults(results, _T("9")), "Verification must reject a single hex character.");
 		NativeAssertEqual(static_cast<size_t>(0), CountDigestMatchingHashResults(results, missingQuery), "The runtime digest search should reject non-matching digests.");
 	}
 
@@ -1963,7 +1965,7 @@ namespace
 		std::vector<sunjwbase::tstring> matchedPaths;
 		size_t matchCount = VisitPathAndDigestMatchingHashResults(GetThreadDataResults(threadData),
 			NormalizeHashResultPathSearchText(_T("alpha")),
-			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("90015098"))),
+			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("900150983CD24FB0D6963F7D28E17F72"))),
 			[&](const HashResult& result)
 		{
 			matchedPaths.push_back(result.path);
@@ -1974,7 +1976,7 @@ namespace
 		NativeAssertEqual(alphaPath, matchedPaths[0], "The runtime path+digest match should select the alpha test file.");
 		NativeAssertEqual(static_cast<size_t>(0), VisitPathAndDigestMatchingHashResults(GetThreadDataResults(threadData),
 			NormalizeHashResultPathSearchText(_T("alpha")),
-			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("5D4140"))),
+			NormalizeHashResultDigestSearchText(sunjwbase::strtotstr(std::string("5D41402ABC4B2A76B9719D911017C592"))),
 			[&](const HashResult& result)
 		{
 			(void)result;

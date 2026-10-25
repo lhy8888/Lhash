@@ -2,6 +2,7 @@
 #include "Common/ThreadPool.h"
 
 #include <future>
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -16,11 +17,13 @@ static void Require(bool condition, const std::string& message)
 }
 
 static void CheckFile(ThreadPool& pool, size_t size, unsigned int chunkSize, size_t buffers,
-    bool yieldRead = false, bool yieldUpdate = false)
+    bool yieldRead = false, bool yieldUpdate = false,
+    size_t maxRead = std::numeric_limits<size_t>::max())
 {
     MockFile file;
     file.length = size;
     file.yieldAfterRead = yieldRead;
+    file.maxRead = maxRead;
     FileExecutionState state;
     state.fileAttemptState.osFile = &file;
     state.hashContexts.yieldAfterUpdate = yieldUpdate;
@@ -34,6 +37,81 @@ static void CheckFile(ThreadPool& pool, size_t size, unsigned int chunkSize, siz
     Require(state.hashContexts.contentMatches, "chunk contents or ordering changed");
     Require(state.progressState.bytes == size, "progress differs from bytes hashed");
     Require(file.offset == size, "input was not completely read");
+}
+
+static void CheckException(ThreadPool& pool, int failure)
+{
+    MockFile file;
+    file.length = 4096;
+    FileExecutionState state;
+    state.fileAttemptState.osFile = &file;
+    HashExecutionContext context;
+    const auto injectedFailure = [] { throw std::runtime_error("injected queue failure"); };
+    if (failure == 0)
+        file.beforeRead = injectedFailure;
+    else if (failure == 1)
+        state.hashContexts.beforeUpdate = injectedFailure;
+    else
+        state.progressState.beforeProgress = injectedFailure;
+    bool caught = false;
+    try
+    {
+        ProcessOpenedFileHashingParallel(&context, {}, file.length, false, 64, {2}, &state, &pool);
+    }
+    catch (const std::runtime_error& error)
+    {
+        caught = std::string(error.what()) == "injected queue failure";
+    }
+    Require(caught, "queue failure was not propagated");
+    CheckFile(pool, 145, 64, 2); // Failure must not leave background work in this pool.
+}
+
+static void CheckProducerExceptionWaitsForConsumer(ThreadPool& pool)
+{
+    MockFile file;
+    file.length = 4096;
+    FileExecutionState state;
+    state.fileAttemptState.osFile = &file;
+    HashExecutionContext context;
+    std::promise<void> updateStarted;
+    auto updateStartedFuture = updateStarted.get_future();
+    std::promise<void> producerThrowing;
+    auto producerThrowingFuture = producerThrowing.get_future();
+    std::promise<void> releaseUpdate;
+    auto releaseUpdateFuture = releaseUpdate.get_future();
+    state.hashContexts.beforeUpdate = [&]
+    {
+        updateStarted.set_value();
+        releaseUpdateFuture.wait();
+    };
+    file.beforeRead = [&]
+    {
+        if (file.offset != 0)
+        {
+            updateStartedFuture.wait();
+            producerThrowing.set_value();
+            throw std::runtime_error("producer failed with update in flight");
+        }
+    };
+    auto execution = std::async(std::launch::async, [&]
+    {
+        try
+        {
+            ProcessOpenedFileHashingParallel(&context, {}, file.length, false, 64, {2}, &state, &pool);
+        }
+        catch (const std::runtime_error& error)
+        {
+            return std::string(error.what()) == "producer failed with update in flight";
+        }
+        return false;
+    });
+    producerThrowingFuture.wait();
+    const bool waited = execution.wait_for(std::chrono::milliseconds(30)) == std::future_status::timeout;
+    releaseUpdate.set_value();
+    Require(execution.get(), "in-flight producer exception was not propagated");
+    Require(waited, "producer failure returned before its consumer finished");
+    Require(state.hashContexts.bytes == 64 && state.hashContexts.contentMatches,
+        "in-flight update lost its buffer during producer failure");
 }
 
 static void CheckReadFailure(ThreadPool& pool, size_t failAfter)
@@ -104,6 +182,12 @@ int main()
         CheckCancellation(pool, true);
         CheckCancellation(pool, false);
         CheckFile(pool, 145, 64, 4); // A cancelled job must not poison pool reuse.
+        for (size_t maxRead : {size_t{1}, size_t{7}, size_t{63}})
+            for (size_t buffers : {size_t{1}, size_t{4}})
+                CheckFile(pool, 145, 64, buffers, true, true, maxRead);
+        for (int failure = 0; failure != 3; ++failure)
+            CheckException(pool, failure);
+        CheckProducerExceptionWaitsForConsumer(pool);
 
         std::vector<std::future<void>> jobs;
         for (size_t job = 0; job < 4; ++job)
@@ -119,7 +203,7 @@ int main()
 
         std::cout << "PASS boundary_cases=" << boundaryCases
             << " final_chunk_stress=" << stressIterations
-            << " read_failures=3 cancellations=2 pool_reuse=1 concurrent_jobs=1200\n";
+            << " read_failures=3 cancellations=2 pool_reuse=1 short_reads=6 exceptions=4 concurrent_jobs=1200\n";
         return 0;
     }
     catch (const std::exception& error)

@@ -2,6 +2,11 @@ name: CodeQL
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - future-winui-was2
+      - codex/**
+  pull_request:
 
 permissions:
   contents: read
@@ -9,9 +14,18 @@ permissions:
   actions: read
 
 jobs:
-  analyze-csharp:
-    name: Analyze C# surface
-    runs-on: windows-latest
+  analyze:
+    name: Analyze ${{ matrix.language }} surface
+    runs-on: windows-2022
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: csharp
+            build_mode: none
+          - language: cpp
+            build_mode: manual
     permissions:
       contents: read
       security-events: write
@@ -19,23 +33,43 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup MSBuild for native analysis
+        if: matrix.language == 'cpp'
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
+
+      - name: Verify and build the static dependency before native tracing
+        if: matrix.language == 'cpp'
+        shell: pwsh
+        run: |
+          & pwsh -NoProfile -File tools/verify_openssl_vendor_pristine.ps1 -Version 3.5.9
+          if ($LASTEXITCODE -ne 0) { throw 'OpenSSL source integrity check failed.' }
+          $openSslRoot = Join-Path $pwd 'artifacts/openssl-vendor-x64'
+          & pwsh -NoProfile -File trunk/build_openssl_vendor.ps1 -Platform x64 -InstallRoot $openSslRoot
+          if ($LASTEXITCODE -ne 0) { throw 'OpenSSL build failed.' }
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
         with:
-          languages: csharp
-          build-mode: none
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build_mode }}
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v5
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
 
-      - name: Analyze
-        uses: github/codeql-action/analyze@v3
+      - name: Trace the native application build
+        if: matrix.language == 'cpp'
+        shell: pwsh
+        run: |
+          $openSslRoot = Join-Path $pwd 'artifacts/openssl-vendor-x64'
+          & msbuild trunk/fileshash15.sln /m /t:LHash /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 "/p:LHashOpenSslInstallRoot=$openSslRoot"
+          if ($LASTEXITCODE -ne 0) { throw 'Native CodeQL build failed.' }
 
-# Note:
-# CodeQL is temporarily restricted to manual execution while the repository's
-# mixed native and managed build surfaces are being aligned for more reliable
-# automated scanning. This avoids repeated noise on normal development pushes.
+      - name: Analyze
+        uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          category: /language:${{ matrix.language }}

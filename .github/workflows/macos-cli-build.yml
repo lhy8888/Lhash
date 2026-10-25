@@ -1,10 +1,11 @@
-name: macOS CLI MVP Build
+name: macOS ARM64 CLI Build
 
 on:
   workflow_dispatch:
   push:
     branches:
       - future-winui-was2
+      - codex/**
   pull_request:
 
 permissions:
@@ -13,9 +14,26 @@ permissions:
 jobs:
   build-macos-arm64-cli:
     runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      OPENSSL_ROOT_DIR: ${{ github.workspace }}/build/openssl-install
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Verify pristine OpenSSL source
+        run: pwsh -NoProfile -File tools/verify_openssl_vendor_pristine.ps1 -Version 3.5.9
+
+      - name: Cache static OpenSSL
+        id: openssl-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: build/openssl-install
+          key: openssl-3.5.9-macos-cli-arm64-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh') }}
+
+      - name: Build static OpenSSL 3.5.9
+        if: steps.openssl-cache.outputs.cache-hit != 'true'
+        run: bash tools/build_openssl_vendor_posix.sh "$OPENSSL_ROOT_DIR"
 
       - name: Configure
         run: |
@@ -23,13 +41,15 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_BUILD_TYPE=Release \
             -DLHASH_BUILD_M2_SMOKE=OFF \
+            -DLHASH_BUILD_RUNTIME_TESTS=ON \
             -DLHASH_BUILD_CLI=ON \
-            -DLHASH_ENABLE_OPENSSL_VENDOR=OFF
+            -DLHASH_ENABLE_OPENSSL_VENDOR=ON \
+            -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR"
 
       - name: Build
         run: |
           cmake --build build/macos-cli \
-            --config Release --target lhash_cli --parallel
+            --config Release --parallel
 
       - name: Locate executable
         run: |
@@ -39,12 +59,10 @@ jobs:
           fi
           echo "CLI_PATH=${CLI_PATH}" >> "$GITHUB_ENV"
 
-      - name: Smoke test
+      - name: Test engine and all CLI algorithms
         run: |
-          echo "hello" > sample.txt
-          "$CLI_PATH" sample.txt | tee cli-smoke.log
-          grep -i "md5" cli-smoke.log
-          grep -i "sha1" cli-smoke.log
+          ctest --test-dir build/macos-cli --output-on-failure --no-tests=error -V
+          "$CLI_PATH" --list-algorithms
 
       - name: Package
         run: |
@@ -52,9 +70,9 @@ jobs:
           DIR="LHash-macos-arm64-cli-${SHA}"
           mkdir -p "dist/${DIR}"
           cp "$CLI_PATH" "dist/${DIR}/"
-          shasum -a 256 "dist/${DIR}/lhash" > "dist/${DIR}/SHA256.txt"
+          (cd "dist/${DIR}" && shasum -a 256 lhash > SHA256.txt)
           cat > "dist/${DIR}/README.txt" <<EOF
-          LHash macOS ARM64 CLI MVP
+          LHash macOS ARM64 CLI
 
           Commit:
           - $GITHUB_SHA
@@ -66,23 +84,32 @@ jobs:
 
           Usage:
           - ./lhash <file>
-          - This workflow artifact is unsigned and is intended for MVP validation only.
+          - ./lhash -a sha256 <file>
+          - ./lhash --list-algorithms
+          - ./lhash --all <file>
+          - shasum -a 256 -c SHA256.txt
+          - This workflow artifact is unsigned and is not notarized.
           EOF
           cat > "dist/${DIR}/BUILD_INFO.txt" <<EOF
           commit=$GITHUB_SHA
           short_sha=$SHA
           platform=macos-arm64
-          artifact_type=cli-mvp
-          openssl_enabled=false
+          artifact_type=cli
+          openssl_enabled=true
+          openssl_vendor_version=3.5.9
           notarized=false
           source_executable=$CLI_PATH
           packaged_executable=lhash
           sha256=$(cut -d ' ' -f 1 "dist/${DIR}/SHA256.txt")
           EOF
           tar -czf "dist/${DIR}.tar.gz" -C dist "${DIR}"
+          verification_root=$(mktemp -d)
+          trap 'rm -rf "$verification_root"' EXIT
+          tar -xzf "dist/${DIR}.tar.gz" -C "$verification_root"
+          (cd "$verification_root/${DIR}" && shasum -a 256 -c SHA256.txt)
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-macos-arm64-cli
           path: dist/LHash-macos-arm64-cli-*.tar.gz

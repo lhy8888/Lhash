@@ -4,6 +4,11 @@
 
 namespace HashRuntime
 {
+	OpenSslEvpHashContext::~OpenSslEvpHashContext()
+	{
+		CleanupOpenSslEvpHashContext(this);
+	}
+
 	bool InitializeOpenSslEvpHashContext(
 		OpenSslEvpHashContext *hashContext,
 		const char *const *algorithmNames,

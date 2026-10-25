@@ -2,9 +2,9 @@
 
 ## Overview
 
-LHash is implemented as a **local Windows verification tool** with a security model centered on correctness, predictable local execution, and a reviewable release posture.
+LHash is implemented as a **local file verification tool** with a security model centered on correctness, predictable local execution, and a reviewable release posture.
 
-The maintained public product line remains the Windows MFC desktop application. macOS arm64 currently exists as a core support and CLI MVP validation path, not as a full macOS GUI product line or notarized public distribution.
+The Windows product uses the MFC desktop UI. The macOS Apple Silicon CLI uses the same 18-algorithm registry and static OpenSSL 3.5.9 backend. macOS artifacts are unsigned and unnotarized; there is no macOS GUI or Intel target.
 
 The maintained release line does not treat security as a single feature. Instead, it combines local-safety defaults, runtime isolation, careful file handling, and release metadata so that the verification workflow is easier to trust and easier to audit.
 

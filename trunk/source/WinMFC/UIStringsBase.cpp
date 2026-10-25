@@ -78,6 +78,11 @@ UIStringsBase::UIStringsBase()
 
 	// Find Dialog Strings
 	m_stringsMap[_T("FINDDLG_TITLE")] = _T("Verify");
+	m_stringsMap[_T("MAINDLG_VERIFY_INVALID")] = _T("Enter a complete hexadecimal digest. Short prefixes are not accepted.");
+	m_stringsMap[_T("MAINDLG_COPY_FAILED")] = _T("Could not copy the result to the clipboard. Please try again.");
+	m_stringsMap[_T("MAINDLG_EXPORT_FAILED")] = _T("Could not export the result. Check the file name, text encoding, and available disk space.");
+	m_stringsMap[_T("MAINDLG_WORKER_START_FAILED")] = _T("Could not start hashing. Please try again.");
+	m_stringsMap[_T("MAINDLG_WORKER_FAILED")] = _T("Hashing could not complete. Please try again.");
 
 	// About Dialog Strings
 	m_stringsMap[_T("ABOUTDLG_TITLE")] = _T("About LHash");

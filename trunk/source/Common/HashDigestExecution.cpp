@@ -8,6 +8,10 @@ namespace HashEngineInternal
 		FileExecutionState *executionState, ThreadPool *threadPool)
 	{
 		const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);
+		if (digestUpdateRequest.operationDescriptors.empty())
+		{
+			return false;
+		}
 		HashDigestExecutionMode digestExecutionMode = GetHashDigestRuntimeExecutionMode(digestRuntimePlan);
 		unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);
 		const HashDigestQueuePlan& digestQueuePlan = GetHashDigestRuntimeQueuePlan(digestRuntimePlan);

@@ -180,11 +180,10 @@ private:
 	template<typename TAppendAction>
 	void UpdateMainHyperEdit(TAppendAction appendAction, bool refreshAfterUpdate = false)
 	{
-		lockBridgeData();
 		{
+			std::lock_guard<sunjwbase::OsMutex> lock(*m_mainMtx);
 			appendAction(m_mainHyperEdit);
 		}
-		unlockBridgeData();
 
 		if (refreshAfterUpdate)
 		{

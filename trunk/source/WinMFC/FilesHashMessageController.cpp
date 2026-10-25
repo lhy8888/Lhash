@@ -10,73 +10,8 @@
 #include "FilesHashInputController.h"
 #include "FilesHashLifecycleController.h"
 #include "FilesHashResultViewController.h"
-#include "WinCommon/WinHandleGuard.h"
-
-namespace
-{
-	bool QueryWindowProcessImagePath(const CWnd* pSenderWnd, sunjwbase::tstring& processImagePath)
-	{
-		if (pSenderWnd == NULL || !::IsWindow(pSenderWnd->GetSafeHwnd()))
-		{
-			return false;
-		}
-
-		DWORD dwSenderProcessId = 0;
-		GetWindowThreadProcessId(pSenderWnd->GetSafeHwnd(), &dwSenderProcessId);
-		if (dwSenderProcessId == 0)
-		{
-			return false;
-		}
-
-		WinHandleGuard::UniqueWinHandle senderProcess(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwSenderProcessId));
-		if (!senderProcess.isValid())
-		{
-			return false;
-		}
-
-		std::vector<TCHAR> processPath(32768, 0);
-		DWORD cchExecutable = static_cast<DWORD>(processPath.size());
-		if (!QueryFullProcessImageName(senderProcess.get(), 0, processPath.data(), &cchExecutable) ||
-			cchExecutable == 0)
-		{
-			return false;
-		}
-
-		processImagePath.assign(processPath.data(), cchExecutable);
-		return !processImagePath.empty();
-	}
-
-	sunjwbase::tstring GetTrustedExplorerImagePath()
-	{
-		std::vector<TCHAR> windowsDirectory(32768, 0);
-		UINT cchWindowsDirectory = GetWindowsDirectory(windowsDirectory.data(), static_cast<UINT>(windowsDirectory.size()));
-		if (cchWindowsDirectory == 0 || cchWindowsDirectory >= windowsDirectory.size())
-		{
-			return _T("");
-		}
-
-		sunjwbase::tstring trustedPath(windowsDirectory.data(), cchWindowsDirectory);
-		if (trustedPath[trustedPath.length() - 1] != _T('\\') &&
-			trustedPath[trustedPath.length() - 1] != _T('/'))
-		{
-			trustedPath += _T("\\");
-		}
-		trustedPath += _T("explorer.exe");
-		return trustedPath;
-	}
-
-	sunjwbase::tstring GetCurrentExecutableImagePath()
-	{
-		std::vector<TCHAR> executablePath(32768, 0);
-		DWORD cchExecutable = GetModuleFileName(NULL, executablePath.data(), static_cast<DWORD>(executablePath.size()));
-		if (cchExecutable == 0 || cchExecutable >= executablePath.size())
-		{
-			return _T("");
-		}
-
-		return sunjwbase::tstring(executablePath.data(), cchExecutable);
-	}
-}
+#include "WindowsUtils.h"
+#include "WinCommon/WindowsStrings.h"
 
 FilesHashMessageController::FilesHashMessageController()
 	: m_threadData(NULL),
@@ -174,6 +109,15 @@ bool FilesHashMessageController::DispatchFileLoadOutcome(
 		AfxMessageBox(message, MB_OK | MB_ICONWARNING);
 		return false;
 
+	case FileLoadResult::EnumerationLimit:
+		AfxMessageBox(WindowsStrings::GetCurrentUILang() == 2052
+			? _T("文件夹包含过多内容或目录层级过深，请选择较小的文件夹。")
+			: _T("The folder contains too many entries or nested folders. Select a smaller folder."), MB_OK | MB_ICONWARNING);
+		return false;
+
+	case FileLoadResult::Cancelled:
+		return false;
+
 	case FileLoadResult::Error:
 		AfxMessageBox(errorMessage, MB_OK | MB_ICONERROR);
 		return false;
@@ -201,7 +145,7 @@ void FilesHashMessageController::HandleDropFiles(
 		return;
 	}
 
-	if (!IsThreadDataWorking(*m_threadData))
+	if (WindowsUtils::CanAcceptUntrustedFileInput() && !m_hashInputController->IsLoadingFiles() && !IsThreadDataWorking(*m_threadData))
 	{
 		m_parentWnd->DragAcceptFiles(FALSE);
 		FileLoadOutcome outcome = m_hashInputController->LoadDroppedFiles(hDropInfo);
@@ -223,31 +167,6 @@ void FilesHashMessageController::HandleDropFiles(
 	}
 }
 
-bool FilesHashMessageController::IsTrustedCopyDataSender(const CWnd* pSenderWnd)
-{
-	sunjwbase::tstring senderImagePath;
-	if (!QueryWindowProcessImagePath(pSenderWnd, senderImagePath))
-	{
-		return false;
-	}
-
-	const TCHAR* pszFileName = _tcsrchr(senderImagePath.c_str(), _T('\\'));
-	pszFileName = (pszFileName != NULL) ? (pszFileName + 1) : senderImagePath.c_str();
-	if (_tcsicmp(pszFileName, _T("explorer.exe")) == 0)
-	{
-		sunjwbase::tstring trustedExplorerPath = GetTrustedExplorerImagePath();
-		return !trustedExplorerPath.empty() && _tcsicmp(senderImagePath.c_str(), trustedExplorerPath.c_str()) == 0;
-	}
-
-	if (_tcsicmp(pszFileName, _T("LHash.exe")) == 0)
-	{
-		sunjwbase::tstring currentExecutablePath = GetCurrentExecutableImagePath();
-		return !currentExecutablePath.empty() && _tcsicmp(senderImagePath.c_str(), currentExecutablePath.c_str()) == 0;
-	}
-
-	return false;
-}
-
 BOOL FilesHashMessageController::HandleCopyData(
 	const CWnd* pSenderWnd,
 	const COPYDATASTRUCT* pCopyDataStruct,
@@ -265,8 +184,13 @@ BOOL FilesHashMessageController::HandleCopyData(
 		return FALSE;
 	}
 
+	// WM_COPYDATA's HWND is supplied by the caller, not an authenticated
+	// sender identity. Ordinary instances accept only validated file input;
+	// elevated/high-integrity instances do not accept this IPC at all.
+	(void)pSenderWnd;
 	if (pCopyDataStruct->dwData == 0 &&
-		IsTrustedCopyDataSender(pSenderWnd) &&
+		WindowsUtils::CanAcceptUntrustedFileInput() &&
+		!m_hashInputController->IsLoadingFiles() &&
 		!IsThreadDataWorking(*m_threadData))
 	{
 		FileLoadOutcome outcome = m_hashInputController->LoadCopyDataFiles(pCopyDataStruct);

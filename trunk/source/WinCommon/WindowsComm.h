@@ -9,7 +9,7 @@
 
 namespace WindowsComm
 {
-	sunjwbase::tstring GetExeFileVersion(TCHAR* path);
+	sunjwbase::tstring GetExeFileVersion(const TCHAR* path);
 
 	bool IsWindowsVistaOrGreater();
 	sunjwbase::tstring GetWindowsInfo();

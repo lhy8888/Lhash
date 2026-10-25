@@ -12,6 +12,7 @@
 #include <vector>
 #include <Windows.h>
 #include <strsafe.h>
+#include <limits>
 
 #include "WinCommon/WinHandleGuard.h"
 
@@ -20,6 +21,13 @@ using namespace sunjwbase;
 #define WINBOOL_2_CBOOL(winbool_var) bool((winbool_var) == TRUE)
 
 // HANDLE == void *
+
+struct OsFile::ReadConsistencyState
+{
+	BY_HANDLE_FILE_INFORMATION initialStatus = {};
+	uint64_t bytesRead = 0;
+	bool valid = false;
+};
 
 static const size_t kWindowsMaxExtendedPath = 32767;
 static void CopyOpenErrorText(TCHAR *errorBuffer, const tstring& errorText);
@@ -350,6 +358,7 @@ static bool ValidateOpenedHandleAgainstPathPolicy(HANDLE fileHandle, const tstri
 
 OsFile::OsFile(tstring filePath):
 	_filePath(filePath),
+	_readConsistency(new ReadConsistencyState),
 	_osfileData(NULL),
 	_fileStatus(CLOSED)
 {
@@ -380,6 +389,8 @@ bool OsFile::isHashTargetAllowed(void *exception)
 
 bool OsFile::open(void *flag, void *exception)
 {
+	close();
+	*_readConsistency = ReadConsistencyState();
 	CreateFileFlag* fileFlag = (CreateFileFlag*)flag;
 	TCHAR *pFileExc = (TCHAR *)exception;
 	_osfileData = NULL;
@@ -460,6 +471,11 @@ bool OsFile::openRead(void *exception/* = NULL*/)
 	if (ret == true)
 	{
 		_fileStatus = OPEN_READ;
+		if (!captureReadConsistency(exception))
+		{
+			close();
+			return false;
+		}
 	}
 
 	return ret;
@@ -479,6 +495,11 @@ bool OsFile::openReadScan(void *exception/* = NULL*/)
 	if (ret == true)
 	{
 		_fileStatus = OPEN_READ;
+		if (!captureReadConsistency(exception))
+		{
+			close();
+			return false;
+		}
 	}
 
 	return ret;
@@ -602,6 +623,7 @@ tstring OsFile::getModifiedTimeFormat()
 
 uint64_t OsFile::seek(uint64_t offset, OsFileSeekFrom from)
 {
+	_readConsistency->valid = false;
 	DWORD dwMoveMethod = FILE_BEGIN;
 	switch (from)
 	{
@@ -631,10 +653,53 @@ int64_t OsFile::read(void *readBuffer, uint32_t bytes)
 	DWORD dwNumberOfBytesRead = 0;
 	if (!ReadFile(_osfileData, readBuffer, bytes, &dwNumberOfBytesRead, NULL))
 	{
+		_readConsistency->valid = false;
 		return -1;
 	}
 
+	if (_readConsistency->valid)
+	{
+		if (dwNumberOfBytesRead > (std::numeric_limits<uint64_t>::max)() - _readConsistency->bytesRead)
+		{
+			_readConsistency->valid = false;
+			return -1;
+		}
+		_readConsistency->bytesRead += dwNumberOfBytesRead;
+	}
 	return dwNumberOfBytesRead;
+}
+
+bool OsFile::captureReadConsistency(void *exception)
+{
+	BY_HANDLE_FILE_INFORMATION status = {};
+	if (_osfileData == NULL || !GetFileInformationByHandle(_osfileData, &status))
+	{
+		CopyOpenErrorText(static_cast<TCHAR *>(exception), TEXT("Cannot inspect this file."));
+		return false;
+	}
+	_readConsistency->initialStatus = status;
+	_readConsistency->bytesRead = 0;
+	_readConsistency->valid = true;
+	return true;
+}
+
+bool OsFile::validateReadConsistency(tstring *errorText) const
+{
+	BY_HANDLE_FILE_INFORMATION current = {};
+	const BY_HANDLE_FILE_INFORMATION& initial = _readConsistency->initialStatus;
+	const uint64_t initialSize = (static_cast<uint64_t>(initial.nFileSizeHigh) << 32) | initial.nFileSizeLow;
+	const bool unchanged = _readConsistency->valid && _osfileData != NULL &&
+		GetFileInformationByHandle(_osfileData, &current) &&
+		current.dwVolumeSerialNumber == initial.dwVolumeSerialNumber &&
+		current.nFileIndexHigh == initial.nFileIndexHigh && current.nFileIndexLow == initial.nFileIndexLow &&
+		current.nFileSizeHigh == initial.nFileSizeHigh && current.nFileSizeLow == initial.nFileSizeLow &&
+		CompareFileTime(&current.ftLastWriteTime, &initial.ftLastWriteTime) == 0 &&
+		_readConsistency->bytesRead == initialSize;
+	if (!unchanged && errorText != NULL)
+	{
+		*errorText = TEXT("File changed or could not be read completely while hashing. Please try again.");
+	}
+	return unchanged;
 }
 
 int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
@@ -651,6 +716,7 @@ int64_t OsFile::write(void *writeBuffer, uint32_t bytes)
 
 void OsFile::close()
 {
+	_readConsistency->valid = false;
 	if (_fileStatus != CLOSED)
 	{
 		WinHandleGuard::UniqueWinHandle fileHandle(reinterpret_cast<HANDLE>(_osfileData));

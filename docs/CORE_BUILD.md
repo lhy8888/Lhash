@@ -26,17 +26,18 @@ The core build target is centered around:
 
 The M2 entry point intentionally keeps OpenSSL optional so the core can still build even when the vendor backend is not enabled.
 
-The current CMake core uses the OpenSSL stub; setting
-`LHASH_ENABLE_OPENSSL_VENDOR=ON` reports that integration is not implemented.
-The standalone provider tests link the actual OpenSSL 3.5.9 static library on
-each supported test platform. See [Testing](TESTING.md) for the separate coverage.
+Enable the static OpenSSL 3.5.9 backend with `LHASH_ENABLE_OPENSSL_VENDOR=ON`
+and `OPENSSL_ROOT_DIR` pointing to the pinned vendor installation. Headers and
+library are verified to resolve inside that root. The definition is propagated
+to consumers so inline algorithm registries have the same 18 algorithms. Core-only
+stub builds remain available; the CLI requires the real backend.
 
 ## What it does not build
 
 The core entry point does not include:
 
 - MFC UI targets
-- Linux targets
+- Linux release targets (an explicit POSIX diagnostic test backend is available)
 - macOS GUI targets
 - OpenSSL 4.0 migration work
 
@@ -85,9 +86,9 @@ continuation, cancellation and concurrent requests. The tests exercise AUTO,
 single-threaded and parallel execution. Details are in
 [the runtime suite README](../tests/core_runtime/README.md).
 
-The standalone OpenSSL provider suite and Windows native suite provide separate
-SHA256 coverage; passing core tests with the stub does not establish that the
-OpenSSL backend works.
+The OpenSSL provider and Windows native suites provide further SHA256 coverage.
+The full CLI suite exercises all 18 registered algorithms through real files.
+Passing a core-only stub build does not establish OpenSSL functionality.
 
 ## Smoke coverage
 
@@ -122,10 +123,12 @@ regular-file acceptance, and descriptor-based validation. It is intentionally
 smaller than the Windows security regression surface and exists to prove that
 the macOS core support is real rather than merely buildable.
 
-## Related macOS CLI MVP
+## macOS CLI and cloud diagnostics
 
-The macOS arm64 CLI MVP workflow, [`macOS CLI MVP Build workflow`](../.github/workflows/macos-cli-build.yml),
-builds `lhash_cli` on top of the core entry point and publishes a `tar.gz`
-validation artifact containing `lhash`, `README.txt`, `BUILD_INFO.txt`, and
-`SHA256.txt`. It is an engine validation artifact, not a feature-complete end-user CLI, and it is separate from the core matrix workflow and the Windows MFC release line.
+See [macOS CLI support](MACOS_CORE_SUPPORT.md) for the complete 18-algorithm CLI,
+OpenSSL build instructions and command-line options. `LHASH_BUILD_CLI=ON` requires
+`LHASH_ENABLE_OPENSSL_VENDOR=ON` and a verified `OPENSSL_ROOT_DIR`.
 
+On Linux, add `LHASH_ENABLE_POSIX_TEST_BACKEND=ON` to run the common engine and
+CLI against the portable POSIX file backend in cloud tests. This option defaults
+to OFF and is not a macOS hardware/platform test. Native macOS remains arm64 only.

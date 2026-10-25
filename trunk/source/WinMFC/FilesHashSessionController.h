@@ -27,8 +27,11 @@ public:
 	void AttachSupplementalControls(CButton* btnOpenFolder, CButton* btnSettings);
 
 	BOOL PrepareHashStart(LPCTSTR noSelectionMessage);
-	void StartHashThread();
+	BOOL StartHashThread();
 	void StopWorkingThread();
+	BOOL TryCollectExitedThread(DWORD* exitCode);
+	BOOL HasWorkerExited() const;
+	void WaitForWorkerExit();
 	void SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText);
 
 private:
@@ -60,4 +63,7 @@ private:
 	CButton* m_btnSettings;
 	FilesHashAlgorithmSelectionController* m_hashAlgorithmSelectionController;
 	WinHandleGuard::UniqueWinHandle m_hWorkThread;
+	BOOL m_limited;
+	CString m_openButtonText;
+	CString m_stopButtonText;
 };

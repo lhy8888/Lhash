@@ -5,6 +5,8 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
+#include "Common/HashTypes.h"
 #include <atlconv.h>
 
 #include "Psapi.h"
@@ -46,8 +48,11 @@ namespace
 // CLHashShellExt
 CLHashShellExt::CLHashShellExt()
 {
-	RegisterStringsForLang(-1, new LHashShlExtStringsBase());
-	RegisterStringsForLang(2052, new LHashShlExtStringsZHCN());
+	static std::once_flag strings;
+	std::call_once(strings, [] {
+		RegisterStringsForLang(-1, new LHashShlExtStringsBase());
+		RegisterStringsForLang(2052, new LHashShlExtStringsZHCN());
+	});
 }
 
 // CLHashShellExt
@@ -55,6 +60,9 @@ HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 								  LPDATAOBJECT pDataObj,
 								  HKEY hProgID)
 {
+	m_pathList.clear();
+	m_LHashPath.clear();
+	if (pDataObj == NULL) return E_INVALIDARG;
 	FORMATETC fmt = { CF_HDROP, NULL, DVASPECT_CONTENT,
 					  -1, TYMED_HGLOBAL };
 	STGMEDIUM stg = { TYMED_HGLOBAL };
@@ -79,7 +87,7 @@ HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 	UINT uNumFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 	HRESULT hr = S_OK;
 
-	if(0 == uNumFiles)
+	if(0 == uNumFiles || uNumFiles > kMaxHashFilesPerSession)
     {
 		GlobalUnlock(stg.hGlobal);
 		ReleaseStgMedium(&stg);
@@ -110,16 +118,14 @@ HRESULT CLHashShellExt::Initialize(LPCITEMIDLIST pidlFolder,
 	if(lResult != ERROR_SUCCESS)
 		return E_INVALIDARG;
 
-	TCHAR szPath[MAX_PATH + 1] = {};
-	ULONG nChars = static_cast<ULONG>(_countof(szPath));
-	if (key.QueryStringValue(SHELL_EXT_EXEPATH, szPath, &nChars) != ERROR_SUCCESS)
-	{
-		key.Close();
+	ULONG chars = 0;
+	if (key.QueryStringValue(SHELL_EXT_EXEPATH, NULL, &chars) != ERROR_SUCCESS || chars == 0 || chars > 32768)
 		return E_INVALIDARG;
-	}
+	std::vector<TCHAR> path(chars, 0);
+	if (key.QueryStringValue(SHELL_EXT_EXEPATH, path.data(), &chars) != ERROR_SUCCESS || path.back() != 0)
+		return E_INVALIDARG;
 	key.Close();
-
-	m_LHashPath = szPath;
+	m_LHashPath = path.data();
 	if(m_LHashPath == _T(""))
 		hr = E_INVALIDARG;
 
@@ -178,6 +184,7 @@ HRESULT CLHashShellExt::GetCommandString(
 
 HRESULT CLHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 {
+	if (pCmdInfo == NULL) return E_INVALIDARG;
 	// If lpVerb really points to a string, ignore this function call and bail out.
 	if(0 != HIWORD(pCmdInfo->lpVerb))
 		return E_INVALIDARG;
@@ -192,8 +199,7 @@ HRESULT CLHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 				return LaunchLHashByCommandLine(pCmdInfo, TRUE);
 
 			// Found LHash, send message.
-			SendFilesToLHash(pCmdInfo, hWndLHash);
-			return S_OK;
+			return SendFilesToLHash(pCmdInfo, hWndLHash);
 		}
 		break;
 
@@ -290,10 +296,10 @@ HWND CLHashShellExt::FindLHashWindow()
 	return NULL;
 }
 
-void CLHashShellExt::SendFilesToLHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndLHash)
+HRESULT CLHashShellExt::SendFilesToLHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndLHash)
 {
-	if (hWndLHash == NULL)
-		return;
+	if (hWndLHash == NULL || pCmdInfo == NULL)
+		return E_INVALIDARG;
 
 	tstring tstrFiles;
 	for(TstrList::const_iterator itr = m_pathList.begin();
@@ -313,7 +319,7 @@ void CLHashShellExt::SendFilesToLHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndL
 			GetStringByKey(SHELL_EXT_TOO_MANY_FILES),
 			GetStringByKey(SHELL_EXT_TOO_MANY_FILES),
 			MB_OK | MB_ICONWARNING);
-		return;
+		return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
 	}
 
 	COPYDATASTRUCT cdFiles;
@@ -321,10 +327,11 @@ void CLHashShellExt::SendFilesToLHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndL
 	cdFiles.cbData = (DWORD)(cmdLen * sizeof(TCHAR));
 	cdFiles.lpData = (PVOID)(tstrFiles.c_str());
 
-	SendMessage(hWndLHash,
-				WM_COPYDATA,
-				(WPARAM)pCmdInfo->hwnd,
-				(LPARAM)&cdFiles);
+	DWORD_PTR accepted = 0;
+	if (!SendMessageTimeout(hWndLHash, WM_COPYDATA, reinterpret_cast<WPARAM>(pCmdInfo->hwnd),
+		reinterpret_cast<LPARAM>(&cdFiles), SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, &accepted))
+		return HRESULT_FROM_WIN32(GetLastError() != ERROR_SUCCESS ? GetLastError() : ERROR_TIMEOUT);
+	return accepted != 0 ? S_OK : HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
 }
 
 

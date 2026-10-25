@@ -27,18 +27,20 @@ namespace WindowsUtils
 	BOOL IsLimitedProc();
 	BOOL ElevateProcess();
 	bool InitializeProcessDllSearchPolicy();
+	bool CanAcceptUntrustedFileInput();
+	bool GetExecutablePath(sunjwbase::tstring& path);
 
-	void CopyCString(const CString& cstrToCopy);
+	bool CopyCString(const CString& cstrToCopy, HWND owner);
 
 	HINSTANCE OpenURL(const TCHAR *pszURL);
 
-	bool FindShlExtDll(TCHAR *pszExeFullPath, TCHAR *pszShlDllPath);
+	bool FindShlExtDll(const sunjwbase::tstring& exePath, sunjwbase::tstring& dllPath);
 
-	bool RegShellExt(TCHAR *pszShlDllPath);
-	bool UnregShellExt(TCHAR *pszShlDllPath);
+	bool RegShellExt(const TCHAR *pszShlDllPath);
+	bool UnregShellExt(const TCHAR *pszShlDllPath);
 
-	bool AddContextMenu(TCHAR *pszExeFullPath);
-	bool AddShellExt(TCHAR *pszExeFullPath);
+	bool AddContextMenu(const TCHAR *pszExeFullPath);
+	bool AddShellExt(const TCHAR *pszExeFullPath);
 
 	bool AddContextMenu();
 	bool RemoveContextMenu();

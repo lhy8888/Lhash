@@ -11,7 +11,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
 
@@ -40,10 +40,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: 10.0.x
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload unit test artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-unit-tests
           path: |
@@ -77,7 +77,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Verify pristine OpenSSL vendor source
         shell: pwsh
@@ -86,13 +86,13 @@ jobs:
 
       - name: Restore cached OpenSSL vendor x64
         id: restore-openssl-vendor-x64-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Build OpenSSL vendor x64 once
         shell: pwsh
@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload OpenSSL vendor x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-openssl-vendor-x64
           path: |
@@ -155,15 +155,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
         with:
           msbuild-architecture: ${{ matrix.artifact_arch }}
 
       - name: Download prepared OpenSSL vendor artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: LHash-openssl-vendor-${{ matrix.artifact_arch }}
           path: artifacts
@@ -203,13 +203,28 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
 
+      - name: Run full core and platform regressions with OpenSSL
+        run: |
+          $artifactRoot = Join-Path $pwd 'artifacts'
+          $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-${{ matrix.artifact_arch }}'
+          $buildRoot = Join-Path $pwd 'build/full-runtime'
+          & cmake -S . -B $buildRoot -G '${{ matrix.generator }}' -A '${{ matrix.platform }}' -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=OFF -DLHASH_ENABLE_OPENSSL_VENDOR=ON "-DOPENSSL_ROOT_DIR=$openSslRoot" 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'full-runtime-configure.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Full runtime configure failed.' }
+          & cmake --build $buildRoot --config Release --parallel 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'full-runtime-build.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Full runtime build failed.' }
+          & ctest --test-dir $buildRoot -C Release -V --output-on-failure --no-tests=error --output-junit (Join-Path $artifactRoot 'full-runtime.xml') 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'full-runtime-tests.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Full runtime tests failed.' }
+
       - name: Annotate test failures
         if: failure()
         run: python tools/report_ci_failures.py "artifacts"
 
       - name: Upload native runtime test artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-native-runtime-tests-${{ matrix.artifact_arch }}
           path: |
@@ -229,13 +244,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Download OpenSSL vendor x64 artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: LHash-openssl-vendor-x64
           path: artifacts
@@ -278,6 +293,20 @@ jobs:
             throw 'MSBuild succeeded, but no executable was found in trunk\\x64\\Release.'
           }
 
+      - name: Test real Windows x64 GUI close and cancellation
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $artifactRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          $reportRoot = Join-Path $artifactRoot 'windows-ui-smoke-x64'
+          $exePath = Join-Path $env:GITHUB_WORKSPACE 'trunk/x64/Release/LHash.exe'
+          & pwsh -NoProfile -File tests/windows-ui/Invoke-LHashUiSmoke.ps1 -Executable $exePath -ReportDirectory $reportRoot 2>&1 |
+            Tee-Object -FilePath (Join-Path $artifactRoot 'windows-ui-smoke-x64.log')
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Real application GUI smoke failed. See windows-ui-smoke-x64.log and ui-smoke-results.json.'
+          }
+
       - name: Sign Windows MFC app with PFX certificate (optional)
         if: ${{ env.LHASH_SIGN_PFX_BASE64 != '' && env.LHASH_SIGN_PFX_PASSWORD != '' }}
         shell: powershell
@@ -300,7 +329,7 @@ jobs:
           }
 
       - name: Package Windows x64 build
-        if: always()
+        if: success()
         shell: powershell
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
@@ -346,6 +375,7 @@ jobs:
           source_exe=$exePath
           packaged_exe=LHash.exe
           sha256=$exeHash
+          application_version=$([System.Diagnostics.FileVersionInfo]::GetVersionInfo($packagedExe).FileVersion)
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
@@ -376,13 +406,15 @@ jobs:
 
       - name: Upload Windows x64 artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-windows-x64
           path: |
             artifacts/build-openssl-vendor-x64.log
             artifacts/openssl-vendor-x64/*.log
             artifacts/build-windows-x64.log
+            artifacts/windows-ui-smoke-x64.log
+            artifacts/windows-ui-smoke-x64/**
             artifacts/windows-x64-*
             artifacts/LHash-windows-x64-*.zip
           if-no-files-found: warn
@@ -393,7 +425,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Verify pristine OpenSSL vendor source
         shell: pwsh
@@ -402,13 +434,13 @@ jobs:
 
       - name: Restore cached OpenSSL vendor arm64
         id: restore-openssl-vendor-arm64-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-arm64
-          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Build OpenSSL vendor arm64 once
         shell: pwsh
@@ -432,7 +464,7 @@ jobs:
 
       - name: Upload OpenSSL vendor arm64 artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-openssl-vendor-arm64
           path: |
@@ -452,13 +484,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
       - name: Download OpenSSL vendor arm64 artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: LHash-openssl-vendor-arm64
           path: artifacts
@@ -569,6 +601,7 @@ jobs:
           source_exe=$exePath
           packaged_exe=LHash.exe
           sha256=$exeHash
+          application_version=$([System.Diagnostics.FileVersionInfo]::GetVersionInfo($packagedExe).FileVersion)
           signature_status=$($signature.Status)
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
@@ -599,7 +632,7 @@ jobs:
 
       - name: Upload Windows ARM64 artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-windows-arm64
           path: |
@@ -610,96 +643,97 @@ jobs:
             artifacts/LHash-windows-arm64-*.zip
           if-no-files-found: warn
 
+  delivery-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Verify release tooling and upstream integrity
+        run: |
+          python3 -m unittest discover -s tests/delivery -v
+          pwsh -NoProfile -File tools/verify_openssl_vendor_pristine.ps1 -Version 3.5.9
+
   publish-release:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs:
       - build-windows-x64
       - build-windows-arm64
       - native-runtime-tests
+      - delivery-regression
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
+      - name: Checkout the exact build commit for release metadata
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: LHash-windows-*
           path: release-assets
           merge-multiple: true
 
       - name: Stage release rehearsal bundle
-        shell: bash
+        run: python3 tools/release_assets.py stage --assets release-assets --output release-staging
+
+      - name: Scan release assets for a CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          path: release-staging
+          format: cyclonedx-json
+          output-file: release-scan.cyclonedx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Finalize and verify immutable release metadata
         run: |
-          set -euo pipefail
+          python3 tools/release_assets.py finalize --directory release-staging --scan release-scan.cyclonedx.json
+          (cd release-staging && sha256sum --check SHA256SUMS.txt)
+          tar -czf "LHash-release-rehearsal-${GITHUB_SHA:0:7}.tar.gz" -C release-staging .
 
-          artifact_root="$PWD/release-assets"
-          staging_root="$PWD/release-staging"
-          mkdir -p "$staging_root"
+      - name: Attest both architecture bundles at the release production point
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: |
+            release-staging/LHash-windows-*.zip
+            release-staging/RELEASE_MANIFEST.txt
+            release-staging/SHA256SUMS.txt
+            release-staging/LHash-release.cyclonedx.json
 
-          if ! compgen -G "$artifact_root/LHash-windows-x64-*.zip" > /dev/null; then
-            echo "Expected packaged lightweight native release zip was not downloaded into release-assets." >&2
-            exit 1
-          fi
-          if ! compgen -G "$artifact_root/LHash-windows-arm64-*.zip" > /dev/null; then
-            echo "Expected packaged Windows ARM64 release zip was not downloaded into release-assets." >&2
-            exit 1
-          fi
-
-          version_header="trunk/source/WinMFC/version.h"
-          version_rc2="trunk/source/WinMFC/fileshash.rc2"
-          app_version=$(grep -oP '(?<=LHASH_VERSION_STRING\s")[^"]+' "$version_header" \
-                        || grep -oP '(?<=STR_VERSION_LEGACY\s")[^"]+' "$version_header" \
-                        || grep -oP '(?<="FileVersion", ")[^"]+' "$version_rc2" \
-                        || echo "unknown")
-          short_sha="${GITHUB_SHA::7}"
-          release_mode="rehearsal"
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            release_mode="tagged-release"
-          fi
-
-          cat > "$staging_root/RELEASE_MANIFEST.txt" <<EOF
-          release_mode=$release_mode
-          ref=$GITHUB_REF
-          commit=$GITHUB_SHA
-          short_sha=$short_sha
-          lhash_application_version=$app_version
-          frontend=windows-mfc
-          openssl_vendor_version=3.5.9
-          openssl_vendor_source=third_party/openssl/3.5.9
-          openssl_vendor_static=true
-          openssl_vendor_policy=pristine-upstream-source
-          openssl_vendor_local_patches=none
-          workflow_run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-          windows_x64=$(basename $(ls "$artifact_root"/LHash-windows-x64-*.zip | head -n 1))
-          windows_arm64=$(basename $(ls "$artifact_root"/LHash-windows-arm64-*.zip | head -n 1))
-          EOF
-
-          cp "$artifact_root"/LHash-windows-x64-*.zip "$staging_root"/
-          cp "$artifact_root"/LHash-windows-arm64-*.zip "$staging_root"/
-          find "$artifact_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.txt' \) -exec cp {} "$staging_root"/ \;
-          (
-            cd "$staging_root"
-            shasum -a 256 LHash-windows-x64-*.zip LHash-windows-arm64-*.zip > SHA256SUMS.txt
-          )
-          tar -czf "$PWD/LHash-release-rehearsal-$short_sha.tar.gz" -C "$staging_root" .
+      - name: Bind the SBOM to both architecture bundles
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v2
+        with:
+          subject-path: release-staging/LHash-windows-*.zip
+          sbom-path: release-staging/LHash-release.cyclonedx.json
 
       - name: Upload release rehearsal artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: LHash-release-rehearsal
           path: |
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
+            release-staging/LHash-release.cyclonedx.json
             LHash-release-rehearsal-*.tar.gz
           if-no-files-found: error
 
       - name: Publish GitHub release assets
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           name: LHash ${{ github.ref_name }}
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
-            release-assets/LHash-windows-x64-*.zip
-            release-assets/LHash-windows-arm64-*.zip
+            release-staging/LHash-windows-x64-*.zip
+            release-staging/LHash-windows-arm64-*.zip
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
+            release-staging/LHash-release.cyclonedx.json

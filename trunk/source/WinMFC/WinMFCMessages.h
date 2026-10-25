@@ -17,6 +17,7 @@
 #define WP_PROG			(WM_USER + 6)
 #define WP_PROG_WHOLE		(WM_USER + 7)
 #define WP_TASK_UPDATE		(WM_USER + 8)
+#define WP_WORKER_JOINED		(WM_USER + 9)
 #define WM_CUSTOM_MSG		(WM_USER + 16)
 #define WM_HYPEREDIT_MENU	(WM_USER + 17)
 

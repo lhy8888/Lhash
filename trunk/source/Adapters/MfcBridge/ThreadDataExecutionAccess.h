@@ -103,7 +103,8 @@ static inline void SetThreadDataWorking(ThreadData& threadData, bool working)
 
 static inline bool IsThreadDataWorking(const ThreadData& threadData)
 {
-	return GetThreadDataHashJobState(threadData).working.load();
+	return threadData.executionState.workerSession.IsActive() ||
+		GetThreadDataHashJobState(threadData).working.load();
 }
 
 static inline void SetThreadDataStop(ThreadData& threadData, bool stopValue)

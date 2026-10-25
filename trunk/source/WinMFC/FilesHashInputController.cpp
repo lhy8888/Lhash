@@ -3,6 +3,12 @@
 #include <vector>
 #include <deque>
 #include <shlobj.h>
+#include <atlbase.h>
+#include <utility>
+
+#include "Common/HashInputPolicy.h"
+#include "WinCommon/WinHandleGuard.h"
+#include "WinCommon/WindowsStrings.h"
 
 #include "FilesHashInputController.h"
 
@@ -14,6 +20,16 @@ using namespace sunjwbase;
 namespace
 {
 	const size_t COPYDATA_COMMAND_CHAR_LIMIT = 32768;
+
+	class ScopedComApartment
+	{
+	public:
+		ScopedComApartment() : m_result(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)) {}
+		~ScopedComApartment() { if (SUCCEEDED(m_result)) CoUninitialize(); }
+		bool initialized() const { return SUCCEEDED(m_result); }
+	private:
+		HRESULT m_result;
+	};
 
 	FileLoadOutcome MakeFileLoadOutcome(
 		FileLoadResult result,
@@ -34,8 +50,33 @@ namespace
 
 FilesHashInputController::FilesHashInputController()
 	: m_threadData(NULL),
-	m_parentWnd(NULL)
+	m_parentWnd(NULL),
+	m_loadingFiles(false),
+	m_cancelLoad(false),
+	m_closeAfterLoading(false)
 {
+}
+
+FilesHashInputController::PendingLoadGuard::PendingLoadGuard(FilesHashInputController& owner)
+	: m_owner(owner)
+{
+	m_owner.m_loadingFiles = true;
+	m_owner.m_cancelLoad = false;
+	m_owner.m_closeAfterLoading = false;
+}
+
+FilesHashInputController::PendingLoadGuard::~PendingLoadGuard()
+{
+	m_owner.m_loadingFiles = false;
+	if (m_owner.m_closeAfterLoading && m_owner.m_parentWnd != NULL)
+		m_owner.m_parentWnd->PostMessage(WM_CLOSE);
+}
+
+void FilesHashInputController::CancelPendingLoad(bool closeAfterLoading)
+{
+	if (!m_loadingFiles) return;
+	m_cancelLoad = true;
+	m_closeAfterLoading = m_closeAfterLoading || closeAfterLoading;
 }
 
 void FilesHashInputController::Initialize(ThreadData* threadData, CWnd* parentWnd)
@@ -52,17 +93,25 @@ void FilesHashInputController::LoadCommandLineFiles(LPTSTR filesCmdLine)
 	}
 
 	TStrVector parameters = ParseFilesCmdLine(filesCmdLine);
+	if (parameters.size() > kMaxHashFilesPerSession)
+	{
+		AfxMessageBox(WindowsStrings::GetCurrentUILang() == 2052
+			? _T("选择的文件过多。每次最多选择 8192 个文件。")
+			: _T("Too many files. Select at most 8192 files per task."), MB_OK | MB_ICONWARNING);
+		return;
+	}
 	ClearFilePaths();
 	ReplaceThreadDataInputFiles(*m_threadData, parameters);
 }
 
 FileLoadOutcome FilesHashInputController::LoadOpenFileDialogSelection(LPCTSTR fileFilter)
 {
-	if (m_threadData == NULL || m_parentWnd == NULL)
+	if (m_threadData == NULL || m_parentWnd == NULL || m_loadingFiles)
 	{
 		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	}
 
+	PendingLoadGuard loading(*this);
 	std::vector<TCHAR> nameBuffer((kMaxHashFilesPerSession * MAX_PATH) + 1, 0);
 	CFileDialog dlgOpen(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT, fileFilter, m_parentWnd, 0);
 	dlgOpen.GetOFN().lpstrFile = nameBuffer.data();
@@ -72,34 +121,32 @@ FileLoadOutcome FilesHashInputController::LoadOpenFileDialogSelection(LPCTSTR fi
 		return MakeFileLoadOutcome(FileLoadResult::Empty, 0, kMaxHashFilesPerSession);
 	}
 
-	ClearFilePaths();
-	size_t loadedCount = 0;
+	if (m_cancelLoad) return MakeFileLoadOutcome(FileLoadResult::Cancelled, 0, kMaxHashFilesPerSession);
+	TStrVector selected;
 	for (POSITION pos = dlgOpen.GetStartPosition(); pos != NULL;)
 	{
-		AppendThreadDataInputFile(*m_threadData, dlgOpen.GetNextPathName(pos).GetString());
-		++loadedCount;
+		if (selected.size() == kMaxHashFilesPerSession)
+		{
+			// Stop before accumulating an unbounded list. Keep the previous task.
+			return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession);
+		}
+		selected.push_back(dlgOpen.GetNextPathName(pos).GetString());
 	}
-
-	if (!HasThreadDataInputFiles(*m_threadData))
-	{
-		return MakeFileLoadOutcome(FileLoadResult::Empty, 0, kMaxHashFilesPerSession);
-	}
-
-	if (loadedCount >= kMaxHashFilesPerSession)
-	{
-		return MakeFileLoadOutcome(FileLoadResult::SuccessPossiblyTruncated, loadedCount, kMaxHashFilesPerSession);
-	}
-
-	return MakeFileLoadOutcome(FileLoadResult::Success, loadedCount, kMaxHashFilesPerSession);
+	if (selected.empty()) return MakeFileLoadOutcome(FileLoadResult::Empty, 0, kMaxHashFilesPerSession);
+	ReplaceThreadDataInputFiles(*m_threadData, selected);
+	return MakeFileLoadOutcome(FileLoadResult::Success, selected.size(), kMaxHashFilesPerSession);
 }
 
 FileLoadOutcome FilesHashInputController::LoadFolderDialogSelection(LPCTSTR folderDialogTitle, LPCTSTR emptyFolderMessage)
 {
-	if (m_threadData == NULL || m_parentWnd == NULL)
+	if (m_threadData == NULL || m_parentWnd == NULL || m_loadingFiles)
 	{
 		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	}
 
+	PendingLoadGuard loading(*this);
+	ScopedComApartment apartment;
+	if (!apartment.initialized()) return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	BROWSEINFO browseInfo = {};
 	browseInfo.hwndOwner = m_parentWnd->GetSafeHwnd();
 	browseInfo.lpszTitle = folderDialogTitle;
@@ -119,19 +166,37 @@ FileLoadOutcome FilesHashInputController::LoadFolderDialogSelection(LPCTSTR fold
 		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	}
 
-	FolderScanOutcome scanOutcome = AppendFolderFilesRecursive(selectedPath);
+	if (m_cancelLoad) return MakeFileLoadOutcome(FileLoadResult::Cancelled, 0, kMaxHashFilesPerSession);
+	CComPtr<IProgressDialog> progress;
+	HRESULT progressResult = progress.CoCreateInstance(CLSID_ProgressDialog);
+	if (FAILED(progressResult)) return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
+	progress->SetTitle(folderDialogTitle);
+	progress->SetLine(1, WindowsStrings::GetCurrentUILang() == 2052
+		? L"正在查找文件，可以取消。" : L"Finding files. You can cancel this operation.", FALSE, NULL);
+	if (FAILED(progress->StartProgressDialog(m_parentWnd->GetSafeHwnd(), NULL, PROGDLG_MODAL | PROGDLG_NOTIME | PROGDLG_NOMINIMIZE, NULL)))
+		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
+	FolderScanOutcome scanOutcome;
+	try
+	{
+		scanOutcome = AppendFolderFilesRecursive(selectedPath, progress, &m_cancelLoad);
+	}
+	catch (...)
+	{
+		progress->StopProgressDialog();
+		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
+	}
+	progress->StopProgressDialog();
+	if (scanOutcome.cancelled || m_cancelLoad) return MakeFileLoadOutcome(FileLoadResult::Cancelled, 0, kMaxHashFilesPerSession);
+	if (scanOutcome.failed) return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
+	if (scanOutcome.overFileLimit) return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession);
+	if (scanOutcome.budgetExceeded) return MakeFileLoadOutcome(FileLoadResult::EnumerationLimit, 0, kMaxHashFilesPerSession);
 	if (scanOutcome.files.empty())
 	{
 		AfxMessageBox(emptyFolderMessage, MB_OK | MB_ICONINFORMATION);
 		return MakeFileLoadOutcome(FileLoadResult::Empty, 0, kMaxHashFilesPerSession);
 	}
-
-	ClearFilePaths();
 	ReplaceThreadDataInputFiles(*m_threadData, scanOutcome.files);
-	return MakeFileLoadOutcome(
-		scanOutcome.truncated ? FileLoadResult::SuccessWithTruncation : FileLoadResult::Success,
-		scanOutcome.files.size(),
-		scanOutcome.limit);
+	return MakeFileLoadOutcome(FileLoadResult::Success, scanOutcome.files.size(), kMaxHashFilesPerSession);
 }
 
 FileLoadOutcome FilesHashInputController::LoadDroppedFiles(HDROP hDropInfo)
@@ -155,22 +220,20 @@ FileLoadOutcome FilesHashInputController::LoadDroppedFiles(HDROP hDropInfo)
 		return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession, true, droppedFileCount);
 	}
 
-	ClearFilePaths();
-	size_t loadedCount = 0;
+	TStrVector selected;
 	for (UINT index = 0; index < droppedFileCount; ++index)
 	{
-		tstring tstrDragFilename;
-		if (CopyDraggedPath(hDropInfo, index, tstrDragFilename))
+		tstring path;
+		if (!CopyDraggedPath(hDropInfo, index, path))
 		{
-			AppendThreadDataInputFile(*m_threadData, tstrDragFilename);
-			++loadedCount;
+			DragFinish(hDropInfo);
+			return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 		}
+		selected.push_back(path);
 	}
-
 	DragFinish(hDropInfo);
-	return HasThreadDataInputFiles(*m_threadData)
-		? MakeFileLoadOutcome(FileLoadResult::Success, loadedCount, kMaxHashFilesPerSession, true, droppedFileCount)
-		: MakeFileLoadOutcome(FileLoadResult::Empty, 0, kMaxHashFilesPerSession, true, droppedFileCount);
+	ReplaceThreadDataInputFiles(*m_threadData, selected);
+	return MakeFileLoadOutcome(FileLoadResult::Success, selected.size(), kMaxHashFilesPerSession, true, droppedFileCount);
 }
 
 FileLoadOutcome FilesHashInputController::LoadCopyDataFiles(const COPYDATASTRUCT* pCopyDataStruct)
@@ -312,84 +375,58 @@ TStrVector FilesHashInputController::ParseFilesCmdLine(LPTSTR filesCmdLine)
 	return parameters;
 }
 
-FolderScanOutcome FilesHashInputController::AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath)
+FolderScanOutcome FilesHashInputController::AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath, IProgressDialog* progress, const bool* cancelRequested)
 {
-	FolderScanOutcome scanOutcome;
-	if (folderPath.empty())
+	FolderScanOutcome outcome;
+	if (folderPath.empty()) return outcome;
+	HashFolderScanBudget budget;
+	std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;
+	pendingFolders.emplace_back(folderPath, 0);
+	while (!pendingFolders.empty())
 	{
-		return scanOutcome;
-	}
-
-	std::deque<sunjwbase::tstring> pendingFolders;
-	pendingFolders.push_back(folderPath);
-	bool truncated = false;
-
-	while (!pendingFolders.empty() && !truncated)
-	{
-		sunjwbase::tstring currentFolder = pendingFolders.back();
+		if ((cancelRequested != NULL && *cancelRequested) || (progress != NULL && progress->HasUserCancelled())) { outcome.cancelled = true; break; }
+		const auto current = pendingFolders.back();
 		pendingFolders.pop_back();
-		if (currentFolder.empty())
-		{
-			continue;
-		}
-
-		sunjwbase::tstring searchPath = currentFolder;
-		if (searchPath[searchPath.length() - 1] != _T('\\') &&
-			searchPath[searchPath.length() - 1] != _T('/'))
-		{
-			searchPath += _T("\\");
-		}
-		searchPath += _T("*");
-
+		const tstring separator = current.first.back() == _T('\\') || current.first.back() == _T('/') ? _T("") : _T("\\");
+		const tstring prefix = current.first + separator;
 		WIN32_FIND_DATA findData = {};
-		HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
-		if (hFind == INVALID_HANDLE_VALUE)
+		WinHandleGuard::UniqueFindHandle find(FindFirstFile((prefix + _T("*")).c_str(), &findData));
+		if (!find.isValid())
 		{
+			// Only a genuinely empty folder is a successful empty enumeration.
+			if (GetLastError() != ERROR_FILE_NOT_FOUND) outcome.failed = true;
+			if (outcome.failed) break;
 			continue;
 		}
-
-		do
+		for (;;)
 		{
-			if (_tcscmp(findData.cFileName, _T(".")) == 0 ||
-				_tcscmp(findData.cFileName, _T("..")) == 0)
+			if ((cancelRequested != NULL && *cancelRequested) || (progress != NULL && progress->HasUserCancelled())) { outcome.cancelled = true; break; }
+			if (_tcscmp(findData.cFileName, _T(".")) != 0 && _tcscmp(findData.cFileName, _T("..")) != 0)
 			{
-				continue;
-			}
-
-			sunjwbase::tstring fullPath = currentFolder;
-			if (fullPath[fullPath.length() - 1] != _T('\\') &&
-				fullPath[fullPath.length() - 1] != _T('/'))
-			{
-				fullPath += _T("\\");
-			}
-			fullPath += findData.cFileName;
-
-			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
-			{
-				continue;
-			}
-
-			if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
-			{
-				pendingFolders.push_back(fullPath);
-			}
-			else
-			{
-				if (scanOutcome.files.size() >= kMaxHashFilesPerSession)
+				if (!budget.VisitEntry()) { outcome.budgetExceeded = true; break; }
+				if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0)
 				{
-					truncated = true;
-					break;
+					if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+					{
+						if (!budget.QueueDirectory(current.second + 1)) { outcome.budgetExceeded = true; break; }
+						pendingFolders.emplace_back(prefix + findData.cFileName, current.second + 1);
+					}
+					else
+					{
+						if (outcome.files.size() == kMaxHashFilesPerSession) { outcome.overFileLimit = true; break; }
+						outcome.files.push_back(prefix + findData.cFileName);
+					}
 				}
-
-				scanOutcome.files.push_back(fullPath);
 			}
-		} while (FindNextFile(hFind, &findData) != FALSE);
-
-		FindClose(hFind);
+			if (!FindNextFile(find.get(), &findData))
+			{
+				if (GetLastError() != ERROR_NO_MORE_FILES) outcome.failed = true;
+				break;
+			}
+		}
+		if (outcome.cancelled || outcome.failed || outcome.budgetExceeded || outcome.overFileLimit) break;
 	}
-
-	scanOutcome.truncated = truncated;
-	return scanOutcome;
+	return outcome;
 }
 
 void FilesHashInputController::ClearFilePaths()

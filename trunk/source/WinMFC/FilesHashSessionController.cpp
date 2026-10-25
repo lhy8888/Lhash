@@ -3,10 +3,12 @@
 #include <CommCtrl.h>
 
 #include "FilesHashSessionController.h"
+#include "Adapters/MfcBridge/HashWorkerSessionLifecycle.h"
 
 #include "Adapters/MfcBridge/HashThreadLaunch.h"
 #include "Adapters/MfcBridge/ThreadDataExecutionAccess.h"
 #include "FilesHashAlgorithmSelectionController.h"
+#include "WindowsUtils.h"
 
 FilesHashSessionController::FilesHashSessionController()
 	: m_threadData(NULL),
@@ -20,7 +22,8 @@ FilesHashSessionController::FilesHashSessionController()
 	m_btnOpenFolder(NULL),
 	m_btnSettings(NULL),
 	m_hashAlgorithmSelectionController(NULL),
-	m_hWorkThread()
+	m_hWorkThread(),
+	m_limited(FALSE)
 {
 }
 
@@ -73,17 +76,27 @@ BOOL FilesHashSessionController::PrepareHashStart(LPCTSTR noSelectionMessage)
 	return TRUE;
 }
 
-void FilesHashSessionController::StartHashThread()
+BOOL FilesHashSessionController::StartHashThread()
 {
 	if (m_threadData == NULL)
 	{
-		return;
+		return FALSE;
 	}
-
-	SetThreadDataStop(*m_threadData, false);
-
-	unsigned int thredID = 0;
-	RestartHashWorkerThread(&m_hWorkThread, m_threadData, &thredID);
+	const bool launched = LaunchThreadDataWorker(*m_threadData, [&]()
+	{
+		SetControls(TRUE, m_limited, m_openButtonText, m_stopButtonText);
+		unsigned int threadID = 0;
+		return RestartHashWorkerThread(&m_hWorkThread, m_threadData, &threadID) != NULL;
+	});
+	if (!launched)
+	{
+		if (!IsThreadDataWorking(*m_threadData))
+		{
+			SetControls(FALSE, m_limited, m_openButtonText, m_stopButtonText);
+		}
+		return FALSE;
+	}
+	return TRUE;
 }
 
 void FilesHashSessionController::StopWorkingThread()
@@ -94,8 +107,57 @@ void FilesHashSessionController::StopWorkingThread()
 	}
 }
 
+BOOL FilesHashSessionController::HasWorkerExited() const
+{
+	return m_hWorkThread.isValid() && WaitForSingleObject(m_hWorkThread.get(), 0) == WAIT_OBJECT_0;
+}
+
+BOOL FilesHashSessionController::TryCollectExitedThread(DWORD* exitCode)
+{
+	DWORD workerExitCode = 1;
+	if (m_threadData == NULL || !CollectThreadDataWorker(*m_threadData, [&]()
+	{
+		if (!m_hWorkThread.isValid() || WaitForSingleObject(m_hWorkThread.get(), 0) != WAIT_OBJECT_0)
+		{
+			return false;
+		}
+		GetExitCodeThread(m_hWorkThread.get(), &workerExitCode);
+		CloseWorkThreadHandle();
+		return true;
+	}))
+	{
+		return FALSE;
+	}
+	if (exitCode != NULL)
+	{
+		*exitCode = workerExitCode;
+	}
+	SetControls(FALSE, m_limited, m_openButtonText, m_stopButtonText);
+	return TRUE;
+}
+
+void FilesHashSessionController::WaitForWorkerExit()
+{
+	// Destruction fallback only. Normal Close/ESC polls the handle on a timer and
+	// continues pumping messages. No UI mutex is held; workers only PostMessage.
+	if (m_hWorkThread.isValid())
+	{
+		StopWorkingThread();
+		WaitForSingleObject(m_hWorkThread.get(), INFINITE);
+		CloseWorkThreadHandle();
+		if (m_threadData != NULL)
+		{
+			SetThreadDataWorking(*m_threadData, false);
+			m_threadData->executionState.workerSession.WorkerJoined();
+		}
+	}
+}
+
 void FilesHashSessionController::SetControls(BOOL working, BOOL limited, LPCTSTR openButtonText, LPCTSTR stopButtonText)
 {
+	m_limited = limited;
+	m_openButtonText = openButtonText;
+	m_stopButtonText = stopButtonText;
 	if (working)
 	{
 		PrepareDropTarget(m_parentWnd, FALSE);
@@ -217,6 +279,7 @@ void FilesHashSessionController::PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
 		return;
 	}
 
+	if (bAccept && !WindowsUtils::CanAcceptUntrustedFileInput()) bAccept = FALSE;
 	if (bAccept)
 	{
 		pWnd->ModifyStyleEx(0, WS_EX_ACCEPTFILES, 0);
@@ -230,7 +293,6 @@ void FilesHashSessionController::PrepareDropTarget(CWnd* pWnd, BOOL bAccept)
 	if (bAccept)
 	{
 		AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_DROPFILES);
-		AllowMessageForWindow(pWnd->GetSafeHwnd(), WM_COPYDATA);
 		AllowMessageForWindow(pWnd->GetSafeHwnd(), 0x0049);
 	}
 }

@@ -10,6 +10,7 @@
 #include "UIBridgeMFC.h"
 #include "Domain/HashAlgorithmRegistryCore.h"
 #include "Adapters/MfcBridge/ThreadDataInputAccess.h"
+#include "WinCommon/WindowsStrings.h"
 
 namespace
 {
@@ -46,7 +47,10 @@ FilesHashLifecycleController::FilesHashLifecycleController()
 	m_hashSessionController(NULL),
 	m_hashProgressController(NULL),
 	m_hashResultViewController(NULL),
-	m_waitingExit(FALSE)
+	m_waitingExit(FALSE),
+	m_workerPollTimer(0),
+	m_terminalMessage(0),
+	m_sessionSetupFailed(false)
 {
 }
 
@@ -77,7 +81,8 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 		m_btnClr == NULL ||
 		m_hashSessionController == NULL ||
 		m_hashProgressController == NULL ||
-		m_hashResultViewController == NULL)
+		m_hashResultViewController == NULL ||
+		m_parentWnd == NULL || m_waitingExit || IsThreadDataWorking(*m_threadData))
 	{
 		return;
 	}
@@ -98,14 +103,46 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 		return;
 	}
 
-	m_hashProgressController->BeginTaskSession(GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
-	m_hashProgressController->StartTiming(secondText);
-	m_hashSessionController->StartHashThread();
+	// Establish the nonblocking exit monitor before launching. If timer creation
+	// fails, no worker is allowed to outlive an unmonitored session.
+	m_workerPollTimer = m_parentWnd->SetTimer(5, 30, NULL);
+	if (m_workerPollTimer == 0)
+	{
+		AfxMessageBox(GetStringByKey(MAINDLG_WORKER_START_FAILED), MB_OK | MB_ICONERROR);
+		return;
+	}
+	m_terminalMessage = 0;
+	m_sessionSetupFailed = false;
+	if (!m_hashSessionController->StartHashThread())
+	{
+		StopWorkerPoll();
+		m_hashProgressController->ResetAfterStop();
+		m_hashProgressController->SetWholeProgress(0);
+		AfxMessageBox(GetStringByKey(MAINDLG_WORKER_START_FAILED), MB_OK | MB_ICONERROR);
+		return;
+	}
+	// Worker notifications are posted and cannot be handled until this UI
+	// handler returns. Failed launches leave the existing task history intact.
+	try
+	{
+		m_hashProgressController->BeginTaskSession(GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
+		m_hashProgressController->StartTiming(secondText);
+	}
+	catch (...)
+	{
+		// Keep the timer and ownership lease intact even if UI allocation fails.
+		m_sessionSetupFailed = true;
+		m_hashSessionController->StopWorkingThread();
+	}
 }
 
 void FilesHashLifecycleController::HandleTimer(UINT_PTR nIDEvent, LPCTSTR secondText, LPCTSTR clearButtonText, LPCTSTR noSelectionMessage)
 {
-	if (nIDEvent == 1)
+	if (m_workerPollTimer != 0 && nIDEvent == m_workerPollTimer)
+	{
+		PollWorkerExit();
+	}
+	else if (nIDEvent == 1)
 	{
 		if (m_hashProgressController != NULL)
 		{
@@ -114,11 +151,11 @@ void FilesHashLifecycleController::HandleTimer(UINT_PTR nIDEvent, LPCTSTR second
 	}
 	else if (nIDEvent == 4)
 	{
-		StartHashing(clearButtonText, secondText, noSelectionMessage);
 		if (m_parentWnd != NULL)
 		{
 			m_parentWnd->KillTimer(4);
 		}
+		StartHashing(clearButtonText, secondText, noSelectionMessage);
 	}
 }
 
@@ -126,8 +163,11 @@ LRESULT FilesHashLifecycleController::HandleThreadMessage(WPARAM wParam, LPARAM 
 {
 	switch (wParam)
 	{
+	case WP_WORKER_JOINED:
+		FinalizeWorkerExit();
+		break;
 	case WP_WORKING:
-		if (m_hashSessionController != NULL)
+		if (m_hashSessionController != NULL && m_threadData != NULL && IsThreadDataWorking(*m_threadData))
 		{
 			m_hashSessionController->SetControls(TRUE, limited, openButtonText, stopButtonText);
 		}
@@ -149,37 +189,10 @@ LRESULT FilesHashLifecycleController::HandleThreadMessage(WPARAM wParam, LPARAM 
 		}
 		break;
 	case WP_FINISHED:
-		if (m_hashProgressController != NULL && m_threadData != NULL)
-		{
-			m_hashProgressController->FinishTiming(GetThreadDataTotalSize(*m_threadData));
-		}
-		if (m_hashSessionController != NULL)
-		{
-			m_hashSessionController->SetControls(FALSE, limited, openButtonText, stopButtonText);
-		}
-		if (m_hashProgressController != NULL)
-		{
-			m_hashProgressController->SetWholeProgress(99);
-		}
-		break;
 	case WP_STOPPED:
-		if (m_hashProgressController != NULL)
-		{
-			m_hashProgressController->ResetAfterStop();
-			m_hashProgressController->SetWholeProgress(0);
-		}
-		if (m_hashSessionController != NULL)
-		{
-			m_hashSessionController->SetControls(FALSE, limited, openButtonText, stopButtonText);
-		}
-		if (m_hashResultViewController != NULL)
-		{
-			m_hashResultViewController->AppendLineBreakAndScrollEnd();
-		}
-		if (m_waitingExit && m_parentWnd != NULL)
-		{
-			m_parentWnd->PostMessage(WM_CLOSE);
-		}
+		// A posted terminal event does not mean the worker has returned. Keep
+		// controls and object ownership busy until the real handle is signalled.
+		m_terminalMessage = wParam;
 		break;
 	}
 
@@ -188,6 +201,11 @@ LRESULT FilesHashLifecycleController::HandleThreadMessage(WPARAM wParam, LPARAM 
 
 BOOL FilesHashLifecycleController::HandleClose()
 {
+	m_waitingExit = TRUE;
+	if (m_parentWnd != NULL)
+	{
+		m_parentWnd->KillTimer(4);
+	}
 	if (m_threadData != NULL && IsThreadDataWorking(*m_threadData))
 	{
 		m_waitingExit = TRUE;
@@ -198,8 +216,86 @@ BOOL FilesHashLifecycleController::HandleClose()
 		return TRUE;
 	}
 
+	StopWorkerPoll();
 	ReleaseBridge();
 	return FALSE;
+}
+
+void FilesHashLifecycleController::StopWorkerPoll()
+{
+	if (m_workerPollTimer != 0 && m_parentWnd != NULL)
+	{
+		m_parentWnd->KillTimer(m_workerPollTimer);
+	}
+	m_workerPollTimer = 0;
+}
+
+void FilesHashLifecycleController::PollWorkerExit()
+{
+	if (m_threadData == NULL || m_hashSessionController == NULL || m_parentWnd == NULL)
+	{
+		return;
+	}
+	m_threadData->executionState.workerSession.QueueFinalization(m_hashSessionController->HasWorkerExited() != FALSE, [&]()
+	{
+		return m_parentWnd->PostMessage(WM_THREAD_INFO, WP_WORKER_JOINED) != FALSE;
+	});
+}
+
+void FilesHashLifecycleController::FinalizeWorkerExit()
+{
+	if (m_threadData == NULL) return;
+	m_threadData->executionState.workerSession.FinalizationHandled();
+	DWORD exitCode = 1;
+	if (m_hashSessionController == NULL || !m_hashSessionController->TryCollectExitedThread(&exitCode))
+	{
+		return;
+	}
+	StopWorkerPoll();
+	if (m_uiBridgeMFC != NULL && *m_uiBridgeMFC != NULL && m_hashProgressController != NULL)
+	{
+		std::vector<FilesHashTaskUpdate> updates;
+		(*m_uiBridgeMFC)->MarkTaskUpdatesHandled();
+		(*m_uiBridgeMFC)->DrainPendingTaskUpdates(updates);
+		m_hashProgressController->ApplyTaskUpdates(updates);
+	}
+	if (m_hashProgressController != NULL && m_threadData != NULL)
+	{
+		if (exitCode == 0 && m_terminalMessage == WP_FINISHED && !m_sessionSetupFailed)
+		{
+			m_hashProgressController->FinishTiming(GetThreadDataTotalSize(*m_threadData));
+			m_hashProgressController->SetWholeProgress(99);
+		}
+		else
+		{
+			m_hashProgressController->ResetAfterStop();
+			m_hashProgressController->SetWholeProgress(0);
+		}
+	}
+	if (m_hashResultViewController != NULL)
+	{
+		m_hashResultViewController->RefreshMainText();
+	}
+	if (m_waitingExit && m_parentWnd != NULL)
+	{
+		// Already joined, and this runs on the UI thread. Finish the pending
+		// close now so a queued click cannot open another modal input dialog.
+		m_parentWnd->SendMessage(WM_CLOSE);
+	}
+	else if (exitCode != 0 || m_terminalMessage == 0 || m_sessionSetupFailed)
+	{
+		AfxMessageBox(GetStringByKey(MAINDLG_WORKER_FAILED), MB_OK | MB_ICONERROR);
+	}
+}
+
+void FilesHashLifecycleController::Shutdown()
+{
+	StopWorkerPoll();
+	if (m_hashSessionController != NULL)
+	{
+		m_hashSessionController->WaitForWorkerExit();
+	}
+	ReleaseBridge();
 }
 
 void FilesHashLifecycleController::ReleaseBridge()
@@ -208,6 +304,10 @@ void FilesHashLifecycleController::ReleaseBridge()
 	{
 		delete *m_uiBridgeMFC;
 		*m_uiBridgeMFC = NULL;
+	}
+	if (m_threadData != NULL)
+	{
+		SetThreadDataObserver(*m_threadData, NULL);
 	}
 
 	m_waitingExit = FALSE;

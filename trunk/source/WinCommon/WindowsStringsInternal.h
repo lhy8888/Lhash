@@ -2,6 +2,7 @@
 #define _WINDOWS_STRINGS_INTERNAL_H_
 
 #include <map>
+#include <mutex>
 #include <Windows.h>
 #include <tchar.h>
 #include "OsUtils/OsThread.h"
@@ -17,7 +18,6 @@ namespace WindowsStrings
 		virtual ~WindowsStringsMgr();
 
 		static WindowsStringsMgr *getInstance(void);
-		static void resetInstance(void);
 
 		int registerStringsForLang(LANGID langId, WindowsStringsMap *stringsMap);
 
@@ -25,10 +25,10 @@ namespace WindowsStrings
 
 	private:
 		WindowsStringsMgr();
-		WindowsStringsMgr(const WindowsStringsMgr& other) {}
+		WindowsStringsMgr(const WindowsStringsMgr&) = delete;
+		WindowsStringsMgr& operator=(const WindowsStringsMgr&) = delete;
 
-		static sunjwbase::OsMutex s_instMtx;
-		static WindowsStringsMgr *s_winStrsMgrInst;
+		std::mutex m_mutex;
 
 		LangStringsMap m_langStrsMap;
 	};

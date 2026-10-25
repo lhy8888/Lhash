@@ -8,6 +8,27 @@ using namespace std;
 using namespace sunjwbase;
 using namespace HashEngineInternal;
 
+namespace
+{
+	class HashExecutionWorkingScope
+	{
+	public:
+		explicit HashExecutionWorkingScope(HashExecutionContext& executionContext)
+			: executionContext_(executionContext)
+		{
+			SetHashExecutionWorking(executionContext_, true);
+		}
+		~HashExecutionWorkingScope()
+		{
+			SetHashExecutionWorking(executionContext_, false);
+		}
+		HashExecutionWorkingScope(const HashExecutionWorkingScope&) = delete;
+		HashExecutionWorkingScope& operator=(const HashExecutionWorkingScope&) = delete;
+	private:
+		HashExecutionContext& executionContext_;
+	};
+}
+
 static int CancelHashing(HashExecutionContext *executionContext)
 {
 	HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
@@ -24,7 +45,7 @@ static int CompleteHashing(HashExecutionContext *executionContext)
 
 int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)
 {
-	SetHashExecutionWorking(*executionContext, true);
+	HashExecutionWorkingScope workingScope(*executionContext);
 
 	HashJobExecutionPlan executionPlan = {};
 	InitializeHashJobExecutionPlan(request, &executionPlan);

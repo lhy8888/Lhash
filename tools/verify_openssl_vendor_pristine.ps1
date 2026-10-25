@@ -17,6 +17,47 @@ if (-not (Test-Path $sourceRoot)) {
     throw "OpenSSL vendor source directory was not found at $sourceRoot."
 }
 
+# The reviewed manifest is outside the upstream tree. It is generated from the
+# release tarball, whose SHA-256 and download URL are recorded in its header.
+# Keep the inventory exact: a marker-only scan cannot detect arbitrary edits.
+$manifestPath = Join-Path $RepoRoot ("third_party\openssl\OPENSSL_{0}_FILES.sha256" -f $Version.Replace('.', '_'))
+if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+    throw "Missing trusted OpenSSL file manifest: $manifestPath"
+}
+$expectedFiles = [System.Collections.Generic.Dictionary[string,string]]::new([System.StringComparer]::Ordinal)
+foreach ($line in [System.IO.File]::ReadLines($manifestPath)) {
+    if ($line.StartsWith('#') -or [string]::IsNullOrWhiteSpace($line)) { continue }
+    if ($line -cnotmatch '^([0-9a-f]{64})  ([^\\]+)$') {
+        throw "Malformed OpenSSL file manifest entry: $line"
+    }
+    $relativePath = $Matches[2]
+    if ($relativePath.StartsWith('/') -or $relativePath.Split('/') -contains '..' -or $expectedFiles.ContainsKey($relativePath)) {
+        throw "Unsafe or duplicate OpenSSL file manifest path: $relativePath"
+    }
+    $expectedFiles.Add($relativePath, $Matches[1])
+}
+if ($expectedFiles.Count -eq 0) { throw 'The OpenSSL file manifest is empty.' }
+$resolvedSourceRoot = (Resolve-Path -LiteralPath $sourceRoot).ProviderPath.TrimEnd([char[]]'\/')
+$actualFiles = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -Force)
+foreach ($entry in $actualFiles) {
+    if (($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "OpenSSL upstream tree must not contain links: $($entry.FullName)"
+    }
+    if ($entry.PSIsContainer) { continue }
+    $relativePath = $entry.FullName.Substring($resolvedSourceRoot.Length + 1).Replace('\', '/')
+    if (-not $expectedFiles.ContainsKey($relativePath)) {
+        throw "Unexpected file in OpenSSL upstream tree: $relativePath"
+    }
+    $actualHash = (Get-FileHash -LiteralPath $entry.FullName -Algorithm SHA256).Hash
+    if ($actualHash -ine $expectedFiles[$relativePath]) {
+        throw "OpenSSL upstream file has changed: $relativePath"
+    }
+    [void]$expectedFiles.Remove($relativePath)
+}
+if ($expectedFiles.Count -ne 0) {
+    throw ("Missing OpenSSL upstream files: {0}" -f (($expectedFiles.Keys | Select-Object -First 10) -join ', '))
+}
+
 function Assert-PathExists {
     param(
         [Parameter(Mandatory = $true)]
