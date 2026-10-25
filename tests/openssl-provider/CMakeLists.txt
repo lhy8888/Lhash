@@ -19,12 +19,34 @@ if (LHASH_OPENSSL_INCLUDE_DIRS AND LHASH_OPENSSL_CRYPTO_LIBRARY)
         INTERFACE_INCLUDE_DIRECTORIES "${LHASH_OPENSSL_INCLUDE_DIRS}"
     )
     set(LHASH_CRYPTO_TARGET lhash_test_crypto)
+    set(LHASH_PROVIDER_OPENSSL_INCLUDES "${LHASH_OPENSSL_INCLUDE_DIRS}")
+    set(LHASH_PROVIDER_OPENSSL_LIBRARY "${LHASH_OPENSSL_CRYPTO_LIBRARY}")
 elseif (LHASH_OPENSSL_INCLUDE_DIRS OR LHASH_OPENSSL_CRYPTO_LIBRARY)
     message(FATAL_ERROR "Pass both LHASH_OPENSSL_INCLUDE_DIRS and LHASH_OPENSSL_CRYPTO_LIBRARY")
 else()
     find_package(OpenSSL 3.5.9 EXACT REQUIRED COMPONENTS Crypto)
     set(LHASH_CRYPTO_TARGET OpenSSL::Crypto)
+    set(LHASH_PROVIDER_OPENSSL_INCLUDES "${OPENSSL_INCLUDE_DIR}")
+    set(LHASH_PROVIDER_OPENSSL_LIBRARY "${OPENSSL_CRYPTO_LIBRARY}")
+    if (OPENSSL_ROOT_DIR)
+        # OPENSSL_ROOT_DIR is only a hint to FindOpenSSL. Do not silently fall
+        # back to a host installation if the requested vendor tree is missing.
+        file(REAL_PATH "${OPENSSL_ROOT_DIR}" LHASH_REQUESTED_OPENSSL_ROOT)
+        foreach (found_path IN LISTS LHASH_PROVIDER_OPENSSL_INCLUDES LHASH_PROVIDER_OPENSSL_LIBRARY)
+            # FindOpenSSL may return optimized;<release>;debug;<debug> on MSVC.
+            if (found_path MATCHES "^(optimized|debug|general)$")
+                continue()
+            endif()
+            file(REAL_PATH "${found_path}" resolved_path)
+            cmake_path(IS_PREFIX LHASH_REQUESTED_OPENSSL_ROOT "${resolved_path}" NORMALIZE is_vendor_path)
+            if (NOT is_vendor_path)
+                message(FATAL_ERROR "OpenSSL path '${resolved_path}' is outside requested OPENSSL_ROOT_DIR '${LHASH_REQUESTED_OPENSSL_ROOT}'")
+            endif()
+        endforeach()
+    endif()
 endif()
+message(STATUS "Lhash provider OpenSSL headers: ${LHASH_PROVIDER_OPENSSL_INCLUDES}")
+message(STATUS "Lhash provider OpenSSL crypto library: ${LHASH_PROVIDER_OPENSSL_LIBRARY}")
 
 get_filename_component(LHASH_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 set(LHASH_SOURCE_ROOT "${LHASH_REPO_ROOT}/trunk/source")
@@ -37,6 +59,11 @@ target_compile_definitions(lhash_openssl_provider_tests PRIVATE
     LHASH_CORE_BUILD=1 LHASH_WITH_OPENSSL3_VENDOR=1
 )
 target_include_directories(lhash_openssl_provider_tests PRIVATE "${LHASH_SOURCE_ROOT}")
+# Imported targets normally use -isystem. CPATH (for example Homebrew OpenSSL
+# headers on Intel macOS runners) precedes -isystem and can mix newer headers
+# with our pinned archive. Keep vendor headers as explicit, leading -I paths.
+set_property(TARGET lhash_openssl_provider_tests PROPERTY NO_SYSTEM_FROM_IMPORTED TRUE)
+target_include_directories(lhash_openssl_provider_tests BEFORE PRIVATE ${LHASH_PROVIDER_OPENSSL_INCLUDES})
 target_link_libraries(lhash_openssl_provider_tests PRIVATE
     ${LHASH_CRYPTO_TARGET} Threads::Threads ${CMAKE_DL_LIBS}
 )

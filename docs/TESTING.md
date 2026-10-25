@@ -12,7 +12,7 @@
 | macOS ARM64 | `macos-14` | Core smoke、真实文件 engine、Darwin 文件检查、CLI、OpenSSL provider、digest queue |
 | macOS x64 | `macos-15-intel` | 与 macOS ARM64 相同的测试 |
 | macOS ARM64 + ASan/UBSan | `macos-14` | 重新编译 OpenSSL、engine 和测试代码并执行 provider、queue、engine、Darwin、CLI 检查 |
-| Linux x64 | `ubuntu-24.04` | 实际 OpenSSL provider、digest queue；不构建 Windows/Darwin 文件后端 |
+| Linux x64 | `ubuntu-24.04` | 实际 OpenSSL provider、digest queue、67 项源码约束和 4 项源码回归；不构建 Windows/Darwin 文件后端 |
 
 工作流分别为 [Core Build Matrix](../.github/workflows/core-m2.yml)、
 [Windows Build](../.github/workflows/windows-build.yml) 和
@@ -100,8 +100,8 @@ dotnet run --project security-tests/SecurityRegression/SecurityRegression.csproj
 
 ## 结果与限制
 
-本轮扩展时，Linux 云环境的 67 项 .NET 源码约束测试已通过。新增平台矩阵仍需
-远端原生执行验证；这项本地结果不代表 Windows/macOS 运行时测试已经通过。
+Linux 云环境可以执行 67 项 .NET 源码约束测试；这项本地结果不代表
+Windows/macOS 运行时测试已经通过。平台运行结果以对应提交的原生 CI 为准。
 
 检查 Actions 对应提交的每个矩阵作业，确认测试步骤实际执行且未被跳过。
 Core、provider 和 queue 使用 `--no-tests=error`，避免空测试集被当作通过；
