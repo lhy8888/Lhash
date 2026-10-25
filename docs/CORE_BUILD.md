@@ -51,8 +51,12 @@ ctest --test-dir build/core/windows-x64 --output-on-failure -C Release -R "^(lha
 
 ### Windows arm64
 
+The `windows-11-arm` CI image uses Visual Studio 2026. The following commands
+require Visual Studio 2026 and CMake 4.2 or newer. For a local Visual Studio 2022
+installation, use the `Visual Studio 17 2022` generator instead.
+
 ```powershell
-cmake -S . -B build/core/windows-arm64 -G "Visual Studio 17 2022" -A ARM64 -DLHASH_BUILD_M2_SMOKE=ON
+cmake -S . -B build/core/windows-arm64 -G "Visual Studio 18 2026" -A ARM64 -DLHASH_BUILD_M2_SMOKE=ON
 cmake --build build/core/windows-arm64 --config Release --target lhash_core_smoke --parallel
 ```
 

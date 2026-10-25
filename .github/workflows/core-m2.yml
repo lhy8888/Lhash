@@ -30,7 +30,8 @@ jobs:
             run_security: false
           - name: windows-arm64
             os: windows-11-arm
-            generator: Visual Studio 17 2022
+            # windows-11-arm ships Visual Studio 2026.
+            generator: Visual Studio 18 2026
             configure_args: -A ARM64
             build_dir: build/core/windows-arm64
             build_target: lhash_core_smoke
