@@ -109,10 +109,15 @@ append fills the read buffer. It uses the existing `IDC_STATIC_UPPER=1023` and
 clear checks and character count. An ordering/content failure includes at most
 1800 characters of the owned fixture's result text for diagnosis; successful
 cases do not record the full text.
-The live-selection case sends integer-only `EM_SETSEL` and reads `EM_GETSEL`
-with null pointer arguments. Its positions stay below the packed return value's
+The live-selection case posts integer-only `EM_SETSEL` to the owned edit control's
+message queue, then polls `EM_GETSEL` until that selection is observed while
+hashing remains active and the first digest is still absent. Posting lets the
+current UI update finish before this interaction; a synchronous cross-thread
+send can be dispatched inside that update's selection save/restore. `EM_GETSEL`
+uses null pointer arguments. Its positions stay below the packed return value's
 16-bit limit; it never passes a pointer to memory in another process. JSON also
-records selection setup/retention and ordered-record verification. These are
+records selection setup/retention, the actual packed selection/range or read
+error, and ordered-record verification. These are
 native text/selection checks, not assertions that screenshot pixels match an
 expected image or that custom painting is correct on every display configuration.
 Folder scanning has separate production-worker/Win32 enumeration tests in the

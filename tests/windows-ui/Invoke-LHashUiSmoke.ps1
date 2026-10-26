@@ -26,8 +26,10 @@ namespace LHashUiSmoke {
         [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder text, int maximum);
         [DllImport("user32.dll")] private static extern IntPtr GetDlgItem(IntPtr window, int id);
         [DllImport("user32.dll")] private static extern bool IsWindowEnabled(IntPtr window);
-        [DllImport("user32.dll", SetLastError = true)] private static extern bool PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
-        [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr SendMessageTimeout(IntPtr window, uint message, IntPtr wparam, IntPtr lparam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll", EntryPoint = "PostMessageW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
+        [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr SendMessageTimeout(IntPtr window, uint message, IntPtr wparam, IntPtr lparam, uint flags, uint timeout, out IntPtr result);
         [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern IntPtr SendMessageTimeoutText(IntPtr window, uint message, IntPtr wparam, [Out] StringBuilder text, uint flags, uint timeout, out IntPtr result);
         [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr OpenInputDesktop(uint flags, bool inherit, uint access);
@@ -124,26 +126,45 @@ namespace LHashUiSmoke {
             return copied.ToInt64() >= 0 && copied.ToInt64() < text.Capacity - 1 ? text.ToString() : null;
         }
 
-        public static bool SelectResultRange(IntPtr window, uint processId, int start, int end) {
+        public static bool PostResultSelection(IntPtr window, uint processId, int start, int end) {
             if (!BelongsTo(window, processId) || start < 0 || end < start || end >= 65536) return false;
             IntPtr edit = GetDlgItem(window, 1000);
             if (!BelongsTo(edit, processId)) return false;
-            IntPtr ignored;
             // EM_SETSEL has integer arguments, not pointers into either process.
-            return SendMessageTimeout(edit, 0x00B1, new IntPtr(start), new IntPtr(end), 0x23, 100, out ignored) != IntPtr.Zero;
+            // Queue the interaction after the current UI update: a synchronous
+            // cross-thread send can run inside its save/restore-selection calls.
+            return PostMessage(edit, 0x00B1, new IntPtr(start), new IntPtr(end));
         }
 
-        public static bool HasResultSelection(IntPtr window, uint processId, int start, int end) {
-            if (!BelongsTo(window, processId) || start < 0 || end < start || end >= 65536) return false;
+        public sealed class ResultSelection {
+            public bool WindowOwned;
+            public bool ReadSucceeded;
+            public int Win32Error;
+            public uint PackedValue;
+            public int Start = -1;
+            public int End = -1;
+        }
+
+        public static ResultSelection GetResultSelection(IntPtr window, uint processId) {
+            var observed = new ResultSelection();
+            if (!BelongsTo(window, processId)) return observed;
             IntPtr edit = GetDlgItem(window, 1000);
-            if (!BelongsTo(edit, processId)) return false;
+            if (!BelongsTo(edit, processId)) return observed;
+            observed.WindowOwned = true;
             IntPtr selection;
             // Null pointer arguments request EM_GETSEL's packed return value.
             // This test deliberately uses positions below its 16-bit boundary.
-            if (SendMessageTimeout(edit, 0x00B0, IntPtr.Zero, IntPtr.Zero, 0x23, 100, out selection) == IntPtr.Zero)
-                return false;
-            uint packed = unchecked((uint)selection.ToInt64());
-            return (packed & 0xffff) == start && (packed >> 16) == end;
+            if (SendMessageTimeout(edit, 0x00B0, IntPtr.Zero, IntPtr.Zero, 0x23, 100, out selection) == IntPtr.Zero) {
+                observed.Win32Error = Marshal.GetLastWin32Error();
+                return observed;
+            }
+            observed.ReadSucceeded = true;
+            observed.PackedValue = unchecked((uint)selection.ToInt64());
+            if (observed.PackedValue != uint.MaxValue) {
+                observed.Start = (int)(observed.PackedValue & 0xffff);
+                observed.End = (int)(observed.PackedValue >> 16);
+            }
+            return observed;
         }
 
         public static bool PostResultCommand(IntPtr window, uint processId, int command) {
@@ -339,6 +360,7 @@ function Invoke-OwnedProcessCase {
         idleObserved = $false; statusSummary = $null; summaryCounts = $null; summaryVerified = $false; stopPosted = $false
         textVerified = $false; rebuildVerified = $false; clearVerified = $false; resultCharacters = 0
         selectionPosted = $false; selectionRetained = $false; orderedRecordsVerified = $false
+        selectionObservation = $null; finalSelectionObservation = $null
         resultTextPreview = $null
         actionPosted = $false; exitCode = $null; elapsedMs = 0; passed = $false
         terminatedByTest = $false; crashEvent = $null; error = $null
@@ -385,16 +407,26 @@ function Invoke-OwnedProcessCase {
                                 Start-Sleep -Milliseconds 10
                                 continue
                             }
-                            if (-not [LHashUiSmoke.Native]::SelectResultRange($window, [uint32]$process.Id, 5, 15) -or
-                                -not [LHashUiSmoke.Native]::HasResultSelection($window, [uint32]$process.Id, 5, 15)) {
-                                throw 'Could not set and observe the owned result selection while hashing.'
+                            $record.selectionPosted = [LHashUiSmoke.Native]::PostResultSelection($window, [uint32]$process.Id, 5, 15)
+                            if (-not $record.selectionPosted) { throw 'Could not post the owned result selection while hashing.' }
+                            $selectionObserved = $false
+                            while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+                                if ($process.HasExited) { throw 'Application exited before the posted selection was observed.' }
+                                $record.selectionObservation = [LHashUiSmoke.Native]::GetResultSelection($window, [uint32]$process.Id)
+                                $afterSelection = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
+                                if (($null -ne $afterSelection -and $afterSelection -match '(?m)^SHA-256:') -or
+                                    -not [LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
+                                    throw 'Hashing completed before the posted selection-before-append condition was established.'
+                                }
+                                $observed = $record.selectionObservation
+                                if ($observed.ReadSucceeded -and $observed.Start -eq 5 -and $observed.End -eq 15 -and
+                                    $null -ne $afterSelection -and $afterSelection.Contains($selectionInputPaths[0])) {
+                                    $selectionObserved = $true
+                                    break
+                                }
+                                Start-Sleep -Milliseconds 10
                             }
-                            $afterSelection = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
-                            if ($null -eq $afterSelection -or $afterSelection -match '(?m)^SHA-256:' -or
-                                -not [LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
-                                throw 'Hashing completed before the selection-before-append condition was established.'
-                            }
-                            $record.selectionPosted = $true
+                            if (-not $selectionObserved) { throw 'The posted result selection was not observed before the case timeout.' }
                         }
                         $record.progressObserved = $true
                         $record.progressValue = $progress
@@ -450,7 +482,9 @@ function Invoke-OwnedProcessCase {
                     if ($record.orderedRecordsVerified) { break }
                     Start-Sleep -Milliseconds 10
                 }
-                $record.selectionRetained = [LHashUiSmoke.Native]::HasResultSelection($window, [uint32]$process.Id, 5, 15)
+                $record.finalSelectionObservation = [LHashUiSmoke.Native]::GetResultSelection($window, [uint32]$process.Id)
+                $observed = $record.finalSelectionObservation
+                $record.selectionRetained = ($observed.ReadSucceeded -and $observed.Start -eq 5 -and $observed.End -eq 15)
                 if (-not $record.orderedRecordsVerified -or -not $record.selectionRetained) {
                     if ($null -ne $text) { $record.resultTextPreview = $text.Substring(0, [Math]::Min(1800, $text.Length)) }
                     throw 'Incremental output changed record order or did not preserve the selection made while hashing.'
@@ -655,6 +689,8 @@ if ($suiteFailure) {
                 resultCharacters = $failedCase.resultCharacters
                 selectionPosted = $failedCase.selectionPosted
                 selectionRetained = $failedCase.selectionRetained
+                selectionObservation = $failedCase.selectionObservation
+                finalSelectionObservation = $failedCase.finalSelectionObservation
                 orderedRecordsVerified = $failedCase.orderedRecordsVerified
                 resultTextPreview = $failedCase.resultTextPreview
                 stopPosted = $failedCase.stopPosted
