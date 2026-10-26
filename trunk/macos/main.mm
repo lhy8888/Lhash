@@ -6,8 +6,10 @@
 @end
 
 @implementation LHApplicationDelegate
-- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+- (void)applicationWillFinishLaunching:(NSNotification *)notification {
     self.controller = [[LHAppController alloc] initWithDefaults:NSUserDefaults.standardUserDefaults];
+}
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
     BOOL chinese = [NSLocale.preferredLanguages.firstObject hasPrefix:@"zh"];
     NSMenu *bar = [[NSMenu alloc] init];
     NSMenuItem *application = [[NSMenuItem alloc] init];

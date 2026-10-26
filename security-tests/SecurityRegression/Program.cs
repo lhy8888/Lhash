@@ -101,7 +101,7 @@ internal static partial class Program
             AssertContains(nativeSecurityTargets, "<DataExecutionPrevention>true</DataExecutionPrevention>", "Shared native security targets do not enable DEP.");
             AssertContains(vendorTargets, "FailNonReleaseOpenSslVendor", "Shared OpenSSL vendor targets do not reject non-Release builds.");
             AssertContains(vendorTargets, "Do not link it into non-Release builds.", "Shared OpenSSL vendor targets do not explain the Release-only restriction.");
-            AssertContains(cmakeLists, "LHASH_BUILD_CLI AND NOT LHASH_ENABLE_OPENSSL_VENDOR", "CLI must not silently expose a reduced stub algorithm set.");
+            AssertContains(cmakeLists, "(LHASH_BUILD_CLI OR LHASH_BUILD_MACOS_GUI) AND NOT LHASH_ENABLE_OPENSSL_VENDOR", "CLI and macOS app must not silently expose a reduced stub algorithm set.");
             string cmakeOpenSsl = ReadRepoFile(repoRoot, @"cmake\LHashOpenSSL.cmake");
             AssertContains(cmakeOpenSsl, "set(OPENSSL_USE_STATIC_LIBS TRUE)", "CMake must select static OpenSSL.");
             AssertContains(cmakeOpenSsl, "find_package(OpenSSL 3.5.9 EXACT REQUIRED COMPONENTS Crypto)", "CMake must pin the supported OpenSSL version.");

@@ -1,6 +1,7 @@
 #import "AppController.h"
 #include "HashSession.h"
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -81,6 +82,8 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
 @implementation LHAppController {
     std::unique_ptr<HashSession> _session;
     std::vector<Result> _results;
+    std::array<size_t, 7> _stateCounts{};
+    NSUInteger _filterMatches;
     NSUserDefaults *_defaults;
     NSMutableArray<NSString *> *_algorithmIDs;
     NSMutableArray<NSMutableDictionary *> *_rows;
@@ -362,7 +365,12 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
         if (!index) {
             index = @(_rows.count); _rowIndex[key] = index;
             row = [NSMutableDictionary dictionary]; [_rows addObject:row]; added = YES;
+            row[@"state"] = @(static_cast<size_t>(TaskState::Pending));
+            ++_stateCounts[static_cast<size_t>(TaskState::Pending)];
         } else row = _rows[index.unsignedIntegerValue];
+        --_stateCounts[[row[@"state"] unsignedIntegerValue]];
+        row[@"state"] = @(static_cast<size_t>(task.state));
+        ++_stateCounts[static_cast<size_t>(task.state)];
         row[@"path"] = Visible(String(task.path).lastPathComponent);
         row[@"fullPath"] = Visible(String(task.path));
         row[@"algorithms"] = _activeAlgorithms ?: @"";
@@ -375,7 +383,10 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
     if (changed.count) [_taskTableView reloadDataForRowIndexes:changed columnIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 4)]];
     NSMutableAttributedString *pending = [[NSMutableAttributedString alloc] init];
     for (auto& result : update.results) {
-        if ([self resultMatches:result]) [pending appendAttributedString:[self renderResult:result]];
+        if ([self resultMatches:result]) {
+            [pending appendAttributedString:[self renderResult:result]];
+            if (_filter.length) ++_filterMatches;
+        }
         _results.push_back(std::move(result));
     }
     if (!update.error.empty()) update.warnings.push_back(update.error);
@@ -399,9 +410,12 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
             (update.busy ? [self text:@"Calculating" chinese:@"正在计算"] : [self text:@"Finished" chinese:@"已结束"]);
         if (!_filter.length)
             _summary.stringValue = [NSString stringWithFormat:@"%@ · %@ %zu/%zu · %@ %zu · %@ %zu", phase,
-                [self text:@"Completed" chinese:@"完成"], update.completed, update.taskCount,
-                [self text:@"Failed" chinese:@"失败"], update.failed,
-                [self text:@"Unfinished" chinese:@"取消/未执行"], update.cancelled + update.notRun + update.aborted];
+                [self text:@"Completed" chinese:@"完成"], _stateCounts[static_cast<size_t>(TaskState::Completed)], (size_t)_rows.count,
+                [self text:@"Failed" chinese:@"失败"], _stateCounts[static_cast<size_t>(TaskState::Failed)],
+                [self text:@"Unfinished" chinese:@"取消/未执行"], _stateCounts[static_cast<size_t>(TaskState::Cancelled)] +
+                    _stateCounts[static_cast<size_t>(TaskState::NotRun)] + _stateCounts[static_cast<size_t>(TaskState::Aborted)]);
+        else
+            _summary.stringValue = [NSString stringWithFormat:[self text:@"Matching files: %lu" chinese:@"匹配文件数：%lu"], (unsigned long)_filterMatches];
         double speed = update.elapsedSeconds > 0 ? update.bytesProcessed / update.elapsedSeconds / (1024.0 * 1024.0) : 0;
         _timing.stringValue = [NSString stringWithFormat:@"%.2f s · %.2f MiB/s", update.elapsedSeconds, speed];
     }
@@ -427,7 +441,8 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
 - (BOOL)textView:(NSTextView *)textView clickedOnLink:(id)link atIndex:(NSUInteger)charIndex {
     if (![link isKindOfClass:NSString.class]) return YES;
     [NSPasteboard.generalPasteboard clearContents];
-    [NSPasteboard.generalPasteboard setString:link forType:NSPasteboardTypeString];
+    if (![NSPasteboard.generalPasteboard setString:link forType:NSPasteboardTypeString])
+        [self clipboardFailed];
     return YES; // Digests are copied locally, never opened as URLs.
 }
 
@@ -441,13 +456,14 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
     _filter = normalized;
     NSUInteger matches = 0;
     for (const auto& result : _results) if ([self resultMatches:result]) ++matches;
+    _filterMatches = matches;
     [self rebuildText];
     _clearButton.title = [self text:@"Clear Verification" chinese:@"清除验证"];
     _summary.stringValue = [NSString stringWithFormat:[self text:@"Matching files: %lu" chinese:@"匹配文件数：%lu"], (unsigned long)matches];
     return matches;
 }
 - (void)clearVerification {
-    if (_filter.length) { _filter = nil; [self rebuildText]; }
+    if (_filter.length) { _filter = nil; _filterMatches = 0; [self rebuildText]; }
     _clearButton.title = [self text:@"Clear" chinese:@"清空"];
 }
 - (void)clearResults {
@@ -455,6 +471,8 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
     [self pollSession];
     _results.clear(); [_rows removeAllObjects]; [_rowIndex removeAllObjects]; [_notices removeAllObjects];
     _filter = nil;
+    _filterMatches = 0;
+    _stateCounts.fill(0);
     // Replace an idle session so later timer ticks cannot restore old counters.
     _session = std::make_unique<HashSession>();
     [_resultTextView setString:@""]; [_taskTableView reloadData];
@@ -467,7 +485,13 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
 }
 - (void)copyAll {
     [NSPasteboard.generalPasteboard clearContents];
-    [NSPasteboard.generalPasteboard setString:_resultTextView.string forType:NSPasteboardTypeString];
+    if (![NSPasteboard.generalPasteboard setString:_resultTextView.string forType:NSPasteboardTypeString])
+        [self clipboardFailed];
+}
+- (void)clipboardFailed {
+    NSError *error = nil;
+    Fail(&error, [self text:@"Could not copy to the clipboard. Please try again." chinese:@"无法复制到剪贴板，请重试。"]);
+    [self showError:error];
 }
 - (BOOL)exportToURL:(NSURL *)url error:(NSError **)error {
     NSData *body = [_resultTextView.string dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:NO];
