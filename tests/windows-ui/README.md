@@ -22,8 +22,8 @@ job downloads the packaged application from the same run and verifies its checks
 commit/version metadata and ARM64 PE machine type before launch. Both jobs gate
 release publication. The crash debugger described below is currently x64 only.
 
-For each of two iterations it creates eight independent application processes
-(16 cases by default). The idle control has no file argument; completion uses
+For each of two iterations it creates nine independent application processes
+(18 cases by default). The idle control has no file argument; completion uses
 a private three-byte file; active cases use a private 512 MiB temporary file.
 It performs:
 
@@ -53,13 +53,28 @@ It performs:
    between files, so Cancelled=0 is legitimate; deterministic running-to-cancelled
    transitions are covered by the task-model tests. Only after these checks does
    the test close the result window and require a zero exit code.
-8. 128 distinct three-byte files supplied together. The idle summary must show
-   all 128 completed. The actual result edit control must contain each filename
-   exactly once and all 128 known SHA256 values. It then invokes the existing
+8. 128 files with distinct contents supplied together. The idle summary must show
+   all 128 completed. The actual result edit control must contain complete records
+   in input order: filename, size, modified date, SHA256, SHA512, SHA3-256.
+   SHA256 and SHA512 must match independent .NET values for each particular file;
+   SHA3 must have the expected label and hexadecimal length. Digest correctness
+   beyond these smoke checks is covered by the provider/engine suites.
+   This rejects output whose digests precede the corresponding metadata, even
+   when every filename and digest occurs once. It then invokes the existing
    uppercase command and verifies a complete replacement in the opposite case,
    without missing or duplicated records. Finally Clear must empty the actual
    edit control and reset the summary to zero. This exercises incremental
    append, rebuild/reset and clear in the same process before normal close.
+9. A large file followed by a small Unicode-named file. While the first file is
+   hashing, the test requires positive progress and visible metadata without a
+   SHA256 result yet, then selects characters 5–15 in the owned result control.
+   It confirms hashing and the pre-digest condition after the selection, so a
+   subsequent append is required. Normal completion must preserve that selection
+   and both records' metadata/digest order; SHA256 is checked against independent
+   reference values. This catches appending at the previous selection instead
+   of the actual end. Failure to establish the live condition is a test failure,
+   not a skip; deterministic batch/selection interleavings are covered separately
+   by the native result-control tests.
 
 Each owned process has a total 10-second budget, including discovery and waiting
 for the busy state. A timeout, inability to observe busy controls, missing main
@@ -91,7 +106,15 @@ The many-results case reads `IDE_TXTMAIN=1000` with standard `WM_GETTEXTLENGTH`
 and `WM_GETTEXT`, capped at 2 MiB and 100 ms per call. It retries if a concurrent
 append fills the read buffer. It uses the existing `IDC_STATIC_UPPER=1023` and
 `IDC_CLEAN=1017` command handlers only while idle. The JSON records text/rebuild/
-clear checks and character count without including the full result text.
+clear checks and character count. An ordering/content failure includes at most
+1800 characters of the owned fixture's result text for diagnosis; successful
+cases do not record the full text.
+The live-selection case sends integer-only `EM_SETSEL` and reads `EM_GETSEL`
+with null pointer arguments. Its positions stay below the packed return value's
+16-bit limit; it never passes a pointer to memory in another process. JSON also
+records selection setup/retention and ordered-record verification. These are
+native text/selection checks, not assertions that screenshot pixels match an
+expected image or that custom painting is correct on every display configuration.
 Folder scanning has separate production-worker/Win32 enumeration tests in the
 full native runtime suite. This smoke does not claim to automate the Shell folder
 picker or reproduce a real network-share stall.

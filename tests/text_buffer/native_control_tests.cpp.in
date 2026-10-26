@@ -1,0 +1,214 @@
+#include <windows.h>
+
+#include "WinMFC/ResultTextBuffer.h"
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+static void Require(bool condition, const char* message)
+{
+    if (!condition) throw std::runtime_error(message);
+}
+
+struct NativeLinkOffset { int iStart; int iLength; };
+
+// CEdit-compatible calls backed by actual USER32 messages. In particular, the
+// implementation of EM_SETSEL(-1,-1) belongs to Windows, never a test double.
+// These styles match the product's read-only multiline result control.
+class CHyperEditHash
+{
+public:
+    using TextUpdate = BasicResultTextBuffer<wchar_t>::Update;
+    CHyperEditHash()
+    {
+        m_parent = CreateWindowExW(0, L"STATIC", L"LHash native rendering test", WS_POPUP,
+                                  0, 0, 640, 400, nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
+        Require(m_parent != nullptr, "could not create owned test parent");
+        m_window = CreateWindowExW(0, L"EDIT", L"",
+            WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL |
+            ES_MULTILINE | ES_READONLY | ES_AUTOHSCROLL | ES_WANTRETURN,
+            0, 0, 620, 380, m_parent, nullptr, GetModuleHandleW(nullptr), nullptr);
+        if (m_window == nullptr)
+        {
+            DestroyWindow(m_parent);
+            throw std::runtime_error("could not create real Win32 EDIT");
+        }
+        SendMessageW(m_window, WM_SETFONT, reinterpret_cast<WPARAM>(GetStockObject(DEFAULT_GUI_FONT)), FALSE);
+        SendMessageW(m_window, EM_SETLIMITTEXT, INT_MAX, 0);
+    }
+    ~CHyperEditHash() { DestroyWindow(m_parent); }
+    CHyperEditHash(const CHyperEditHash&) = delete;
+    CHyperEditHash& operator=(const CHyperEditHash&) = delete;
+
+    void ShowTextUpdate(const TextUpdate& update, BOOL scrollToEnd);
+    void SetSel(int start, int end, BOOL noScroll = FALSE)
+    {
+        SendMessageW(m_window, EM_SETSEL, static_cast<WPARAM>(start), static_cast<LPARAM>(end));
+        if (!noScroll) SendMessageW(m_window, EM_SCROLLCARET, 0, 0);
+    }
+    void GetSel(int& start, int& end) const
+    {
+        DWORD first = 0, last = 0;
+        SendMessageW(m_window, EM_GETSEL, reinterpret_cast<WPARAM>(&first), reinterpret_cast<LPARAM>(&last));
+        start = static_cast<int>(first);
+        end = static_cast<int>(last);
+    }
+    std::pair<int, int> Selection() const
+    {
+        int first = 0, last = 0;
+        GetSel(first, last);
+        return {first, last};
+    }
+    int GetFirstVisibleLine() const { return static_cast<int>(SendMessageW(m_window, EM_GETFIRSTVISIBLELINE, 0, 0)); }
+    int GetLineCount() const { return static_cast<int>(SendMessageW(m_window, EM_GETLINECOUNT, 0, 0)); }
+    int GetWindowTextLength() const { return ::GetWindowTextLengthW(m_window); }
+    void SetWindowText(const wchar_t* text) { Require(::SetWindowTextW(m_window, text) != FALSE, "WM_SETTEXT failed"); }
+    void ReplaceSel(const wchar_t* text, BOOL undo) { SendMessageW(m_window, EM_REPLACESEL, undo, reinterpret_cast<LPARAM>(text)); }
+    void EnableRedraw(BOOL enable) { SendMessageW(m_window, WM_SETREDRAW, enable, 0); }
+    void LineScroll(int lines) { SendMessageW(m_window, EM_LINESCROLL, 0, lines); }
+    void Invalidate(BOOL erase) { InvalidateRect(m_window, nullptr, erase); }
+    void Repaint() { UpdateWindow(m_window); }
+    std::wstring NativeText() const
+    {
+        const int length = GetWindowTextLength();
+        std::vector<wchar_t> text(static_cast<size_t>(length) + 1);
+        const int copied = ::GetWindowTextW(m_window, text.data(), length + 1);
+        Require(copied == length, "could not read the complete native text");
+        return std::wstring(text.data(), static_cast<size_t>(copied));
+    }
+    std::wstring DisplayCache() const { return m_displayText.Range(0, m_displayText.Size()); }
+    const std::vector<NativeLinkOffset>& DisplayLinks() const { return m_linkOffsets; }
+
+private:
+    HWND m_parent = nullptr, m_window = nullptr;
+    BasicResultTextView<wchar_t> m_displayText;
+    std::vector<NativeLinkOffset> m_linkOffsets;
+};
+
+@@PRODUCTION_SHOW_TEXT_UPDATE@@
+
+static void VerifyAgreement(const BasicResultTextBuffer<wchar_t>& buffer, const CHyperEditHash& control)
+{
+    const auto native = control.NativeText();
+    Require(native == buffer.Text(), "native EDIT text differs from canonical record order");
+    Require(control.DisplayCache() == native, "custom painting cache differs from native EDIT text");
+    const auto& links = control.DisplayLinks();
+    Require(links.size() == buffer.Links().size(), "display link count differs from canonical links");
+    for (size_t index = 0; index < links.size(); ++index)
+    {
+        const auto& expected = buffer.Links()[index];
+        Require(links[index].iStart == expected.start && links[index].iLength == expected.length,
+                "display link offset drifted during append");
+        const auto start = static_cast<size_t>(expected.start), length = static_cast<size_t>(expected.length);
+        Require(start + length <= native.size(), "display link extends beyond native text");
+        Require(native.substr(start, length) == buffer.Text().substr(start, length),
+                "custom link overlay addresses a different native substring");
+    }
+}
+
+static void Flush(BasicResultTextBuffer<wchar_t>& buffer, CHyperEditHash& control, BOOL scroll = FALSE)
+{
+    const auto selected = control.Selection();
+    const auto update = buffer.Drain();
+    control.ShowTextUpdate(update, scroll);
+    control.Repaint();
+    VerifyAgreement(buffer, control);
+    const int length = control.GetWindowTextLength();
+    Require(control.Selection() == std::make_pair((std::min)(selected.first, length), (std::min)(selected.second, length)),
+            "append/reset changed the preserved selection");
+}
+
+static void OldCodeNegativeControl()
+{
+    CHyperEditHash control;
+    control.SetWindowText(L"first record\r\n");
+    control.SetSel(0, 0, TRUE);
+    // The buggy call only cancels the current selection. It is not append-at-end.
+    control.SetSel(-1, -1, TRUE);
+    control.ReplaceSel(L"second record\r\n", FALSE);
+    Require(control.NativeText() == L"second record\r\nfirst record\r\n",
+            "the old caret-based append negative control did not reproduce");
+    std::cout << "PASS negative control: old SetSel(-1,-1) prepends at the current caret\n";
+}
+
+static void MultipleRecordsAndLiveSelections()
+{
+    BasicResultTextBuffer<wchar_t> buffer;
+    CHyperEditHash control;
+    buffer.Append(L"\u6587\u4ef6\u540d: ");
+    buffer.Append(L"D:\\software\\first.iso", true);
+    buffer.Append(L"\r\n\u6587\u4ef6\u5927\u5c0f: 5125844992\r\n");
+    Flush(buffer, control);
+    control.SetSel(0, 0, TRUE);
+    buffer.Append(L"SHA-256: "); buffer.Append(L"0123456789abcdef", true); buffer.Append(L"\r\n");
+    Flush(buffer, control, TRUE);
+    control.SetSel(3, 10, TRUE);
+    buffer.Append(L"SHA-512: "); buffer.Append(L"ffeeddccbbaa99887766554433221100", true); buffer.Append(L"\r\n\r\n");
+    Flush(buffer, control);
+    control.SetSel(0, control.GetWindowTextLength(), TRUE);
+    buffer.Append(L"\u6587\u4ef6\u540d: ");
+    buffer.Append(L"D:\\software\\ChromeSetup-\u6587\u4ef6-\U0001F4C4.exe", true);
+    buffer.Append(L"\r\n\u4fee\u6539\u65e5\u671f: 2026-05-08\r\n");
+    Flush(buffer, control);
+    control.SetSel(8, 8, TRUE);
+    buffer.Append(L"SHA-256: "); buffer.Append(L"0847018dd8a78fb656a91dd4719ca74b", true); buffer.Append(L"\r\n");
+    Flush(buffer, control, TRUE);
+    const auto original = control.NativeText();
+    control.SetSel(0, -1, TRUE); control.Invalidate(FALSE); control.Repaint();
+    VerifyAgreement(buffer, control);
+    control.SetSel(0, 0, TRUE); control.Invalidate(FALSE); control.Repaint();
+    VerifyAgreement(buffer, control);
+    Require(control.NativeText() == original, "selection/repaint changed the result content");
+    const auto secondPath = original.find(L"ChromeSetup-");
+    Require(secondPath != std::wstring::npos && original.find(L"0847018dd8a78fb656a91dd4719ca74b") > secondPath,
+            "second file digest precedes its metadata");
+}
+
+static void LargeIndicesScrollAndReset()
+{
+    BasicResultTextBuffer<wchar_t> buffer;
+    CHyperEditHash control;
+    for (int line = 0; line < 8192; ++line)
+    {
+        const auto name = L"retained-file-" + std::to_wstring(line);
+        buffer.Append(name.c_str(), true);
+        buffer.Append(L" SHA256: abcdef0123456789\r\n");
+    }
+    Flush(buffer, control);
+    Require(control.GetWindowTextLength() > 65536, "the full-width selection boundary was not reached");
+    control.SetSel(70000, 70010, TRUE);
+    control.LineScroll(100);
+    const auto firstVisible = control.GetFirstVisibleLine();
+    buffer.Append(L"\u6587\u4ef6\u540d: "); buffer.Append(L"final-file", true); buffer.Append(L"\r\n");
+    Flush(buffer, control, FALSE);
+    Require(control.GetFirstVisibleLine() == firstVisible, "non-tail append moved the visible first line");
+    control.SetSel(control.GetWindowTextLength(), control.GetWindowTextLength(), TRUE);
+    buffer.Append(L"SHA-256: "); buffer.Append(L"final-digest", true); buffer.Append(L"\r\n");
+    Flush(buffer, control, TRUE);
+    buffer.Clear(); buffer.Append(L"filtered result "); buffer.Append(L"new-link", true);
+    Flush(buffer, control);
+    buffer.Clear(); Flush(buffer, control);
+    Require(control.NativeText().empty() && control.DisplayLinks().empty(), "clear left text or hyperlinks behind");
+    buffer.Append(L"new session\r\n"); Flush(buffer, control);
+}
+
+int main()
+{
+    try
+    {
+        OldCodeNegativeControl();
+        MultipleRecordsAndLiveSelections();
+        LargeIndicesScrollAndReset();
+        std::cout << "PASS real Win32 EDIT: production append method, record order, native/cache/link agreement, live selection, Unicode, >64KiB indices, scroll and reset\n";
+        return 0;
+    }
+    catch (const std::exception& error)
+    {
+        std::cerr << "FAIL native result control: " << error.what() << '\n';
+        return 1;
+    }
+}

@@ -7,8 +7,8 @@ API替身、原生执行和GUI交互是不同的证据。
 
 | 平台 | Runner | 覆盖 |
 | --- | --- | --- |
-| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及16例真实窗口退出/任务状态/文本测试 |
-| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行16例窗口退出/任务状态/文本测试 |
+| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及18例真实窗口退出/任务状态/文本测试 |
+| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行18例窗口退出/任务状态/文本测试 |
 | macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测 |
 | macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
@@ -57,9 +57,13 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
   异常冻结、reset和并发读取；worker入口与启动生命周期另有集成约束。
 - `lhash_text_buffer_tests`：8192条差量恰好交付一次、Unicode、reset/过期批次、
   准备状态快照恢复、可见链接边界以及显示阻塞期间生产者仍可追加。
-- `tests/windows-ui`：原10例退出测试加每轮三例：重复小文件完成后必须为2项完成；
+- `lhash_native_text_control_tests`：Windows实际EDIT控件执行抽取的产品刷新函数，
+  验证旧caret调用的负对照、每批控件/缓存/链接一致、选区保留、超过64Ki字符与重建。
+  CEdit薄适配调用真实USER32；完整MFC绘制由GUI场景覆盖，不声称像素级截图比对。
+- `tests/windows-ui`：原10例退出测试加每轮四例：重复小文件完成后必须为2项完成；
   读取中Stop后窗口保留、没有运行中任务，已完成/取消/未执行计数覆盖全部输入。
-  128文件场景检查全部SHA256输出恰好一次，再验证大小写重建和Clear。
+  128个不同内容文件检查文件信息→对应摘要的严格顺序，再验证大小写重建和Clear；
+  大文件读取期间设置选区，完成后核对两文件输出顺序与原选区保留。
   从自有进程的普通状态控件读取文字，系统封送，不读取远程ListView结构。
 - `tests/windows-inputs`：从当前生产函数生成探针，验证250024个COPYDATA样本、数量
   边界、带空格exe引用、目录预算/取消、剪贴板所有权与失败、版本API返回边界。

@@ -115,7 +115,12 @@ void CHyperEditHash::ShowTextUpdate(const TextUpdate& update, BOOL scrollToEnd)
 	}
 	else if (!update.text.empty())
 	{
-		SetSel(-1, -1, TRUE);
+		// EM_SETSEL with start == -1 only collapses the current selection;
+		// it does not move the caret to the end of the control. Each refresh
+		// restores the user's selection below, so append at an explicit offset.
+		// Otherwise the native text diverges from the display cache/link offsets.
+		const int appendPosition = GetWindowTextLength();
+		SetSel(appendPosition, appendPosition, TRUE);
 		ReplaceSel(update.text.c_str(), FALSE);
 	}
 	// Appending must not destroy a user's selection while results are arriving.

@@ -12,3 +12,23 @@ if(MSVC)
 endif()
 add_test(NAME lhash_text_buffer_tests COMMAND lhash_text_buffer_tests)
 set_tests_properties(lhash_text_buffer_tests PROPERTIES TIMEOUT 30)
+
+if(WIN32)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    get_filename_component(LHASH_TEXT_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/native_control_tests.cpp"
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/generate_native_control.py" "${CMAKE_CURRENT_BINARY_DIR}"
+        DEPENDS generate_native_control.py native_control_tests.cpp.in
+            "${LHASH_TEXT_REPO_ROOT}/trunk/source/WinMFC/HyperEditHash.cpp"
+        VERBATIM)
+    add_executable(lhash_native_text_control_tests "${CMAKE_CURRENT_BINARY_DIR}/native_control_tests.cpp")
+    target_compile_features(lhash_native_text_control_tests PRIVATE cxx_std_17)
+    target_compile_definitions(lhash_native_text_control_tests PRIVATE UNICODE _UNICODE NOMINMAX)
+    target_include_directories(lhash_native_text_control_tests PRIVATE "${LHASH_TEXT_REPO_ROOT}/trunk/source")
+    target_link_libraries(lhash_native_text_control_tests PRIVATE user32 gdi32)
+    if(MSVC)
+        target_compile_options(lhash_native_text_control_tests PRIVATE /utf-8 /W4)
+    endif()
+    add_test(NAME lhash_native_text_control_tests COMMAND lhash_native_text_control_tests)
+    set_tests_properties(lhash_native_text_control_tests PROPERTIES TIMEOUT 30)
+endif()

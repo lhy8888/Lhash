@@ -124,6 +124,28 @@ namespace LHashUiSmoke {
             return copied.ToInt64() >= 0 && copied.ToInt64() < text.Capacity - 1 ? text.ToString() : null;
         }
 
+        public static bool SelectResultRange(IntPtr window, uint processId, int start, int end) {
+            if (!BelongsTo(window, processId) || start < 0 || end < start || end >= 65536) return false;
+            IntPtr edit = GetDlgItem(window, 1000);
+            if (!BelongsTo(edit, processId)) return false;
+            IntPtr ignored;
+            // EM_SETSEL has integer arguments, not pointers into either process.
+            return SendMessageTimeout(edit, 0x00B1, new IntPtr(start), new IntPtr(end), 0x23, 100, out ignored) != IntPtr.Zero;
+        }
+
+        public static bool HasResultSelection(IntPtr window, uint processId, int start, int end) {
+            if (!BelongsTo(window, processId) || start < 0 || end < start || end >= 65536) return false;
+            IntPtr edit = GetDlgItem(window, 1000);
+            if (!BelongsTo(edit, processId)) return false;
+            IntPtr selection;
+            // Null pointer arguments request EM_GETSEL's packed return value.
+            // This test deliberately uses positions below its 16-bit boundary.
+            if (SendMessageTimeout(edit, 0x00B0, IntPtr.Zero, IntPtr.Zero, 0x23, 100, out selection) == IntPtr.Zero)
+                return false;
+            uint packed = unchecked((uint)selection.ToInt64());
+            return (packed & 0xffff) == start && (packed >> 16) == end;
+        }
+
         public static bool PostResultCommand(IntPtr window, uint processId, int command) {
             if (!IsHashSessionIdle(window, processId) || (command != 1017 && command != 1023)) return false;
             IntPtr control = GetDlgItem(window, command); // Clear / uppercase label
@@ -178,8 +200,14 @@ $results = [System.Collections.Generic.List[object]]::new()
 $temporaryDirectory = $null
 $suiteFailure = $null
 $executablePath = $null
-$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close', 'duplicate-completion', 'active-stop-summary', 'many-results-reset')
+$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close', 'duplicate-completion', 'active-stop-summary', 'many-results-reset', 'selection-during-append')
 $textInputPaths = @()
+$textSha256 = @()
+$textSha512 = @()
+$textSizes = @()
+$selectionInputPaths = @()
+$selectionSha256 = @()
+$selectionSizes = @()
 $abcSha256 = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
 $reportRoot = [System.IO.Path]::GetFullPath($ReportDirectory)
 [System.IO.Directory]::CreateDirectory($reportRoot) | Out-Null
@@ -201,15 +229,35 @@ function ConvertFrom-StatusSummary {
     return [pscustomobject]$counts
 }
 
-function Test-CompleteResultText {
-    param([string]$Text)
-    if ([string]::IsNullOrEmpty($Text)) { return $false }
-    if ([regex]::Matches($Text, "(?i)\b$abcSha256\b").Count -ne $textInputPaths.Count) { return $false }
-    foreach ($path in $textInputPaths) {
-        $name = [System.IO.Path]::GetFileName($path)
-        if ([regex]::Matches($Text, [regex]::Escape($name)).Count -ne 1) { return $false }
+function Test-OrderedResultText {
+    param([string]$Text, [string[]]$Paths, [string[]]$Sha256, [long[]]$Sizes, [string[]]$Sha512 = @())
+    if ([string]::IsNullOrEmpty($Text) -or $Paths.Count -eq 0 -or
+        $Sha256.Count -ne $Paths.Count -or $Sizes.Count -ne $Paths.Count -or
+        ($Sha512.Count -ne 0 -and $Sha512.Count -ne $Paths.Count)) { return $false }
+    # These private .bin fixtures have exactly two metadata lines and the
+    # default three digest lines. Check records in input order, not just presence:
+    # the former verifier accepted hashes inserted before their file metadata.
+    $lines = @($Text -split '\r?\n' | Where-Object { $_.Length -ne 0 })
+    if ($lines.Count -ne $Paths.Count * 6) { return $false }
+    for ($index = 0; $index -lt $Paths.Count; ++$index) {
+        $first = $index * 6
+        $pathPattern = [regex]::Escape($Paths[$index])
+        $hashPattern = [regex]::Escape($Sha256[$index])
+        $sha512Pattern = if ($Sha512.Count -eq 0) { '[0-9a-f]{128}' } else { [regex]::Escape($Sha512[$index]) }
+        if ($lines[$first] -notmatch "^(?:Name|文件名): $pathPattern`$" -or
+            $lines[$first + 1] -notmatch "^(?:File Size|文件大小): $($Sizes[$index]) (?:Byte\(s\)|字节)(?: \([^\r\n]+\))?`$" -or
+            $lines[$first + 2] -notmatch '^(?:Modified Date|修改日期): [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$' -or
+            $lines[$first + 3] -notmatch "(?i)^SHA-256: $hashPattern`$" -or
+            $lines[$first + 4] -notmatch "(?i)^SHA-512: $sha512Pattern`$" -or
+            $lines[$first + 5] -notmatch '^(?i)SHA3-256: [0-9a-f]{64}$') { return $false }
     }
     return $true
+}
+
+function Test-CompleteResultText {
+    param([string]$Text)
+    return Test-OrderedResultText -Text $Text -Paths $textInputPaths `
+        -Sha256 $textSha256 -Sha512 $textSha512 -Sizes $textSizes
 }
 
 function Get-OwnedCrashEvent {
@@ -290,6 +338,8 @@ function Invoke-OwnedProcessCase {
         progressObserved = $false; progressValue = $null
         idleObserved = $false; statusSummary = $null; summaryCounts = $null; summaryVerified = $false; stopPosted = $false
         textVerified = $false; rebuildVerified = $false; clearVerified = $false; resultCharacters = 0
+        selectionPosted = $false; selectionRetained = $false; orderedRecordsVerified = $false
+        resultTextPreview = $null
         actionPosted = $false; exitCode = $null; elapsedMs = 0; passed = $false
         terminatedByTest = $false; crashEvent = $null; error = $null
     }
@@ -301,6 +351,8 @@ function Invoke-OwnedProcessCase {
         $inputCount = switch ($Name) { 'duplicate-completion' { 2 } 'active-stop-summary' { 16 } default { 1 } }
         if ($Name -eq 'many-results-reset') {
             foreach ($path in $textInputPaths) { $process.StartInfo.ArgumentList.Add($path) }
+        } elseif ($Name -eq 'selection-during-append') {
+            foreach ($path in $selectionInputPaths) { $process.StartInfo.ArgumentList.Add($path) }
         } elseif ($InputPath) {
             foreach ($unused in 1..$inputCount) { $process.StartInfo.ArgumentList.Add($InputPath) }
         }
@@ -323,6 +375,27 @@ function Invoke-OwnedProcessCase {
                     $record.busyObserved = $true
                     $progress = [LHashUiSmoke.Native]::GetHashProgress($window, [uint32]$process.Id)
                     if ($progress -gt 0 -and [LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
+                        if ($Name -eq 'selection-during-append') {
+                            $beforeSelection = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
+                            # Require metadata already displayed and the first digest
+                            # still pending, so this selection precedes a later append.
+                            if ($null -eq $beforeSelection -or $beforeSelection.Length -lt 20 -or
+                                -not $beforeSelection.Contains($selectionInputPaths[0]) -or
+                                $beforeSelection -match '(?m)^SHA-256:') {
+                                Start-Sleep -Milliseconds 10
+                                continue
+                            }
+                            if (-not [LHashUiSmoke.Native]::SelectResultRange($window, [uint32]$process.Id, 5, 15) -or
+                                -not [LHashUiSmoke.Native]::HasResultSelection($window, [uint32]$process.Id, 5, 15)) {
+                                throw 'Could not set and observe the owned result selection while hashing.'
+                            }
+                            $afterSelection = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
+                            if ($null -eq $afterSelection -or $afterSelection -match '(?m)^SHA-256:' -or
+                                -not [LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
+                                throw 'Hashing completed before the selection-before-append condition was established.'
+                            }
+                            $record.selectionPosted = $true
+                        }
                         $record.progressObserved = $true
                         $record.progressValue = $progress
                         break
@@ -333,7 +406,7 @@ function Invoke-OwnedProcessCase {
             if (-not $record.progressObserved) { throw 'Did not observe positive hashing progress while still busy; crypto-use close coverage was not achieved.' }
         }
 
-        if ($Name -notin @('duplicate-completion', 'many-results-reset')) {
+        if ($Name -notin @('duplicate-completion', 'many-results-reset', 'selection-during-append')) {
             $record.actionPosted = switch ($Name) {
                 'idle-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
                 'active-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
@@ -346,7 +419,7 @@ function Invoke-OwnedProcessCase {
             if (-not $record.actionPosted) { throw 'PostMessage failed or the window no longer belongs to the test process.' }
             if ($Name -eq 'active-stop-summary') { $record.stopPosted = $true }
         }
-        if ($Name -in @('duplicate-completion', 'active-stop-summary', 'many-results-reset')) {
+        if ($Name -in @('duplicate-completion', 'active-stop-summary', 'many-results-reset', 'selection-during-append')) {
             while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
                 if ($process.HasExited) { throw 'The application exited instead of keeping the completed/stopped result window open.' }
                 $record.statusSummary = [LHashUiSmoke.Native]::GetStatusOverview($window, [uint32]$process.Id)
@@ -355,7 +428,7 @@ function Invoke-OwnedProcessCase {
                 if ($idle) { $record.idleObserved = $true }
                 $counts = $record.summaryCounts
                 if ($idle -and $null -ne $counts -and $counts.running -eq 0 -and $counts.failed -eq 0 -and $counts.aborted -eq 0) {
-                    if ($Name -in @('duplicate-completion', 'many-results-reset')) {
+                    if ($Name -in @('duplicate-completion', 'many-results-reset', 'selection-during-append')) {
                         $expected = if ($Name -eq 'many-results-reset') { $textInputPaths.Count } else { 2 }
                         $record.summaryVerified = ($counts.total -eq $expected -and $counts.done -eq $expected -and $counts.cancelled -eq 0 -and $counts.notRun -eq 0)
                     } else {
@@ -369,8 +442,24 @@ function Invoke-OwnedProcessCase {
                 Start-Sleep -Milliseconds 10
             }
             if (-not $record.summaryVerified) { throw "The idle result summary did not match $Name within the case timeout. Last text: $($record.statusSummary)" }
+            if ($Name -eq 'selection-during-append') {
+                while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+                    if ($process.HasExited) { throw 'Application exited before the selected-append result could be verified.' }
+                    $text = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
+                    $record.orderedRecordsVerified = Test-OrderedResultText -Text $text -Paths $selectionInputPaths -Sha256 $selectionSha256 -Sizes $selectionSizes
+                    if ($record.orderedRecordsVerified) { break }
+                    Start-Sleep -Milliseconds 10
+                }
+                $record.selectionRetained = [LHashUiSmoke.Native]::HasResultSelection($window, [uint32]$process.Id, 5, 15)
+                if (-not $record.orderedRecordsVerified -or -not $record.selectionRetained) {
+                    if ($null -ne $text) { $record.resultTextPreview = $text.Substring(0, [Math]::Min(1800, $text.Length)) }
+                    throw 'Incremental output changed record order or did not preserve the selection made while hashing.'
+                }
+                $record.textVerified = $true
+                $record.resultCharacters = $text.Length
+            }
             if ($Name -eq 'many-results-reset') {
-                $expectedCasedHash = $null
+                $expectedUppercase = $false
                 foreach ($phase in @('complete', 'uppercase-reset', 'clear')) {
                     if ($phase -ne 'complete') {
                         $command = if ($phase -eq 'clear') { 1017 } else { 1023 }
@@ -388,18 +477,25 @@ function Invoke-OwnedProcessCase {
                         } else {
                             $verified = Test-CompleteResultText -Text $text
                             if ($verified -and $phase -eq 'uppercase-reset') {
-                                $verified = [regex]::Matches($text, "\b$expectedCasedHash\b").Count -eq $textInputPaths.Count
+                                foreach ($hash in $textSha256) {
+                                    $casedHash = if ($expectedUppercase) { $hash.ToUpperInvariant() } else { $hash }
+                                    if ([regex]::Matches($text, "\b$casedHash\b").Count -ne 1) { $verified = $false; break }
+                                }
                             }
                         }
                         if ($verified) { break }
                         Start-Sleep -Milliseconds 10
                     }
-                    if (-not $verified) { throw "Result text phase $phase was incomplete, duplicated or stale within the case timeout." }
+                    if (-not $verified) {
+                        if ($null -ne $text) { $record.resultTextPreview = $text.Substring(0, [Math]::Min(1800, $text.Length)) }
+                        throw "Result text phase $phase was incomplete, misordered, duplicated or stale within the case timeout."
+                    }
                     switch ($phase) {
                         'complete' {
                             $record.textVerified = $true
+                            $record.orderedRecordsVerified = $true
                             $record.resultCharacters = $text.Length
-                            $expectedCasedHash = if ($text.Contains($abcSha256)) { $abcSha256.ToUpperInvariant() } else { $abcSha256 }
+                            $expectedUppercase = $text.Contains($textSha256[0])
                         }
                         'uppercase-reset' { $record.rebuildVerified = $true }
                         'clear' { $record.clearVerified = $true }
@@ -477,9 +573,22 @@ try {
     [System.IO.File]::WriteAllBytes($smallInputPath, [byte[]](0x61, 0x62, 0x63))
     $textInputPaths = @(foreach ($index in 0..127) {
         $path = Join-Path $temporaryDirectory ('text-result-{0:D4}.bin' -f $index)
-        [System.IO.File]::WriteAllBytes($path, [byte[]](0x61, 0x62, 0x63))
+        $payload = [System.Text.Encoding]::UTF8.GetBytes(('LHash GUI ordered record {0:D4}' -f $index))
+        [System.IO.File]::WriteAllBytes($path, $payload)
+        $textSizes += [long]$payload.Length
+        $textSha256 += [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($payload)).ToLowerInvariant()
+        $textSha512 += [Convert]::ToHexString([System.Security.Cryptography.SHA512]::HashData($payload)).ToLowerInvariant()
         $path
     })
+    $selectionSmallPath = Join-Path $temporaryDirectory 'selection-文件-small.bin'
+    [System.IO.File]::WriteAllBytes($selectionSmallPath, [byte[]](0x61, 0x62, 0x63))
+    $referenceStream = [System.IO.File]::OpenRead($inputPath)
+    $referenceHasher = [System.Security.Cryptography.SHA256]::Create()
+    try { $largeSha256 = [Convert]::ToHexString($referenceHasher.ComputeHash($referenceStream)).ToLowerInvariant() }
+    finally { $referenceHasher.Dispose(); $referenceStream.Dispose() }
+    $selectionInputPaths = @($inputPath, $selectionSmallPath)
+    $selectionSha256 = @($largeSha256, $abcSha256)
+    $selectionSizes = @(([long]$FileSizeMiB * 1024 * 1024), [long]3)
 
     foreach ($iteration in 1..$Iterations) {
         foreach ($name in $caseNames) {
@@ -544,6 +653,10 @@ if ($suiteFailure) {
                 rebuildVerified = $failedCase.rebuildVerified
                 clearVerified = $failedCase.clearVerified
                 resultCharacters = $failedCase.resultCharacters
+                selectionPosted = $failedCase.selectionPosted
+                selectionRetained = $failedCase.selectionRetained
+                orderedRecordsVerified = $failedCase.orderedRecordsVerified
+                resultTextPreview = $failedCase.resultTextPreview
                 stopPosted = $failedCase.stopPosted
                 actionPosted = $failedCase.actionPosted
                 exitCode = $failedCase.exitCode
