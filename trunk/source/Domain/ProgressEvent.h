@@ -24,12 +24,14 @@ struct ProgressEvent
 {
 	ProgressEvent()
 		: type(PROGRESS_EVENT_NONE),
+		taskIndex(kInvalidHashTaskIndex),
 		value(0),
 		uppercaseDigest(false)
 	{
 	}
 
 	ProgressEventType type;
+	uint32_t taskIndex;
 	HashResult result;
 	int value;
 	bool uppercaseDigest;
@@ -52,6 +54,7 @@ static inline ProgressEvent CreateResultProgressEvent(ProgressEventType eventTyp
 {
 	ProgressEvent progressEvent = CreateLifecycleProgressEvent(eventType);
 	progressEvent.result = result;
+	progressEvent.taskIndex = result.taskIndex;
 	return progressEvent;
 }
 
@@ -104,9 +107,11 @@ static inline ProgressEvent CreateValueProgressEvent(ProgressEventType eventType
 	return progressEvent;
 }
 
-static inline ProgressEvent CreateFileProgressEvent(int value)
+static inline ProgressEvent CreateFileProgressEvent(int value, uint32_t taskIndex = kInvalidHashTaskIndex)
 {
-	return CreateValueProgressEvent(PROGRESS_EVENT_FILE_PROGRESS, value);
+	ProgressEvent progressEvent = CreateValueProgressEvent(PROGRESS_EVENT_FILE_PROGRESS, value);
+	progressEvent.taskIndex = taskIndex;
+	return progressEvent;
 }
 
 static inline ProgressEvent CreateTotalProgressEvent(int value)
@@ -114,14 +119,18 @@ static inline ProgressEvent CreateTotalProgressEvent(int value)
 	return CreateValueProgressEvent(PROGRESS_EVENT_TOTAL_PROGRESS, value);
 }
 
-static inline ProgressEvent CreateFileCalculatedProgressEvent()
+static inline ProgressEvent CreateFileCalculatedProgressEvent(uint32_t taskIndex = kInvalidHashTaskIndex)
 {
-	return CreateLifecycleProgressEvent(PROGRESS_EVENT_FILE_CALCULATED);
+	ProgressEvent progressEvent = CreateLifecycleProgressEvent(PROGRESS_EVENT_FILE_CALCULATED);
+	progressEvent.taskIndex = taskIndex;
+	return progressEvent;
 }
 
-static inline ProgressEvent CreateFileFinishedProgressEvent()
+static inline ProgressEvent CreateFileFinishedProgressEvent(uint32_t taskIndex = kInvalidHashTaskIndex)
 {
-	return CreateLifecycleProgressEvent(PROGRESS_EVENT_FILE_FINISHED);
+	ProgressEvent progressEvent = CreateLifecycleProgressEvent(PROGRESS_EVENT_FILE_FINISHED);
+	progressEvent.taskIndex = taskIndex;
+	return progressEvent;
 }
 
 #endif

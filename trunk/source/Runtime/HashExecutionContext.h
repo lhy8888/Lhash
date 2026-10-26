@@ -33,12 +33,15 @@ struct HashExecutionContext
 	HashExecutionContext(HashProgressSink *sink, HashJobState& state, HashCancellationState& cancellation)
 		: progressSinkObserver(sink != NULL ? sink : &GetNullHashProgressSink()),
 		jobState(state),
-		cancellationState(cancellation)
+		cancellationState(cancellation),
+		currentTaskIndex(kInvalidHashTaskIndex)
 	{
 	}
 	HashProgressSink *progressSinkObserver; // Non-owning; the caller keeps the sink alive until RunHashRequest returns.
 	HashJobState& jobState;
 	HashCancellationState& cancellationState;
+	// Set before FILE_STARTED and unchanged until this file's digest work completes.
+	uint32_t currentTaskIndex;
 };
 
 static inline HashExecutionContext CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)

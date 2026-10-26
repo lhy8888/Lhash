@@ -17,7 +17,7 @@ namespace HashEngineInternal
 
 		if (positionNew > progressState->position)
 		{
-			observer->onProgressEvent(CreateFileProgressEvent(positionNew));
+			observer->onProgressEvent(CreateFileProgressEvent(positionNew, executionContext->currentTaskIndex));
 			progressState->position = positionNew;
 		}
 

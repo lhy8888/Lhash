@@ -22,6 +22,7 @@ namespace HashEngineInternal
 		YieldHashThread();
 
 		const TCHAR *path = fullPath.c_str();
+		executionContext->currentTaskIndex = fileIndex;
 		HashResult& result = BeginFileHashAttempt(executionContext, fullPath, executionState, &path);
 
 #if defined (_WIN32)

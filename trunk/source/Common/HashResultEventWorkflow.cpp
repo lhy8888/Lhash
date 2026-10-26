@@ -28,6 +28,6 @@ namespace HashEngineInternal
 	void PublishFileFinishedEvent(HashExecutionContext *executionContext)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		observer->onProgressEvent(CreateFileFinishedProgressEvent());
+		observer->onProgressEvent(CreateFileFinishedProgressEvent(executionContext->currentTaskIndex));
 	}
 }

@@ -38,7 +38,7 @@ namespace HashEngineInternal
 		}
 
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		observer->onProgressEvent(CreateFileCalculatedProgressEvent());
+		observer->onProgressEvent(CreateFileCalculatedProgressEvent(executionContext->currentTaskIndex));
 
 		executionState.fileAttemptState.osFile->close();
 		sunjwbase::tstring finalizeErrorText;

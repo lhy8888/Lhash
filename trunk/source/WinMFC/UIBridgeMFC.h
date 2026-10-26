@@ -12,7 +12,7 @@
 #include "OsUtils/OsThread.h"
 #include "Common/HashTypes.h"
 #include "Common/HashResultRender.h"
-#include "FilesHashTaskUpdate.h"
+#include "FilesHashTaskModel.h"
 #include "HyperEditHash.h"
 #include "WinMFC/WinMFCMessages.h"
 
@@ -81,6 +81,7 @@ public:
 	{
 		InterlockedExchange(&m_taskUpdatePending, 0);
 	}
+	void BeginTaskSession(uint64_t sessionId);
 	void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);
 
 	static void AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit);
@@ -227,9 +228,9 @@ private:
 	sunjwbase::tstring m_currentTaskPath;
 	LONG m_refreshPending;
 	LONG m_taskUpdatePending;
-	std::mutex m_taskUpdateMutex;
-	std::vector<FilesHashTaskUpdate> m_pendingTaskUpdates;
-	std::map<sunjwbase::tstring, size_t> m_pendingTaskUpdateIndices;
+	uint64_t m_sessionId = 0;
+	uint32_t m_currentTaskIndex = kInvalidHashTaskIndex;
+	FilesHashTaskUpdateQueue m_taskUpdates;
 };
 
 #endif

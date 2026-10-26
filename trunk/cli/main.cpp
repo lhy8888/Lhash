@@ -126,6 +126,19 @@ namespace
         if (json) std::cout << "]\n";
     }
 
+    int FinishOutput(int status = 0)
+    {
+        // Buffered output can fail only at flush time. Stream destruction after
+        // main returns cannot change the exit status chosen by the application.
+        std::cout.flush();
+        if (!std::cout)
+        {
+            std::cerr << "ERROR: Could not write standard output.\n";
+            return 1;
+        }
+        return status;
+    }
+
     class CliProgressSink : public HashProgressSink
     {
     public:
@@ -185,7 +198,7 @@ int main(int argc, char **argv)
             const std::string arg(argv[i]);
             if (!IsUtf8(arg)) throw std::invalid_argument("Arguments must use valid UTF-8.");
             if (options && arg == "--") { options = false; continue; }
-            if (options && (arg == "--help" || arg == "-h")) { Usage(std::cout); return 0; }
+            if (options && (arg == "--help" || arg == "-h")) { Usage(std::cout); return FinishOutput(); }
             if (options && arg == "--json") { json = true; continue; }
             if (options && arg == "--all") { all = true; continue; }
             if (options && arg == "--list-algorithms") { list = true; continue; }
@@ -208,7 +221,7 @@ int main(int argc, char **argv)
         {
             if (!request.files.empty() || all || !request.algorithmIds.empty()) throw std::invalid_argument("--list-algorithms cannot be combined with file selection.");
             ListAlgorithms(json);
-            return 0;
+            return FinishOutput();
         }
         if (request.files.empty()) { Usage(std::cerr); return 2; }
         if (all && !request.algorithmIds.empty()) throw std::invalid_argument("Use either --all or --algorithm.");
@@ -230,7 +243,7 @@ int main(int argc, char **argv)
     try
     {
         const int result = RunHashRequest(&context, request);
-        return result != 0 ? 1 : (sink.anyFailed ? 1 : 0);
+        return FinishOutput(result != 0 || sink.anyFailed ? 1 : 0);
     }
     catch (const std::exception& error)
     {

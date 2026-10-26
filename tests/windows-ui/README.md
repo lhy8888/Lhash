@@ -22,9 +22,10 @@ job downloads the packaged application from the same run and verifies its checks
 commit/version metadata and ARM64 PE machine type before launch. Both jobs gate
 release publication. The crash debugger described below is currently x64 only.
 
-For each of two iterations it creates independent application processes. The
-idle control has no file argument; other cases use a private 512 MiB temporary
-file. It performs:
+For each of two iterations it creates seven independent application processes
+(14 cases by default). The idle control has no file argument; completion uses
+a private three-byte file; active cases use a private 512 MiB temporary file.
+It performs:
 
 1. An idle `WM_CLOSE` without initializing a hash worker, to distinguish dialog
    teardown failures from hashing/OpenSSL-related exit failures.
@@ -40,6 +41,18 @@ file. It performs:
 5. `WM_CLOSE` immediately after discovering the main dialog, without waiting for
    the startup hashing timer. This stresses rapid launch/close; exact scheduling
    of the worker is not claimed deterministic.
+6. The same small file supplied twice on the command line, waiting for the
+   application to become idle with **Files=2, Done=2, Running=0**, and zero
+   failed/cancelled/aborted/not-run counts. This checks that equal paths remain
+   distinct tasks through the engine, UI adapter and displayed summary. The
+   test then closes the still-open window and requires a zero exit code.
+7. Sixteen occurrences of the large file, waiting for positive progress while
+   busy, then posting the actual Stop button's `WM_COMMAND(IDC_OPEN)`. The
+   window must stay open and become idle, with Running/Failed/Aborted all zero,
+   at least one Not run row, and Done + Cancelled + Not run = 16. Stop may arrive
+   between files, so Cancelled=0 is legitimate; deterministic running-to-cancelled
+   transitions are covered by the task-model tests. Only after these checks does
+   the test close the result window and require a zero exit code.
 
 Each owned process has a total 10-second budget, including discovery and waiting
 for the busy state. A timeout, inability to observe busy controls, missing main
@@ -53,11 +66,20 @@ only by the exact report GUID. The module/offset/exception fields are saved and
 published as safely escaped GitHub annotations. Its own temporary input is
 removed when the suite ends.
 
-The three active cancellation cases all require positive progress before their
-action. The busy check uses current resource IDs `IDC_OPEN=1003`, `IDC_FIND=1025`,
+The active close, Escape, cancel-command and Stop cases all require positive
+progress before their action. The busy/idle check uses current resource IDs `IDC_OPEN=1003`, `IDC_FIND=1025`,
 `IDC_SETTINGS=1034`, and the progress check uses `IDC_PROG_WHOLE=1014` with
 `PBM_GETPOS` through a PID-checked `SendMessageTimeout` capped at 100 ms. Update
 these checks if the resource IDs or session control behavior change.
+The summary check uses the ordinary static text control
+`IDC_STATIC_STATUS_OVERVIEW=1038` and `SendMessageTimeoutW(WM_GETTEXT)` with a
+bounded `StringBuilder`. Windows marshals this standard message across processes;
+the test never reads remote process memory or sends custom ListView structures.
+It parses the seven count fields in their displayed order before Time and Speed,
+independently of the English/Chinese labels, and saves the original summary and
+parsed counts in `ui-smoke-results.json` and failure annotations. Missing,
+truncated or unparseable summaries fail the case. These aggregate checks do not
+claim to inspect every individual row or inject a native worker exception.
 This is a lifecycle smoke, not a replacement for PageHeap/ASan or deterministic
 worker-barrier tests in `tests/ui_lifecycle`. A zero exit code alone cannot prove
 the absence of every memory error. No native Windows execution is implied by

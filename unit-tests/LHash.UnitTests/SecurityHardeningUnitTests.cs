@@ -204,12 +204,15 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("ShouldPostProgressValue(m_totalProgressDispatchState, value)", uiBridge, StringComparison.Ordinal);
         Assert.Contains("PostThreadInfoMessage(WP_PROG_WHOLE, value);", uiBridge, StringComparison.Ordinal);
         Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", uiBridge, StringComparison.Ordinal);
-        Assert.Contains("taskUpdates.swap(m_pendingTaskUpdates);", uiBridge, StringComparison.Ordinal);
+        string taskModel = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\FilesHashTaskModel.h");
+        Assert.Contains("m_taskUpdates.Drain(taskUpdates);", uiBridge, StringComparison.Ordinal);
+        Assert.Contains("std::lock_guard<std::mutex> lock(m_mutex);", taskModel, StringComparison.Ordinal);
+        Assert.Contains("updates.swap(m_updates);", taskModel, StringComparison.Ordinal);
         Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", filesHashDialog, StringComparison.Ordinal);
         Assert.Contains("ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", filesHashDialog, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);
         Assert.Contains("std::this_thread::yield();", fileAttemptWorkflow, StringComparison.Ordinal);

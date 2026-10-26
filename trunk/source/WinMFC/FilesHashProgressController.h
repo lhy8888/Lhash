@@ -6,7 +6,7 @@
 #include "afxcmn.h"
 
 #include "Common/HashTypes.h"
-#include "FilesHashTaskUpdate.h"
+#include "FilesHashTaskModel.h"
 
 struct ITaskbarList3;
 class CListCtrl;
@@ -21,7 +21,8 @@ public:
 	void Initialize(CDialog* parentWnd, CProgressCtrl* progressCtrl);
 	void AttachTaskControls(CListCtrl* taskListCtrl, CStatic* statusOverviewCtrl);
 	void InitializeTaskList(LPCTSTR fileColumnText, LPCTSTR algorithmColumnText, LPCTSTR statusColumnText, LPCTSTR progressColumnText);
-	void BeginTaskSession(const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary);
+	void BeginTaskSession(uint64_t sessionId, const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary);
+	bool FinishTaskSession(uint64_t sessionId, FilesHashSessionOutcome outcome);
 	void ResetTaskSession();
 	void ApplyTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
 	void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);
@@ -35,19 +36,9 @@ public:
 	bool TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const;
 
 private:
-	struct TaskRowState
-	{
-		sunjwbase::tstring fullPath;
-		sunjwbase::tstring displayName;
-		sunjwbase::tstring algorithms;
-		sunjwbase::tstring status;
-		FilesHashTaskState state;
-		int progress;
-	};
+	using TaskRowState = FilesHashTaskRow;
 
-	static sunjwbase::tstring BuildDisplayName(const sunjwbase::tstring& fullPath);
 	static CString BuildProgressText(int progress);
-	int FindTaskRowIndex(const sunjwbase::tstring& fullPath) const;
 	int ApplyTaskUpdateToState(const FilesHashTaskUpdate& taskUpdate, bool *ensureVisible);
 	const TaskRowState* TryGetTaskRowState(int rowIndex) const;
 	void RefreshTaskRow(int rowIndex, bool ensureVisible = false);
@@ -65,6 +56,5 @@ private:
 	ITaskbarList3* m_taskbarList;
 	CString m_secondText;
 	CString m_speedText;
-	std::vector<TaskRowState> m_taskRows;
-	sunjwbase::tstring m_algorithmSummary;
+	FilesHashTaskModel m_taskModel;
 };

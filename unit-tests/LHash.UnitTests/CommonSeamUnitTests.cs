@@ -383,9 +383,11 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("InterlockedCompareExchange(&m_taskUpdatePending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("MarkMainTextRefreshHandled();", lifecycleController, StringComparison.Ordinal);
-        Assert.Contains("m_pendingTaskUpdates.push_back(taskUpdate);", bridgeImplementation, StringComparison.Ordinal);
-        Assert.Contains("m_pendingTaskUpdateIndices[taskUpdate.path] = m_pendingTaskUpdates.size();", bridgeImplementation, StringComparison.Ordinal);
-        Assert.Contains("taskUpdates.swap(m_pendingTaskUpdates);", bridgeImplementation, StringComparison.Ordinal);
+        string taskModel = RepositoryTestContext.ReadUtf8File(@"trunk\source\WinMFC\FilesHashTaskModel.h");
+        Assert.Contains("m_taskUpdates.Push(taskUpdate)", bridgeImplementation, StringComparison.Ordinal);
+        Assert.Contains("m_taskUpdates.Drain(taskUpdates);", bridgeImplementation, StringComparison.Ordinal);
+        Assert.Contains("std::map<FilesHashTaskId, size_t> m_indices;", taskModel, StringComparison.Ordinal);
+        Assert.Contains("updates.swap(m_updates);", taskModel, StringComparison.Ordinal);
         Assert.DoesNotContain("new FilesHashTaskUpdate(taskUpdate)", bridgeImplementation, StringComparison.Ordinal);
         Assert.Contains("m_uiBridgeMFC->DrainPendingTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
         Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", dialog, StringComparison.Ordinal);
@@ -400,7 +402,7 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
         Assert.Contains("int ensureVisibleRowIndex = -1;", progressController, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->RedrawItems(rowIndex, rowIndex);", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);

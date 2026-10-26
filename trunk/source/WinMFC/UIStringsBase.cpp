@@ -69,6 +69,13 @@ UIStringsBase::UIStringsBase()
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_RUNNING")] = _T("Running");
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_COMPLETED")] = _T("Done");
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_FAILED")] = _T("Failed");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_CANCELLED")] = _T("Cancelled");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_ABORTED")] = _T("Aborted");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_NOT_RUN_CANCELLED")] = _T("Not run (cancelled)");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_NOT_RUN_ABORTED")] = _T("Not run (aborted)");
+	m_stringsMap[_T("MAINDLG_STATUS_CANCELLED")] = _T("Cancelled");
+	m_stringsMap[_T("MAINDLG_STATUS_ABORTED")] = _T("Aborted");
+	m_stringsMap[_T("MAINDLG_STATUS_NOT_RUN")] = _T("Not run");
 	m_stringsMap[_T("MAINDLG_STATUS_TOTAL")] = _T("Files");
 	m_stringsMap[_T("MAINDLG_STATUS_DONE")] = _T("Done");
 	m_stringsMap[_T("MAINDLG_STATUS_FAILED")] = _T("Failed");

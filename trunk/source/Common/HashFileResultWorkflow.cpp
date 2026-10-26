@@ -16,6 +16,7 @@ namespace HashEngineInternal
 		HashResult& result = AppendHashExecutionResult(*executionContext);
 		result = HashResult();
 		result.path = path;
+		result.taskIndex = executionContext->currentTaskIndex;
 
 		EmitPathResult(executionContext, result);
 		return result;

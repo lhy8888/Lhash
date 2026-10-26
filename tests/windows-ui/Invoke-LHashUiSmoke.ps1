@@ -28,6 +28,8 @@ namespace LHashUiSmoke {
         [DllImport("user32.dll")] private static extern bool IsWindowEnabled(IntPtr window);
         [DllImport("user32.dll", SetLastError = true)] private static extern bool PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
         [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr SendMessageTimeout(IntPtr window, uint message, IntPtr wparam, IntPtr lparam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr SendMessageTimeoutText(IntPtr window, uint message, IntPtr wparam, [Out] StringBuilder text, uint flags, uint timeout, out IntPtr result);
         [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr OpenInputDesktop(uint flags, bool inherit, uint access);
         [DllImport("user32.dll")] private static extern bool CloseDesktop(IntPtr desktop);
         [DllImport("user32.dll")] private static extern bool GetGUIThreadInfo(uint threadId, ref GuiThreadInfo info);
@@ -82,6 +84,35 @@ namespace LHashUiSmoke {
             return BelongsTo(window, processId) && PostMessage(window, 0x0010, IntPtr.Zero, IntPtr.Zero);
         }
 
+        public static bool IsHashSessionIdle(IntPtr window, uint processId) {
+            if (!BelongsTo(window, processId)) return false;
+            IntPtr open = GetDlgItem(window, 1003);
+            IntPtr verify = GetDlgItem(window, 1025);
+            IntPtr settings = GetDlgItem(window, 1034);
+            return BelongsTo(open, processId) && BelongsTo(verify, processId) && BelongsTo(settings, processId)
+                && IsWindowEnabled(open) && IsWindowEnabled(verify) && IsWindowEnabled(settings);
+        }
+
+        public static string GetStatusOverview(IntPtr window, uint processId) {
+            if (!BelongsTo(window, processId)) return null;
+            IntPtr status = GetDlgItem(window, 1038); // IDC_STATIC_STATUS_OVERVIEW
+            if (!BelongsTo(status, processId)) return null;
+            var text = new StringBuilder(2048);
+            IntPtr copied;
+            // WM_GETTEXT is a standard system-marshalled message. No remote
+            // ListView structures, pointers or process-memory access are used.
+            if (SendMessageTimeoutText(status, 0x000D, new IntPtr(text.Capacity), text, 0x23, 100, out copied) == IntPtr.Zero)
+                return null;
+            return copied.ToInt64() >= 0 && copied.ToInt64() < text.Capacity - 1 ? text.ToString() : null;
+        }
+
+        public static bool PostStopCommand(IntPtr window, uint processId) {
+            if (!IsHashSessionBusy(window, processId)) return false;
+            IntPtr button = GetDlgItem(window, 1003); // IDC_OPEN becomes Stop while busy.
+            return BelongsTo(button, processId)
+                && PostMessage(window, 0x0111, new IntPtr(1003), button); // WM_COMMAND / BN_CLICKED
+        }
+
         public static int GetHashProgress(IntPtr window, uint processId) {
             if (!BelongsTo(window, processId)) return -1;
             IntPtr progress = GetDlgItem(window, 1014); // IDC_PROG_WHOLE
@@ -123,9 +154,26 @@ $results = [System.Collections.Generic.List[object]]::new()
 $temporaryDirectory = $null
 $suiteFailure = $null
 $executablePath = $null
-$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close')
+$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close', 'duplicate-completion', 'active-stop-summary')
 $reportRoot = [System.IO.Path]::GetFullPath($ReportDirectory)
 [System.IO.Directory]::CreateDirectory($reportRoot) | Out-Null
+
+function ConvertFrom-StatusSummary {
+    param([string]$Text)
+    # The translated labels can contain spaces. The product separates fields
+    # with four spaces and puts the seven counts before time and speed.
+    $fields = @($Text -split ' {4,}')
+    if ($fields.Count -ne 9) { return $null }
+    $keys = @('total', 'done', 'failed', 'running', 'cancelled', 'aborted', 'notRun')
+    $counts = [ordered]@{}
+    for ($index = 0; $index -lt $keys.Count; ++$index) {
+        if ($fields[$index] -notmatch '^\S(?:.*\S)? ([0-9]+)$') { return $null }
+        $value = 0
+        if (-not [int]::TryParse($Matches[1], [ref]$value)) { return $null }
+        $counts[$keys[$index]] = $value
+    }
+    return [pscustomobject]$counts
+}
 
 function Get-OwnedCrashEvent {
     param([int]$ProcessId, [datetime]$StartedAt, [string]$ExpectedApp)
@@ -203,6 +251,7 @@ function Invoke-OwnedProcessCase {
     $record = [ordered]@{
         case = $Name; iteration = $Iteration; processId = $null; busyObserved = $false
         progressObserved = $false; progressValue = $null
+        idleObserved = $false; statusSummary = $null; summaryCounts = $null; summaryVerified = $false; stopPosted = $false
         actionPosted = $false; exitCode = $null; elapsedMs = 0; passed = $false
         terminatedByTest = $false; crashEvent = $null; error = $null
     }
@@ -211,7 +260,10 @@ function Invoke-OwnedProcessCase {
         $process.StartInfo.FileName = $executablePath
         $process.StartInfo.WorkingDirectory = [System.IO.Path]::GetDirectoryName($executablePath)
         $process.StartInfo.UseShellExecute = $false
-        if ($InputPath) { $process.StartInfo.ArgumentList.Add($InputPath) }
+        $inputCount = switch ($Name) { 'duplicate-completion' { 2 } 'active-stop-summary' { 16 } default { 1 } }
+        if ($InputPath) {
+            foreach ($unused in 1..$inputCount) { $process.StartInfo.ArgumentList.Add($InputPath) }
+        }
         if (-not $process.Start()) { throw 'Process.Start returned false.' }
         $started = $true
         $record.processId = $process.Id
@@ -224,7 +276,7 @@ function Invoke-OwnedProcessCase {
         }
         if ($window -eq [IntPtr]::Zero) { throw 'No visible main dialog in this process; desktop access or application startup failed.' }
 
-        if ($Name -notin @('rapid-close', 'idle-close')) {
+        if ($Name -notin @('rapid-close', 'idle-close', 'duplicate-completion')) {
             while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
                 if ($process.HasExited) { throw 'The application exited before hashing became active.' }
                 if ([LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
@@ -241,13 +293,44 @@ function Invoke-OwnedProcessCase {
             if (-not $record.progressObserved) { throw 'Did not observe positive hashing progress while still busy; crypto-use close coverage was not achieved.' }
         }
 
-        $record.actionPosted = switch ($Name) {
-            'idle-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
-            'active-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
-            'escape-key' { [LHashUiSmoke.Native]::PostEscapeKey($window, [uint32]$process.Id) }
-            'cancel-command' { [LHashUiSmoke.Native]::PostCancelCommand($window, [uint32]$process.Id) }
-            'rapid-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
-            default { throw "Unknown case: $Name" }
+        if ($Name -ne 'duplicate-completion') {
+            $record.actionPosted = switch ($Name) {
+                'idle-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
+                'active-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
+                'escape-key' { [LHashUiSmoke.Native]::PostEscapeKey($window, [uint32]$process.Id) }
+                'cancel-command' { [LHashUiSmoke.Native]::PostCancelCommand($window, [uint32]$process.Id) }
+                'rapid-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
+                'active-stop-summary' { [LHashUiSmoke.Native]::PostStopCommand($window, [uint32]$process.Id) }
+                default { throw "Unknown case: $Name" }
+            }
+            if (-not $record.actionPosted) { throw 'PostMessage failed or the window no longer belongs to the test process.' }
+            if ($Name -eq 'active-stop-summary') { $record.stopPosted = $true }
+        }
+        if ($Name -in @('duplicate-completion', 'active-stop-summary')) {
+            while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+                if ($process.HasExited) { throw 'The application exited instead of keeping the completed/stopped result window open.' }
+                $record.statusSummary = [LHashUiSmoke.Native]::GetStatusOverview($window, [uint32]$process.Id)
+                $record.summaryCounts = ConvertFrom-StatusSummary -Text $record.statusSummary
+                $idle = [LHashUiSmoke.Native]::IsHashSessionIdle($window, [uint32]$process.Id)
+                if ($idle) { $record.idleObserved = $true }
+                $counts = $record.summaryCounts
+                if ($idle -and $null -ne $counts -and $counts.running -eq 0 -and $counts.failed -eq 0 -and $counts.aborted -eq 0) {
+                    if ($Name -eq 'duplicate-completion') {
+                        $record.summaryVerified = ($counts.total -eq 2 -and $counts.done -eq 2 -and $counts.cancelled -eq 0 -and $counts.notRun -eq 0)
+                    } else {
+                        # Stop can arrive between files: zero cancelled rows is
+                        # valid when completed rows and not-run rows account for all inputs.
+                        $record.summaryVerified = ($counts.total -eq 16 -and $counts.notRun -ge 1 -and
+                            ($counts.done + $counts.cancelled + $counts.notRun) -eq $counts.total)
+                    }
+                    if ($record.summaryVerified) { break }
+                }
+                Start-Sleep -Milliseconds 10
+            }
+            if (-not $record.summaryVerified) { throw "The idle result summary did not match $Name within the case timeout. Last text: $($record.statusSummary)" }
+            # The window must survive normal completion/Stop. Close it only
+            # after checking its user-visible aggregate state, then check exit.
+            $record.actionPosted = [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id)
         }
         if (-not $record.actionPosted) { throw 'PostMessage failed or the window no longer belongs to the test process.' }
         $remainingMs = [int][Math]::Max(0, ($TimeoutSeconds * 1000) - $timer.ElapsedMilliseconds)
@@ -312,11 +395,13 @@ try {
         $stream.Flush()
     }
     finally { $stream.Dispose() }
+    $smallInputPath = Join-Path $temporaryDirectory 'duplicate-small-file.bin'
+    [System.IO.File]::WriteAllBytes($smallInputPath, [byte[]](0x61, 0x62, 0x63))
 
     foreach ($iteration in 1..$Iterations) {
         foreach ($name in $caseNames) {
             try {
-                $caseInput = if ($name -eq 'idle-close') { '' } else { $inputPath }
+                $caseInput = switch ($name) { 'idle-close' { '' } 'duplicate-completion' { $smallInputPath } default { $inputPath } }
                 Invoke-OwnedProcessCase -Name $name -InputPath $caseInput -Iteration $iteration
             }
             catch {
@@ -368,6 +453,11 @@ if ($suiteFailure) {
                 busyObserved = $failedCase.busyObserved
                 progressObserved = $failedCase.progressObserved
                 progressValue = $failedCase.progressValue
+                idleObserved = $failedCase.idleObserved
+                statusSummary = $failedCase.statusSummary
+                summaryCounts = $failedCase.summaryCounts
+                summaryVerified = $failedCase.summaryVerified
+                stopPosted = $failedCase.stopPosted
                 actionPosted = $failedCase.actionPosted
                 exitCode = $failedCase.exitCode
                 elapsedMs = $failedCase.elapsedMs

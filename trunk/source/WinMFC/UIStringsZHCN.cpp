@@ -69,6 +69,13 @@ UIStringsZHCN::UIStringsZHCN()
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_RUNNING")] = _T("处理中");
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_COMPLETED")] = _T("已完成");
 	m_stringsMap[_T("MAINDLG_TASK_STATUS_FAILED")] = _T("失败");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_CANCELLED")] = _T("已取消");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_ABORTED")] = _T("已中止");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_NOT_RUN_CANCELLED")] = _T("未执行（已取消）");
+	m_stringsMap[_T("MAINDLG_TASK_STATUS_NOT_RUN_ABORTED")] = _T("未执行（任务异常）");
+	m_stringsMap[_T("MAINDLG_STATUS_CANCELLED")] = _T("已取消");
+	m_stringsMap[_T("MAINDLG_STATUS_ABORTED")] = _T("已中止");
+	m_stringsMap[_T("MAINDLG_STATUS_NOT_RUN")] = _T("未执行");
 	m_stringsMap[_T("MAINDLG_STATUS_TOTAL")] = _T("总文件");
 	m_stringsMap[_T("MAINDLG_STATUS_DONE")] = _T("完成");
 	m_stringsMap[_T("MAINDLG_STATUS_FAILED")] = _T("失败");

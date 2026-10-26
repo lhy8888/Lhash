@@ -625,7 +625,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("std::rethrow_exception(firstException);", digestUpdater, StringComparison.Ordinal);
         Assert.DoesNotContain("digestUpdateTasks[taskIndex].wait();", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", progressTracker, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew));", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew, executionContext->currentTaskIndex));", progressTracker, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", progressTracker, StringComparison.Ordinal);
         Assert.Contains("UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", digestQueue, StringComparison.Ordinal);
         Assert.Contains("UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", digestSinglePass, StringComparison.Ordinal);
@@ -749,7 +749,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", successfulFileCompletionWorkflowHeader, StringComparison.Ordinal);
         Assert.Contains("void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("void ExecuteSuccessfulFileHashingWorkflow(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", successfulFileCompletionWorkflow, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileCalculatedProgressEvent());", successfulFileCompletionWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileCalculatedProgressEvent(executionContext->currentTaskIndex));", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("FinalizeDigestStrings(request, executionState.hashContexts, executionState.digestBundle, &finalizeErrorText)", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("EmitErrorMessageResult(executionContext, result, finalizeErrorText);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
         Assert.Contains("UpdateWholeProgressAfterFile(executionContext, request, isSizeCaled, fileIndex);", successfulFileCompletionWorkflow, StringComparison.Ordinal);
@@ -769,7 +769,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("observer->onProgressEvent(CreateFileMetaReadyProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileHashReadyProgressEvent(result, uppercase));", resultEventWorkflow, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileFailedProgressEvent(result));", resultEventWorkflow, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent());", resultEventWorkflow, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateFileFinishedProgressEvent(executionContext->currentTaskIndex));", resultEventWorkflow, StringComparison.Ordinal);
 
         Assert.Contains("void UpdateWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)", publisher, StringComparison.Ordinal);
         Assert.Contains("void CompleteSuccessfulFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex, bool isSizeCaled,", publisher, StringComparison.Ordinal);

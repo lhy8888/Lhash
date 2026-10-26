@@ -113,13 +113,42 @@ def main():
         symlink = root / "link.bin"
         symlink.symlink_to(abc)
         assert "ERROR:" in run([symlink], 1).stderr
+
+        # Small outputs can fail only at the final flush. A read-only stdout
+        # descriptor gives deterministic EBADF on both macOS and Linux, without
+        # relying on /dev/full or SIGPIPE. The many-record case also forces an
+        # error while output is still being produced.
+        output_cases = [["--help"], ["-h"], ["--list-algorithms"],
+                        ["--json", "--list-algorithms"], [abc], ["--json", abc],
+                        ["--all", "--json", abc], ["--parallel", "--json", abc],
+                        ["--json", *([abc] * 40)]]
+        if os.name == "posix":
+            for arguments in output_cases:
+                normal = run(arguments)
+                assert normal.stdout and not normal.stderr, normal
+                with abc.open("rb") as readonly_stdout:
+                    failed = subprocess.run([executable, *map(str, arguments)],
+                                            stdout=readonly_stdout, stderr=subprocess.PIPE,
+                                            text=True, encoding="utf-8", timeout=45)
+                assert failed.returncode == 1 and "output" in failed.stderr.lower(), (arguments, failed)
+                cases += 1
+            assert abc.read_bytes() == b"abc", "The read-only output fixture was modified"
+        if sys.platform.startswith("linux"):
+            for arguments in [["--json", abc], ["--list-algorithms"]]:
+                with open("/dev/full", "wb", buffering=0) as full_stdout:
+                    failed = subprocess.run([executable, *map(str, arguments)],
+                                            stdout=full_stdout, stderr=subprocess.PIPE,
+                                            text=True, encoding="utf-8", timeout=45)
+                assert failed.returncode == 1 and "output" in failed.stderr.lower(), (arguments, failed)
+                cases += 1
+
         # Reject before accessing any paths or hashing, preserving the common limit.
         assert "8192" in run(["--json", *([abc] * 8193)], 2).stderr
         if sys.platform.startswith("linux"):
             bad = subprocess.run([os.fsencode(executable), b"bad-\xff"], capture_output=True, timeout=10)
             assert bad.returncode == 2 and b"valid UTF-8" in bad.stderr
             cases += 1
-    print(f"PASS CLI cases={cases}: 18 algorithm parity, independent vectors, default selection, all/individual modes, UTF-8, escaped records, failure continuation")
+    print(f"PASS CLI cases={cases}: 18 algorithm parity, independent vectors, default selection, all/individual modes, UTF-8, escaped records, failure continuation, stdout failures")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 #include "afxwin.h"
 
 #include "Common/HashTypes.h"
+#include <cstdint>
 struct ThreadData;
 
 class UIBridgeMFC;
@@ -50,4 +51,5 @@ private:
 	UINT_PTR m_workerPollTimer;
 	WPARAM m_terminalMessage;
 	bool m_sessionSetupFailed;
+	uint64_t m_sessionId = 0;
 };

@@ -7,8 +7,8 @@ API替身、原生执行和GUI交互是不同的证据。
 
 | 平台 | Runner | 覆盖 |
 | --- | --- | --- |
-| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及10例真实窗口退出测试 |
-| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行10例窗口退出测试 |
+| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及14例真实窗口退出/任务状态测试 |
+| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行14例窗口退出/任务状态测试 |
 | macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测 |
 | macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
@@ -31,6 +31,10 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
 - `lhash_cli_regression`：默认算法与Windows一致，18算法空文件/abc/4MiB+17独立向量，
   逐个选择、全部选择、单/并行、分块边界、Unicode/控制字符文件名、JSON记录、退出码和
   8192文件上限。参考数据来自Python hashlib、独立blake3/xxhash及逐bit CRC32C。
+  macOS/Linux 用只读 stdout 描述符注入写入失败，覆盖帮助、列表、单/多文件文本及JSON；
+  Linux 另用 `/dev/full` 注入空间不足，要求退出码1及明确错误，含退出前flush才失败的情形。
+- `lhash_task_identity_tests`：真实引擎单/并行的重复路径、文件失败、保留历史和新请求，
+  验证每个文件事件携带原输入索引；取消与异常不发布部分摘要，也不替未执行任务发完成事件。
 - `lhash_file_integrity`：POSIX真实读取与前后metadata/累计字节校验、同尺寸覆盖、
   截短/增长、恢复mtime后的变化、metadata-only、路径类型、并发时间格式化。
   Linux额外使用链接器wrap注入短读/EINTR/EIO和受控检查/open竞争；macOS不冒充执行了Linux wrap。
@@ -41,6 +45,11 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
 - `tests/ui_lifecycle`：实际session所有权gate、请求快照、退出通知顺序、启动失败与
   完整hex摘要匹配；COM初始化失败、已有初始化引用和异常退出时的客户对象析构顺序；
   Windows另运行真实线程handle，验证活线程不能丢失/重启。
+- `lhash_task_state_tests`：直接执行产品使用的队列和任务行模型，验证同路径不同任务、
+  延迟消费、终态不回退、取消/异常/未执行、当前会话收尾、历史保留和过期/未知ID拒绝。
+- `tests/windows-ui`：原10例退出测试加每轮两例：重复小文件完成后必须为2项完成；
+  读取中Stop后窗口保留、没有运行中任务，已完成/取消/未执行计数覆盖全部输入。
+  从自有进程的普通状态控件读取文字，系统封送，不读取远程ListView结构。
 - `tests/windows-inputs`：从当前生产函数生成探针，验证250024个COPYDATA样本、数量
   边界、带空格exe引用、目录预算/取消、剪贴板所有权与失败、版本API返回边界。
   MFC/WinAPI为显式替身，不代表自动运行了原生窗口、Explorer或UIPI。

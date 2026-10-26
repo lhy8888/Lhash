@@ -49,6 +49,7 @@ void UIBridgeMFC::handleJobPreparingEvent()
 	ResetProgressDispatchState(m_fileProgressDispatchState);
 	ResetProgressDispatchState(m_totalProgressDispatchState);
 	m_currentTaskPath.clear();
+	m_currentTaskIndex = kInvalidHashTaskIndex;
 
 	PostThreadInfoMessage(WP_WORKING);
 
@@ -95,8 +96,10 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	case PROGRESS_EVENT_FILE_STARTED:
 		ResetProgressDispatchState(m_fileProgressDispatchState);
 		m_currentTaskPath = result.path;
+		m_currentTaskIndex = result.taskIndex;
 		{
 			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_RUNNING);
 			taskUpdate.state = FILES_HASH_TASK_RUNNING;
@@ -108,6 +111,7 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	case PROGRESS_EVENT_FILE_META_READY:
 		{
 			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_META);
 			taskUpdate.state = FILES_HASH_TASK_RUNNING;
@@ -119,6 +123,7 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	case PROGRESS_EVENT_FILE_HASH_READY:
 		{
 			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
 			taskUpdate.algorithms = BuildAlgorithmSummary(result);
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_COMPLETED);
@@ -131,6 +136,7 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 	case PROGRESS_EVENT_FILE_FAILED:
 		{
 			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_FAILED);
 			taskUpdate.state = FILES_HASH_TASK_FAILED;
@@ -177,6 +183,7 @@ void UIBridgeMFC::handleFileProgressEvent(int value)
 		if (!m_currentTaskPath.empty())
 		{
 			FilesHashTaskUpdate taskUpdate;
+			taskUpdate.id = {m_sessionId, m_currentTaskIndex};
 			taskUpdate.path = m_currentTaskPath;
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_RUNNING);
 			taskUpdate.state = FILES_HASH_TASK_RUNNING;
@@ -202,43 +209,22 @@ void UIBridgeMFC::handleFileFinishedEvent()
 {
 }
 
+void UIBridgeMFC::BeginTaskSession(uint64_t sessionId)
+{
+	// UI thread only, before launch and after the previous worker's exit barrier.
+	m_sessionId = sessionId;
+	m_currentTaskIndex = kInvalidHashTaskIndex;
+	m_currentTaskPath.clear();
+}
+
 void UIBridgeMFC::PostTaskUpdate(const FilesHashTaskUpdate& taskUpdate)
 {
-	if (taskUpdate.path.empty())
-	{
-		return;
-	}
-
-	std::lock_guard<std::mutex> lock(m_taskUpdateMutex);
-	std::map<tstring, size_t>::iterator pendingTaskIndex = m_pendingTaskUpdateIndices.find(taskUpdate.path);
-	if (pendingTaskIndex != m_pendingTaskUpdateIndices.end())
-	{
-		FilesHashTaskUpdate& pendingTaskUpdate = m_pendingTaskUpdates[pendingTaskIndex->second];
-		if (!taskUpdate.algorithms.empty())
-		{
-			pendingTaskUpdate.algorithms = taskUpdate.algorithms;
-		}
-		if (!taskUpdate.status.empty())
-		{
-			pendingTaskUpdate.status = taskUpdate.status;
-		}
-		pendingTaskUpdate.state = taskUpdate.state;
-		pendingTaskUpdate.progress = taskUpdate.progress;
-	}
-	else
-	{
-		m_pendingTaskUpdateIndices[taskUpdate.path] = m_pendingTaskUpdates.size();
-		m_pendingTaskUpdates.push_back(taskUpdate);
-	}
-
-	RequestTaskUpdateFlush();
+	if (m_taskUpdates.Push(taskUpdate)) RequestTaskUpdateFlush();
 }
 
 void UIBridgeMFC::DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates)
 {
-	std::lock_guard<std::mutex> lock(m_taskUpdateMutex);
-	taskUpdates.swap(m_pendingTaskUpdates);
-	m_pendingTaskUpdateIndices.clear();
+	m_taskUpdates.Drain(taskUpdates);
 }
 
 sunjwbase::tstring UIBridgeMFC::BuildAlgorithmSummary(const HashResult& result)

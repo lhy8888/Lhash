@@ -15,6 +15,8 @@ typedef std::vector<sunjwbase::tstring> TStrVector;
 typedef std::vector<uint64_t> ULLongVector;
 
 static constexpr size_t kMaxHashFilesPerSession = 8192;
+// Index in the original request, independent of path and retained result history.
+static constexpr uint32_t kInvalidHashTaskIndex = UINT32_MAX;
 
 enum ResultState
 {
@@ -112,11 +114,13 @@ struct HashFileMeta
 struct HashResult
 {
 	HashResult()
-		: state(RESULT_NONE)
+		: state(RESULT_NONE),
+		taskIndex(kInvalidHashTaskIndex)
 	{
 	}
 
 	ResultState state;
+	uint32_t taskIndex;
 	sunjwbase::tstring path;
 	HashFileMeta meta;
 	sunjwbase::tstring error;

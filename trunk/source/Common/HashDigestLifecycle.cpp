@@ -12,7 +12,7 @@ namespace HashEngineInternal
 			return true;
 		});
 
-		GetHashExecutionProgressSink(*executionContext)->onProgressEvent(CreateFileProgressEvent(0));
+		GetHashExecutionProgressSink(*executionContext)->onProgressEvent(CreateFileProgressEvent(0, executionContext->currentTaskIndex));
 	}
 
 	const sunjwbase::tstring& GetFinalizedDigestValueById(const ResultDigestStorage& digestBundle, const HashAlgorithmId& algorithmId)

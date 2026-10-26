@@ -46,6 +46,7 @@ static int CompleteHashing(HashExecutionContext *executionContext)
 int RunHashRequest(HashExecutionContext *executionContext, const HashRequest& request)
 {
 	HashExecutionWorkingScope workingScope(*executionContext);
+	executionContext->currentTaskIndex = kInvalidHashTaskIndex;
 
 	HashJobExecutionPlan executionPlan = {};
 	InitializeHashJobExecutionPlan(request, &executionPlan);

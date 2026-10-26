@@ -82,6 +82,7 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 		m_hashSessionController == NULL ||
 		m_hashProgressController == NULL ||
 		m_hashResultViewController == NULL ||
+		m_uiBridgeMFC == NULL || *m_uiBridgeMFC == NULL ||
 		m_parentWnd == NULL || m_waitingExit || IsThreadDataWorking(*m_threadData))
 	{
 		return;
@@ -113,6 +114,8 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 	}
 	m_terminalMessage = 0;
 	m_sessionSetupFailed = false;
+	++m_sessionId;
+	(*m_uiBridgeMFC)->BeginTaskSession(m_sessionId);
 	if (!m_hashSessionController->StartHashThread())
 	{
 		StopWorkerPoll();
@@ -125,7 +128,7 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 	// handler returns. Failed launches leave the existing task history intact.
 	try
 	{
-		m_hashProgressController->BeginTaskSession(GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
+		m_hashProgressController->BeginTaskSession(m_sessionId, GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
 		m_hashProgressController->StartTiming(secondText);
 	}
 	catch (...)
@@ -252,6 +255,9 @@ void FilesHashLifecycleController::FinalizeWorkerExit()
 		return;
 	}
 	StopWorkerPoll();
+	const bool completedNormally = exitCode == 0 && m_terminalMessage == WP_FINISHED && !m_sessionSetupFailed;
+	const bool cancelledNormally = exitCode == 0 && m_terminalMessage == WP_STOPPED && !m_sessionSetupFailed;
+	bool sessionConsistent = true;
 	if (m_uiBridgeMFC != NULL && *m_uiBridgeMFC != NULL && m_hashProgressController != NULL)
 	{
 		std::vector<FilesHashTaskUpdate> updates;
@@ -261,7 +267,10 @@ void FilesHashLifecycleController::FinalizeWorkerExit()
 	}
 	if (m_hashProgressController != NULL && m_threadData != NULL)
 	{
-		if (exitCode == 0 && m_terminalMessage == WP_FINISHED && !m_sessionSetupFailed)
+		const FilesHashSessionOutcome outcome = completedNormally ? FilesHashSessionOutcome::Completed :
+			(cancelledNormally ? FilesHashSessionOutcome::Cancelled : FilesHashSessionOutcome::Aborted);
+		sessionConsistent = m_hashProgressController->FinishTaskSession(m_sessionId, outcome);
+		if (completedNormally && sessionConsistent)
 		{
 			m_hashProgressController->FinishTiming(GetThreadDataTotalSize(*m_threadData));
 			m_hashProgressController->SetWholeProgress(99);
@@ -282,7 +291,7 @@ void FilesHashLifecycleController::FinalizeWorkerExit()
 		// close now so a queued click cannot open another modal input dialog.
 		m_parentWnd->SendMessage(WM_CLOSE);
 	}
-	else if (exitCode != 0 || m_terminalMessage == 0 || m_sessionSetupFailed)
+	else if (exitCode != 0 || m_terminalMessage == 0 || m_sessionSetupFailed || !sessionConsistent)
 	{
 		AfxMessageBox(GetStringByKey(MAINDLG_WORKER_FAILED), MB_OK | MB_ICONERROR);
 	}

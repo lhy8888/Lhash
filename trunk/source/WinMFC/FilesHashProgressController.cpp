@@ -37,8 +37,7 @@ void FilesHashProgressController::Initialize(CDialog* parentWnd, CProgressCtrl* 
 	m_timerId = 0;
 	m_secondText.Empty();
 	m_speedText.Empty();
-	m_taskRows.clear();
-	m_algorithmSummary.clear();
+	m_taskModel.Clear();
 	CloseTaskbarList();
 }
 
@@ -67,7 +66,7 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 	int availableWidth = max(420, clientRect.Width() - 2);
 	int fileColumnWidth = max(190, (availableWidth * 35) / 100);
 	int algorithmColumnWidth = max(120, (availableWidth * 20) / 100);
-	int statusColumnWidth = max(56, (availableWidth * 9) / 100);
+	int statusColumnWidth = max(130, (availableWidth * 15) / 100);
 	int progressColumnWidth = max(220, availableWidth - fileColumnWidth - algorithmColumnWidth - statusColumnWidth);
 
 	m_taskListCtrl->InsertColumn(0, fileColumnText, LVCFMT_LEFT, fileColumnWidth);
@@ -78,30 +77,27 @@ void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPC
 	UpdateSummaryText();
 }
 
-void FilesHashProgressController::BeginTaskSession(const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary)
+void FilesHashProgressController::BeginTaskSession(uint64_t sessionId, const TStrVector& inputFiles, const sunjwbase::tstring& algorithmSummary)
 {
-	m_algorithmSummary = algorithmSummary;
-
-	for (TStrVector::const_iterator itr = inputFiles.begin(); itr != inputFiles.end(); ++itr)
-	{
-		TaskRowState taskRowState;
-		taskRowState.fullPath = *itr;
-		taskRowState.displayName = BuildDisplayName(*itr);
-		taskRowState.algorithms = algorithmSummary;
-		taskRowState.status = GetStringByKey(MAINDLG_TASK_STATUS_PENDING);
-		taskRowState.state = FILES_HASH_TASK_PENDING;
-		taskRowState.progress = 0;
-		m_taskRows.push_back(taskRowState);
-	}
-
+	m_taskModel.BeginSession(sessionId, inputFiles, algorithmSummary, GetStringByKey(MAINDLG_TASK_STATUS_PENDING));
 	RefreshAllTaskRows();
 	UpdateSummaryText();
 }
 
+bool FilesHashProgressController::FinishTaskSession(uint64_t sessionId, FilesHashSessionOutcome outcome)
+{
+	const FilesHashTaskFinishText text = {
+		GetStringByKey(MAINDLG_TASK_STATUS_CANCELLED), GetStringByKey(MAINDLG_TASK_STATUS_ABORTED),
+		GetStringByKey(MAINDLG_TASK_STATUS_NOT_RUN_CANCELLED), GetStringByKey(MAINDLG_TASK_STATUS_NOT_RUN_ABORTED)};
+	const bool consistent = m_taskModel.FinishSession(sessionId, outcome, text);
+	RefreshAllTaskRows();
+	UpdateSummaryText();
+	return consistent;
+}
+
 void FilesHashProgressController::ResetTaskSession()
 {
-	m_taskRows.clear();
-	m_algorithmSummary.clear();
+	m_taskModel.Clear();
 	m_speedText.Empty();
 	RefreshAllTaskRows();
 	UpdateSummaryText();
@@ -109,11 +105,6 @@ void FilesHashProgressController::ResetTaskSession()
 
 void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& taskUpdate)
 {
-	if (taskUpdate.path.empty())
-	{
-		return;
-	}
-
 	bool ensureVisible = false;
 	int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
 	RefreshTaskRow(rowIndex, ensureVisible);
@@ -137,11 +128,6 @@ void FilesHashProgressController::ApplyTaskUpdates(const std::vector<FilesHashTa
 	for (size_t updateIndex = 0; updateIndex < taskUpdates.size(); ++updateIndex)
 	{
 		const FilesHashTaskUpdate& taskUpdate = taskUpdates[updateIndex];
-		if (taskUpdate.path.empty())
-		{
-			continue;
-		}
-
 		bool ensureVisible = false;
 		int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
 		RefreshTaskRow(rowIndex, false);
@@ -166,48 +152,8 @@ void FilesHashProgressController::ApplyTaskUpdates(const std::vector<FilesHashTa
 
 int FilesHashProgressController::ApplyTaskUpdateToState(const FilesHashTaskUpdate& taskUpdate, bool *ensureVisible)
 {
-	if (ensureVisible != NULL)
-	{
-		*ensureVisible = false;
-	}
-
-	int rowIndex = FindTaskRowIndex(taskUpdate.path);
-	if (rowIndex < 0)
-	{
-		TaskRowState taskRowState;
-		taskRowState.fullPath = taskUpdate.path;
-		taskRowState.displayName = BuildDisplayName(taskUpdate.path);
-		taskRowState.algorithms = taskUpdate.algorithms.empty() ? m_algorithmSummary : taskUpdate.algorithms;
-		taskRowState.status = taskUpdate.status;
-		taskRowState.state = taskUpdate.state;
-		taskRowState.progress = taskUpdate.progress;
-		m_taskRows.push_back(taskRowState);
-		rowIndex = static_cast<int>(m_taskRows.size() - 1);
-		if (ensureVisible != NULL)
-		{
-			*ensureVisible = true;
-		}
-	}
-	else
-	{
-		TaskRowState& taskRowState = m_taskRows[static_cast<size_t>(rowIndex)];
-		if (!taskUpdate.algorithms.empty())
-		{
-			taskRowState.algorithms = taskUpdate.algorithms;
-		}
-		taskRowState.status = taskUpdate.status;
-		taskRowState.state = taskUpdate.state;
-		taskRowState.progress = taskUpdate.progress;
-	}
-
-	if (taskUpdate.state == FILES_HASH_TASK_COMPLETED || taskUpdate.state == FILES_HASH_TASK_FAILED)
-	{
-		if (ensureVisible != NULL)
-		{
-			*ensureVisible = true;
-		}
-	}
-
+	const int rowIndex = m_taskModel.Apply(taskUpdate);
+	if (ensureVisible != NULL) *ensureVisible = rowIndex >= 0 && IsFilesHashTaskTerminal(taskUpdate.state);
 	return rowIndex;
 }
 
@@ -322,7 +268,7 @@ void FilesHashProgressController::SetWholeProgress(UINT pos)
 
 int FilesHashProgressController::GetTaskRowCount() const
 {
-	return static_cast<int>(m_taskRows.size());
+	return static_cast<int>(m_taskModel.Rows().size());
 }
 
 bool FilesHashProgressController::TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const
@@ -358,40 +304,24 @@ bool FilesHashProgressController::TryGetTaskRowDisplayText(int rowIndex, int sub
 	}
 }
 
-int FilesHashProgressController::FindTaskRowIndex(const sunjwbase::tstring& fullPath) const
-{
-	for (int index = static_cast<int>(m_taskRows.size()) - 1; index >= 0; --index)
-	{
-		const TaskRowState& taskRowState = m_taskRows[static_cast<size_t>(index)];
-		if (taskRowState.fullPath == fullPath &&
-			(taskRowState.state == FILES_HASH_TASK_PENDING ||
-			 taskRowState.state == FILES_HASH_TASK_RUNNING))
-		{
-			return index;
-		}
-	}
-
-	return -1;
-}
-
 const FilesHashProgressController::TaskRowState* FilesHashProgressController::TryGetTaskRowState(int rowIndex) const
 {
-	if (rowIndex < 0 || rowIndex >= static_cast<int>(m_taskRows.size()))
+	if (rowIndex < 0 || rowIndex >= static_cast<int>(m_taskModel.Rows().size()))
 	{
 		return NULL;
 	}
 
-	return &m_taskRows[static_cast<size_t>(rowIndex)];
+	return &m_taskModel.Rows()[static_cast<size_t>(rowIndex)];
 }
 
 void FilesHashProgressController::RefreshTaskRow(int rowIndex, bool ensureVisible /*= false*/)
 {
-	if (m_taskListCtrl == NULL || !::IsWindow(m_taskListCtrl->GetSafeHwnd()) || rowIndex < 0 || rowIndex >= static_cast<int>(m_taskRows.size()))
+	if (m_taskListCtrl == NULL || !::IsWindow(m_taskListCtrl->GetSafeHwnd()) || rowIndex < 0 || rowIndex >= static_cast<int>(m_taskModel.Rows().size()))
 	{
 		return;
 	}
 
-	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 	m_taskListCtrl->RedrawItems(rowIndex, rowIndex);
 	if (ensureVisible)
 	{
@@ -406,7 +336,7 @@ void FilesHashProgressController::RefreshAllTaskRows()
 		return;
 	}
 
-	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskRows.size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 	m_taskListCtrl->Invalidate(FALSE);
 }
 
@@ -420,9 +350,12 @@ void FilesHashProgressController::UpdateSummaryText()
 	int completedCount = 0;
 	int failedCount = 0;
 	int runningCount = 0;
-	for (size_t index = 0; index < m_taskRows.size(); ++index)
+	int cancelledCount = 0;
+	int abortedCount = 0;
+	int notRunCount = 0;
+	for (size_t index = 0; index < m_taskModel.Rows().size(); ++index)
 	{
-		switch (m_taskRows[index].state)
+		switch (m_taskModel.Rows()[index].state)
 		{
 		case FILES_HASH_TASK_COMPLETED:
 			++completedCount;
@@ -433,6 +366,15 @@ void FilesHashProgressController::UpdateSummaryText()
 		case FILES_HASH_TASK_RUNNING:
 			++runningCount;
 			break;
+		case FILES_HASH_TASK_CANCELLED:
+			++cancelledCount;
+			break;
+		case FILES_HASH_TASK_ABORTED:
+			++abortedCount;
+			break;
+		case FILES_HASH_TASK_NOT_RUN:
+			++notRunCount;
+			break;
 		default:
 			break;
 		}
@@ -442,31 +384,26 @@ void FilesHashProgressController::UpdateSummaryText()
 	elapsedText.Format(_T("%d %s"), static_cast<int>(m_calculateTime), static_cast<LPCTSTR>(m_secondText.IsEmpty() ? CString(GetStringByKey(SECOND_STRING)) : m_secondText));
 
 	CString summary;
-	summary.Format(_T("%s %d    %s %d    %s %d    %s %d    %s %s    %s %s"),
+	summary.Format(_T("%s %d    %s %d    %s %d    %s %d    %s %d    %s %d    %s %d    %s %s    %s %s"),
 		GetStringByKey(MAINDLG_STATUS_TOTAL),
-		static_cast<int>(m_taskRows.size()),
+		static_cast<int>(m_taskModel.Rows().size()),
 		GetStringByKey(MAINDLG_STATUS_DONE),
 		completedCount,
 		GetStringByKey(MAINDLG_STATUS_FAILED),
 		failedCount,
 		GetStringByKey(MAINDLG_STATUS_RUNNING),
 		runningCount,
+		GetStringByKey(MAINDLG_STATUS_CANCELLED),
+		cancelledCount,
+		GetStringByKey(MAINDLG_STATUS_ABORTED),
+		abortedCount,
+		GetStringByKey(MAINDLG_STATUS_NOT_RUN),
+		notRunCount,
 		GetStringByKey(MAINDLG_STATUS_TIME),
 		static_cast<LPCTSTR>(elapsedText),
 		GetStringByKey(MAINDLG_STATUS_SPEED),
 		static_cast<LPCTSTR>(m_speedText.IsEmpty() ? CString(_T("-")) : m_speedText));
 	m_statusOverviewCtrl->SetWindowText(summary);
-}
-
-sunjwbase::tstring FilesHashProgressController::BuildDisplayName(const sunjwbase::tstring& fullPath)
-{
-	sunjwbase::tstring::size_type separatorPosition = fullPath.find_last_of(_T("\\/"));
-	if (separatorPosition == sunjwbase::tstring::npos)
-	{
-		return fullPath;
-	}
-
-	return fullPath.substr(separatorPosition + 1);
 }
 
 CString FilesHashProgressController::BuildProgressText(int progress)
