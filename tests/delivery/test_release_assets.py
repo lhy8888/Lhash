@@ -6,7 +6,10 @@ import io
 import json
 import os
 from pathlib import Path
+import plistlib
 import shutil
+import stat
+import struct
 import subprocess
 import tempfile
 import tarfile
@@ -35,6 +38,7 @@ class ReleaseAssetsTest(unittest.TestCase):
                 archive.writestr("LHash.exe", b"harmless binary fixture")
                 archive.writestr("BUILD_INFO.txt", f"commit={self.env['GITHUB_SHA']}\napplication_version={self.version}\nopenssl_vendor_version=3.5.9\n")
         self.write_macos()
+        self.write_macos_app()
         self.scan = self.root / "scan.json"
         self.scan.write_text(json.dumps({"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1, "components": []}))
 
@@ -60,6 +64,34 @@ class ReleaseAssetsTest(unittest.TestCase):
             if extra is not None:
                 archive.addfile(extra, io.BytesIO(b""))
 
+    def write_macos_app(self):
+        app = self.root / "LHash.app"
+        (app / "Contents/MacOS").mkdir(parents=True, exist_ok=True)
+        (app / "Contents/_CodeSignature").mkdir(parents=True, exist_ok=True)
+        # Harmless, non-runnable thin arm64 Mach-O fixture with macOS 14 metadata.
+        binary = struct.pack("<8I", 0xfeedfacf, 0x100000c, 0, 2, 1, 24, 0, 0)
+        binary += struct.pack("<6I", 0x32, 24, 1, 14 << 16, 14 << 16, 0)
+        executable = app / "Contents/MacOS/LHash"
+        executable.write_bytes(binary)
+        executable.chmod(0o755)
+        (app / "Contents/_CodeSignature/CodeResources").write_bytes(b"harmless signature fixture")
+        (app / "Contents/Info.plist").write_bytes(plistlib.dumps({
+            "CFBundleExecutable": "LHash", "CFBundlePackageType": "APPL",
+            "CFBundleShortVersionString": self.version.removesuffix(".0"),
+            "CFBundleVersion": self.version, "LSMinimumSystemVersion": "14.0"}))
+        self.app_bundle = self.assets / f"LHash-macos-arm64-app-{self.env['GITHUB_SHA'][:7]}.zip"
+        result = subprocess.run([os.sys.executable, str(REPO / "tools/package_macos_app.py"),
+                                 "--app", str(app), "--output", str(self.assets), "--repo", str(REPO)],
+                                env=dict(os.environ, **self.env), capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def rewrite_macos_app(self, transform):
+        with zipfile.ZipFile(self.app_bundle) as archive:
+            entries = [(entry, archive.read(entry)) for entry in archive.infolist()]
+        with zipfile.ZipFile(self.app_bundle, "w") as archive:
+            for entry, data in transform(entries):
+                archive.writestr(entry, data)
+
     def build(self):
         release.stage(self.assets, self.output, REPO, self.env)
         with contextlib.redirect_stdout(io.StringIO()):
@@ -68,10 +100,11 @@ class ReleaseAssetsTest(unittest.TestCase):
     def test_all_platform_packages_and_metadata_verify_from_download_directory(self):
         self.build()
         checksums = (self.output / release.CHECKSUMS).read_text()
-        self.assertEqual(len(checksums.splitlines()), 5)
+        self.assertEqual(len(checksums.splitlines()), 6)
         self.assertIn("LHash-windows-x64-", checksums)
         self.assertIn("LHash-windows-arm64-", checksums)
         self.assertIn("LHash-macos-arm64-cli-", checksums)
+        self.assertIn("LHash-macos-arm64-app-", checksums)
         self.assertNotIn("release-assets/", checksums)
         self.assertIn(f"lhash_application_version={self.version}", (self.output / release.MANIFEST).read_text())
         consumer = self.root / "downloaded"
@@ -96,7 +129,7 @@ class ReleaseAssetsTest(unittest.TestCase):
 
     def test_modified_arm64_archive_rejected(self):
         self.build()
-        next(self.output.glob("*arm64*.zip")).write_bytes(b"changed fixture")
+        next(self.output.glob("LHash-windows-arm64*.zip")).write_bytes(b"changed fixture")
         with self.assertRaisesRegex(ValueError, "checksum mismatch"):
             release.verify(self.output)
 
@@ -178,14 +211,27 @@ class ReleaseAssetsTest(unittest.TestCase):
     def test_existing_windows_only_release_remains_verifiable(self):
         self.build()
         next(self.output.glob("*.tar.gz")).unlink()
+        next(self.output.glob("LHash-macos-*.zip")).unlink()
         manifest = self.output / release.MANIFEST
         manifest.write_text("\n".join(line for line in manifest.read_text().splitlines()
-                                     if not line.startswith("macos_arm64=")) + "\n")
+                                     if not line.startswith(("macos_arm64=", "macos_arm64_app="))) + "\n")
         (self.output / release.CHECKSUMS).unlink()
         with contextlib.redirect_stdout(io.StringIO()):
             release.finalize(self.output, self.scan, REPO)
             release.verify(self.output)
         self.assertEqual(len((self.output / release.CHECKSUMS).read_text().splitlines()), 4)
+
+    def test_existing_windows_and_cli_release_remains_verifiable(self):
+        self.build()
+        next(self.output.glob("LHash-macos-*.zip")).unlink()
+        manifest = self.output / release.MANIFEST
+        manifest.write_text("\n".join(line for line in manifest.read_text().splitlines()
+                                     if not line.startswith("macos_arm64_app=")) + "\n")
+        (self.output / release.CHECKSUMS).unlink()
+        with contextlib.redirect_stdout(io.StringIO()):
+            release.finalize(self.output, self.scan, REPO)
+            release.verify(self.output)
+        self.assertEqual(len((self.output / release.CHECKSUMS).read_text().splitlines()), 5)
 
     def test_prefixed_or_traversal_checksum_path_rejected(self):
         self.build()
@@ -197,14 +243,14 @@ class ReleaseAssetsTest(unittest.TestCase):
                 release.verify(self.output)
 
     def test_missing_architecture_rejected(self):
-        next(self.assets.glob("*arm64*.zip")).unlink()
+        next(self.assets.glob("LHash-windows-arm64*.zip")).unlink()
         with self.assertRaisesRegex(ValueError, "arm64"):
             release.stage(self.assets, self.output, REPO, self.env)
 
     def test_valid_short_and_full_commit_asset_names(self):
         for length in (7, 8, 12, 40):
             for arch in ("x64", "arm64"):
-                current = next(self.assets.glob(f"*{arch}*.zip"))
+                current = next(self.assets.glob(f"LHash-windows-{arch}*.zip"))
                 current.rename(self.assets / f"LHash-windows-{arch}-{self.env['GITHUB_SHA'][:length]}.zip")
             output = self.root / f"release-{length}"
             release.stage(self.assets, output, REPO, self.env)
@@ -213,13 +259,13 @@ class ReleaseAssetsTest(unittest.TestCase):
                 release.verify(output)
 
     def test_wrong_commit_prefix_rejected(self):
-        current = next(self.assets.glob("*arm64*.zip"))
+        current = next(self.assets.glob("LHash-windows-arm64*.zip"))
         current.rename(self.assets / "LHash-windows-arm64-fffffff.zip")
         with self.assertRaisesRegex(ValueError, "from this commit"):
             release.stage(self.assets, self.output, REPO, self.env)
 
     def test_mismatched_binary_version_rejected(self):
-        path = next(self.assets.glob("*arm64*.zip"))
+        path = next(self.assets.glob("LHash-windows-arm64*.zip"))
         with zipfile.ZipFile(path, "w") as archive:
             archive.writestr("LHash.exe", b"harmless binary fixture")
             archive.writestr("BUILD_INFO.txt", f"commit={self.env['GITHUB_SHA']}\napplication_version=0.0.0.0\nopenssl_vendor_version=3.5.9\n")
@@ -237,6 +283,89 @@ class ReleaseAssetsTest(unittest.TestCase):
     def test_duplicate_metadata_keys_rejected(self):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             release.fields("commit=a\ncommit=b\n")
+
+    def test_missing_app_package_rejected(self):
+        self.app_bundle.unlink()
+        with self.assertRaisesRegex(ValueError, "application bundle"):
+            release.stage(self.assets, self.output, REPO, self.env)
+
+    def test_app_archive_rejects_unsafe_and_duplicate_paths_and_links(self):
+        original = self.app_bundle.read_bytes()
+        prefix = self.app_bundle.stem + "/"
+        for name, mode in (("../outside", stat.S_IFREG), ("/absolute", stat.S_IFREG),
+                           (prefix + "LHash.app/Contents/../escape", stat.S_IFREG),
+                           (prefix + "LHash.app/Contents/link", stat.S_IFLNK),
+                           (prefix + "BUILD_INFO.txt", stat.S_IFREG)):
+            with self.subTest(name=name, mode=mode):
+                self.app_bundle.write_bytes(original)
+                entry = zipfile.ZipInfo(name)
+                entry.external_attr = (mode | 0o644) << 16
+                with zipfile.ZipFile(self.app_bundle, "a") as archive:
+                    archive.writestr(entry, b"../../outside")
+                with self.assertRaisesRegex(ValueError, "Unsafe, duplicate"):
+                    release.validate_macos_app_bundle(self.app_bundle, self.env["GITHUB_SHA"], self.version)
+
+    def test_app_requires_executable_permission_and_arm64_macos14_binary(self):
+        original = self.app_bundle.read_bytes()
+        def mutate(entries, change):
+            for entry, data in entries:
+                if entry.filename.endswith("/Contents/MacOS/LHash"):
+                    entry, data = change(entry, data)
+                yield entry, data
+        def no_execute(entry, data):
+            entry.external_attr = (stat.S_IFREG | 0o644) << 16
+            return entry, data
+        cases = [("permission", no_execute),
+                 ("arm64", lambda e, d: (e, d[:4] + struct.pack("<I", 0x1000007) + d[8:])),
+                 ("deployment", lambda e, d: (e, d[:44] + struct.pack("<I", 15 << 16) + d[48:]))]
+        for expected, change in cases:
+            with self.subTest(expected=expected):
+                self.app_bundle.write_bytes(original)
+                self.rewrite_macos_app(lambda entries: mutate(entries, change))
+                with self.assertRaisesRegex(ValueError, expected):
+                    release.validate_macos_app_bundle(self.app_bundle, self.env["GITHUB_SHA"], self.version)
+
+    def test_app_checksums_cover_metadata_resources_and_licenses(self):
+        original = self.app_bundle.read_bytes()
+        for suffix in ("/README.txt", "/LICENSES/OpenSSL.txt", "/Contents/_CodeSignature/CodeResources"):
+            with self.subTest(suffix=suffix):
+                self.app_bundle.write_bytes(original)
+                self.rewrite_macos_app(lambda entries: ((e, d + b"changed" if e.filename.endswith(suffix) else d)
+                                                        for e, d in entries))
+                with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                    release.validate_macos_app_bundle(self.app_bundle, self.env["GITHUB_SHA"], self.version)
+
+    def test_app_plist_version_must_match_release(self):
+        def change(entries):
+            for entry, data in entries:
+                if entry.filename.endswith("/Contents/Info.plist"):
+                    info = plistlib.loads(data)
+                    info["CFBundleVersion"] = "0.0.0.0"
+                    data = plistlib.dumps(info)
+                yield entry, data
+        self.rewrite_macos_app(change)
+        with self.assertRaisesRegex(ValueError, "plist disagrees"):
+            release.validate_macos_app_bundle(self.app_bundle, self.env["GITHUB_SHA"], self.version)
+
+    def test_app_package_manifest_and_checksums_detect_omission_or_modification(self):
+        self.build()
+        package = self.output / self.app_bundle.name
+        package.write_bytes(b"changed fixture")
+        with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+            release.verify(self.output)
+        package.unlink()
+        with self.assertRaisesRegex(ValueError, "application archives"):
+            release.verify(self.output)
+
+    @unittest.skipUnless(shutil.which("unzip") and shutil.which("sha256sum"), "needs ZIP consumer tools")
+    def test_actual_app_package_extracts_with_executable_bit_and_valid_checksums(self):
+        extracted = self.root / "consumer-app"
+        result = subprocess.run(["unzip", "-q", str(self.app_bundle), "-d", str(extracted)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        root = next(extracted.iterdir())
+        self.assertTrue((root / "LHash.app/Contents/MacOS/LHash").stat().st_mode & 0o111)
+        result = subprocess.run(["sha256sum", "--check", "SHA256.txt"], cwd=root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @staticmethod
     def shell_step(workflow, name):

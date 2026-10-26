@@ -143,4 +143,8 @@ The project is best described as:
 
 LHash is a Windows trusted local verification tool that helps users review files and release artifacts with safer defaults, repeatable results, and clearer release metadata than a typical generic hash utility.
 
-The Windows product uses the MFC desktop UI. The macOS Apple Silicon CLI uses the same 18-algorithm registry and static OpenSSL 3.5.9 backend. macOS artifacts are unsigned and unnotarized; there is no macOS GUI or Intel target.
+The Windows product uses the MFC desktop UI. The macOS Apple Silicon app and CLI
+share its 18-algorithm registry and static OpenSSL 3.5.9 backend. The maintained
+branch adds a native AppKit app, locally ad-hoc signed without Developer ID
+signing or notarization. The published v1.12.6 macOS package remains the unsigned,
+unnotarized CLI. There is no Intel target. See [macOS desktop support](MACOS_GUI.md).

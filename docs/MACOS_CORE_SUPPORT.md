@@ -1,9 +1,14 @@
-# macOS Apple Silicon CLI and core
+# macOS Apple Silicon app, CLI and core
 
 LHash supports the generic `arm64` target on Apple Silicon M-series Macs. The
-macOS CLI uses the same engine, algorithm registry and static OpenSSL 3.5.9
+macOS desktop app and CLI use the same engine, algorithm registry and static OpenSSL 3.5.9
 backend as Windows. All **18** Windows algorithms are available; the default
 selection is also shared: SHA-256, SHA-512 and SHA3-256.
+
+The desktop app uses native AppKit controls with the same main layout and hashing
+actions as the Windows app. It is built on the maintained branch; the already
+published v1.12.6 release contains the CLI only. See the
+[desktop guide](MACOS_GUI.md) for the GUI artifact, usage and build commands.
 
 ## Download
 
@@ -78,11 +83,13 @@ read length prevent publishing a successful digest. This check detects unstable
 files; it does not provide a filesystem snapshot guarantee. Ancestor symlinks
 remain allowed, and this utility does not promise directory sandbox confinement.
 
-The [macOS CLI workflow](../.github/workflows/macos-cli-build.yml) packages the
-arm64 executable, checksum and build metadata after the engine/CLI tests pass.
-It also supplies the macOS package to the tagged release workflow. Branch CI
-retains its downloadable workflow artifact for testing between releases.
-Artifacts remain unsigned and unnotarized. There is no macOS GUI or Intel build.
+The [macOS workflow](../.github/workflows/macos-cli-build.yml) packages the
+arm64 CLI and desktop app after their configured tests pass. The app adds native
+AppKit tests and shared session-model tests to the engine/CLI suite. It also
+supplies the macOS packages to the tagged release workflow. Branch CI retains
+separate downloadable app and CLI artifacts for testing between releases.
+The app is ad-hoc signed but has no Developer ID signature or notarization;
+the CLI release is unsigned and unnotarized. There is no Intel build.
 All M-series models use the same arm64 target; hosted CI validates its selected
 machine, not every M5/M6 hardware model. Linux's explicitly enabled POSIX test
 backend is for cloud regressions and does not establish native macOS filesystem

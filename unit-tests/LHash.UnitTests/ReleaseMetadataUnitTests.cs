@@ -28,8 +28,8 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", draft, StringComparison.Ordinal);
-        Assert.Contains("macOS CLI Build workflow", readme, StringComparison.Ordinal);
-        Assert.Contains("macOS CLI Build workflow", draft, StringComparison.Ordinal);
+        Assert.Contains("macOS Build workflow", readme, StringComparison.Ordinal);
+        Assert.Contains("macOS Build workflow", draft, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -7,10 +7,10 @@ not identify the publisher.
 ## Release production
 
 `.github/workflows/windows-build.yml` builds Windows x64 and ARM64 packages and
-invokes the reusable macOS CLI workflow for the Apple Silicon package before
+invokes the reusable macOS workflow for the Apple Silicon packages before
 release publication. Publication depends on these builds, Windows native and
 portable runtime tests, native ARM64 GUI tests, and release tooling tests. The
-macOS build runs its full engine and CLI suite before packaging. Each Windows
+macOS build runs its engine, CLI, desktop session and native AppKit suites before packaging. Each Windows
 native job also executes the root CMake runtime and platform regressions with
 the vendored static OpenSSL library.
 
@@ -22,7 +22,7 @@ report are retained even on failure. These checks inspect text and interaction
 state; they are not pixel comparisons across every display configuration.
 
 The release job checks out the same commit, validates the version resource and
-commit recorded inside the two Windows ZIPs and macOS tarball, and creates
+commit recorded inside the Windows ZIPs, macOS CLI tarball and desktop app ZIP, and creates
 `RELEASE_MANIFEST.txt`. Missing or inconsistent application versions fail the
 job; `unknown` is not accepted.
 
@@ -33,11 +33,11 @@ Before publishing a v* tag release, that same job:
    **build-declared** components because binary scanners cannot reliably recover
    all static library identities. This does not claim that every source file or
    transitive build tool was discovered by the scanner.
-2. Generates one `SHA256SUMS.txt` containing both Windows ZIPs, the macOS tarball,
+2. Generates one `SHA256SUMS.txt` containing all platform packages,
    the release manifest and the final SBOM, using plain filenames relative to
    the download directory.
 3. Verifies the complete set and creates provenance and SBOM attestations that
-   include **all three** platform packages.
+   include every platform package recorded in that release manifest.
 4. Publishes the artifacts only after the preceding steps succeed.
 
 The checksum file is created once. The manual recovery workflows
@@ -50,6 +50,11 @@ quoted arguments, rather than shell-source interpolation.
 
 A manual Windows Build dispatch produces a rehearsal artifact and verifies its
 metadata without publishing a release or creating release attestations.
+
+The new app ZIP belongs to the maintained branch's future release path. The
+already published v1.12.6 release has three platform packages: Windows x64,
+Windows ARM64 and the macOS CLI. Its original checksum and attestation set is
+not rewritten to include the desktop app.
 
 ## Vendored OpenSSL integrity
 
@@ -69,7 +74,7 @@ hash. Workflow cache keys additionally include vendored source and the reviewed
 file manifest. Main and benchmark jobs keep the script-owned build log separate
 from console capture, so a cold build does not create two writers for one file.
 
-## macOS ARM64 CLI artifacts
+## macOS ARM64 artifacts
 
 The macOS workflow builds static OpenSSL 3.5.9 for arm64 and enables the vendor
 backend in the CLI. CTest executes the engine tests and the CLI's full algorithm
@@ -84,6 +89,18 @@ tagged release and checksum/manifest/SBOM set as the Windows packages; branch
 builds also retain it as a workflow artifact. It remains unsigned and not
 notarized. Only Apple Silicon/arm64 is supported; an arm64 build is not a record
 of testing individual M-series hardware models.
+
+The maintained branch also builds `LHash-macos-arm64-app-<shortsha>.zip` as a
+separate Actions artifact. It contains `LHash.app`, package metadata, a checksum
+list and license notices. The app uses the same statically linked core and
+algorithm set as the CLI. Packaging checks the arm64 executable and bundle
+version, applies a local ad-hoc signature, verifies that signature, and records
+checksums for the package files. Ad-hoc signing does not establish a Developer
+ID identity; the app is not notarized. Future tagged releases include the app
+archive in the checksum, manifest, SBOM and attestation set.
+
+See the [desktop guide](MACOS_GUI.md) for obtaining and verifying the branch
+artifact. A successful branch build is not itself a new published release.
 
 ## Automation controls and limitations
 

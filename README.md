@@ -1,12 +1,12 @@
 # LHash
 
 ![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
-![macOS CLI Build](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
+![macOS Build](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6)
 
-LHash calculates checksums for local files. Use the Windows desktop app or the
-macOS command-line tool to calculate SHA-256, compare a downloaded file with an
+LHash calculates checksums for local files. Use the Windows desktop app, the
+macOS desktop app or its command-line tool to calculate SHA-256, compare a downloaded file with an
 expected digest, or process a batch of files. Files are read locally; hashing
 does not require an account or uploading file contents.
 
@@ -24,9 +24,16 @@ Choose the package for your operating system and processor from the release page
 | Windows ARM64 | `LHash-windows-arm64-<commit>.zip` | Native ARM64 desktop app (`LHash.exe`) |
 | macOS Apple Silicon | `LHash-macos-arm64-cli-<commit>.tar.gz` | Native arm64 CLI (`lhash`) |
 
-macOS uses one generic arm64 build for M-series Macs. There is no Intel build
-or macOS GUI. The macOS package is unsigned and not notarized; Windows signing
-depends on the release's recorded signature state.
+The maintained branch also builds the new **macOS desktop app** as the
+`LHash-macos-arm64-app` artifact in the [macOS workflow](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml).
+Choose a successful run on `codex/openssl-3.5.9-vendor` and extract
+`LHash-macos-arm64-app-<commit>.zip`. This contains `LHash.app`; the already
+published v1.12.6 release contains the CLI only.
+
+macOS requires macOS 14 or later on an Apple Silicon M-series Mac. It uses one
+generic arm64 build; there is no Intel build. The GUI package is ad-hoc signed,
+without a Developer ID signature or notarization. The CLI release is unsigned
+and not notarized. Windows signing depends on the recorded signature state.
 
 The current release includes `SHA256SUMS.txt`, `RELEASE_MANIFEST.txt` and
 `LHash-release.cyclonedx.json`. Compare the archive's SHA-256 with its entry in
@@ -59,7 +66,22 @@ The task list shows each input separately, including repeated paths. Stop ends
 the active session and marks unfinished tasks accordingly. Folder scanning runs
 outside the UI thread so the window remains responsive while collecting files.
 
-### macOS Apple Silicon
+### macOS desktop app (maintained branch)
+
+1. Extract the app ZIP, open a terminal in its extracted directory, and check
+   its files with `shasum -a 256 -c SHA256.txt`.
+2. Copy `LHash.app` to Applications and open it.
+3. Use **Open**, **Open Folder**, or drag files/folders into the window.
+4. Choose algorithms in **Settings**. The defaults match Windows: SHA-256,
+   SHA-512 and SHA3-256. Use **Verify**, **Copy All** or **Export** for the results.
+
+The layout follows the Windows desktop app: commands above the results, a
+file/algorithm/status/progress table below, and overall progress with Stop/Clear.
+The interface supports Chinese and English, using native macOS controls.
+See the [macOS desktop guide](docs/MACOS_GUI.md) for installation, building,
+platform details and the app's signing state.
+
+### macOS command line
 
 Extract the macOS package, then open a terminal in the extracted directory:
 
@@ -148,8 +170,8 @@ snapshot. Details are in the [security model](docs/SECURITY_MODEL.md) and
   native ARM64 runtime/GUI tests, packaging and tagged release publication.
 - [Core Build Matrix workflow](.github/workflows/core-m2.yml): native core smoke
   and runtime checks on Windows and macOS.
-- [macOS CLI Build workflow](.github/workflows/macos-cli-build.yml): Apple Silicon
-  CLI build, full engine/algorithm tests and packaging.
+- [macOS Build workflow](.github/workflows/macos-cli-build.yml): Apple Silicon
+  desktop app and CLI, engine/algorithm tests, native UI tests and packaging.
 - [Portable Runtime Tests](.github/workflows/portable-runtime-tests.yml): Linux
   diagnostic and macOS arm64 regressions, including sanitizer builds.
 - [Core build instructions](docs/CORE_BUILD.md), [test guide](docs/TESTING.md)

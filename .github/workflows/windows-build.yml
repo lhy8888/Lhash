@@ -887,6 +887,12 @@ jobs:
           name: LHash-macos-arm64-cli
           path: release-assets
 
+      - name: Download macOS ARM64 application artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: LHash-macos-arm64-app
+          path: release-assets
+
       - name: Stage release rehearsal bundle
         run: python3 tools/release_assets.py stage --assets release-assets --output release-staging
 
@@ -912,6 +918,7 @@ jobs:
           subject-path: |
             release-staging/LHash-windows-*.zip
             release-staging/LHash-macos-arm64-cli-*.tar.gz
+            release-staging/LHash-macos-arm64-app-*.zip
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
             release-staging/LHash-release.cyclonedx.json
@@ -923,6 +930,7 @@ jobs:
           subject-path: |
             release-staging/LHash-windows-*.zip
             release-staging/LHash-macos-arm64-cli-*.tar.gz
+            release-staging/LHash-macos-arm64-app-*.zip
           sbom-path: release-staging/LHash-release.cyclonedx.json
 
       - name: Upload release rehearsal artifact
@@ -948,6 +956,7 @@ jobs:
             release-staging/LHash-windows-x64-*.zip
             release-staging/LHash-windows-arm64-*.zip
             release-staging/LHash-macos-arm64-cli-*.tar.gz
+            release-staging/LHash-macos-arm64-app-*.zip
             release-staging/RELEASE_MANIFEST.txt
             release-staging/SHA256SUMS.txt
             release-staging/LHash-release.cyclonedx.json

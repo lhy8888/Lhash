@@ -9,14 +9,14 @@ API替身、原生执行和GUI交互是不同的证据。
 | --- | --- | --- |
 | Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及18例真实窗口退出/任务状态/文本测试 |
 | Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行18例窗口退出/任务状态/文本测试 |
-| macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测 |
+| macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测；维护分支增加AppKit界面及后台会话回归 |
 | macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
 
 工作流：[Core Build Matrix](../.github/workflows/core-m2.yml)、
 [Windows Build](../.github/workflows/windows-build.yml)、
 [Portable Runtime Tests](../.github/workflows/portable-runtime-tests.yml)、
-[macOS CLI](../.github/workflows/macos-cli-build.yml)、
+[macOS GUI/CLI](../.github/workflows/macos-cli-build.yml)、
 [CodeQL](../.github/workflows/codeql.yml)。CodeQL包含C++产品构建与C#检查。
 
 macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表其运行机器，
@@ -77,6 +77,11 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
   并发、注入失败、长度/模式/NULL参数、专用上下文与外部OpenSSL配置隔离。
 - `tests/delivery`：双架构包/版本/提交身份、不可覆盖完整清单、实际解包校验、SBOM
   及vendor完整性。发布门禁包括原生测试和交付回归。
+- `tests/macos_session`：桌面应用的实际后台会话与共享哈希引擎，覆盖输入身份、
+  取消/终态、文件错误和目录扫描；可在显式Linux POSIX测试后端及原生macOS运行。
+- `tests/macos_ui`：在原生macOS上执行AppKit控制器、控件及消息循环，检查界面
+  与后台结果的衔接。Linux后端不执行这些界面测试；具体用例及是否通过以同一提交
+  的测试代码和CI报告为准，不以源码断言代替原生执行。
 - .NET源码约束与SecurityRegression：检查源码/工程关系，不能当作运行时安全证明。
 
 ## macOS完整构建
@@ -86,12 +91,13 @@ bash tools/build_openssl_vendor_posix.sh "$PWD/build/openssl-install"
 cmake -S . -B build/runtime -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DCMAKE_OSX_ARCHITECTURES=arm64 \
   -DLHASH_ENABLE_OPENSSL_VENDOR=ON -DOPENSSL_ROOT_DIR="$PWD/build/openssl-install" \
-  -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON
+  -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=ON \
+  -DLHASH_BUILD_MACOS_GUI=ON
 cmake --build build/runtime --parallel 3
 ctest --test-dir build/runtime -V --output-on-failure --no-tests=error
 ```
 
-Linux云端使用同一命令，删除`CMAKE_OSX_ARCHITECTURES`并增加
+Linux云端使用同一命令，删除`CMAKE_OSX_ARCHITECTURES`和`LHASH_BUILD_MACOS_GUI`并增加
 `-DLHASH_ENABLE_POSIX_TEST_BACKEND=ON`。这个选项默认关闭。
 Windows参见[Core Build](CORE_BUILD.md)和[native说明](../native-runtime-tests/README.md)，
 真实OpenSSL core须给出`OPENSSL_ROOT_DIR`，并使用与vendor一致的Release/静态CRT。

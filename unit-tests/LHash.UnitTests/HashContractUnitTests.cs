@@ -271,7 +271,7 @@ public sealed class HashContractUnitTests
         Assert.Contains("--list-algorithms", cliMain, StringComparison.Ordinal);
         Assert.Contains("--all", cliMain, StringComparison.Ordinal);
         Assert.Contains("--json", cliMain, StringComparison.Ordinal);
-        Assert.Contains("LHASH_BUILD_CLI AND NOT LHASH_ENABLE_OPENSSL_VENDOR", cmake, StringComparison.Ordinal);
+        Assert.Contains("(LHASH_BUILD_CLI OR LHASH_BUILD_MACOS_GUI) AND NOT LHASH_ENABLE_OPENSSL_VENDOR", cmake, StringComparison.Ordinal);
         Assert.Contains("18", macosCoreSupport, StringComparison.Ordinal);
     }
 

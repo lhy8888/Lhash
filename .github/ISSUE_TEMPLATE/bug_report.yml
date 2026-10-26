@@ -62,7 +62,7 @@ body:
     attributes:
       label: Operating system and architecture
       description: Include the OS version and CPU architecture, and whether you used the desktop app or CLI.
-      placeholder: Windows 11 x64 (desktop app) or macOS 14 arm64 (CLI)
+      placeholder: Windows 11 x64 (desktop app) or macOS 14 arm64 (desktop app / CLI)
 
   - type: textarea
     id: input_type

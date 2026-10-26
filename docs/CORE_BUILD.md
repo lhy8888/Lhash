@@ -1,15 +1,17 @@
-# Core Build Entry Point
+# Core and macOS Build Entry Point
 
 ## Scope
 
-M2 introduces a core-only cross-platform build entry point for LHash.
+The root CMake project builds LHash's cross-platform core, macOS CLI and optional
+native macOS desktop app. The baseline M2 configuration remains core-only.
 
-This entry point is intentionally narrower than the maintained Windows MFC release line:
+Core targets cover:
 
 - Windows x64 and native Windows arm64: core build + baseline smoke run + engine link smoke + real-file runtime tests
 - macOS arm64 (Apple Silicon M-series): the same core tests + Darwin security regression
 
-It does not replace the MFC Windows mainline or add release-path GUI bridge dependencies.
+The Windows MFC release continues to use its Visual Studio project. The optional
+macOS AppKit target links the shared core without depending on the MFC bridge.
 
 M3 extends this entry point so macOS arm64 is not just buildable, but also has
 an explicit Darwin path-security contract and a macOS-specific security
@@ -30,7 +32,7 @@ Enable the static OpenSSL 3.5.9 backend with `LHASH_ENABLE_OPENSSL_VENDOR=ON`
 and `OPENSSL_ROOT_DIR` pointing to the pinned vendor installation. Headers and
 library are verified to resolve inside that root. The definition is propagated
 to consumers so inline algorithm registries have the same 18 algorithms. Core-only
-stub builds remain available; the CLI requires the real backend.
+stub builds remain available; the CLI and macOS desktop app require the real backend.
 
 ## What it does not build
 
@@ -38,7 +40,6 @@ The core entry point does not include:
 
 - MFC UI targets
 - Linux release targets (an explicit POSIX diagnostic test backend is available)
-- macOS GUI targets
 - OpenSSL 4.0 migration work
 
 ## How to build
@@ -123,11 +124,16 @@ regular-file acceptance, and descriptor-based validation. It is intentionally
 smaller than the Windows security regression surface and exists to prove that
 the macOS core support is real rather than merely buildable.
 
-## macOS CLI and cloud diagnostics
+## macOS desktop app, CLI and cloud diagnostics
 
 See [macOS CLI support](MACOS_CORE_SUPPORT.md) for the complete 18-algorithm CLI,
 OpenSSL build instructions and command-line options. `LHASH_BUILD_CLI=ON` requires
 `LHASH_ENABLE_OPENSSL_VENDOR=ON` and a verified `OPENSSL_ROOT_DIR`.
+
+`LHASH_BUILD_MACOS_GUI=ON` adds the native AppKit app on macOS 14+ arm64 and also
+requires the vendor backend. The bundle is written to `bin/LHash.app` inside the
+build directory. See the [desktop build and usage guide](MACOS_GUI.md); the
+existing v1.12.6 release remains CLI-only on macOS until a later GUI release.
 
 On Linux, add `LHASH_ENABLE_POSIX_TEST_BACKEND=ON` to run the common engine and
 CLI against the portable POSIX file backend in cloud tests. This option defaults

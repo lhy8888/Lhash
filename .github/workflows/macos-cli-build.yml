@@ -1,4 +1,4 @@
-name: macOS ARM64 CLI Build
+name: macOS ARM64 App and CLI Build
 
 on:
   workflow_call:
@@ -17,6 +17,7 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 30
     env:
+      LHASH_UI_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/mac-cli/gui
       OPENSSL_ROOT_DIR: ${{ github.workspace }}/build/openssl-install
 
     steps:
@@ -44,19 +45,22 @@ jobs:
 
       - name: Configure
         run: |
+          set -o pipefail
           cmake -S . -B build/macos-cli \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_BUILD_TYPE=Release \
             -DLHASH_BUILD_M2_SMOKE=OFF \
             -DLHASH_BUILD_RUNTIME_TESTS=ON \
             -DLHASH_BUILD_CLI=ON \
+            -DLHASH_BUILD_MACOS_GUI=ON \
             -DLHASH_ENABLE_OPENSSL_VENDOR=ON \
-            -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR"
+            -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" 2>&1 | tee artifacts/mac-cli/configure.log
 
       - name: Build
         run: |
+          set -o pipefail
           cmake --build build/macos-cli \
-            --config Release --parallel
+            --config Release --parallel 2>&1 | tee artifacts/mac-cli/build.log
 
       - name: Locate executable
         run: |
@@ -66,10 +70,10 @@ jobs:
           fi
           echo "CLI_PATH=${CLI_PATH}" >> "$GITHUB_ENV"
 
-      - name: Test engine and all CLI algorithms
+      - name: Test engine, CLI algorithms and native AppKit interface
         run: |
           set -o pipefail
-          mkdir -p artifacts/mac-cli
+          mkdir -p "$LHASH_UI_ARTIFACT_DIR"
           ctest --test-dir build/macos-cli --output-on-failure --no-tests=error -V \
             --output-junit "$GITHUB_WORKSPACE/artifacts/mac-cli/runtime.xml" 2>&1 | tee artifacts/mac-cli/runtime-tests.log
           "$CLI_PATH" --list-algorithms
@@ -143,4 +147,25 @@ jobs:
         with:
           name: LHash-macos-arm64-cli
           path: dist/LHash-macos-arm64-cli-*.tar.gz
+          if-no-files-found: error
+
+      - name: Sign and package macOS application
+        run: |
+          APP_PATH="$GITHUB_WORKSPACE/build/macos-cli/bin/LHash.app"
+          codesign --force --sign - --timestamp=none "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          python3 tools/package_macos_app.py --app "$APP_PATH" --output dist
+          verification_root=$(mktemp -d)
+          trap 'rm -rf "$verification_root"' EXIT
+          package="LHash-macos-arm64-app-${GITHUB_SHA:0:7}"
+          ditto -x -k "dist/$package.zip" "$verification_root"
+          (cd "$verification_root/$package" && shasum -a 256 -c SHA256.txt)
+          test -x "$verification_root/$package/LHash.app/Contents/MacOS/LHash"
+          codesign --verify --deep --strict --verbose=2 "$verification_root/$package/LHash.app"
+
+      - name: Upload application artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: LHash-macos-arm64-app
+          path: dist/LHash-macos-arm64-app-*.zip
           if-no-files-found: error

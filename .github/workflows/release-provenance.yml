@@ -33,7 +33,7 @@ jobs:
           git check-ref-format "refs/tags/$RELEASE_TAG"
           gh release download --repo "$GITHUB_REPOSITORY" --dir release-assets \
             --pattern 'LHash-windows-*.zip' --pattern 'LHash-macos-arm64-cli-*.tar.gz' \
-            --pattern RELEASE_MANIFEST.txt \
+            --pattern 'LHash-macos-arm64-app-*.zip' --pattern RELEASE_MANIFEST.txt \
             --pattern SHA256SUMS.txt --pattern LHash-release.cyclonedx.json -- "$RELEASE_TAG"
           python3 tools/release_assets.py verify --directory release-assets
           (cd release-assets && sha256sum --check SHA256SUMS.txt)
@@ -44,6 +44,7 @@ jobs:
           subject-path: |
             release-assets/LHash-windows-*.zip
             release-assets/LHash-macos-arm64-cli-*.tar.gz
+            release-assets/LHash-macos-arm64-app-*.zip
             release-assets/RELEASE_MANIFEST.txt
             release-assets/SHA256SUMS.txt
             release-assets/LHash-release.cyclonedx.json

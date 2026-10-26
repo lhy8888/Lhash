@@ -5,8 +5,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import plistlib
 import re
 import shutil
+import stat
+import struct
 import sys
 import tarfile
 import zipfile
@@ -48,6 +51,116 @@ def matches_bundle(name, architecture, commit):
 def matches_macos_bundle(name, commit):
     match = re.fullmatch(r"LHash-macos-arm64-cli-([0-9a-f]{7,40})\.tar\.gz", name)
     return match is not None and commit.startswith(match[1])
+
+
+def matches_macos_app_bundle(name, commit):
+    match = re.fullmatch(r"LHash-macos-arm64-app-([0-9a-f]{7,40})\.zip", name)
+    return match is not None and commit.startswith(match[1])
+
+
+def validate_macos_app_binary(data):
+    # A thin arm64 MH_EXECUTE image; reject Intel/universal or a deployment
+    # target newer than the macOS 14 contract before publishing the bundle.
+    if len(data) < 32:
+        raise ValueError("Truncated macOS application executable")
+    magic, cpu, _, kind, count, size, _, _ = struct.unpack_from("<8I", data)
+    if magic != 0xfeedfacf or cpu != 0x100000c or kind != 2:
+        raise ValueError("The macOS application must be a native arm64 executable")
+    if size > len(data) - 32 or count > size // 8:
+        raise ValueError("Invalid Mach-O load commands")
+    cursor, deployment = 32, None
+    for _ in range(count):
+        if cursor + 8 > 32 + size:
+            raise ValueError("Truncated Mach-O load command")
+        command, length = struct.unpack_from("<2I", data, cursor)
+        if length < 8 or cursor + length > 32 + size:
+            raise ValueError("Invalid Mach-O load command length")
+        if command == 0x32:  # LC_BUILD_VERSION
+            if length < 24:
+                raise ValueError("Truncated Mach-O deployment metadata")
+            platform, minimum = struct.unpack_from("<2I", data, cursor + 8)
+            if platform != 1 or deployment is not None:
+                raise ValueError("Invalid Mach-O macOS platform metadata")
+            deployment = minimum
+        cursor += length
+    if cursor != 32 + size or deployment is None or deployment > (14 << 16):
+        raise ValueError("The application does not support the macOS 14 deployment target")
+
+
+def validate_macos_app_plist(data, version):
+    info = plistlib.loads(data)
+    required = {"CFBundleExecutable": "LHash", "CFBundlePackageType": "APPL",
+                "CFBundleShortVersionString": version.removesuffix(".0"),
+                "CFBundleVersion": version, "LSMinimumSystemVersion": "14.0"}
+    if not isinstance(info, dict) or any(info.get(key) != value for key, value in required.items()):
+        raise ValueError("macOS application plist disagrees with the release")
+
+
+def validate_macos_app_bundle(bundle, commit, version):
+    root = bundle.name.removesuffix(".zip") + "/"
+    executable_name = "LHash.app/Contents/MacOS/LHash"
+    required = {executable_name, "LHash.app/Contents/Info.plist",
+                "LHash.app/Contents/_CodeSignature/CodeResources",
+                "BUILD_INFO.txt", "README.txt", "SHA256.txt",
+                "LICENSES/LICENSE", "LICENSES/LICENSE-OPENSSL-EXCEPTION.md",
+                "LICENSES/OpenSSL.txt", "LICENSES/BLAKE3-CC0.txt",
+                "LICENSES/BLAKE3-Apache-2.0.txt", "LICENSES/xxHash.txt", "LICENSES/CRC32C.txt"}
+    with zipfile.ZipFile(bundle) as archive:
+        files, seen, total_size = {}, set(), 0
+        for entry in archive.infolist():
+            name = entry.filename
+            parts = name.rstrip("/").split("/")
+            mode = entry.external_attr >> 16
+            if (not name.startswith(root) or "\\" in name or
+                    any(part in ("", ".", "..") for part in parts) or
+                    name in seen or entry.flag_bits & 1 or
+                    stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR)):
+                raise ValueError("Unsafe, duplicate or unsupported macOS application package member")
+            seen.add(name)
+            if entry.is_dir():
+                continue
+            relative = name[len(root):]
+            if (relative not in required and not relative.startswith("LHash.app/Contents/")):
+                raise ValueError("Unexpected macOS application package member")
+            total_size += entry.file_size
+            if len(seen) > 1000 or entry.file_size > 128 * 1024 * 1024 or total_size > 256 * 1024 * 1024:
+                raise ValueError("Oversized macOS application package")
+            if relative != executable_name and entry.file_size > 8 * 1024 * 1024:
+                raise ValueError("Oversized macOS application resource")
+            if relative in ("BUILD_INFO.txt", "SHA256.txt", "LHash.app/Contents/Info.plist") and entry.file_size > 65536:
+                raise ValueError("Oversized macOS application metadata")
+            files[relative] = entry
+        if not required.issubset(files):
+            raise ValueError("Missing executable, signature, licenses or metadata in macOS application package")
+        info = fields(archive.read(files["BUILD_INFO.txt"]).decode("ascii"))
+        expected = {"commit": commit, "application_version": version,
+                    "platform": "macos-arm64", "artifact_type": "app",
+                    "openssl_vendor_version": OPENSSL_VERSION,
+                    "packaged_executable": executable_name,
+                    "signature_status": "AdHoc", "notarized": "false"}
+        if any(info.get(key) != value for key, value in expected.items()):
+            raise ValueError("macOS application build metadata disagrees with the release")
+        if not (files[executable_name].external_attr >> 16) & 0o111:
+            raise ValueError("macOS application executable has no execute permission")
+        binary = archive.read(files[executable_name])
+        validate_macos_app_binary(binary)
+        validate_macos_app_plist(archive.read(files["LHash.app/Contents/Info.plist"]), version)
+        if info.get("sha256") != hashlib.sha256(binary).hexdigest():
+            raise ValueError("macOS application executable checksum mismatch")
+        checksums = archive.read(files["SHA256.txt"]).decode("utf-8")
+        checked = set()
+        for line in checksums.splitlines():
+            digest, separator, name = line.partition("  ")
+            if (not separator or not re.fullmatch(r"[0-9a-f]{64}", digest) or
+                    name not in files or name == "SHA256.txt" or name in checked):
+                raise ValueError("Invalid macOS application checksum entry")
+            with archive.open(files[name]) as stream:
+                actual = hashlib.file_digest(stream, "sha256").hexdigest()
+            if actual != digest:
+                raise ValueError("macOS application file checksum mismatch")
+            checked.add(name)
+        if checked != set(files) - {"SHA256.txt"}:
+            raise ValueError("macOS application checksums must cover every bundled file")
 
 
 def validate_macos_bundle(bundle, commit, version):
@@ -113,10 +226,16 @@ def stage(assets, output, repo, env):
     macos_bundle = candidates[0]
     validate_macos_bundle(macos_bundle, commit, version)
     shutil.copyfile(macos_bundle, output / macos_bundle.name)
+    candidates = list(assets.glob("LHash-macos-arm64-app-*.zip"))
+    if len(candidates) != 1 or not matches_macos_app_bundle(candidates[0].name, commit):
+        raise ValueError("Expected exactly the macOS ARM64 application bundle from this commit")
+    macos_app_bundle = candidates[0]
+    validate_macos_app_bundle(macos_app_bundle, commit, version)
+    shutil.copyfile(macos_app_bundle, output / macos_app_bundle.name)
     metadata = {
         "release_mode": "tagged-release" if env["GITHUB_REF"].startswith("refs/tags/v") else "rehearsal",
         "ref": env["GITHUB_REF"], "commit": commit, "short_sha": commit[:7],
-        "lhash_application_version": version, "frontend": "windows-mfc,macos-cli",
+        "lhash_application_version": version, "frontend": "windows-mfc,macos-cli,macos-appkit",
         "openssl_vendor_version": OPENSSL_VERSION,
         "openssl_vendor_source": f"third_party/openssl/{OPENSSL_VERSION}",
         "openssl_vendor_static": "true", "openssl_vendor_policy": "pristine-upstream-source",
@@ -124,6 +243,7 @@ def stage(assets, output, repo, env):
         "workflow_run": f"{env['GITHUB_SERVER_URL']}/{env['GITHUB_REPOSITORY']}/actions/runs/{env['GITHUB_RUN_ID']}",
         "windows_x64": bundles["x64"], "windows_arm64": bundles["arm64"],
         "macos_arm64": macos_bundle.name,
+        "macos_arm64_app": macos_app_bundle.name,
     }
     if any("\n" in value or "\r" in value for value in metadata.values()):
         raise ValueError("Release metadata must not contain line breaks")
@@ -155,6 +275,15 @@ def release_names(directory):
         names.append(name)
     if {p.name for p in directory.glob("LHash-macos-*.tar.gz")} != macos_names:
         raise ValueError("macOS release archives do not match the manifest")
+    app_names = set()
+    if "macos_arm64_app" in info:
+        name = info["macos_arm64_app"]
+        if not matches_macos_app_bundle(name, commit):
+            raise ValueError("Invalid macOS ARM64 application asset name")
+        app_names.add(name)
+        names.append(name)
+    if {p.name for p in directory.glob("LHash-macos-*.zip")} != app_names:
+        raise ValueError("macOS application archives do not match the manifest")
     return [*names, MANIFEST, SBOM]
 
 

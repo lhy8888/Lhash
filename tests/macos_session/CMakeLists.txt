@@ -1,0 +1,4 @@
+add_executable(lhash_macos_session_tests session_tests.cpp)
+target_link_libraries(lhash_macos_session_tests PRIVATE lhash_macos_session)
+add_test(NAME lhash_macos_session_tests COMMAND lhash_macos_session_tests)
+set_tests_properties(lhash_macos_session_tests PROPERTIES TIMEOUT 180)

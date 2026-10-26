@@ -15,6 +15,7 @@ This directory contains the project documents for the maintained LHash release l
 
 - [Core build entry point](CORE_BUILD.md)
 - [macOS core support criteria](MACOS_CORE_SUPPORT.md)
+- [macOS desktop app: download, usage and build](MACOS_GUI.md)
 
 ## Other reference material
 

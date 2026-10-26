@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 
 FAILURE_PATTERN = re.compile(
-    r"(?:fatal error|error [A-Z]+\d+|CMake Error|\bFAIL[: ]|\bFAILED\b|runtime error:|"
+    r"(?:fatal error|error [A-Z]+\d+|:\d+:\d+: error:|CMake Error|\bFAIL[: ]|\bFAILED\b|runtime error:|"
     r"ERROR: AddressSanitizer|\bException\b|\bTimeout\b|\bTimed out\b|\bAborted\b|"
     r"\bcannot\b|not found|ParserError|AssertionError|Traceback)", re.I
 )
