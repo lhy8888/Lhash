@@ -1,13 +1,12 @@
 #include "stdafx.h"
 
 #include <vector>
-#include <deque>
 #include <shlobj.h>
 #include <atlbase.h>
 #include <utility>
 
 #include "Common/HashInputPolicy.h"
-#include "WinCommon/WinHandleGuard.h"
+#include "WinCommon/HashFolderScanner.h"
 #include "WinCommon/WindowsStrings.h"
 
 #include "FilesHashInputController.h"
@@ -57,6 +56,11 @@ FilesHashInputController::FilesHashInputController()
 {
 }
 
+FilesHashInputController::~FilesHashInputController()
+{
+	if (m_folderScan) m_folderScan->Cancel();
+}
+
 FilesHashInputController::PendingLoadGuard::PendingLoadGuard(FilesHashInputController& owner)
 	: m_owner(owner)
 {
@@ -76,6 +80,7 @@ void FilesHashInputController::CancelPendingLoad(bool closeAfterLoading)
 {
 	if (!m_loadingFiles) return;
 	m_cancelLoad = true;
+	if (m_folderScan) m_folderScan->Cancel();
 	m_closeAfterLoading = m_closeAfterLoading || closeAfterLoading;
 }
 
@@ -144,6 +149,16 @@ FileLoadOutcome FilesHashInputController::LoadFolderDialogSelection(LPCTSTR fold
 		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	}
 
+	// A cancelled scan may still be inside a filesystem driver. Keep at most
+	// one such worker; other input modes and application close remain available.
+	if (m_folderScan && !m_folderScan->HasExited())
+	{
+		AfxMessageBox(WindowsStrings::GetCurrentUILang() == 2052
+			? _T("上一次文件夹扫描仍在停止，请稍后重试，或直接选择文件。")
+			: _T("The previous folder scan is still stopping. Retry later or select files directly."), MB_OK | MB_ICONINFORMATION);
+		return MakeFileLoadOutcome(FileLoadResult::Cancelled, 0, kMaxHashFilesPerSession);
+	}
+	m_folderScan.reset();
 	PendingLoadGuard loading(*this);
 	ScopedComApartment apartment;
 	if (!apartment.initialized()) return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
@@ -176,16 +191,59 @@ FileLoadOutcome FilesHashInputController::LoadFolderDialogSelection(LPCTSTR fold
 	if (FAILED(progress->StartProgressDialog(m_parentWnd->GetSafeHwnd(), NULL, PROGDLG_MODAL | PROGDLG_NOTIME | PROGDLG_NOMINIMIZE, NULL)))
 		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	FolderScanOutcome scanOutcome;
+	bool quitRequested = false;
+	int quitCode = 0;
 	try
 	{
-		scanOutcome = AppendFolderFilesRecursive(selectedPath, progress, &m_cancelLoad);
+		m_folderScan = HashFolderScanJob::Start(selectedPath);
+		if (!m_folderScan) scanOutcome.failed = true;
+		while (m_folderScan && !m_folderScan->IsFinished())
+		{
+			if (m_cancelLoad || progress->HasUserCancelled())
+			{
+				CancelPendingLoad();
+				break;
+			}
+			HANDLE worker = m_folderScan->ThreadHandle();
+			const DWORD waited = MsgWaitForMultipleObjectsEx(1, &worker, 50, QS_ALLINPUT, MWMO_INPUTAVAILABLE);
+			if (waited == WAIT_FAILED)
+			{
+				scanOutcome.failed = true;
+				m_folderScan->Cancel();
+				break;
+			}
+			// A bounded pump keeps the owner responsive without letting a message
+			// flood prevent cancellation checks. All UI and COM calls stay here.
+			MSG message;
+			for (unsigned int count = 0; count < 64 && PeekMessage(&message, NULL, 0, 0, PM_REMOVE); ++count)
+			{
+				if (message.message == WM_QUIT)
+				{
+					quitRequested = true;
+					quitCode = static_cast<int>(message.wParam);
+					CancelPendingLoad();
+					break;
+				}
+				if (!AfxGetThread()->PreTranslateMessage(&message))
+				{
+					TranslateMessage(&message);
+					DispatchMessage(&message);
+				}
+				if (m_cancelLoad) break;
+			}
+			if (m_cancelLoad) break;
+		}
+		if (progress->HasUserCancelled()) CancelPendingLoad();
+		if (m_folderScan && !m_cancelLoad && !scanOutcome.failed && !m_folderScan->TryTake(scanOutcome))
+			scanOutcome.failed = true;
 	}
 	catch (...)
 	{
-		progress->StopProgressDialog();
-		return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
+		if (m_folderScan) m_folderScan->Cancel();
+		scanOutcome.failed = true;
 	}
 	progress->StopProgressDialog();
+	if (quitRequested) PostQuitMessage(quitCode);
 	if (scanOutcome.cancelled || m_cancelLoad) return MakeFileLoadOutcome(FileLoadResult::Cancelled, 0, kMaxHashFilesPerSession);
 	if (scanOutcome.failed) return MakeFileLoadOutcome(FileLoadResult::Error, 0, kMaxHashFilesPerSession);
 	if (scanOutcome.overFileLimit) return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession);
@@ -375,59 +433,6 @@ TStrVector FilesHashInputController::ParseFilesCmdLine(LPTSTR filesCmdLine)
 	return parameters;
 }
 
-FolderScanOutcome FilesHashInputController::AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath, IProgressDialog* progress, const bool* cancelRequested)
-{
-	FolderScanOutcome outcome;
-	if (folderPath.empty()) return outcome;
-	HashFolderScanBudget budget;
-	std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;
-	pendingFolders.emplace_back(folderPath, 0);
-	while (!pendingFolders.empty())
-	{
-		if ((cancelRequested != NULL && *cancelRequested) || (progress != NULL && progress->HasUserCancelled())) { outcome.cancelled = true; break; }
-		const auto current = pendingFolders.back();
-		pendingFolders.pop_back();
-		const tstring separator = current.first.back() == _T('\\') || current.first.back() == _T('/') ? _T("") : _T("\\");
-		const tstring prefix = current.first + separator;
-		WIN32_FIND_DATA findData = {};
-		WinHandleGuard::UniqueFindHandle find(FindFirstFile((prefix + _T("*")).c_str(), &findData));
-		if (!find.isValid())
-		{
-			// Only a genuinely empty folder is a successful empty enumeration.
-			if (GetLastError() != ERROR_FILE_NOT_FOUND) outcome.failed = true;
-			if (outcome.failed) break;
-			continue;
-		}
-		for (;;)
-		{
-			if ((cancelRequested != NULL && *cancelRequested) || (progress != NULL && progress->HasUserCancelled())) { outcome.cancelled = true; break; }
-			if (_tcscmp(findData.cFileName, _T(".")) != 0 && _tcscmp(findData.cFileName, _T("..")) != 0)
-			{
-				if (!budget.VisitEntry()) { outcome.budgetExceeded = true; break; }
-				if ((findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0)
-				{
-					if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
-					{
-						if (!budget.QueueDirectory(current.second + 1)) { outcome.budgetExceeded = true; break; }
-						pendingFolders.emplace_back(prefix + findData.cFileName, current.second + 1);
-					}
-					else
-					{
-						if (outcome.files.size() == kMaxHashFilesPerSession) { outcome.overFileLimit = true; break; }
-						outcome.files.push_back(prefix + findData.cFileName);
-					}
-				}
-			}
-			if (!FindNextFile(find.get(), &findData))
-			{
-				if (GetLastError() != ERROR_NO_MORE_FILES) outcome.failed = true;
-				break;
-			}
-		}
-		if (outcome.cancelled || outcome.failed || outcome.budgetExceeded || outcome.overFileLimit) break;
-	}
-	return outcome;
-}
 
 void FilesHashInputController::ClearFilePaths()
 {

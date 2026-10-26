@@ -22,8 +22,8 @@ job downloads the packaged application from the same run and verifies its checks
 commit/version metadata and ARM64 PE machine type before launch. Both jobs gate
 release publication. The crash debugger described below is currently x64 only.
 
-For each of two iterations it creates seven independent application processes
-(14 cases by default). The idle control has no file argument; completion uses
+For each of two iterations it creates eight independent application processes
+(16 cases by default). The idle control has no file argument; completion uses
 a private three-byte file; active cases use a private 512 MiB temporary file.
 It performs:
 
@@ -53,6 +53,13 @@ It performs:
    between files, so Cancelled=0 is legitimate; deterministic running-to-cancelled
    transitions are covered by the task-model tests. Only after these checks does
    the test close the result window and require a zero exit code.
+8. 128 distinct three-byte files supplied together. The idle summary must show
+   all 128 completed. The actual result edit control must contain each filename
+   exactly once and all 128 known SHA256 values. It then invokes the existing
+   uppercase command and verifies a complete replacement in the opposite case,
+   without missing or duplicated records. Finally Clear must empty the actual
+   edit control and reset the summary to zero. This exercises incremental
+   append, rebuild/reset and clear in the same process before normal close.
 
 Each owned process has a total 10-second budget, including discovery and waiting
 for the busy state. A timeout, inability to observe busy controls, missing main
@@ -80,6 +87,14 @@ independently of the English/Chinese labels, and saves the original summary and
 parsed counts in `ui-smoke-results.json` and failure annotations. Missing,
 truncated or unparseable summaries fail the case. These aggregate checks do not
 claim to inspect every individual row or inject a native worker exception.
+The many-results case reads `IDE_TXTMAIN=1000` with standard `WM_GETTEXTLENGTH`
+and `WM_GETTEXT`, capped at 2 MiB and 100 ms per call. It retries if a concurrent
+append fills the read buffer. It uses the existing `IDC_STATIC_UPPER=1023` and
+`IDC_CLEAN=1017` command handlers only while idle. The JSON records text/rebuild/
+clear checks and character count without including the full result text.
+Folder scanning has separate production-worker/Win32 enumeration tests in the
+full native runtime suite. This smoke does not claim to automate the Shell folder
+picker or reproduce a real network-share stall.
 This is a lifecycle smoke, not a replacement for PageHeap/ASan or deterministic
 worker-barrier tests in `tests/ui_lifecycle`. A zero exit code alone cannot prove
 the absence of every memory error. No native Windows execution is implied by

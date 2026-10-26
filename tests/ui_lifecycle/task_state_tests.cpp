@@ -31,6 +31,20 @@ static size_t Drain(FilesHashTaskUpdateQueue& queue, FilesHashTaskModel& model)
     return updates.size();
 }
 
+static void VerifyCounts(const FilesHashTaskModel& model)
+{
+    // Independent oracle used at transition boundaries; production queries are O(1).
+    std::array<size_t, FILES_HASH_TASK_NOT_RUN + 1> expected{};
+    for (const auto& row : model.Rows()) ++expected[static_cast<size_t>(row.state)];
+    size_t total = 0;
+    for (size_t state = 0; state < expected.size(); ++state) {
+        Require(model.Count(static_cast<FilesHashTaskState>(state)) == expected[state],
+                "incremental counts must match the actual retained task history");
+        total += model.Count(static_cast<FilesHashTaskState>(state));
+    }
+    Require(total == model.Rows().size(), "every row must contribute to exactly one state count");
+}
+
 static void DuplicatePathsAndTerminalBoundaries()
 {
     FilesHashTaskUpdateQueue queue;
@@ -44,6 +58,7 @@ static void DuplicatePathsAndTerminalBoundaries()
     Require(model.Rows().size() == 2 && model.Rows()[0].state == FILES_HASH_TASK_FAILED &&
             model.Rows()[1].state == FILES_HASH_TASK_COMPLETED, "input positions must retain their own distinct outcomes");
     Require(model.FinishSession(1, FilesHashSessionOutcome::Completed, finishText), "all terminal rows are a consistent completed request");
+    VerifyCounts(model);
 }
 
 static void ProgressCoalescingAndTerminalImmutability()
@@ -64,6 +79,7 @@ static void ProgressCoalescingAndTerminalImmutability()
     Require(model.Rows()[0].state == FILES_HASH_TASK_COMPLETED && model.Rows()[0].progress == 100,
             "consumed terminal row must not regress in a later batch");
     model.FinishSession(1, FilesHashSessionOutcome::Completed, finishText);
+    VerifyCounts(model);
 }
 
 static void CancelAndAbortOnlyUnfinishedCurrentRows()
@@ -92,6 +108,7 @@ static void CancelAndAbortOnlyUnfinishedCurrentRows()
                 "pending row must be not-run and explain cancellation versus abort");
         Require(model.Apply(Update(2, 2, FILES_HASH_TASK_COMPLETED, 100)) == -1,
                 "a late event must not resurrect a finalized session");
+        VerifyCounts(model);
     }
 }
 
@@ -115,6 +132,7 @@ static void PreparationCancellationAndInconsistentCompletion()
     Require(!model.FinishSession(2, FilesHashSessionOutcome::Cancelled, finishText), "old-session finalization must leave the current session intact");
     Require(model.Rows().back().state == FILES_HASH_TASK_PENDING, "current task must remain unchanged by stale updates");
     model.FinishSession(3, FilesHashSessionOutcome::Aborted, finishText);
+    VerifyCounts(model);
 }
 
 static void UnknownIdentityNeverCreatesRows()
@@ -133,6 +151,50 @@ static void UnknownIdentityNeverCreatesRows()
     Require(Drain(queue, model) == 2 && model.Rows()[0].state == FILES_HASH_TASK_COMPLETED,
             "queue keys must include session and model must ignore a different session");
     model.FinishSession(1, FilesHashSessionOutcome::Completed, finishText);
+    VerifyCounts(model);
+}
+
+static void IncrementalCountsWithLargeHistory()
+{
+    FilesHashTaskModel model;
+    const size_t fileCount = 8192;
+    const std::vector<sunjwbase::tstring> inputs(fileCount, _T("same-file.txt"));
+    model.BeginSession(1, inputs, _T("SHA256"), _T("pending"));
+    VerifyCounts(model);
+    for (uint32_t index = 0; index < fileCount; ++index) {
+        model.Apply(Update(1, index, FILES_HASH_TASK_RUNNING, 10));
+        model.Apply(Update(1, index, FILES_HASH_TASK_RUNNING, 65));
+        Require(model.Count(FILES_HASH_TASK_RUNNING) == 1 && model.Count(FILES_HASH_TASK_PENDING) == fileCount - index - 1,
+                "repeated progress must not double-count a running task");
+        model.Apply(Update(1, index, index % 2 == 0 ? FILES_HASH_TASK_COMPLETED : FILES_HASH_TASK_FAILED, 100));
+        Require(model.Count(FILES_HASH_TASK_RUNNING) == 0 && model.Count(FILES_HASH_TASK_COMPLETED) == (index + 2) / 2 &&
+                model.Count(FILES_HASH_TASK_FAILED) == (index + 1) / 2, "large-session counts must update per transition");
+    }
+    Require(model.FinishSession(1, FilesHashSessionOutcome::Completed, finishText), "terminal history should finish normally");
+    VerifyCounts(model);
+    model.BeginSession(2, {_T("a"), _T("b"), _T("c")}, _T("MD5"), _T("pending"));
+    model.Apply(Update(2, 0, FILES_HASH_TASK_RUNNING, 25));
+    model.Apply(Update(2, 1, FILES_HASH_TASK_COMPLETED, 100));
+    Require(model.Apply(Update(1, 0, FILES_HASH_TASK_RUNNING)) == -1, "stale-session counts must remain unchanged");
+    // 7 is unnamed but representable by this enum (valid range 0..7). An
+    // out-of-range cast such as 999 is itself undefined behavior under UBSan.
+    Require(model.Apply(Update(2, 0, static_cast<FilesHashTaskState>(FILES_HASH_TASK_NOT_RUN + 1))) == -1,
+            "unnamed states must not corrupt counters");
+    model.FinishSession(2, FilesHashSessionOutcome::Cancelled, finishText);
+    Require(model.Count(FILES_HASH_TASK_COMPLETED) == fileCount / 2 + 1 &&
+            model.Count(FILES_HASH_TASK_FAILED) == fileCount / 2 && model.Count(FILES_HASH_TASK_CANCELLED) == 1 &&
+            model.Count(FILES_HASH_TASK_NOT_RUN) == 1 && model.Count(FILES_HASH_TASK_PENDING) == 0 &&
+            model.Count(FILES_HASH_TASK_RUNNING) == 0, "cancellation must settle current counts while retaining all historical outcomes");
+    VerifyCounts(model);
+    model.Clear();
+    VerifyCounts(model);
+    model.BeginSession(3, {}, _T("SHA256"), _T("pending"));
+    Require(model.FinishSession(3, FilesHashSessionOutcome::Completed, finishText), "empty session must have no unfinished counter");
+    model.BeginSession(4, {_T("retry")}, _T("SHA256"), _T("pending"));
+    Require(model.Count(FILES_HASH_TASK_PENDING) == 1 && model.Count(FILES_HASH_TASK_COMPLETED) == 0,
+            "clear and restart must not reuse historical counters");
+    model.FinishSession(4, FilesHashSessionOutcome::Aborted, finishText);
+    VerifyCounts(model);
 }
 
 int main()
@@ -143,7 +205,8 @@ int main()
         CancelAndAbortOnlyUnfinishedCurrentRows();
         PreparationCancellationAndInconsistentCompletion();
         UnknownIdentityNeverCreatesRows();
-        std::cout << "PASS: task identity, duplicate inputs, terminal queue/state monotonicity, cancellation/abort, history and stale events\n";
+        IncrementalCountsWithLargeHistory();
+        std::cout << "PASS: task identity, duplicate inputs, terminal queue/state monotonicity, cancellation/abort, history, stale events and incremental counts\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "FAIL: " << error.what() << '\n';

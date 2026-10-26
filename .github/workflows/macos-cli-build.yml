@@ -29,11 +29,17 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/openssl-install
-          key: openssl-3.5.9-macos-cli-arm64-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh') }}
+          key: openssl-3.5.9-macos-cli-arm64-optimized-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py') }}
 
       - name: Build static OpenSSL 3.5.9
         if: steps.openssl-cache.outputs.cache-hit != 'true'
-        run: bash tools/build_openssl_vendor_posix.sh "$OPENSSL_ROOT_DIR"
+        run: bash tools/build_openssl_vendor_posix.sh "$OPENSSL_ROOT_DIR" optimized
+
+      - name: Verify optimized OpenSSL configuration
+        run: |
+          python3 tools/verify_openssl_install.py "$OPENSSL_ROOT_DIR" optimized darwin64-arm64-cc
+          mkdir -p artifacts/mac-cli
+          cp "$OPENSSL_ROOT_DIR/lhash-openssl-build-config.json" artifacts/mac-cli/
 
       - name: Configure
         run: |
@@ -112,6 +118,8 @@ jobs:
           artifact_type=cli
           openssl_enabled=true
           openssl_vendor_version=3.5.9
+          openssl_vendor_assembly_mode=optimized
+          openssl_vendor_target=darwin64-arm64-cc
           notarized=false
           source_executable=$CLI_PATH
           packaged_executable=lhash

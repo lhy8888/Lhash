@@ -16,6 +16,7 @@ static inline int RunMfcHashThread(void *param)
 	{
 		std::unique_ptr<HashThreadLaunchContext> launchContext(static_cast<HashThreadLaunchContext*>(param));
 		ThreadData *thrdData = launchContext->threadData;
+		HashWorkerTimingScope timing(thrdData->executionState.timing);
 		HashExecutionContext executionContext = CreateThreadDataHashExecutionContext(*thrdData);
 		const HashRequest& request = launchContext->request;
 		return RunHashRequest(&executionContext, request);

@@ -89,10 +89,15 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-optimized-v3-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
+
+      - name: Prepare OpenSSL x64 assembler
+        uses: ./.github/actions/setup-openssl-assembler
+        with:
+          platform: x64
 
       - name: Build OpenSSL vendor x64 once
         shell: pwsh
@@ -102,12 +107,16 @@ jobs:
           $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-x64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-x64'
 
-          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform x64 -AssemblyMode optimized -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath (Join-Path $artifactRoot 'build-openssl-vendor-x64-console.log')
 
           if ($LASTEXITCODE -ne 0) {
             throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-x64.log for details."
           }
+
+      - name: Verify optimized OpenSSL x64 build metadata
+        shell: pwsh
+        run: python tools/verify_openssl_install.py artifacts/openssl-vendor-x64 optimized VC-WIN64A
 
       - name: Annotate OpenSSL build failures
         if: failure()
@@ -203,6 +212,17 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
 
+      - name: Test optimized x64 library with optional CPU features masked
+        if: matrix.platform == 'x64'
+        run: |
+          $env:OPENSSL_ia32cap = '0:0'
+          try {
+            ctest --test-dir build/openssl-provider -C Release -V --output-on-failure --no-tests=error --output-junit "$pwd/artifacts/provider-baseline.xml" 2>&1 | Tee-Object artifacts/provider-baseline.log
+            if ($LASTEXITCODE -ne 0) { throw 'Baseline CPU dispatch tests failed.' }
+          } finally {
+            Remove-Item Env:OPENSSL_ia32cap
+          }
+
       - name: Run full core and platform regressions with OpenSSL
         run: |
           $artifactRoot = Join-Path $pwd 'artifacts'
@@ -230,6 +250,71 @@ jobs:
           path: |
             artifacts/*.log
             artifacts/*.xml
+          if-no-files-found: error
+
+  portable-openssl-tests:
+    name: Portable OpenSSL (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            os: windows-2022
+            generator: Visual Studio 17 2022
+            target: VC-WIN64A
+          - platform: ARM64
+            os: windows-11-arm
+            generator: Visual Studio 18 2026
+            target: VC-WIN64-ARM
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Verify pristine OpenSSL vendor source
+        run: pwsh -NoProfile -File tools/verify_openssl_vendor_pristine.ps1 -Version 3.5.9
+
+      - name: Cache portable dependency separately from release artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: artifacts/openssl-portable
+          key: ${{ runner.os }}-openssl-vendor-${{ matrix.platform }}-portable-v3-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', 'NativeOpenSslVendor.targets') }}
+
+      - name: Build and verify portable OpenSSL
+        run: |
+          $root = Join-Path $pwd 'artifacts/openssl-portable'
+          pwsh -NoProfile -File trunk/build_openssl_vendor.ps1 -Platform '${{ matrix.platform }}' -AssemblyMode portable -InstallRoot $root
+          if ($LASTEXITCODE -ne 0) { throw 'Portable OpenSSL build failed.' }
+          python tools/verify_openssl_install.py $root portable '${{ matrix.target }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Portable OpenSSL configuration mismatch.' }
+
+      - name: Run full native core regressions against portable OpenSSL
+        run: |
+          $root = Join-Path $pwd 'artifacts/openssl-portable'
+          New-Item -ItemType Directory -Force artifacts/portable-runtime | Out-Null
+          cmake -S . -B build/portable-runtime -G '${{ matrix.generator }}' -A '${{ matrix.platform }}' -DLHASH_BUILD_M2_SMOKE=ON -DLHASH_BUILD_RUNTIME_TESTS=ON -DLHASH_BUILD_CLI=OFF -DLHASH_ENABLE_OPENSSL_VENDOR=ON "-DOPENSSL_ROOT_DIR=$root" 2>&1 | Tee-Object artifacts/portable-runtime/configure.log
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime configure failed.' }
+          cmake --build build/portable-runtime --config Release --parallel 2>&1 | Tee-Object artifacts/portable-runtime/build.log
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime build failed.' }
+          ctest --test-dir build/portable-runtime -C Release -V --output-on-failure --no-tests=error --output-junit "$pwd/artifacts/portable-runtime/tests.xml" 2>&1 | Tee-Object artifacts/portable-runtime/tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Portable runtime tests failed.' }
+
+      - name: Annotate portable test failures
+        if: failure()
+        run: python tools/report_ci_failures.py artifacts
+
+      - name: Upload portable regression diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: LHash-portable-openssl-${{ matrix.platform }}
+          path: |
+            artifacts/portable-runtime/**
+            artifacts/openssl-portable/*.log
+            artifacts/openssl-portable/lhash-openssl-build-config.json
           if-no-files-found: error
 
   build-windows-x64:
@@ -406,6 +491,8 @@ jobs:
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
           openssl_vendor_version=3.5.9
+          openssl_vendor_assembly_mode=optimized
+          openssl_vendor_target=VC-WIN64A
           openssl_vendor_source=third_party/openssl/3.5.9
           openssl_vendor_static=true
           openssl_vendor_policy=pristine-upstream-source
@@ -464,10 +551,15 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-arm64
-          key: ${{ runner.os }}-openssl-vendor-arm64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-arm64-optimized-v3-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', 'NativeOpenSslVendor.targets') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
+
+      - name: Prepare OpenSSL arm64 assembler
+        uses: ./.github/actions/setup-openssl-assembler
+        with:
+          platform: ARM64
 
       - name: Build OpenSSL vendor arm64 once
         shell: pwsh
@@ -477,12 +569,16 @@ jobs:
           $openSslLogPath = Join-Path $artifactRoot 'build-openssl-vendor-arm64.log'
           $openSslRoot = Join-Path $artifactRoot 'openssl-vendor-arm64'
 
-          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform ARM64 -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
+          & pwsh -NoProfile -File 'trunk/build_openssl_vendor.ps1' -Platform ARM64 -AssemblyMode optimized -InstallRoot $openSslRoot -CombinedLogPath $openSslLogPath 2>&1 |
             Tee-Object -FilePath (Join-Path $artifactRoot 'build-openssl-vendor-arm64-console.log')
 
           if ($LASTEXITCODE -ne 0) {
             throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-arm64.log for details."
           }
+
+      - name: Verify optimized OpenSSL arm64 build metadata
+        shell: pwsh
+        run: python tools/verify_openssl_install.py artifacts/openssl-vendor-arm64 optimized VC-WIN64-CLANGASM-ARM
 
       - name: Annotate OpenSSL build failures
         if: failure()
@@ -633,6 +729,8 @@ jobs:
           signature_subject=$signatureSubject
           signature_thumbprint=$signatureThumbprint
           openssl_vendor_version=3.5.9
+          openssl_vendor_assembly_mode=optimized
+          openssl_vendor_target=VC-WIN64-CLANGASM-ARM
           openssl_vendor_source=third_party/openssl/3.5.9
           openssl_vendor_static=true
           openssl_vendor_policy=pristine-upstream-source
@@ -711,6 +809,7 @@ jobs:
           }
           if ($metadata.commit -ne $env:GITHUB_SHA -or $metadata.sha256 -ne $expectedHash -or
               $metadata.openssl_vendor_version -ne '3.5.9' -or $metadata.openssl_vendor_static -ne 'true' -or
+              $metadata.openssl_vendor_assembly_mode -ne 'optimized' -or $metadata.openssl_vendor_target -ne 'VC-WIN64-CLANGASM-ARM' -or
               $metadata.application_version -ne [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath).FileVersion) {
             throw 'Packaged executable metadata does not match this commit, version and static OpenSSL build.'
           }
@@ -755,6 +854,7 @@ jobs:
       - build-windows-x64
       - build-windows-arm64
       - native-runtime-tests
+      - portable-openssl-tests
       - windows-arm64-gui
       - delivery-regression
     runs-on: ubuntu-latest

@@ -51,15 +51,23 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-x64
-          key: ${{ runner.os }}-openssl-vendor-x64-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-x64-optimized-v3-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', 'NativeOpenSslVendor.targets') }}
+
+      - name: Prepare native analysis assembler
+        if: matrix.language == 'cpp'
+        uses: ./.github/actions/setup-openssl-assembler
+        with:
+          platform: x64
 
       - name: Validate or build the static dependency before native tracing
         if: matrix.language == 'cpp'
         shell: pwsh
         run: |
           $openSslRoot = Join-Path $pwd 'artifacts/openssl-vendor-x64'
-          & pwsh -NoProfile -File trunk/build_openssl_vendor.ps1 -Platform x64 -InstallRoot $openSslRoot
+          & pwsh -NoProfile -File trunk/build_openssl_vendor.ps1 -Platform x64 -AssemblyMode optimized -InstallRoot $openSslRoot
           if ($LASTEXITCODE -ne 0) { throw 'OpenSSL build failed.' }
+          python tools/verify_openssl_install.py $openSslRoot optimized VC-WIN64A
+          if ($LASTEXITCODE -ne 0) { throw 'OpenSSL assembly metadata mismatch.' }
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3

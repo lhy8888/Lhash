@@ -129,7 +129,7 @@ void FilesHashLifecycleController::StartHashing(LPCTSTR clearButtonText, LPCTSTR
 	try
 	{
 		m_hashProgressController->BeginTaskSession(m_sessionId, GetThreadDataInputFiles(*m_threadData), BuildEnabledAlgorithmSummary(*m_threadData));
-		m_hashProgressController->StartTiming(secondText);
+		m_hashProgressController->StartTiming(secondText, &m_threadData->executionState.timing);
 	}
 	catch (...)
 	{

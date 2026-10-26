@@ -3,6 +3,7 @@
 
 #include "Common/HashTypes.h"
 #include "Adapters/MfcBridge/HashWorkerSessionState.h"
+#include "Adapters/MfcBridge/HashWorkerTiming.h"
 class HashProgressSink;
 
 struct ThreadDataInputState
@@ -17,6 +18,7 @@ struct ThreadDataExecutionState
 	HashCancellationState cancellation;
 	HashJobState jobState;
 	HashWorkerSessionState workerSession;
+	HashWorkerTiming timing;
 };
 
 struct ThreadData

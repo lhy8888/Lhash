@@ -855,9 +855,10 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("Q246009", windowsComm, StringComparison.Ordinal);
         Assert.DoesNotContain("BYTE *pver = new BYTE[cchver];", windowsComm, StringComparison.Ordinal);
 
+        string folderScanner = RepositoryTestContext.ReadTextFile(@"trunk\source\WinCommon\HashFolderScanner.h");
         Assert.Contains("enum class FileLoadResult", inputHeader, StringComparison.Ordinal);
         Assert.Contains("struct FileLoadOutcome", inputHeader, StringComparison.Ordinal);
-        Assert.Contains("struct FolderScanOutcome", inputHeader, StringComparison.Ordinal);
+        Assert.Contains("struct FolderScanOutcome", folderScanner, StringComparison.Ordinal);
         Assert.Contains("static size_t GetCopyDataCommandCharLimit();", inputHeader, StringComparison.Ordinal);
         Assert.Contains("dlgOpen.GetOFN().nMaxFile = static_cast<DWORD>(nameBuffer.size());", inputController, StringComparison.Ordinal);
         Assert.Contains("charCount > GetCopyDataCommandCharLimit()", inputController, StringComparison.Ordinal);
@@ -867,10 +868,13 @@ public sealed class HashContractUnitTests
         Assert.Contains("return sawTerminator;", inputController, StringComparison.Ordinal);
         Assert.Contains("parameters.size() > kMaxHashFilesPerSession", inputController, StringComparison.Ordinal);
         Assert.Contains("return MakeFileLoadOutcome(FileLoadResult::RejectedOverLimit, 0, kMaxHashFilesPerSession, true, parameters.size());", inputController, StringComparison.Ordinal);
-        Assert.Contains("budget.VisitEntry()", inputController, StringComparison.Ordinal);
+        Assert.Contains("budget.VisitEntry()", folderScanner, StringComparison.Ordinal);
         Assert.Contains("progress->HasUserCancelled()", inputController, StringComparison.Ordinal);
+        Assert.Contains("HashFolderScanJob::Start", inputController, StringComparison.Ordinal);
+        Assert.Contains("MsgWaitForMultipleObjectsEx", inputController, StringComparison.Ordinal);
+        Assert.Contains("cancelRequested.load(std::memory_order_relaxed)", folderScanner, StringComparison.Ordinal);
         Assert.Contains("FileLoadResult::EnumerationLimit", inputController, StringComparison.Ordinal);
-        Assert.Contains("std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", inputController, StringComparison.Ordinal);
+        Assert.Contains("std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", folderScanner, StringComparison.Ordinal);
 
         Assert.Contains("bool DispatchFileLoadOutcome(", messageControllerHeader, StringComparison.Ordinal);
         Assert.Contains("BOOL HandleCopyData(", messageControllerHeader, StringComparison.Ordinal);

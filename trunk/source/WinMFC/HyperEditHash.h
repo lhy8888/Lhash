@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HyperEdit.h"
+#include "ResultTextBuffer.h"
 
 // CHyperEditHash
 #define CHyperEditHash_BASE_CLASS CHyperEdit
@@ -16,10 +17,9 @@ public:
 	void ClearTextBuffer();
 	CString GetTextBuffer() const;
 
-	inline void ShowTextBuffer()
-	{ ShowTextBufferEx(FALSE); }
-	void ShowTextBufferScrollEnd()
-	{ ShowTextBufferEx(TRUE); }
+	using TextUpdate = BasicResultTextBuffer<TCHAR>::Update;
+	TextUpdate TakeTextUpdate();
+	void ShowTextUpdate(const TextUpdate& update, BOOL scrollToEnd);
 
 	void AppendTextToBuffer(LPCTSTR pszText);
 	void AppendLinkToBuffer(LPCTSTR pszText);
@@ -44,17 +44,15 @@ protected:
 	virtual inline void EnableRedraw(BOOL bEnable)
 	{ SendMessage(WM_SETREDRAW, bEnable, 0); }
 
-	virtual void ShowTextBufferEx(BOOL bScrollToEnd);
+	virtual CString GetDisplayTextRange(int start, int length) const;
 
 	virtual void BuildOffsetList(int iCharStart, int iCharFinish);
 
 	virtual HINSTANCE OpenHyperlink(const CString& hyperlink, CPoint point);
 
 private:
-	CString m_cstrTextBuffer;
-
-	CRITICAL_SECTION m_csLinkOffsets;
-	OFFSETS m_bufferLinkOffsets;
+	BasicResultTextBuffer<TCHAR> m_textBuffer; // Guarded by the shared main mutex.
+	BasicResultTextView<TCHAR> m_displayText; // UI thread only, also used when painting links.
 
 	CString m_cstrLastHyperlink;
 	CPoint m_cpLastScreenPoint;

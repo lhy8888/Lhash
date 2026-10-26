@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(LHashWindowsInputPolicyTests LANGUAGES CXX)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_package(Threads REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(INPUT_PROBES copydata_probe dialog_limit_probe registry_command_probe folder_walk_probe windows_utility_probe version_api_probe input_token_probe)
+set(INPUT_PROBES copydata_probe dialog_limit_probe registry_command_probe folder_walk_probe folder_scan_ui_probe windows_utility_probe version_api_probe input_token_probe)
 set(INPUT_PROBE_SOURCES "")
 foreach(probe IN LISTS INPUT_PROBES)
     list(APPEND INPUT_PROBE_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/${probe}.cpp")
@@ -11,8 +12,10 @@ endforeach()
 get_filename_component(LHASH_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 add_custom_command(OUTPUT ${INPUT_PROBE_SOURCES}
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/generate_probes.py" "${CMAKE_CURRENT_BINARY_DIR}"
-    DEPENDS generate_probes.py
+    DEPENDS generate_probes.py folder_scan_ui_probe.cpp.in
         "${LHASH_REPO_ROOT}/trunk/source/WinMFC/FilesHashInputController.cpp"
+        "${LHASH_REPO_ROOT}/trunk/source/WinMFC/FilesHashDlg.cpp"
+        "${LHASH_REPO_ROOT}/trunk/source/WinCommon/HashFolderScanner.h"
         "${LHASH_REPO_ROOT}/trunk/source/WinMFC/WindowsUtils.cpp"
         "${LHASH_REPO_ROOT}/trunk/source/WinCommon/WindowsComm.cpp"
         "${LHASH_REPO_ROOT}/trunk/source/Adapters/MfcBridge/ThreadDataInputAccess.h"
@@ -36,3 +39,26 @@ foreach(probe IN LISTS INPUT_PROBES)
     add_test(NAME "windows_input_${probe}" COMMAND ${probe})
     set_tests_properties("windows_input_${probe}" PROPERTIES TIMEOUT 30)
 endforeach()
+
+add_executable(lhash_background_result_tests background_result_tests.cpp)
+target_include_directories(lhash_background_result_tests PRIVATE "${LHASH_REPO_ROOT}/trunk/source")
+target_link_libraries(lhash_background_result_tests PRIVATE Threads::Threads)
+if(MSVC)
+    target_compile_options(lhash_background_result_tests PRIVATE /utf-8 /W4)
+elseif(LHASH_INPUT_SANITIZERS)
+    target_compile_options(lhash_background_result_tests PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(lhash_background_result_tests PRIVATE -fsanitize=address,undefined)
+endif()
+add_test(NAME lhash_background_result_tests COMMAND lhash_background_result_tests)
+set_tests_properties(lhash_background_result_tests PROPERTIES TIMEOUT 30)
+
+if(WIN32)
+    add_executable(lhash_folder_scan_native_tests folder_scan_native_tests.cpp)
+    target_include_directories(lhash_folder_scan_native_tests PRIVATE "${LHASH_REPO_ROOT}/trunk/source")
+    target_compile_definitions(lhash_folder_scan_native_tests PRIVATE UNICODE _UNICODE NOMINMAX WINVER=0x0600 _WIN32_WINNT=0x0600)
+    if(MSVC)
+        target_compile_options(lhash_folder_scan_native_tests PRIVATE /utf-8 /W4)
+    endif()
+    add_test(NAME lhash_folder_scan_native_tests COMMAND lhash_folder_scan_native_tests)
+    set_tests_properties(lhash_folder_scan_native_tests PROPERTIES TIMEOUT 45)
+endif()

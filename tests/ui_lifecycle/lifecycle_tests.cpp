@@ -74,15 +74,23 @@ static void TestComApartmentClientLifetime()
 static void TestLaunchFailureAndRetry()
 {
     ThreadData state;
+    const auto start = HashWorkerTiming::TimePoint{} + std::chrono::seconds(100);
+    state.executionState.timing.Start(start);
+    state.executionState.timing.Finish(start + std::chrono::seconds(2));
     bool busyBeforeLaunch = false;
     Require(!LaunchThreadDataWorker(state, [&] {
         busyBeforeLaunch = IsThreadDataWorking(state);
         return false; // injected _beginthreadex failure
     }), "failed launch must report failure");
     Require(busyBeforeLaunch && !IsThreadDataWorking(state), "launch failure must release a pre-acquired lease");
+    Require(state.executionState.timing.ElapsedSeconds() == 0, "failed launch must not keep the preceding duration");
     Require(!LaunchThreadDataWorker(state, []() -> bool { throw std::bad_alloc(); }), "launch exception must report failure");
     Require(!IsThreadDataWorking(state), "launch exception must restore idle state");
     Require(LaunchThreadDataWorker(state, [] { return true; }), "retry after failure must succeed");
+    state.executionState.timing.Start(start);
+    state.executionState.timing.Finish(start + std::chrono::seconds(3));
+    Require(!LaunchThreadDataWorker(state, [] { return true; }), "duplicate launch must preserve the active worker");
+    Require(state.executionState.timing.ElapsedSeconds() == 3, "rejected duplicate launch must not reset active worker timing");
     Require(CollectThreadDataWorker(state, [] { return true; }), "joined retry must release ownership");
     Require(!IsThreadDataWorking(state), "joined retry must be idle");
 }

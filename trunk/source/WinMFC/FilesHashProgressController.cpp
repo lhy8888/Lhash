@@ -12,7 +12,8 @@ FilesHashProgressController::FilesHashProgressController()
 	m_progressCtrl(NULL),
 	m_taskListCtrl(NULL),
 	m_statusOverviewCtrl(NULL),
-	m_calculateTime(0.0f),
+	m_calculateTime(0.0),
+	m_workerTiming(NULL),
 	m_timerId(0),
 	m_bAdvTaskbar(FALSE),
 	m_taskbarList(NULL)
@@ -33,10 +34,12 @@ void FilesHashProgressController::Initialize(CDialog* parentWnd, CProgressCtrl* 
 {
 	m_parentWnd = parentWnd;
 	m_progressCtrl = progressCtrl;
-	m_calculateTime = 0.0f;
+	m_calculateTime = 0.0;
+	m_workerTiming = NULL;
 	m_timerId = 0;
 	m_secondText.Empty();
 	m_speedText.Empty();
+	m_summaryText.Empty();
 	m_taskModel.Clear();
 	CloseTaskbarList();
 }
@@ -45,6 +48,7 @@ void FilesHashProgressController::AttachTaskControls(CListCtrl* taskListCtrl, CS
 {
 	m_taskListCtrl = taskListCtrl;
 	m_statusOverviewCtrl = statusOverviewCtrl;
+	m_summaryText.Empty();
 }
 
 void FilesHashProgressController::InitializeTaskList(LPCTSTR fileColumnText, LPCTSTR algorithmColumnText, LPCTSTR statusColumnText, LPCTSTR progressColumnText)
@@ -107,8 +111,11 @@ void FilesHashProgressController::ApplyTaskUpdate(const FilesHashTaskUpdate& tas
 {
 	bool ensureVisible = false;
 	int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
-	RefreshTaskRow(rowIndex, ensureVisible);
-	UpdateSummaryText();
+	if (rowIndex >= 0)
+	{
+		RefreshTaskRow(rowIndex, ensureVisible);
+		UpdateSummaryText();
+	}
 }
 
 void FilesHashProgressController::ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates)
@@ -118,33 +125,26 @@ void FilesHashProgressController::ApplyTaskUpdates(const std::vector<FilesHashTa
 		return;
 	}
 
-	bool canBatchRedraw = m_taskListCtrl != NULL && ::IsWindow(m_taskListCtrl->GetSafeHwnd());
-	if (canBatchRedraw)
-	{
-		m_taskListCtrl->SetRedraw(FALSE);
-	}
-
+	int firstChangedRow = -1;
+	int lastChangedRow = -1;
 	int ensureVisibleRowIndex = -1;
-	for (size_t updateIndex = 0; updateIndex < taskUpdates.size(); ++updateIndex)
+	for (const auto& taskUpdate : taskUpdates)
 	{
-		const FilesHashTaskUpdate& taskUpdate = taskUpdates[updateIndex];
 		bool ensureVisible = false;
-		int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
-		RefreshTaskRow(rowIndex, false);
-		if (ensureVisible)
-		{
-			ensureVisibleRowIndex = rowIndex;
-		}
+		const int rowIndex = ApplyTaskUpdateToState(taskUpdate, &ensureVisible);
+		if (rowIndex < 0) continue;
+		firstChangedRow = firstChangedRow < 0 ? rowIndex : min(firstChangedRow, rowIndex);
+		lastChangedRow = max(lastChangedRow, rowIndex);
+		if (ensureVisible) ensureVisibleRowIndex = rowIndex;
 	}
 
-	if (canBatchRedraw)
+	if (firstChangedRow < 0) return;
+	if (m_taskListCtrl != NULL && ::IsWindow(m_taskListCtrl->GetSafeHwnd()))
 	{
-		m_taskListCtrl->SetRedraw(TRUE);
-		if (ensureVisibleRowIndex >= 0)
-		{
-			m_taskListCtrl->EnsureVisible(ensureVisibleRowIndex, FALSE);
-		}
-		m_taskListCtrl->Invalidate(FALSE);
+		// Owner-data count changes only at Begin/Clear. Invalidate the changed
+		// range once rather than the entire retained history for every batch.
+		m_taskListCtrl->RedrawItems(firstChangedRow, lastChangedRow);
+		if (ensureVisibleRowIndex >= 0) m_taskListCtrl->EnsureVisible(ensureVisibleRowIndex, FALSE);
 	}
 
 	UpdateSummaryText();
@@ -181,9 +181,10 @@ void FilesHashProgressController::PrepareAdvTaskbar()
 #endif
 }
 
-void FilesHashProgressController::StartTiming(LPCTSTR secondText)
+void FilesHashProgressController::StartTiming(LPCTSTR secondText, const HashWorkerTiming* timing)
 {
-	m_calculateTime = 0.0f;
+	m_workerTiming = timing;
+	m_calculateTime = timing != NULL ? timing->ElapsedSeconds() : 0.0;
 	m_secondText = secondText;
 	m_speedText.Empty();
 	if (m_parentWnd != NULL)
@@ -200,7 +201,8 @@ void FilesHashProgressController::StartTiming(LPCTSTR secondText)
 
 void FilesHashProgressController::AdvanceTimeTick(LPCTSTR secondText)
 {
-	m_calculateTime += 0.1f;
+	if (m_workerTiming == NULL) return;
+	m_calculateTime = m_workerTiming->ElapsedSeconds();
 	m_secondText = secondText;
 	UpdateSummaryText();
 }
@@ -213,7 +215,9 @@ void FilesHashProgressController::FinishTiming(ULONGLONG totalSize)
 		m_timerId = 0;
 	}
 
-	if (m_calculateTime > 0.1f)
+	if (m_workerTiming != NULL) m_calculateTime = m_workerTiming->ElapsedSeconds();
+	m_workerTiming = NULL;
+	if (m_calculateTime > 0.0)
 	{
 		double speed = totalSize / m_calculateTime;
 		CString speedStr;
@@ -248,7 +252,8 @@ void FilesHashProgressController::ResetAfterStop()
 		m_timerId = 0;
 	}
 
-	m_calculateTime = 0.0f;
+	m_calculateTime = 0.0;
+	m_workerTiming = NULL;
 	m_speedText.Empty();
 	UpdateSummaryText();
 }
@@ -321,7 +326,6 @@ void FilesHashProgressController::RefreshTaskRow(int rowIndex, bool ensureVisibl
 		return;
 	}
 
-	m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 	m_taskListCtrl->RedrawItems(rowIndex, rowIndex);
 	if (ensureVisible)
 	{
@@ -347,38 +351,6 @@ void FilesHashProgressController::UpdateSummaryText()
 		return;
 	}
 
-	int completedCount = 0;
-	int failedCount = 0;
-	int runningCount = 0;
-	int cancelledCount = 0;
-	int abortedCount = 0;
-	int notRunCount = 0;
-	for (size_t index = 0; index < m_taskModel.Rows().size(); ++index)
-	{
-		switch (m_taskModel.Rows()[index].state)
-		{
-		case FILES_HASH_TASK_COMPLETED:
-			++completedCount;
-			break;
-		case FILES_HASH_TASK_FAILED:
-			++failedCount;
-			break;
-		case FILES_HASH_TASK_RUNNING:
-			++runningCount;
-			break;
-		case FILES_HASH_TASK_CANCELLED:
-			++cancelledCount;
-			break;
-		case FILES_HASH_TASK_ABORTED:
-			++abortedCount;
-			break;
-		case FILES_HASH_TASK_NOT_RUN:
-			++notRunCount;
-			break;
-		default:
-			break;
-		}
-	}
 
 	CString elapsedText;
 	elapsedText.Format(_T("%d %s"), static_cast<int>(m_calculateTime), static_cast<LPCTSTR>(m_secondText.IsEmpty() ? CString(GetStringByKey(SECOND_STRING)) : m_secondText));
@@ -388,22 +360,26 @@ void FilesHashProgressController::UpdateSummaryText()
 		GetStringByKey(MAINDLG_STATUS_TOTAL),
 		static_cast<int>(m_taskModel.Rows().size()),
 		GetStringByKey(MAINDLG_STATUS_DONE),
-		completedCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_COMPLETED)),
 		GetStringByKey(MAINDLG_STATUS_FAILED),
-		failedCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_FAILED)),
 		GetStringByKey(MAINDLG_STATUS_RUNNING),
-		runningCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_RUNNING)),
 		GetStringByKey(MAINDLG_STATUS_CANCELLED),
-		cancelledCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_CANCELLED)),
 		GetStringByKey(MAINDLG_STATUS_ABORTED),
-		abortedCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_ABORTED)),
 		GetStringByKey(MAINDLG_STATUS_NOT_RUN),
-		notRunCount,
+		static_cast<int>(m_taskModel.Count(FILES_HASH_TASK_NOT_RUN)),
 		GetStringByKey(MAINDLG_STATUS_TIME),
 		static_cast<LPCTSTR>(elapsedText),
 		GetStringByKey(MAINDLG_STATUS_SPEED),
 		static_cast<LPCTSTR>(m_speedText.IsEmpty() ? CString(_T("-")) : m_speedText));
-	m_statusOverviewCtrl->SetWindowText(summary);
+	if (summary != m_summaryText)
+	{
+		m_statusOverviewCtrl->SetWindowText(summary);
+		m_summaryText = summary;
+	}
 }
 
 CString FilesHashProgressController::BuildProgressText(int progress)

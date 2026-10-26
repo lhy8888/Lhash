@@ -7,16 +7,29 @@ param(
 
     [string]$CombinedLogPath = '',
 
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+
+    [ValidateSet('optimized', 'portable')]
+    [string]$AssemblyMode = 'optimized'
 )
 
 $ErrorActionPreference = 'Stop'
+$AssemblyMode = $AssemblyMode.ToLowerInvariant()
 
 $openSslVersion = 'openssl-3.5.9'
 $openSslSourceDirectory = 'third_party\openssl\3.5.9'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $repoRoot $openSslSourceDirectory
+$configValidator = Join-Path $repoRoot 'tools\verify_openssl_build_config.pl'
+$configureTarget = if ($Platform -eq 'x64') {
+    'VC-WIN64A'
+} elseif ($AssemblyMode -eq 'optimized') {
+    # Upstream supports MSVC C with clang-cl assembling Windows ARM64 sources.
+    'VC-WIN64-CLANGASM-ARM'
+} else {
+    'VC-WIN64-ARM'
+}
 if (-not (Test-Path $sourceRoot)) {
     throw "OpenSSL vendor source for $openSslVersion was not found at $sourceRoot."
 }
@@ -56,7 +69,7 @@ foreach ($requiredVendorFile in $requiredVendorFiles) {
 }
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
-    $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}\{1}-{2}" -f $openSslVersion, $Platform, $Configuration)
+    $InstallRoot = Join-Path $repoRoot ("artifacts\openssl\{0}\{1}-{2}-{3}" -f $openSslVersion, $Platform, $Configuration, $AssemblyMode)
 }
 
 if ([string]::IsNullOrWhiteSpace($CombinedLogPath)) {
@@ -105,13 +118,29 @@ $pdbPath = Join-Path $InstallRoot 'lib\ossl_static.pdb'
 $configurationHeaderPath = Join-Path $InstallRoot 'include\openssl\configuration.h'
 $versionHeaderPath = Join-Path $InstallRoot 'include\openssl\opensslv.h'
 $buildIdentityPath = Join-Path $InstallRoot 'lhash-openssl-build-identity.txt'
+$buildConfigPath = Join-Path $InstallRoot 'lhash-openssl-build-config.json'
 $buildScriptHash = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash
-$expectedBuildIdentity = '{0}|{1}|{2}|{3}' -f $openSslVersion, $Platform, $Configuration, $buildScriptHash
+$validatorHash = (Get-FileHash -LiteralPath $configValidator -Algorithm SHA256).Hash
+$expectedBuildIdentity = '{0}|{1}|{2}|{3}|{4}|{5}|{6}' -f $openSslVersion, $Platform, $Configuration, $AssemblyMode, $configureTarget, $buildScriptHash, $validatorHash
 $hasMatchingBuildIdentity = (Test-Path $buildIdentityPath -PathType Leaf) -and
     (([string](Get-Content -LiteralPath $buildIdentityPath -Raw)).Trim() -eq $expectedBuildIdentity)
+$hasMatchingBuildConfig = $false
+if (Test-Path $buildConfigPath -PathType Leaf) {
+    try {
+        $savedConfig = Get-Content -LiteralPath $buildConfigPath -Raw | ConvertFrom-Json
+        $wantAssembly = $AssemblyMode -eq 'optimized'
+        $hasMatchingBuildConfig = $savedConfig.schema_version -eq 1 -and
+            $savedConfig.openssl_version -eq '3.5.9' -and
+            $savedConfig.assembly_mode -eq $AssemblyMode -and $savedConfig.target -eq $configureTarget -and
+            ($savedConfig.sha256_asm -is [bool]) -and ($savedConfig.sha512_asm -is [bool]) -and
+            ($savedConfig.assembly_disabled -is [bool]) -and
+            $savedConfig.sha256_asm -eq $wantAssembly -and $savedConfig.sha512_asm -eq $wantAssembly -and
+            $savedConfig.assembly_disabled -eq (-not $wantAssembly)
+    } catch { $hasMatchingBuildConfig = $false }
+}
 
 # Older versioned libraries and incomplete installs must never satisfy this cache.
-if ($hasMatchingBuildIdentity -and
+if ($hasMatchingBuildIdentity -and $hasMatchingBuildConfig -and
     (Test-Path $libPath -PathType Leaf) -and (Test-Path $pdbPath -PathType Leaf) -and
     (Test-Path $configurationHeaderPath -PathType Leaf) -and (Test-Path $versionHeaderPath -PathType Leaf)) {
     Reset-CombinedOpenSslLog -Path $CombinedLogPath
@@ -156,7 +185,6 @@ if (-not (Test-Path $vcvarsall)) {
     throw "Unable to locate vcvarsall.bat at $vcvarsall."
 }
 
-$configureTarget = ''
 $vcvarsArch = ''
 # PROCESSOR_ARCHITEW6432 identifies the native host even when PowerShell runs
 # under emulation. It is absent in a native process (including Windows ARM64).
@@ -166,18 +194,53 @@ if ([string]::IsNullOrWhiteSpace($hostArchitecture)) {
 }
 switch ($Platform) {
     'x64' {
-        $configureTarget = 'VC-WIN64A'
         $vcvarsArch = 'amd64'
     }
     'ARM64' {
-        $configureTarget = 'VC-WIN64-ARM'
         $vcvarsArch = if ($hostArchitecture -eq 'ARM64') { 'arm64' } else { 'amd64_arm64' }
     }
     default {
         throw "Unsupported OpenSSL vendor platform: $Platform"
     }
 }
-Write-Host "OpenSSL toolchain: host=$hostArchitecture target=$Platform vcvarsall=$vcvarsArch"
+Write-Host "OpenSSL toolchain: host=$hostArchitecture target=$configureTarget vcvarsall=$vcvarsArch assembly_mode=$AssemblyMode"
+
+# Do not silently fall back to C when an assembler is missing. portable must be
+# requested explicitly, and has a different install/build identity.
+$assemblerDirectory = ''
+if ($AssemblyMode -eq 'optimized') {
+    $assemblerName = if ($Platform -eq 'x64') { 'nasm.exe' } else { 'clang-cl.exe' }
+    $assembler = Get-Command $assemblerName -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    $assemblerPath = if ($null -ne $assembler) { $assembler.Source } else { '' }
+    if ([string]::IsNullOrWhiteSpace($assemblerPath)) {
+        $candidates = if ($Platform -eq 'x64') {
+            @((Join-Path $env:ProgramFiles 'NASM\nasm.exe'),
+              (Join-Path ${env:ProgramFiles(x86)} 'NASM\nasm.exe'))
+        } else {
+            @((Join-Path $vsInstallDir 'VC\Tools\Llvm\x64\bin\clang-cl.exe'),
+              (Join-Path $vsInstallDir 'VC\Tools\Llvm\bin\clang-cl.exe'),
+              (Join-Path $env:ProgramFiles 'LLVM\bin\clang-cl.exe'))
+        }
+        foreach ($candidate in $candidates) {
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) { $assemblerPath = $candidate; break }
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($assemblerPath)) {
+        throw "Optimized $Platform OpenSSL requires $assemblerName on PATH (NASM for x64; LLVM clang-cl for ARM64). Install it, or explicitly select -AssemblyMode portable."
+    }
+    $assemblerDirectory = Split-Path -Parent $assemblerPath
+    if ($Platform -eq 'x64') {
+        $assemblerVersion = & $assemblerPath -v
+        if ($LASTEXITCODE -ne 0 -or $assemblerVersion -notmatch 'NASM version (\d+)\.(\d+)' -or
+            ([int]$Matches[1] -lt 2) -or ([int]$Matches[1] -eq 2 -and [int]$Matches[2] -lt 9)) {
+            throw 'Optimized x64 OpenSSL requires NASM 2.09 or later.'
+        }
+    } else {
+        $assemblerVersion = & $assemblerPath --version
+        if ($LASTEXITCODE -ne 0) { throw "Unable to run $assemblerPath." }
+    }
+    Write-Host "OpenSSL assembler: $assemblerPath ($($assemblerVersion -join ' '))"
+}
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("lhash-openssl-build-{0}-{1}" -f $Platform.ToLowerInvariant(), [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
@@ -208,6 +271,7 @@ function Invoke-OpenSslBuildStep {
         '@echo off',
         "call `"$vcvarsall`" $vcvarsArch",
         'if errorlevel 1 exit /b %errorlevel%',
+        $(if ($assemblerDirectory) { "set `"PATH=$assemblerDirectory;%PATH%`"" } else { '' }),
         "cd /d `"$WorkingDirectory`"",
         'if errorlevel 1 exit /b %errorlevel%',
         $CommandLine,
@@ -280,6 +344,9 @@ try {
     if (Test-Path $buildIdentityPath) {
         Remove-Item -LiteralPath $buildIdentityPath -Force
     }
+    if (Test-Path $buildConfigPath) {
+        Remove-Item -LiteralPath $buildConfigPath -Force
+    }
     Copy-Item -Path $sourceRoot -Destination $buildRoot -Recurse -Force
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
     Reset-CombinedOpenSslLog -Path $CombinedLogPath
@@ -289,6 +356,8 @@ try {
     $configureLog = Join-Path $InstallRoot 'configure.log'
     $generatedLog = Join-Path $InstallRoot 'build-generated.log'
     $buildLog = Join-Path $InstallRoot 'build-libs.log'
+    $configCheckLog = Join-Path $InstallRoot 'verify-build-config.log'
+    $generatedConfigPath = Join-Path $buildRoot 'lhash-openssl-build-config.json'
 
     $configureCommand = @(
         'perl',
@@ -299,12 +368,14 @@ try {
         'no-tests',
         'no-module',
         'no-ssl',
-        'no-asm',
-        "--prefix=$InstallRoot",
-        "--openssldir=$openSslDir"
+        $(if ($AssemblyMode -eq 'portable') { 'no-asm' }),
+        "`"--prefix=$InstallRoot`"",
+        "`"--openssldir=$openSslDir`""
     ) -join ' '
 
     Invoke-OpenSslBuildStep -StepName 'configure' -WorkingDirectory $buildRoot -CommandLine $configureCommand -LogPath $configureLog -CombinedLogPath $CombinedLogPath
+    $verifyCommand = 'perl "{0}" {1} {2} > "{3}"' -f $configValidator, $AssemblyMode, $configureTarget, $generatedConfigPath
+    Invoke-OpenSslBuildStep -StepName 'configuration verification' -WorkingDirectory $buildRoot -CommandLine $verifyCommand -LogPath $configCheckLog -CombinedLogPath $CombinedLogPath
     Invoke-OpenSslBuildStep -StepName 'generated-header build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_generated' -LogPath $generatedLog -CombinedLogPath $CombinedLogPath
     Invoke-OpenSslBuildStep -StepName 'libcrypto build' -WorkingDirectory $buildRoot -CommandLine 'nmake /NOLOGO build_libs' -LogPath $buildLog -CombinedLogPath $CombinedLogPath
 
@@ -335,6 +406,8 @@ try {
         throw "OpenSSL vendor build did not produce the public version header $versionHeaderPath."
     }
 
+    Copy-Item -LiteralPath $generatedConfigPath -Destination $buildConfigPath -Force
+    Get-Content -LiteralPath $buildConfigPath | Add-Content -Path $CombinedLogPath -Encoding UTF8
     Set-Content -LiteralPath $buildIdentityPath -Value $expectedBuildIdentity -Encoding UTF8
     Add-Content -Path $CombinedLogPath -Value "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot" -Encoding UTF8
     Write-Host "OPENSSL_VENDOR_INSTALL_ROOT=$InstallRoot"

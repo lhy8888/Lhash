@@ -33,4 +33,7 @@ public:
 private:
 	sunjwbase::OsMutex* m_mainMutex;
 	CHyperEditHash* m_mainEdit;
+	bool m_refreshing = false;
+	bool m_refreshAgain = false;
+	BOOL m_deferredScrollToEnd = TRUE;
 };

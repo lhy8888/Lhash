@@ -94,6 +94,7 @@ protected:
 	inline BOOL IsWhiteSpaceOrEOF(const CString& csBuff, int iIndex) const;
 
 	virtual void BuildOffsetList(int iCharStart, int iCharFinish);
+	virtual CString GetDisplayTextRange(int start, int length) const;
 
 	virtual HINSTANCE OpenHyperlink(const CString& hyperlink, CPoint point);
 

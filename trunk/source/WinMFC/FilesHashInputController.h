@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shellapi.h>
+#include <memory>
 
 #include "afxwin.h"
 
@@ -37,21 +38,13 @@ struct FileLoadOutcome
 	size_t requestedCount;
 };
 
-struct FolderScanOutcome
-{
-	TStrVector files;
-	bool overFileLimit = false;
-	bool budgetExceeded = false;
-	bool cancelled = false;
-	bool failed = false;
-};
-
-struct IProgressDialog;
+class HashFolderScanJob;
 
 class FilesHashInputController
 {
 public:
 	FilesHashInputController();
+	~FilesHashInputController();
 
 	void Initialize(ThreadData* threadData, CWnd* parentWnd);
 	bool IsLoadingFiles() const { return m_loadingFiles; }
@@ -77,7 +70,6 @@ private:
 	static bool CopyDraggedPath(HDROP hDropInfo, UINT index, sunjwbase::tstring& tstrPath);
 	static bool IsValidCopyDataString(const COPYDATASTRUCT* pCopyDataStruct);
 	static TStrVector ParseFilesCmdLine(LPTSTR filesCmdLine);
-	static FolderScanOutcome AppendFolderFilesRecursive(const sunjwbase::tstring& folderPath, IProgressDialog* progress, const bool* cancelRequested = NULL);
 
 	void ClearFilePaths();
 
@@ -86,4 +78,6 @@ private:
 	bool m_loadingFiles;
 	bool m_cancelLoad;
 	bool m_closeAfterLoading;
+	// Retain a cancelled but still blocked job to prevent unbounded workers.
+	std::shared_ptr<HashFolderScanJob> m_folderScan;
 };

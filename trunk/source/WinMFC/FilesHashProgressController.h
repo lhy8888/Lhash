@@ -7,6 +7,7 @@
 
 #include "Common/HashTypes.h"
 #include "FilesHashTaskModel.h"
+#include "Adapters/MfcBridge/HashWorkerTiming.h"
 
 struct ITaskbarList3;
 class CListCtrl;
@@ -27,7 +28,7 @@ public:
 	void ApplyTaskUpdate(const FilesHashTaskUpdate& taskUpdate);
 	void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);
 	void PrepareAdvTaskbar();
-	void StartTiming(LPCTSTR secondText);
+	void StartTiming(LPCTSTR secondText, const HashWorkerTiming* timing);
 	void AdvanceTimeTick(LPCTSTR secondText);
 	void FinishTiming(ULONGLONG totalSize);
 	void ResetAfterStop();
@@ -50,11 +51,13 @@ private:
 	CProgressCtrl* m_progressCtrl;
 	CListCtrl* m_taskListCtrl;
 	CStatic* m_statusOverviewCtrl;
-	float m_calculateTime;
+	double m_calculateTime;
+	const HashWorkerTiming* m_workerTiming;
 	UINT_PTR m_timerId;
 	BOOL m_bAdvTaskbar;
 	ITaskbarList3* m_taskbarList;
 	CString m_secondText;
 	CString m_speedText;
+	CString m_summaryText;
 	FilesHashTaskModel m_taskModel;
 };

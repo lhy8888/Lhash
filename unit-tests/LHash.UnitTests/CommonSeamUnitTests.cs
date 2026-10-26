@@ -399,8 +399,8 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("void ApplyTaskUpdates(const std::vector<FilesHashTaskUpdate>& taskUpdates);", progressControllerHeader, StringComparison.Ordinal);
         Assert.Contains("int GetTaskRowCount() const;", progressControllerHeader, StringComparison.Ordinal);
         Assert.Contains("bool TryGetTaskRowDisplayText(int rowIndex, int subItem, CString *displayText) const;", progressControllerHeader, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->RedrawItems(firstChangedRow, lastChangedRow);", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->SetRedraw(FALSE)", progressController, StringComparison.Ordinal);
         Assert.Contains("int ensureVisibleRowIndex = -1;", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->RedrawItems(rowIndex, rowIndex);", progressController, StringComparison.Ordinal);

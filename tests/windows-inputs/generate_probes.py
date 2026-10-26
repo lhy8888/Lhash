@@ -128,6 +128,8 @@ struct CFileDialog {
 struct FilesHashInputController {
     ThreadData* m_threadData;
     CWnd* m_parentWnd;
+    struct ScanStub { void Cancel() {} };
+    ScanStub* m_folderScan=nullptr;
     bool m_loadingFiles=false, m_cancelLoad=false, m_closeAfterLoading=false;
     struct PendingLoadGuard { FilesHashInputController& m_owner; explicit PendingLoadGuard(FilesHashInputController&); ~PendingLoadGuard(); };
     void CancelPendingLoad(bool closeAfterLoading=false);
@@ -222,6 +224,7 @@ int main() {
 (out/'registry_command_probe.cpp').write_text(registry_probe, encoding='utf-8')
 
 folder_probe = common + r'''
+#include <atomic>
 #include <deque>
 #include <utility>
 #include "Common/HashInputPolicy.h"
@@ -241,7 +244,8 @@ static const HANDLE INVALID_HANDLE_VALUE=reinterpret_cast<HANDLE>(intptr_t(-1));
 static size_t directoryOpens, entryCount, closed;
 static DWORD entryAttributes, lastError;
 static bool failOpen=false;
-struct IProgressDialog { size_t calls=0, cancelAt=~size_t(0); bool HasUserCancelled() { return ++calls >= cancelAt; } };
+static std::atomic<bool> cancelled{false};
+static size_t cancelAfterEntry = ~size_t(0);
 DWORD GetLastError() { return lastError; }
 void setEntry(WIN32_FIND_DATA* d,size_t i) {
     auto name=std::string("item")+std::to_string(i);
@@ -251,46 +255,50 @@ HANDLE FindFirstFile(const char* path, WIN32_FIND_DATA* d) {
     ++directoryOpens;
     if (failOpen) { lastError=ERROR_ACCESS_DENIED; return INVALID_HANDLE_VALUE; }
     if(std::string(path)!="root\\*" || entryCount==0) { lastError=ERROR_FILE_NOT_FOUND; return INVALID_HANDLE_VALUE; }
+    if (cancelAfterEntry == 0) cancelled.store(true);
     setEntry(d,0); return new FindState{0};
 }
 int FindNextFile(HANDLE h,WIN32_FIND_DATA* d) {
-    if(++h->i>=entryCount) { lastError=ERROR_NO_MORE_FILES; return FALSE; }
+    if (++h->i == cancelAfterEntry) cancelled.store(true);
+    if(h->i>=entryCount) { lastError=ERROR_NO_MORE_FILES; return FALSE; }
     setEntry(d,h->i); return 1;
 }
 namespace WinHandleGuard { struct UniqueFindHandle {
     HANDLE h; explicit UniqueFindHandle(HANDLE v):h(v){} bool isValid()const{return h!=INVALID_HANDLE_VALUE;}
     HANDLE get()const{return h;} ~UniqueFindHandle(){if(isValid()){delete h;++closed;}}
 }; }
-struct FilesHashInputController { static FolderScanOutcome AppendFolderFilesRecursive(const sunjwbase::tstring&,IProgressDialog*,const bool* = nullptr); };
+
 '''
-folder_probe += extract(inputs, 'FolderScanOutcome FilesHashInputController::AppendFolderFilesRecursive(')+'\n'
+folder_probe += extract('trunk/source/WinCommon/HashFolderScanner.h', 'inline FolderScanOutcome ScanHashFolder(')+'\n'
 folder_probe += r'''
 int main() {
     entryCount=50000; directoryOpens=closed=0; entryAttributes=FILE_ATTRIBUTE_DIRECTORY;
-    auto r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr);
+    auto r=ScanHashFolder("root",cancelled);
     assert(directoryOpens==1 && r.files.empty() && r.budgetExceeded && closed==1);
     entryAttributes=FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_REPARSE_POINT;
-    r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr);
+    r=ScanHashFolder("root",cancelled);
     assert(r.files.empty() && !r.budgetExceeded && !r.failed);
     entryCount=65537;
-    r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr);
+    r=ScanHashFolder("root",cancelled);
     assert(r.budgetExceeded);
     entryAttributes=0;
     for(size_t n : {0u,1u,8191u,8192u,8193u,10000u}) {
-        entryCount=n; r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr);
+        entryCount=n; r=ScanHashFolder("root",cancelled);
         assert(r.files.size()==std::min(n,size_t(8192))); assert(r.overFileLimit==(n>8192));
         assert(!r.failed && !r.cancelled && !r.budgetExceeded);
     }
-    IProgressDialog progress; progress.cancelAt=8; entryCount=10000;
+    cancelAfterEntry=7; entryCount=10000;
     size_t before=closed;
-    r=FilesHashInputController::AppendFolderFilesRecursive("root",&progress);
-    assert(r.cancelled && r.files.size()<8 && closed==before+1);
-    progress.calls=0; progress.cancelAt=1;
-    r=FilesHashInputController::AppendFolderFilesRecursive("root",&progress);
+    r=ScanHashFolder("root",cancelled);
+    assert(r.cancelled && r.files.size()==7 && closed==before+1);
+    before=directoryOpens;
+    r=ScanHashFolder("root",cancelled);
+    assert(r.cancelled && r.files.empty() && directoryOpens==before);
+    cancelled.store(false); cancelAfterEntry=0;
+    r=ScanHashFolder("root",cancelled);
     assert(r.cancelled && r.files.empty());
-    bool requested=true; r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr,&requested);
-    assert(r.cancelled && r.files.empty());
-    failOpen=true; r=FilesHashInputController::AppendFolderFilesRecursive("root",nullptr);
+    cancelled.store(false); cancelAfterEntry=~size_t(0);
+    failOpen=true; r=ScanHashFolder("root",cancelled);
     assert(r.failed && r.files.empty());
     HashFolderScanBudget budget;
     assert(budget.QueueDirectory(128)); assert(!budget.QueueDirectory(129));
@@ -417,4 +425,14 @@ int main(){
 }
 '''
 (out/'input_token_probe.cpp').write_text(input_token_probe, encoding='utf-8')
+folder_ui_methods = []
+for signature in ['FileLoadOutcome MakeFileLoadOutcome(',
+                  'FilesHashInputController::PendingLoadGuard::PendingLoadGuard(',
+                  'FilesHashInputController::PendingLoadGuard::~PendingLoadGuard()',
+                  'void FilesHashInputController::CancelPendingLoad(',
+                  'FileLoadOutcome FilesHashInputController::LoadFolderDialogSelection(']:
+    folder_ui_methods.append(extract(inputs, signature))
+folder_ui_methods.append(extract('trunk/source/WinMFC/FilesHashDlg.cpp', 'BOOL CFilesHashDlg::OnCommand('))
+folder_ui_template = (repo/'tests/windows-inputs/folder_scan_ui_probe.cpp.in').read_text(encoding='utf-8')
+(out/'folder_scan_ui_probe.cpp').write_text(folder_ui_template.replace('@@PRODUCTION@@', '\n'.join(folder_ui_methods)), encoding='utf-8')
 (out/'extracted_functions.json').write_text(json.dumps(manifest,indent=2)+'\n', encoding='utf-8')

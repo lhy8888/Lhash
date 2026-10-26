@@ -35,8 +35,8 @@ void FilesHashResultViewController::ShowInitialInfo(LPCTSTR initInfo)
 		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->ClearTextBuffer();
 		m_mainEdit->AppendTextToBuffer(initInfo);
-		m_mainEdit->ShowTextBuffer();
 	}
+	RefreshMainText(FALSE);
 }
 
 void FilesHashResultViewController::ClearResults(ThreadData& threadData)
@@ -50,28 +50,31 @@ void FilesHashResultViewController::ClearResults(ThreadData& threadData)
 		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->ClearTextBuffer();
 		ClearThreadDataResults(threadData);
-		m_mainEdit->ShowTextBuffer();
 	}
+	RefreshMainText(FALSE);
 }
 
 void FilesHashResultViewController::RefreshMainText(BOOL scrollToEnd /*= TRUE*/)
 {
-	if (m_mainMutex == NULL || m_mainEdit == NULL)
+	if (m_mainMutex == NULL || m_mainEdit == NULL) return;
+	// Synchronous edit notifications can reenter UI code. Finish the current
+	// batch first; only then drain another generation/append, preserving order.
+	if (m_refreshing)
 	{
+		m_refreshAgain = true;
+		m_deferredScrollToEnd = scrollToEnd;
 		return;
 	}
-
+	m_refreshing = true;
+	struct RefreshGuard { bool& active; ~RefreshGuard() { active = false; } } guard{m_refreshing};
+	do
 	{
-		std::lock_guard<OsMutex> lock(*m_mainMutex);
-		if (scrollToEnd)
-		{
-			m_mainEdit->ShowTextBufferScrollEnd();
-		}
-		else
-		{
-			m_mainEdit->ShowTextBuffer();
-		}
-	}
+		m_refreshAgain = false;
+		DeliverResultTextUpdate(*m_mainMutex,
+			[&]() { return m_mainEdit->TakeTextUpdate(); },
+			[&](const CHyperEditHash::TextUpdate& update) { m_mainEdit->ShowTextUpdate(update, scrollToEnd); });
+		if (m_refreshAgain) scrollToEnd = m_deferredScrollToEnd;
+	} while (m_refreshAgain);
 }
 
 void FilesHashResultViewController::RebuildCurrentViewPreservingScroll(FilesHashSearchController& searchController)
@@ -84,7 +87,7 @@ void FilesHashResultViewController::RebuildCurrentViewPreservingScroll(FilesHash
 	int firstVisible = m_mainEdit->GetFirstVisibleLine();
 	searchController.RebuildCurrentView();
 	RefreshMainText(FALSE);
-	m_mainEdit->LineScroll(firstVisible);
+	m_mainEdit->LineScroll(firstVisible - m_mainEdit->GetFirstVisibleLine());
 }
 
 void FilesHashResultViewController::ToggleUppercaseAndRebuild(CButton* chkUppercase, FilesHashSearchController& searchController)
@@ -108,8 +111,8 @@ void FilesHashResultViewController::AppendLineBreakAndScrollEnd()
 	{
 		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		m_mainEdit->AppendTextToBuffer(_T("\r\n"));
-		m_mainEdit->ShowTextBufferScrollEnd();
 	}
+	RefreshMainText(TRUE);
 }
 
 void FilesHashResultViewController::ShowHyperEditMenu(CWnd* ownerWnd)
@@ -235,10 +238,6 @@ CString FilesHashResultViewController::GetCurrentText() const
 	{
 		std::lock_guard<OsMutex> lock(*m_mainMutex);
 		currentText = m_mainEdit->GetTextBuffer();
-		if (currentText.IsEmpty())
-		{
-			m_mainEdit->GetWindowText(currentText);
-		}
 	}
 
 	return currentText;

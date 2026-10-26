@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "HyperEdit.h"
 #include "winuser.h"
+#include "ResultTextBuffer.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -228,114 +229,54 @@ LRESULT CHyperEdit::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 void CHyperEdit::DrawHyperlinks()
 {
-	CRect rcRect;
-	GetRect(rcRect); // Get the formatting rectangle for the edit control
+	const int textLength = GetWindowTextLength();
+	const int firstCharacter = LineIndex(GetFirstVisibleLine());
+	if (textLength == 0 || firstCharacter < 0) return;
+	int lastCharacter = LineIndex(GetFirstInvisibleLine() + 1);
+	if (lastCharacter < 0) lastCharacter = textLength;
+	BuildOffsetList(firstCharacter, lastCharacter);
+	const auto visible = VisibleResultLinkRange(m_linkOffsets, firstCharacter, lastCharacter,
+		[](const _TOKEN_OFFSET& link) { return ResultTextLink{link.iStart, link.iLength}; });
+	if (visible.first == visible.second) return;
+	const CString visibleText = GetDisplayTextRange(firstCharacter, lastCharacter - firstCharacter);
+	lastCharacter = firstCharacter + visibleText.GetLength();
 
-	CDC* pDC = GetDC(); 
-	ASSERT(pDC);
-
-	// Select our hyperlink font into the DC
-	CFont* pTemp = pDC->SelectObject(&m_oFont);
-
-	// Prepare the DC for for our output on top of existing content
-	pDC->SetBkMode(TRANSPARENT);
-	pDC->IntersectClipRect(rcRect);	// Prevent drawing outside the format rectangle
-
-	// Get the character index of the first and last visible characters
-	//int iCharStart = LOWORD(CharFromPos(CPoint(rcRect.left, rcRect.top))); // LineIndex(GetFirstVisibleLine()); // Old method!!!
-	//int iCharFinish = LOWORD(CharFromPos(CPoint(rcRect.right, rcRect.bottom)));
-
-	int iCharStart = 0;
-	int iCharFinish = 0;
-
-	int iVisibleLine = GetFirstVisibleLine();
-	iCharStart = LineIndex(iVisibleLine);
-
-	int iInvisibleLine = GetFirstInvisibleLine();
-	iCharFinish = LineIndex(iInvisibleLine);
-
-	// Build a list of hyperlink character offsets
-	BuildOffsetList(iCharStart, iCharFinish);
-
-	CString csBuff; // Holds the text for the entire control
-	GetWindowText(csBuff);
-
-	// Holds the start and finish offset of current selection (if any)
-	int iSelStart=0, iSelFinish=0;
-	GetSel(iSelStart, iSelFinish);
-
-	// Used to determine if user is hovering over a hyperlink or not
-	//CPoint ptMouse(GetMessagePos()); // Current mouse location
-	//ScreenToClient(&ptMouse);
-
-	//CString csTemp; //
-
-	// Draw our hyperlink(s)	
-	for (int i = 0; i < m_linkOffsets.size(); i++)
+	CRect rect;
+	GetRect(rect);
+	CDC* dc = GetDC();
+	if (dc == NULL) return;
+	CFont* previousFont = dc->SelectObject(&m_oFont);
+	dc->SetBkMode(TRANSPARENT);
+	dc->IntersectClipRect(rect);
+	dc->SetTextColor(m_crHyperlinkNormal);
+	int selectionStart = 0, selectionEnd = 0;
+	GetSel(selectionStart, selectionEnd);
+	for (size_t index = visible.first; index < visible.second; ++index)
 	{
-		if (m_linkOffsets[i].iStart + m_linkOffsets[i].iLength < iCharStart ||
-			m_linkOffsets[i].iStart > iCharFinish)
-			continue; // Do not draw outside
-
-		// Determine if mouse pointer is over a hyperlink
-		//csTemp = GetHyperlinkFromPoint(ptMouse);
-
-		pDC->SetTextColor(m_crHyperlinkNormal);
-
-		// If return URL is empty then were not over a hyperlink
-		//if (!csTemp.IsEmpty() &&
-		//	csTemp == csBuff.Mid(m_linkOffsets[i].iStart, m_linkOffsets[i].iLength))
-		//	pDC->SetTextColor(m_crHyperlinkHover);
-
-		// Paint each URL, email, etc character individually so we can have URL's that wrap
-		// onto different lines
-		for (int j = m_linkOffsets[i].iStart; 
-			j < (m_linkOffsets[i].iStart + m_linkOffsets[i].iLength); 
-			j++)
+		const auto& link = m_linkOffsets[index];
+		const int begin = (std::max)(link.iStart, firstCharacter);
+		const int end = (std::min)(link.iStart + link.iLength, lastCharacter);
+		for (int character = begin; character < end; ++character)
 		{
-			CPoint pt; // Coordinates for a single tokens character which is painted blue
-			TCHAR chToken = csBuff.GetAt(j); // Get a single token from URL, Email, etc
-			pt = PosFromCharEx(j); // Get the coordinates for a single token
-
-			BOOL needDraw = FALSE;
-			// Determine if there is a selection
-			if (IsSelection(iSelStart, iSelFinish))
-			{
-				// Does our current token fall within a selection range
-				if (j < iSelStart || j >= iSelFinish)
-					needDraw = TRUE;
-			}
-			else // No selection, just draw normally
-			{
-				needDraw = TRUE;
-			}
-
-			if (needDraw)
-			{
-				CString cstrToken = CString(chToken);
-
-				CSize size = pDC->GetTextExtent(cstrToken);
-				if (j == m_linkOffsets[i].iStart)
-				{
-					// 1st fix
-					pDC->FillSolidRect(pt.x - 1, pt.y, size.cx + 1, size.cy, m_crEditBk);
-				}
-				else if (j == m_linkOffsets[i].iStart + m_linkOffsets[i].iLength - 1)
-				{
-					// Last fix
-					pDC->FillSolidRect(pt.x, pt.y, size.cx + 1, size.cy, m_crEditBk);
-				}
-				else
-				{
-					pDC->FillSolidRect(pt.x, pt.y, size.cx, size.cy, m_crEditBk);
-				}
-				// Draw overtop of existing character
-				pDC->TextOut(pt.x, pt.y, cstrToken);
-			}
+			if (IsSelection(selectionStart, selectionEnd) && character >= selectionStart && character < selectionEnd) continue;
+			const CPoint point = PosFromCharEx(character);
+			const CString token(visibleText.GetAt(character - firstCharacter));
+			const CSize size = dc->GetTextExtent(token);
+			if (character == link.iStart) dc->FillSolidRect(point.x - 1, point.y, size.cx + 1, size.cy, m_crEditBk);
+			else if (character == link.iStart + link.iLength - 1) dc->FillSolidRect(point.x, point.y, size.cx + 1, size.cy, m_crEditBk);
+			else dc->FillSolidRect(point.x, point.y, size.cx, size.cy, m_crEditBk);
+			dc->TextOut(point.x, point.y, token);
 		}
 	}
+	dc->SelectObject(previousFont);
+	ReleaseDC(dc);
+}
 
-	pDC->SelectObject(pTemp); // Restore original font (Free hyperlink font)
+CString CHyperEdit::GetDisplayTextRange(int start, int length) const
+{
+	CString text;
+	GetWindowText(text);
+	return start < 0 || length <= 0 ? CString() : text.Mid(start, length);
 }
 
 //
@@ -378,22 +319,18 @@ void CHyperEdit::BuildOffsetList(int iCharStart, int iCharFinish)
 
 CPoint CHyperEdit::PosFromCharEx(UINT nChar)
 {
-	if (nChar < (UINT)GetWindowTextLength())
+	const int length = GetWindowTextLength();
+	if (length <= 0) return CPoint(0, 0);
+	if (nChar < static_cast<UINT>(length)) return PosFromChar(nChar);
+	// CEdit::PosFromChar cannot address the position after the last character.
+	CPoint point = PosFromChar(length - 1);
+	CDC* dc = GetDC();
+	if (dc != NULL)
 	{
-		return PosFromChar(nChar);
+		point.x += dc->GetTextExtent(GetDisplayTextRange(length - 1, 1)).cx;
+		ReleaseDC(dc);
 	}
-	else
-	{
-		// PosFromChar has a bug on over last char.
-		// https://social.msdn.microsoft.com/Forums/en-US/5740af95-ec61-4f6a-b46b-ad22521e4609/cedit-posfromchar-broken
-		CPoint point = PosFromChar(GetWindowTextLength() - 1); // index of last character
-		CDC *pDC = GetDC();
-		CString str;
-		GetWindowText(str);
-		str = str.Right(1); // last character in string
-		point.x += pDC->GetTextExtent(str).cx; // bump x by it's width
-		return point;
-	}
+	return point;
 }
 
 //
@@ -403,43 +340,21 @@ CPoint CHyperEdit::PosFromCharEx(UINT nChar)
 
 CString CHyperEdit::GetHyperlinkFromPoint(CPoint& pt)
 {
-	CString csBuff, csTemp;
-	GetWindowText(csBuff);
-
-	int iCharStart = 0;
-	int iCharFinish = 0;
-
-	int iVisibleLine = GetFirstVisibleLine();
-	iCharStart = LineIndex(iVisibleLine);
-
-	int iInvisibleLine = GetFirstInvisibleLine();
-	iCharFinish = LineIndex(iInvisibleLine);
-
-	size_t linkOffsetsCount = m_linkOffsets.size();
-	for (size_t i = 0; i < linkOffsetsCount; ++i)
+	const int firstCharacter = LineIndex(GetFirstVisibleLine());
+	if (firstCharacter < 0) return CString();
+	int lastCharacter = LineIndex(GetFirstInvisibleLine() + 1);
+	if (lastCharacter < 0) lastCharacter = GetWindowTextLength();
+	const auto visible = VisibleResultLinkRange(m_linkOffsets, firstCharacter, lastCharacter,
+		[](const _TOKEN_OFFSET& link) { return ResultTextLink{link.iStart, link.iLength}; });
+	for (size_t index = visible.second; index > visible.first; --index)
 	{
-		size_t lastIdx = linkOffsetsCount - 1 - i;
-		const _TOKEN_OFFSET& linkOffset = m_linkOffsets[lastIdx];
-
-		if (linkOffset.iStart + linkOffset.iLength < iCharStart ||
-			linkOffset.iStart > iCharFinish)
-			continue;
-
-		CPoint linkLTPoint = PosFromCharEx(linkOffset.iStart);
-		CPoint linkRTPoint = PosFromCharEx(linkOffset.iStart + linkOffset.iLength);
-
-		if (pt.y > linkLTPoint.y &&
-			pt.y < linkLTPoint.y + m_nLineHeight &&
-			pt.x >= linkLTPoint.x &&
-			pt.x <= linkRTPoint.x)
-		{
-			csTemp = csBuff.Mid(linkOffset.iStart, linkOffset.iLength);
-			return csTemp;
-		}
+		const auto& link = m_linkOffsets[index - 1];
+		const CPoint left = PosFromCharEx(link.iStart);
+		const CPoint right = PosFromCharEx(link.iStart + link.iLength);
+		if (pt.y > left.y && pt.y < left.y + m_nLineHeight && pt.x >= left.x && pt.x <= right.x)
+			return GetDisplayTextRange(link.iStart, link.iLength);
 	}
-
-	csTemp.Empty(); // NULL string on error
-	return csTemp; 
+	return CString();
 }
 
 //

@@ -210,8 +210,8 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("updates.swap(m_updates);", taskModel, StringComparison.Ordinal);
         Assert.Contains("m_hashProgressController.ApplyTaskUpdates(taskUpdates);", filesHashDialog, StringComparison.Ordinal);
         Assert.Contains("ON_NOTIFY(LVN_GETDISPINFO, IDC_TASK_LIST, &CFilesHashDlg::OnTaskListGetDispInfo)", filesHashDialog, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetRedraw(FALSE);", progressController, StringComparison.Ordinal);
-        Assert.Contains("m_taskListCtrl->SetRedraw(TRUE);", progressController, StringComparison.Ordinal);
+        Assert.Contains("m_taskListCtrl->RedrawItems(firstChangedRow, lastChangedRow);", progressController, StringComparison.Ordinal);
+        Assert.DoesNotContain("m_taskListCtrl->SetRedraw(FALSE)", progressController, StringComparison.Ordinal);
         Assert.Contains("m_taskListCtrl->SetItemCountEx(static_cast<int>(m_taskModel.Rows().size()), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->InsertItem(", progressController, StringComparison.Ordinal);
         Assert.DoesNotContain("m_taskListCtrl->SetItemText(", progressController, StringComparison.Ordinal);

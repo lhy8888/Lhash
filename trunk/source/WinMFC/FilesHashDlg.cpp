@@ -294,6 +294,17 @@ BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 	}
 	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
 }
+BOOL CFilesHashDlg::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	// Folder scanning pumps messages while its input transaction is open.
+	// Keep close/cancel responsive, but do not permit commands to clear results,
+	// replace inputs, change algorithms or start another task through reentrancy.
+	if (m_hashInputController.IsLoadingFiles() && LOWORD(wParam) != IDCANCEL &&
+		LOWORD(wParam) != IDOK && LOWORD(wParam) != IDC_EXIT)
+		return TRUE;
+	return CDialog::OnCommand(wParam, lParam);
+}
+
 void CFilesHashDlg::OnClose()
 {
 	if (m_hashInputController.IsLoadingFiles())

@@ -106,6 +106,30 @@ namespace LHashUiSmoke {
             return copied.ToInt64() >= 0 && copied.ToInt64() < text.Capacity - 1 ? text.ToString() : null;
         }
 
+        public static string GetResultText(IntPtr window, uint processId) {
+            if (!BelongsTo(window, processId)) return null;
+            IntPtr edit = GetDlgItem(window, 1000); // IDE_TXTMAIN
+            if (!BelongsTo(edit, processId)) return null;
+            IntPtr size;
+            if (SendMessageTimeout(edit, 0x000E, IntPtr.Zero, IntPtr.Zero, 0x23, 100, out size) == IntPtr.Zero)
+                return null; // WM_GETTEXTLENGTH
+            long length = size.ToInt64();
+            if (length < 0 || length > 2 * 1024 * 1024) return null;
+            var text = new StringBuilder((int)length + 2);
+            IntPtr copied;
+            if (SendMessageTimeoutText(edit, 0x000D, new IntPtr(text.Capacity), text, 0x23, 100, out copied) == IntPtr.Zero)
+                return null;
+            // Retry on the next poll if new output filled the buffer between
+            // length and text reads. Both are system-marshalled messages.
+            return copied.ToInt64() >= 0 && copied.ToInt64() < text.Capacity - 1 ? text.ToString() : null;
+        }
+
+        public static bool PostResultCommand(IntPtr window, uint processId, int command) {
+            if (!IsHashSessionIdle(window, processId) || (command != 1017 && command != 1023)) return false;
+            IntPtr control = GetDlgItem(window, command); // Clear / uppercase label
+            return BelongsTo(control, processId) && PostMessage(window, 0x0111, new IntPtr(command), control);
+        }
+
         public static bool PostStopCommand(IntPtr window, uint processId) {
             if (!IsHashSessionBusy(window, processId)) return false;
             IntPtr button = GetDlgItem(window, 1003); // IDC_OPEN becomes Stop while busy.
@@ -154,7 +178,9 @@ $results = [System.Collections.Generic.List[object]]::new()
 $temporaryDirectory = $null
 $suiteFailure = $null
 $executablePath = $null
-$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close', 'duplicate-completion', 'active-stop-summary')
+$caseNames = @('idle-close', 'active-close', 'escape-key', 'cancel-command', 'rapid-close', 'duplicate-completion', 'active-stop-summary', 'many-results-reset')
+$textInputPaths = @()
+$abcSha256 = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
 $reportRoot = [System.IO.Path]::GetFullPath($ReportDirectory)
 [System.IO.Directory]::CreateDirectory($reportRoot) | Out-Null
 
@@ -173,6 +199,17 @@ function ConvertFrom-StatusSummary {
         $counts[$keys[$index]] = $value
     }
     return [pscustomobject]$counts
+}
+
+function Test-CompleteResultText {
+    param([string]$Text)
+    if ([string]::IsNullOrEmpty($Text)) { return $false }
+    if ([regex]::Matches($Text, "(?i)\b$abcSha256\b").Count -ne $textInputPaths.Count) { return $false }
+    foreach ($path in $textInputPaths) {
+        $name = [System.IO.Path]::GetFileName($path)
+        if ([regex]::Matches($Text, [regex]::Escape($name)).Count -ne 1) { return $false }
+    }
+    return $true
 }
 
 function Get-OwnedCrashEvent {
@@ -252,6 +289,7 @@ function Invoke-OwnedProcessCase {
         case = $Name; iteration = $Iteration; processId = $null; busyObserved = $false
         progressObserved = $false; progressValue = $null
         idleObserved = $false; statusSummary = $null; summaryCounts = $null; summaryVerified = $false; stopPosted = $false
+        textVerified = $false; rebuildVerified = $false; clearVerified = $false; resultCharacters = 0
         actionPosted = $false; exitCode = $null; elapsedMs = 0; passed = $false
         terminatedByTest = $false; crashEvent = $null; error = $null
     }
@@ -261,7 +299,9 @@ function Invoke-OwnedProcessCase {
         $process.StartInfo.WorkingDirectory = [System.IO.Path]::GetDirectoryName($executablePath)
         $process.StartInfo.UseShellExecute = $false
         $inputCount = switch ($Name) { 'duplicate-completion' { 2 } 'active-stop-summary' { 16 } default { 1 } }
-        if ($InputPath) {
+        if ($Name -eq 'many-results-reset') {
+            foreach ($path in $textInputPaths) { $process.StartInfo.ArgumentList.Add($path) }
+        } elseif ($InputPath) {
             foreach ($unused in 1..$inputCount) { $process.StartInfo.ArgumentList.Add($InputPath) }
         }
         if (-not $process.Start()) { throw 'Process.Start returned false.' }
@@ -276,7 +316,7 @@ function Invoke-OwnedProcessCase {
         }
         if ($window -eq [IntPtr]::Zero) { throw 'No visible main dialog in this process; desktop access or application startup failed.' }
 
-        if ($Name -notin @('rapid-close', 'idle-close', 'duplicate-completion')) {
+        if ($Name -notin @('rapid-close', 'idle-close', 'duplicate-completion', 'many-results-reset')) {
             while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
                 if ($process.HasExited) { throw 'The application exited before hashing became active.' }
                 if ([LHashUiSmoke.Native]::IsHashSessionBusy($window, [uint32]$process.Id)) {
@@ -293,7 +333,7 @@ function Invoke-OwnedProcessCase {
             if (-not $record.progressObserved) { throw 'Did not observe positive hashing progress while still busy; crypto-use close coverage was not achieved.' }
         }
 
-        if ($Name -ne 'duplicate-completion') {
+        if ($Name -notin @('duplicate-completion', 'many-results-reset')) {
             $record.actionPosted = switch ($Name) {
                 'idle-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
                 'active-close' { [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id) }
@@ -306,7 +346,7 @@ function Invoke-OwnedProcessCase {
             if (-not $record.actionPosted) { throw 'PostMessage failed or the window no longer belongs to the test process.' }
             if ($Name -eq 'active-stop-summary') { $record.stopPosted = $true }
         }
-        if ($Name -in @('duplicate-completion', 'active-stop-summary')) {
+        if ($Name -in @('duplicate-completion', 'active-stop-summary', 'many-results-reset')) {
             while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
                 if ($process.HasExited) { throw 'The application exited instead of keeping the completed/stopped result window open.' }
                 $record.statusSummary = [LHashUiSmoke.Native]::GetStatusOverview($window, [uint32]$process.Id)
@@ -315,8 +355,9 @@ function Invoke-OwnedProcessCase {
                 if ($idle) { $record.idleObserved = $true }
                 $counts = $record.summaryCounts
                 if ($idle -and $null -ne $counts -and $counts.running -eq 0 -and $counts.failed -eq 0 -and $counts.aborted -eq 0) {
-                    if ($Name -eq 'duplicate-completion') {
-                        $record.summaryVerified = ($counts.total -eq 2 -and $counts.done -eq 2 -and $counts.cancelled -eq 0 -and $counts.notRun -eq 0)
+                    if ($Name -in @('duplicate-completion', 'many-results-reset')) {
+                        $expected = if ($Name -eq 'many-results-reset') { $textInputPaths.Count } else { 2 }
+                        $record.summaryVerified = ($counts.total -eq $expected -and $counts.done -eq $expected -and $counts.cancelled -eq 0 -and $counts.notRun -eq 0)
                     } else {
                         # Stop can arrive between files: zero cancelled rows is
                         # valid when completed rows and not-run rows account for all inputs.
@@ -328,6 +369,43 @@ function Invoke-OwnedProcessCase {
                 Start-Sleep -Milliseconds 10
             }
             if (-not $record.summaryVerified) { throw "The idle result summary did not match $Name within the case timeout. Last text: $($record.statusSummary)" }
+            if ($Name -eq 'many-results-reset') {
+                $expectedCasedHash = $null
+                foreach ($phase in @('complete', 'uppercase-reset', 'clear')) {
+                    if ($phase -ne 'complete') {
+                        $command = if ($phase -eq 'clear') { 1017 } else { 1023 }
+                        if (-not [LHashUiSmoke.Native]::PostResultCommand($window, [uint32]$process.Id, $command)) {
+                            throw "Could not post the owned result-view command: $phase"
+                        }
+                    }
+                    $verified = $false
+                    while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+                        if ($process.HasExited) { throw "Application exited during text phase $phase." }
+                        $text = [LHashUiSmoke.Native]::GetResultText($window, [uint32]$process.Id)
+                        if ($phase -eq 'clear') {
+                            $summary = ConvertFrom-StatusSummary -Text ([LHashUiSmoke.Native]::GetStatusOverview($window, [uint32]$process.Id))
+                            $verified = ($null -ne $text -and $text.Length -eq 0 -and $null -ne $summary -and $summary.total -eq 0)
+                        } else {
+                            $verified = Test-CompleteResultText -Text $text
+                            if ($verified -and $phase -eq 'uppercase-reset') {
+                                $verified = [regex]::Matches($text, "\b$expectedCasedHash\b").Count -eq $textInputPaths.Count
+                            }
+                        }
+                        if ($verified) { break }
+                        Start-Sleep -Milliseconds 10
+                    }
+                    if (-not $verified) { throw "Result text phase $phase was incomplete, duplicated or stale within the case timeout." }
+                    switch ($phase) {
+                        'complete' {
+                            $record.textVerified = $true
+                            $record.resultCharacters = $text.Length
+                            $expectedCasedHash = if ($text.Contains($abcSha256)) { $abcSha256.ToUpperInvariant() } else { $abcSha256 }
+                        }
+                        'uppercase-reset' { $record.rebuildVerified = $true }
+                        'clear' { $record.clearVerified = $true }
+                    }
+                }
+            }
             # The window must survive normal completion/Stop. Close it only
             # after checking its user-visible aggregate state, then check exit.
             $record.actionPosted = [LHashUiSmoke.Native]::PostClose($window, [uint32]$process.Id)
@@ -397,6 +475,11 @@ try {
     finally { $stream.Dispose() }
     $smallInputPath = Join-Path $temporaryDirectory 'duplicate-small-file.bin'
     [System.IO.File]::WriteAllBytes($smallInputPath, [byte[]](0x61, 0x62, 0x63))
+    $textInputPaths = @(foreach ($index in 0..127) {
+        $path = Join-Path $temporaryDirectory ('text-result-{0:D4}.bin' -f $index)
+        [System.IO.File]::WriteAllBytes($path, [byte[]](0x61, 0x62, 0x63))
+        $path
+    })
 
     foreach ($iteration in 1..$Iterations) {
         foreach ($name in $caseNames) {
@@ -457,6 +540,10 @@ if ($suiteFailure) {
                 statusSummary = $failedCase.statusSummary
                 summaryCounts = $failedCase.summaryCounts
                 summaryVerified = $failedCase.summaryVerified
+                textVerified = $failedCase.textVerified
+                rebuildVerified = $failedCase.rebuildVerified
+                clearVerified = $failedCase.clearVerified
+                resultCharacters = $failedCase.resultCharacters
                 stopPosted = $failedCase.stopPosted
                 actionPosted = $failedCase.actionPosted
                 exitCode = $failedCase.exitCode

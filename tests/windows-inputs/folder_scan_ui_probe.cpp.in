@@ -1,0 +1,163 @@
+// Production controller methods are inserted below. Windows/MFC/worker boundary
+// objects are explicit doubles: native worker behavior has a separate test.
+#include <cassert>
+#include <cstdint>
+#include <deque>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#undef assert
+#define assert(value) do { if (!(value)) throw std::runtime_error(#value); } while (false)
+#define _T(s) u##s
+using TCHAR = char16_t;
+using LPCTSTR = const TCHAR*;
+using DWORD = uint32_t;
+using BOOL = int;
+using HRESULT = int;
+using WPARAM = uintptr_t;
+using LPARAM = intptr_t;
+using HANDLE = void*;
+using LPITEMIDLIST = void*;
+using TStrVector = std::vector<std::u16string>;
+constexpr int MAX_PATH=260, WM_CLOSE=16, WM_QUIT=18, FALSE=0, TRUE=1;
+constexpr int IDOK=1, IDCANCEL=2, IDC_EXIT=1004;
+unsigned int LOWORD(WPARAM value) { return static_cast<unsigned int>(value & 0xffff); }
+constexpr int BIF_RETURNONLYFSDIRS=1, BIF_NEWDIALOGSTYLE=2, BIF_USENEWUI=4;
+constexpr int CLSID_ProgressDialog=1, PROGDLG_MODAL=1, PROGDLG_NOTIME=2, PROGDLG_NOMINIMIZE=4;
+constexpr int MB_OK=0, MB_ICONINFORMATION=1, QS_ALLINPUT=1, MWMO_INPUTAVAILABLE=1, PM_REMOVE=1;
+constexpr DWORD WAIT_FAILED=0xffffffffu;
+constexpr size_t kMaxHashFilesPerSession=8192;
+bool FAILED(HRESULT value) { return value<0; }
+namespace WindowsStrings { int GetCurrentUILang() { return 2052; } }
+enum class FileLoadResult { Success, SuccessPossiblyTruncated, SuccessWithTruncation, RejectedOverLimit, EnumerationLimit, Cancelled, Empty, Error };
+struct FileLoadOutcome { FileLoadResult result; size_t loadedCount, limit; bool hasRequestedCount; size_t requestedCount; };
+struct FolderScanOutcome { TStrVector files; bool overFileLimit=false, budgetExceeded=false, cancelled=false, failed=false; };
+struct ThreadData { TStrVector files{u"previous"}; };
+void ReplaceThreadDataInputFiles(ThreadData& data, const TStrVector& files) { data.files=files; }
+struct IProgressDialog {
+    bool active=false, cancelled=false;
+    unsigned int starts=0, stops=0;
+    HRESULT CoCreateInstance(int) { return 0; }
+    void SetTitle(LPCTSTR) {}
+    void SetLine(int,const wchar_t*,int,void*) {}
+    HRESULT StartProgressDialog(void*,void*,int,void*) { active=true; ++starts; return 0; }
+    void StopProgressDialog() { assert(active); active=false; ++stops; }
+    bool HasUserCancelled() { return cancelled; }
+} progress;
+template<class T> struct CComPtr {
+    HRESULT CoCreateInstance(int value) { return progress.CoCreateInstance(value); }
+    T* operator->() { return &progress; }
+};
+struct CWnd {
+    unsigned int closes=0;
+    void* GetSafeHwnd() { return this; }
+    void PostMessage(int message) { assert(message==WM_CLOSE && !progress.active); ++closes; }
+};
+struct ScopedComApartment { bool initialized() const { return true; } };
+struct BROWSEINFO { void* hwndOwner; LPCTSTR lpszTitle; unsigned int ulFlags; };
+static bool pickerCancelled=false, failStart=false, throwStart=false;
+static unsigned int started=0, alerts=0, waits=0;
+static FolderScanOutcome desired;
+static bool finishOnStart=false;
+void AfxMessageBox(LPCTSTR,int) { ++alerts; }
+LPITEMIDLIST SHBrowseForFolder(BROWSEINFO*) { return pickerCancelled ? nullptr : reinterpret_cast<void*>(1); }
+BOOL SHGetPathFromIDList(void*,TCHAR* out) { std::u16string(u"root").copy(out,4);out[4]=0;return 1; }
+void CoTaskMemFree(void*) {}
+struct HashFolderScanJob {
+    bool finished=false, exited=false, cancelled=false;
+    unsigned int cancellations=0;
+    static std::shared_ptr<HashFolderScanJob> Start(LPCTSTR) {
+        ++started; if(throwStart)throw std::runtime_error("start failure");
+        if(failStart)return {};
+        auto result=std::make_shared<HashFolderScanJob>();result->finished=finishOnStart;return result;
+    }
+    void Cancel() { cancelled=true;++cancellations; }
+    bool HasExited() const { return exited; }
+    bool IsFinished() const { return finished; }
+    HANDLE ThreadHandle() const { return reinterpret_cast<void*>(1); }
+    bool TryTake(FolderScanOutcome& result) { if(cancelled||!finished)return false;result=desired;return true; }
+};
+struct FilesHashInputController {
+    ThreadData* m_threadData;
+    CWnd* m_parentWnd;
+    bool m_loadingFiles=false, m_cancelLoad=false, m_closeAfterLoading=false;
+    std::shared_ptr<HashFolderScanJob> m_folderScan;
+    struct PendingLoadGuard { FilesHashInputController& m_owner; explicit PendingLoadGuard(FilesHashInputController&); ~PendingLoadGuard(); };
+    void CancelPendingLoad(bool closeAfterLoading=false);
+    bool IsLoadingFiles() const { return m_loadingFiles; }
+    FileLoadOutcome LoadFolderDialogSelection(LPCTSTR,LPCTSTR);
+};
+struct CDialog { unsigned int commands=0; BOOL OnCommand(WPARAM,LPARAM) { ++commands;return TRUE; } };
+struct CFilesHashDlg : CDialog {
+    FilesHashInputController& m_hashInputController;
+    explicit CFilesHashDlg(FilesHashInputController& controller) : m_hashInputController(controller) {}
+    BOOL OnCommand(WPARAM,LPARAM);
+};
+struct MSG { unsigned int message; uintptr_t wParam; };
+static std::deque<MSG> messages;
+static std::function<DWORD()> waitAction;
+static std::function<void(MSG*)> dispatchAction;
+static int quitCode=-1;
+DWORD MsgWaitForMultipleObjectsEx(DWORD count,const HANDLE*,DWORD timeout,DWORD,DWORD) {
+    assert(count==1 && timeout==50 && progress.active);++waits;assert(waits<4);return waitAction();
+}
+BOOL PeekMessage(MSG* message,void*,int,int,int) { if(messages.empty())return 0;*message=messages.front();messages.pop_front();return 1; }
+struct FakeThread { BOOL PreTranslateMessage(MSG*) { return 0; } } fakeThread;
+FakeThread* AfxGetThread() { return &fakeThread; }
+void TranslateMessage(MSG*) {}
+void DispatchMessage(MSG* message) { dispatchAction(message); }
+void PostQuitMessage(int value) { assert(!progress.active);quitCode=value; }
+
+@@PRODUCTION@@
+
+int main()
+{
+    CWnd window;ThreadData data;FilesHashInputController controller{&data,&window,false,false,false,{}};
+    CFilesHashDlg dialog(controller);
+    controller.m_loadingFiles=true;
+    assert(dialog.OnCommand(1001,0) && dialog.commands==0);
+    assert(dialog.OnCommand(IDOK,0) && dialog.OnCommand(IDCANCEL,0) && dialog.OnCommand(IDC_EXIT,0) && dialog.commands==3);
+    controller.m_loadingFiles=false;
+    assert(dialog.OnCommand(1001,0) && dialog.commands==4);
+    auto reset=[&] {
+        data.files={u"previous"};controller.m_folderScan.reset();progress={};desired={};
+        started=alerts=waits=window.closes=0;quitCode=-1;messages.clear();
+        pickerCancelled=failStart=throwStart=finishOnStart=false;
+        waitAction=[] { return DWORD(0); };dispatchAction=[](MSG*) {};
+    };
+    auto run=[&] { return controller.LoadFolderDialogSelection(u"Folder",u"Empty"); };
+    reset();pickerCancelled=true;
+    assert(run().result==FileLoadResult::Empty && started==0 && progress.starts==0);
+    reset();finishOnStart=true;desired.files={u"one",u"two"};
+    assert(run().result==FileLoadResult::Success && data.files==desired.files && progress.stops==1);
+    reset();finishOnStart=true;desired.overFileLimit=true;desired.files={u"partial"};
+    assert(run().result==FileLoadResult::RejectedOverLimit && data.files==TStrVector{u"previous"});
+    reset();finishOnStart=true;desired.budgetExceeded=true;
+    assert(run().result==FileLoadResult::EnumerationLimit && data.files==TStrVector{u"previous"});
+    reset();finishOnStart=true;desired.failed=true;
+    assert(run().result==FileLoadResult::Error && data.files==TStrVector{u"previous"});
+    reset();waitAction=[] { progress.cancelled=true;return DWORD(0); };
+    assert(run().result==FileLoadResult::Cancelled && controller.m_folderScan->cancelled);
+    assert(!controller.m_folderScan->IsFinished() && progress.stops==1 && data.files==TStrVector{u"previous"});
+    const auto blocked=controller.m_folderScan;
+    assert(run().result==FileLoadResult::Cancelled && started==1 && controller.m_folderScan==blocked);
+    reset();waitAction=[] { messages.push_back({WM_CLOSE,0});return DWORD(0); };
+    dispatchAction=[&](MSG* message) { assert(message->message==WM_CLOSE);controller.CancelPendingLoad(true); };
+    assert(run().result==FileLoadResult::Cancelled && window.closes==1 && progress.stops==1);
+    assert(!controller.m_folderScan->IsFinished() && data.files==TStrVector{u"previous"});
+    reset();waitAction=[] { messages.push_back({WM_QUIT,37});return DWORD(0); };
+    assert(run().result==FileLoadResult::Cancelled && quitCode==37 && progress.stops==1);
+    assert(!controller.m_folderScan->IsFinished() && data.files==TStrVector{u"previous"});
+    reset();waitAction=[] { return WAIT_FAILED; };
+    assert(run().result==FileLoadResult::Error && controller.m_folderScan->cancelled && progress.stops==1);
+    assert(data.files==TStrVector{u"previous"});
+    reset();failStart=true;
+    assert(run().result==FileLoadResult::Error && progress.stops==1 && data.files==TStrVector{u"previous"});
+    reset();throwStart=true;
+    assert(run().result==FileLoadResult::Error && progress.stops==1 && data.files==TStrVector{u"previous"});
+    std::cout<<"PASS production folder UI loop: success/limits/error transaction, blocked cancel/close/quit, one-worker bound, creation and wait failure cleanup; Windows boundary doubles\n";
+}

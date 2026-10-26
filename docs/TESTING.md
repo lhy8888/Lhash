@@ -7,8 +7,8 @@ API替身、原生执行和GUI交互是不同的证据。
 
 | 平台 | Runner | 覆盖 |
 | --- | --- | --- |
-| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及14例真实窗口退出/任务状态测试 |
-| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行14例窗口退出/任务状态测试 |
+| Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及16例真实窗口退出/任务状态/文本测试 |
+| Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行16例窗口退出/任务状态/文本测试 |
 | macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测 |
 | macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
@@ -21,6 +21,11 @@ API替身、原生执行和GUI交互是不同的证据。
 
 macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表其运行机器，
 不能声称已在每个M5/M6型号实机验证。Linux测试后端不替代Darwin原生文件行为。
+
+正式构建使用 OpenSSL 上游汇编优化；Windows x64/ARM64 和 Linux/macOS 另有
+隔离的 `portable` 回归。模式、目标和 SHA256/SHA512 汇编状态在构建及缓存恢复后验证。
+优化库另在支持的平台屏蔽可选 CPU 特性执行 provider 回归，验证基线分派；这不等同于
+在所有旧 CPU 上实测。工具链与命令见 [OPENSSL_OPTIMIZATION.md](OPENSSL_OPTIMIZATION.md)。
 
 ## 测试目标
 
@@ -47,12 +52,21 @@ macOS仅Apple Silicon通用arm64，不绑定某一代M系列CPU。托管CI代表
   Windows另运行真实线程handle，验证活线程不能丢失/重启。
 - `lhash_task_state_tests`：直接执行产品使用的队列和任务行模型，验证同路径不同任务、
   延迟消费、终态不回退、取消/异常/未执行、当前会话收尾、历史保留和过期/未知ID拒绝。
-- `tests/windows-ui`：原10例退出测试加每轮两例：重复小文件完成后必须为2项完成；
+  8192条任务及后续会话核对增量计数，覆盖重复进度、清空和非法状态拒绝。
+- `lhash_ui_timing_tests`：生产 steady_clock 模型的漏 tick、延迟UI、极短任务、
+  异常冻结、reset和并发读取；worker入口与启动生命周期另有集成约束。
+- `lhash_text_buffer_tests`：8192条差量恰好交付一次、Unicode、reset/过期批次、
+  准备状态快照恢复、可见链接边界以及显示阻塞期间生产者仍可追加。
+- `tests/windows-ui`：原10例退出测试加每轮三例：重复小文件完成后必须为2项完成；
   读取中Stop后窗口保留、没有运行中任务，已完成/取消/未执行计数覆盖全部输入。
+  128文件场景检查全部SHA256输出恰好一次，再验证大小写重建和Clear。
   从自有进程的普通状态控件读取文字，系统封送，不读取远程ListView结构。
 - `tests/windows-inputs`：从当前生产函数生成探针，验证250024个COPYDATA样本、数量
   边界、带空格exe引用、目录预算/取消、剪贴板所有权与失败、版本API返回边界。
   MFC/WinAPI为显式替身，不代表自动运行了原生窗口、Explorer或UIPI。
+- `lhash_background_result_tests`：异步扫描结果的取消、晚完成、独立寿命和单次交付；
+  Windows另运行 `lhash_folder_scan_native_tests`，实际枚举Unicode临时目录，验证空目录、
+  错误、异常以及受控阻塞worker的取消和UI owner释放。受控阻塞不是故障存储实测。
 - `lhash_string_safety`：SHA1最终字符串、UTF8/UTF16边界、随机Unicode、嵌入NUL、
   非法编码、ctype高位字节、replace/进制。Windows运行真实字符转换API。
 - `tests/openssl-provider`：8个CTest分组，真实3.5.9适配器的向量、文件、生命周期、

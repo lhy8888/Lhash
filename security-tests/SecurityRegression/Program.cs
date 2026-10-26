@@ -15,6 +15,7 @@ internal static partial class Program
             string dialogContent = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashDlg.cpp");
             string messageController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashMessageController.cpp");
             string inputController = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\FilesHashInputController.cpp");
+            string folderScanner = ReadRepoFile(repoRoot, @"trunk\source\WinCommon\HashFolderScanner.h");
             string content = string.Join(Environment.NewLine, dialogContent, messageController, inputController);
 
             AssertContains(content, "IsValidCopyDataString", "Missing WM_COPYDATA input validation helper.");
@@ -30,9 +31,13 @@ internal static partial class Program
             AssertContains(content, "FileLoadResult::RejectedOverLimit", "WM_COPYDATA and drag-drop ingestion no longer surface explicit over-limit outcomes.");
             AssertContains(content, "DispatchFileLoadOutcome(", "WinMFC file-loading outcomes are no longer dispatched through the shared message controller.");
             AssertContains(content, "static_cast<size_t>(droppedFileCount) > kMaxHashFilesPerSession", "Drag-and-drop ingestion no longer rejects oversize batches before loading.");
-            AssertContains(content, "outcome.overFileLimit = true", "Folder enumeration no longer rejects oversized selections.");
-            AssertContains(content, "budget.VisitEntry()", "Folder enumeration no longer bounds all entries.");
+            AssertContains(folderScanner, "outcome.files.size() == kMaxHashFilesPerSession", "Folder enumeration no longer checks the per-session file limit before insertion.");
+            AssertContains(folderScanner, "outcome.overFileLimit = true", "Folder enumeration no longer rejects oversized selections.");
+            AssertContains(folderScanner, "budget.VisitEntry()", "Folder enumeration no longer bounds all entries.");
+            AssertContains(folderScanner, "budget.QueueDirectory(current.second + 1)", "Folder enumeration no longer bounds directory count and depth.");
             AssertContains(content, "progress->HasUserCancelled()", "Folder enumeration no longer checks cancellation.");
+            AssertContains(inputController, "HashFolderScanJob::Start", "Folder enumeration no longer starts its managed background worker.");
+            AssertContains(folderScanner, "cancelRequested.load(std::memory_order_relaxed)", "Folder worker no longer checks the cross-thread cancellation signal.");
             AssertContains(content, "WindowsUtils::CanAcceptUntrustedFileInput()", "External file input no longer rejects elevated/high-integrity instances.");
             AssertDoesNotContain(content, "IsTrustedCopyDataSender", "Caller-supplied HWND must not be treated as authenticated sender identity.");
             string windowsUtils = ReadRepoFile(repoRoot, @"trunk\source\WinMFC\WindowsUtils.cpp");
@@ -40,7 +45,7 @@ internal static partial class Program
             AssertContains(windowsUtils, "SECURITY_MANDATORY_HIGH_RID", "External input policy no longer checks integrity level.");
             AssertContains(content, "if (sawTerminator)", "WM_COPYDATA validation no longer rejects non-empty data after the first terminator.");
             AssertContains(content, "return sawTerminator;", "WM_COPYDATA validation no longer accepts a single strict terminator.");
-            AssertContains(content, "std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", "Folder enumeration no longer uses an explicit queue/stack traversal.");
+            AssertContains(folderScanner, "std::deque<std::pair<sunjwbase::tstring, size_t>> pendingFolders;", "Folder enumeration no longer uses an explicit queue/stack traversal.");
             AssertContains(content, "!IsThreadDataWorking(*m_threadData)", "WM_COPYDATA handler no longer rejects requests while hashing is in progress.");
         }, failures);
         Run("WinMFC drag and drop still works across the resized result area", () =>

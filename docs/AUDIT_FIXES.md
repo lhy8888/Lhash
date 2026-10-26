@@ -1,5 +1,31 @@
 # 本轮审计修复与回归映射
 
+## 补充修复：汇编优化、界面性能与扫描响应
+
+对 `bf72ae52` 的后续复核确认构建和界面仍有性能、统计及响应性问题，实施如下修复：
+
+- OpenSSL 默认使用上游汇编目标，保留显式 `portable` 排错模式。Windows ARM64
+  使用已有的 `VC-WIN64-CLANGASM-ARM`（MSVC C + clang-cl 汇编），Windows x64 使用
+  NASM，macOS 仍仅 Apple Silicon。实际 Configure 的 SHA256/SHA512 汇编状态须通过
+  验证，模式进入安装身份和 CI 缓存键；缓存恢复后也校验。上游源码保持原样。
+- 任务身份索引保留，状态计数改为增量维护；汇总读取不再扫描历史行，任务列表每批仅
+  重绘变化范围。文本在短锁内交付差量，UI 解锁后追加；清空、搜索重建和准备状态恢复
+  使用有序 reset。链接绘制和命中只查找可见范围，避免渲染路径继续复制全部结果。
+- worker 使用 `steady_clock` 与 RAII 记录真实起止，UI 定时器只读取经过时间。
+  极短任务、漏 tick、异常与延迟处理结束消息不再依赖消息数量计算速度。
+- 目录枚举由独立 worker 持有路径和结果，不持有窗口、控制器或 COM 指针。UI 保持
+  消息处理；取消后立即停止等待，迟到结果不提交。`CancelSynchronousIo` 为尽力取消，
+  卡住的驱动不妨碍关闭窗口；同一时刻最多保留一个未退出扫描，避免反复取消积累线程。
+  保留目录预算、错误处理、重入限制与成功才替换输入的规则。
+
+回归入口：`tests/openssl-build`、`tests/ui_lifecycle`、`tests/text_buffer`、
+`tests/windows-inputs`。Windows 原生目录测试覆盖真实 Unicode 目录以及受控阻塞 worker
+的取消、迟到结果和 owner 销毁，不将受控阻塞测试等同于真实故障网络盘。
+两架构 GUI 套件每个平台16例，新增128文件输出完整性、大小写重建和清空验证。
+优化与 portable 构建分别执行原生回归。实际通过情况以同一提交的 CI 为准。
+
+工具链和构建模式见 [OPENSSL_OPTIMIZATION.md](OPENSSL_OPTIMIZATION.md)。
+
 ## 补充修复：输出失败与任务行状态
 
 对 `7ec2ed13` 的后续核对确认三项此前未覆盖的问题，并补充以下修复与回归：

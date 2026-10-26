@@ -10,6 +10,7 @@ static inline bool LaunchThreadDataWorker(ThreadData& threadData, TLaunch launch
 	{
 		return false;
 	}
+	threadData.executionState.timing.Reset();
 	SetThreadDataStop(threadData, false);
 	try
 	{

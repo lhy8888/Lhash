@@ -6,28 +6,12 @@
 #include "WinMFC/WinMFCMessages.h"
 #include "Common/HashTypes.h"
 
-namespace
-{
-class CriticalSectionLock
-{
-public:
-	explicit CriticalSectionLock(CRITICAL_SECTION& section) : m_section(section) { EnterCriticalSection(&m_section); }
-	~CriticalSectionLock() { LeaveCriticalSection(&m_section); }
-	CriticalSectionLock(const CriticalSectionLock&) = delete;
-	CriticalSectionLock& operator=(const CriticalSectionLock&) = delete;
-private:
-	CRITICAL_SECTION& m_section;
-};
-}
-
 // CHyperEditHash
 
 IMPLEMENT_DYNAMIC(CHyperEditHash, CHyperEditHash_BASE_CLASS)
 
 CHyperEditHash::CHyperEditHash()
 {
-	InitializeCriticalSection(&m_csLinkOffsets);
-
 	ClearTextBuffer();
 
 	COLORREF crBlack = RGB(0, 0, 0);
@@ -36,7 +20,6 @@ CHyperEditHash::CHyperEditHash()
 
 CHyperEditHash::~CHyperEditHash()
 {
-	DeleteCriticalSection(&m_csLinkOffsets);
 }
 
 
@@ -97,62 +80,82 @@ BOOL CHyperEditHash::PreTranslateMessage(MSG* pMsg)
 
 void CHyperEditHash::ClearTextBuffer()
 {
-	{
-		CriticalSectionLock lock(m_csLinkOffsets);
-		m_bufferLinkOffsets.clear();
-	}
-	m_cstrTextBuffer = CString(_T(""));
+	m_textBuffer.Clear();
 }
 
 CString CHyperEditHash::GetTextBuffer() const
 {
-	return m_cstrTextBuffer;
+	return CString(m_textBuffer.Text().c_str());
 }
 
-void CHyperEditHash::ShowTextBufferEx(BOOL bScrollToEnd)
+CHyperEditHash::TextUpdate CHyperEditHash::TakeTextUpdate()
 {
+	return m_textBuffer.Drain();
+}
+
+void CHyperEditHash::ShowTextUpdate(const TextUpdate& update, BOOL scrollToEnd)
+{
+	if (update.Empty() || !m_displayText.CanApply(update)) return;
+	// All allocations and producer data access are complete before window calls.
+	// Link offsets and the display cache belong exclusively to the UI thread.
+	if (update.reset) m_linkOffsets.clear();
+	const size_t neededLinks = m_linkOffsets.size() + update.links.size();
+	if (neededLinks > m_linkOffsets.capacity())
+		m_linkOffsets.reserve((std::max)(neededLinks, m_linkOffsets.capacity() * 2));
+	for (const auto& link : update.links) m_linkOffsets.push_back({link.start, link.length});
+	m_displayText.Apply(update);
+
+	int selectionStart = 0, selectionEnd = 0;
+	GetSel(selectionStart, selectionEnd);
+	const int firstVisible = GetFirstVisibleLine();
 	EnableRedraw(FALSE);
-
+	if (update.reset)
 	{
-		CriticalSectionLock lock(m_csLinkOffsets);
-		m_linkOffsets = m_bufferLinkOffsets;
+		SetWindowText(update.text.c_str());
 	}
-	SetWindowText(m_cstrTextBuffer);
-
-	if (bScrollToEnd)
+	else if (!update.text.empty())
 	{
-		LineScrollEnd();
+		SetSel(-1, -1, TRUE);
+		ReplaceSel(update.text.c_str(), FALSE);
 	}
-
+	// Appending must not destroy a user's selection while results are arriving.
+	const int textLength = static_cast<int>(m_displayText.Size());
+	SetSel((std::min)(selectionStart, textLength), (std::min)(selectionEnd, textLength), TRUE);
+	if (scrollToEnd) LineScroll(GetLineCount());
+	else LineScroll(firstVisible - GetFirstVisibleLine());
 	EnableRedraw(TRUE);
+	Invalidate(FALSE);
+}
+
+CString CHyperEditHash::GetDisplayTextRange(int start, int length) const
+{
+	if (start < 0 || length <= 0) return CString();
+	return CString(m_displayText.Range(static_cast<size_t>(start), static_cast<size_t>(length)).c_str());
 }
 
 void CHyperEditHash::AppendTextToBuffer(LPCTSTR pszText)
 {
-	m_cstrTextBuffer.Append(pszText);
+	m_textBuffer.Append(pszText);
 }
 
 void CHyperEditHash::AppendLinkToBuffer(LPCTSTR pszText)
 {
-	int startPos = m_cstrTextBuffer.GetLength();
-	AppendTextToBuffer(pszText);
-	INT endPos = m_cstrTextBuffer.GetLength();
-	INT linkLength = endPos - startPos;
-	_TOKEN_OFFSET off = { startPos /* Start offset */, linkLength /* Length */ };
-	CriticalSectionLock lock(m_csLinkOffsets);
-	m_bufferLinkOffsets.push_back(off);
+	m_textBuffer.Append(pszText, true);
 }
 
 void CHyperEditHash::CopyLinkOffsets(OFFSETS& linkOffsets)
 {
-	CriticalSectionLock lock(m_csLinkOffsets);
-	linkOffsets = m_bufferLinkOffsets;
+	linkOffsets.clear();
+	linkOffsets.reserve(m_textBuffer.Links().size());
+	for (const auto& link : m_textBuffer.Links()) linkOffsets.push_back({link.start, link.length});
 }
 
 void CHyperEditHash::SetLinkOffsets(const OFFSETS& linkOffsets)
 {
-	CriticalSectionLock lock(m_csLinkOffsets);
-	m_bufferLinkOffsets = linkOffsets;
+	std::vector<ResultTextLink> links;
+	links.reserve(linkOffsets.size());
+	for (const auto& link : linkOffsets) links.push_back({link.iStart, link.iLength});
+	m_textBuffer.ReplaceLinks(links);
 }
 
 void CHyperEditHash::LineScrollEnd()

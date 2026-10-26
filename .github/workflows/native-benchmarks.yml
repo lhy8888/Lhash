@@ -42,7 +42,12 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: artifacts/openssl-vendor-${{ matrix.artifact_suffix }}
-          key: ${{ runner.os }}-openssl-vendor-${{ matrix.artifact_suffix }}-v2-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'NativeOpenSslVendor.targets') }}
+          key: ${{ runner.os }}-openssl-vendor-${{ matrix.artifact_suffix }}-optimized-v3-${{ hashFiles('third_party/openssl/3.5.9/**', 'tools/verify_openssl_vendor_pristine.ps1', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'trunk/build_openssl_vendor.ps1', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', 'NativeOpenSslVendor.targets') }}
+
+      - name: Prepare OpenSSL assembler
+        uses: ./.github/actions/setup-openssl-assembler
+        with:
+          platform: ${{ matrix.benchmark_platform }}
 
       - name: Build OpenSSL vendor
         shell: powershell
@@ -52,12 +57,19 @@ jobs:
           $buildLogPath = Join-Path $artifactRoot ('build-openssl-vendor-{0}.log' -f '${{ matrix.artifact_suffix }}')
           $openSslRoot = Join-Path $artifactRoot ('openssl-vendor-{0}' -f '${{ matrix.artifact_suffix }}')
 
-          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform ${{ matrix.benchmark_platform }} -InstallRoot $openSslRoot -CombinedLogPath $buildLogPath 2>&1 |
+          & powershell -ExecutionPolicy Bypass -File 'trunk/build_openssl_vendor.ps1' -Platform ${{ matrix.benchmark_platform }} -AssemblyMode optimized -InstallRoot $openSslRoot -CombinedLogPath $buildLogPath 2>&1 |
             Tee-Object -FilePath (Join-Path $artifactRoot ('build-openssl-vendor-{0}-console.log' -f '${{ matrix.artifact_suffix }}'))
 
           if ($LASTEXITCODE -ne 0) {
             throw "OpenSSL vendor build failed. See artifacts/build-openssl-vendor-${{ matrix.artifact_suffix }}.log for details."
           }
+
+      - name: Verify optimized OpenSSL build metadata
+        shell: pwsh
+        run: |
+          $target = if ('${{ matrix.benchmark_platform }}' -eq 'ARM64') { 'VC-WIN64-CLANGASM-ARM' } else { 'VC-WIN64A' }
+          python tools/verify_openssl_install.py 'artifacts/openssl-vendor-${{ matrix.artifact_suffix }}' optimized $target
+          if ($LASTEXITCODE -ne 0) { throw 'OpenSSL assembly metadata mismatch.' }
 
       - name: Capture benchmark machine info
         shell: powershell

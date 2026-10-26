@@ -1,0 +1,49 @@
+name: Prepare OpenSSL assembler
+description: Require the upstream assembler used by the optimized Windows target.
+inputs:
+  platform:
+    description: Windows target architecture
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      env:
+        LHASH_ASSEMBLER_PLATFORM: ${{ inputs.platform }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $platform = $env:LHASH_ASSEMBLER_PLATFORM
+        if ($platform -notin @('x64', 'ARM64')) { throw 'Unsupported OpenSSL assembler platform.' }
+        if ($platform -eq 'x64') {
+          $nasm = Get-Command nasm.exe -ErrorAction SilentlyContinue
+          $installed = Join-Path $env:ProgramFiles 'NASM/nasm.exe'
+          if ($null -eq $nasm -and -not (Test-Path -LiteralPath $installed)) {
+            choco install nasm --version=2.16.03 --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { throw 'NASM installation failed.' }
+          }
+          if (Test-Path -LiteralPath $installed) {
+            (Split-Path -Parent $installed) | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+            & $installed -v
+          } else {
+            & nasm.exe -v
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'NASM is not executable.' }
+        } else {
+          $clang = Get-Command clang-cl.exe -ErrorAction SilentlyContinue
+          if ($null -ne $clang) {
+            & $clang.Source --version
+          } else {
+            $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+            $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.ARM64 -property installationPath
+            $candidates = @(
+              (Join-Path $vs 'VC/Tools/Llvm/x64/bin/clang-cl.exe'),
+              (Join-Path $vs 'VC/Tools/Llvm/bin/clang-cl.exe'),
+              (Join-Path $env:ProgramFiles 'LLVM/bin/clang-cl.exe')
+            )
+            $assembler = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+            if (-not $assembler) { throw 'Optimized ARM64 requires LLVM clang-cl; the runner image lacks the upstream assembler.' }
+            (Split-Path -Parent $assembler) | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+            & $assembler --version
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'clang-cl is not executable.' }
+        }
