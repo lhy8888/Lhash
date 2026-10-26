@@ -18,6 +18,10 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      # Core and desktop workflows also use hosted Apple Silicon runners.
+      # Avoid requesting three more macOS runners at once: allocation failures
+      # have cancelled queued jobs before any test could execute.
+      max-parallel: 1
       matrix:
         include:
           - name: linux-x64
