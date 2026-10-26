@@ -5,6 +5,26 @@ macOS CLI uses the same engine, algorithm registry and static OpenSSL 3.5.9
 backend as Windows. All **18** Windows algorithms are available; the default
 selection is also shared: SHA-256, SHA-512 and SHA3-256.
 
+## Download
+
+Starting with [v1.12.6](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6),
+the tagged release includes `LHash-macos-arm64-cli-<shortsha>.tar.gz` alongside
+the Windows packages. The release's `SHA256SUMS.txt`, `RELEASE_MANIFEST.txt`,
+CycloneDX SBOM and attestations cover this archive too. See
+[release verification](RELEASE_VERIFICATION.md) to verify the downloaded archive
+and its source commit.
+
+Extract the macOS archive, enter its directory and run:
+
+```sh
+shasum -a 256 -c SHA256.txt
+./lhash -a sha256 /path/to/file
+```
+
+The package remains unsigned and unnotarized. Apple Silicon uses the same
+generic arm64 executable across M-series generations; this is not a claim that
+CI has run on each individual model.
+
 ## Build and run
 
 Use native arm64 development tools, CMake, Perl and Xcode Command Line Tools:
@@ -42,7 +62,9 @@ No system OpenSSL installation is silently substituted.
   keyed by stable ID or `error`. Human output escapes control characters in paths.
 - `--`: end options, allowing filenames beginning with `-`.
 
-Exit codes: 0 for success, 1 for a file/runtime failure, 2 for invalid arguments.
+Exit codes: 0 for success, 1 for a file/runtime/output failure, 2 for invalid arguments.
+A write or flush failure on standard output returns a nonzero status, including
+algorithm-list output and JSON records.
 A failed file does not prevent later valid files from being processed. Arguments
 must be UTF-8; file inputs share the Windows limit of 8192 per request.
 
@@ -57,11 +79,14 @@ files; it does not provide a filesystem snapshot guarantee. Ancestor symlinks
 remain allowed, and this utility does not promise directory sandbox confinement.
 
 The [macOS CLI workflow](../.github/workflows/macos-cli-build.yml) packages the
-arm64 executable, checksum and build metadata. Artifacts remain unsigned and
-unnotarized. There is no macOS GUI or Intel build. All M-series models use the
-same arm64 target; hosted CI validates its selected machine, not every M5/M6
-hardware model. Linux's explicitly enabled POSIX test backend is for cloud
-regressions and does not establish native macOS filesystem results.
+arm64 executable, checksum and build metadata after the engine/CLI tests pass.
+It also supplies the macOS package to the tagged release workflow. Branch CI
+retains its downloadable workflow artifact for testing between releases.
+Artifacts remain unsigned and unnotarized. There is no macOS GUI or Intel build.
+All M-series models use the same arm64 target; hosted CI validates its selected
+machine, not every M5/M6 hardware model. Linux's explicitly enabled POSIX test
+backend is for cloud regressions and does not establish native macOS filesystem
+results.
 
 See [testing](TESTING.md) for native, sanitizer, exception and file-integrity
 coverage, and [core build](CORE_BUILD.md) for Windows build commands.

@@ -4,21 +4,27 @@ The maintained release line builds from `lhy8888/Lhash`. Release metadata and
 checksums support verification against that repository; a checksum alone does
 not identify the publisher.
 
-## Windows release production
+## Release production
 
-`.github/workflows/windows-build.yml` builds Windows x64 and ARM64 packages.
-Publication depends on both builds, the native runtime test matrix, and release
-tooling tests. Each native job also builds and executes the root CMake runtime
-and platform regressions with the vendored static OpenSSL library.
-The x64 application build additionally runs the actual MFC executable through
-close, Escape/cancel and rapid-start/close GUI cases before signing or packaging.
-Missing interactive desktop access is a failed coverage requirement, not a
-successful skip. Console output and the per-case JSON report are retained even
-on failure. Windows ARM64 is not claimed to have this x64 GUI automation run.
+`.github/workflows/windows-build.yml` builds Windows x64 and ARM64 packages and
+invokes the reusable macOS CLI workflow for the Apple Silicon package before
+release publication. Publication depends on these builds, Windows native and
+portable runtime tests, native ARM64 GUI tests, and release tooling tests. The
+macOS build runs its full engine and CLI suite before packaging. Each Windows
+native job also executes the root CMake runtime and platform regressions with
+the vendored static OpenSSL library.
+
+The actual MFC application runs through 18 GUI cases on each of x64 and native
+ARM64, including close/cancel, duplicate inputs, ordered results from 128 files
+and selection preservation while new results arrive. Missing interactive desktop
+access fails the coverage requirement. Console output and the per-case JSON
+report are retained even on failure. These checks inspect text and interaction
+state; they are not pixel comparisons across every display configuration.
 
 The release job checks out the same commit, validates the version resource and
-commit recorded inside both ZIPs, and creates `RELEASE_MANIFEST.txt`. Missing or
-inconsistent application versions fail the job; `unknown` is not accepted.
+commit recorded inside the two Windows ZIPs and macOS tarball, and creates
+`RELEASE_MANIFEST.txt`. Missing or inconsistent application versions fail the
+job; `unknown` is not accepted.
 
 Before publishing a v* tag release, that same job:
 
@@ -27,10 +33,11 @@ Before publishing a v* tag release, that same job:
    **build-declared** components because binary scanners cannot reliably recover
    all static library identities. This does not claim that every source file or
    transitive build tool was discovered by the scanner.
-2. Generates one `SHA256SUMS.txt` containing both ZIPs, the release manifest and
-   the final SBOM, using plain filenames relative to the download directory.
+2. Generates one `SHA256SUMS.txt` containing both Windows ZIPs, the macOS tarball,
+   the release manifest and the final SBOM, using plain filenames relative to
+   the download directory.
 3. Verifies the complete set and creates provenance and SBOM attestations that
-   include **both** architecture ZIPs.
+   include **all three** platform packages.
 4. Publishes the artifacts only after the preceding steps succeed.
 
 The checksum file is created once. The manual recovery workflows
@@ -72,10 +79,11 @@ registrations as Windows; SHA256 is available through `-a sha256`, with
 
 The artifact contains `lhash`, `README.txt`, `BUILD_INFO.txt` and `SHA256.txt`.
 The workflow extracts the produced tarball to a fresh directory and verifies
-`SHA256.txt` there. It is a workflow artifact, currently unsigned and not
-notarized, and is not included in the Windows tagged-release set. Only Apple
-Silicon/arm64 is supported; an arm64 build is not a record of testing individual
-M-series hardware models.
+`SHA256.txt` there. Starting with v1.12.6, the tarball is included in the same
+tagged release and checksum/manifest/SBOM set as the Windows packages; branch
+builds also retain it as a workflow artifact. It remains unsigned and not
+notarized. Only Apple Silicon/arm64 is supported; an arm64 build is not a record
+of testing individual M-series hardware models.
 
 ## Automation controls and limitations
 

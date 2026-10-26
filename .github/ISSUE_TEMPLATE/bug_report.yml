@@ -28,10 +28,9 @@ body:
       description: List the exact steps needed to reproduce the issue.
       placeholder: |
         1. Open LHash
-        2. Drag a file into the window
-        3. Enable SHA-256
-        4. Click start
-        5. Observe the problem
+        2. Select the algorithms to calculate
+        3. Open or drag a file into the window
+        4. Observe the problem
     validations:
       required: true
 
@@ -56,14 +55,14 @@ body:
     attributes:
       label: Version or release tag
       description: Which version, tag, or commit are you using?
-      placeholder: v1.12.5
+      placeholder: v1.12.6
 
   - type: input
     id: platform
     attributes:
-      label: Windows version and architecture
-      description: Example: Windows 11 24H2 x64
-      placeholder: Windows 11 x64
+      label: Operating system and architecture
+      description: Include the OS version and CPU architecture, and whether you used the desktop app or CLI.
+      placeholder: Windows 11 x64 (desktop app) or macOS 14 arm64 (CLI)
 
   - type: textarea
     id: input_type

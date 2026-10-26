@@ -32,13 +32,16 @@ jobs:
           test -n "$RELEASE_TAG"
           git check-ref-format "refs/tags/$RELEASE_TAG"
           gh release download --repo "$GITHUB_REPOSITORY" --dir release-assets \
-            --pattern 'LHash-windows-*.zip' --pattern RELEASE_MANIFEST.txt \
+            --pattern 'LHash-windows-*.zip' --pattern 'LHash-macos-arm64-cli-*.tar.gz' \
+            --pattern RELEASE_MANIFEST.txt \
             --pattern SHA256SUMS.txt --pattern LHash-release.cyclonedx.json -- "$RELEASE_TAG"
           python3 tools/release_assets.py verify --directory release-assets
           (cd release-assets && sha256sum --check SHA256SUMS.txt)
 
-      - name: Bind the verified SBOM to both architecture bundles
+      - name: Bind the verified SBOM to all declared platform bundles
         uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v2
         with:
-          subject-path: release-assets/LHash-windows-*.zip
+          subject-path: |
+            release-assets/LHash-windows-*.zip
+            release-assets/LHash-macos-arm64-cli-*.tar.gz
           sbom-path: release-assets/LHash-release.cyclonedx.json

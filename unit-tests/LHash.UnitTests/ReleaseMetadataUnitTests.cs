@@ -3,27 +3,27 @@ namespace LHash.UnitTests;
 public sealed class ReleaseMetadataUnitTests
 {
     [Fact]
-    public void LegacyVersion_IsUpdatedTo_1_12_5_0_AndAboutDialogDisplays_1_12_5()
+    public void LegacyVersion_IsUpdatedTo_1_12_6_0_AndAboutDialogDisplays_1_12_6()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,5,0", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.5.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,6,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.6.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (LHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("LHashVersion = LHashVersion.Left(LHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_5_0()
+    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_6_0()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
         string draft = RepositoryTestContext.ReadTextFile(@"docs\README-trusted-verification-draft.md");
 
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.5.0\"", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.5`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.5)", readme, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.5`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.5)", draft, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.6.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)", readme, StringComparison.Ordinal);
+        Assert.Contains("Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)", draft, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
@@ -102,7 +102,13 @@ public sealed class ReleaseMetadataUnitTests
         Assert.Contains("release-staging/LHash-windows-arm64-*.zip", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/RELEASE_MANIFEST.txt", workflow, StringComparison.Ordinal);
         Assert.Contains("release-staging/SHA256SUMS.txt", workflow, StringComparison.Ordinal);
-        Assert.Contains("subject-path: release-staging/LHash-windows-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("subject-path: |", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/LHash-windows-*.zip", workflow, StringComparison.Ordinal);
+        Assert.Contains("release-staging/LHash-macos-arm64-cli-*.tar.gz", workflow, StringComparison.Ordinal);
+        Assert.Contains("build-macos-release:", workflow, StringComparison.Ordinal);
+        Assert.Contains("uses: ./.github/workflows/macos-cli-build.yml", workflow, StringComparison.Ordinal);
+        Assert.Contains("body_path: docs/releases/${{ github.ref_name }}.md", workflow, StringComparison.Ordinal);
+        Assert.Contains("make_latest: true", workflow, StringComparison.Ordinal);
         Assert.Matches(@"softprops/action-gh-release@[0-9a-f]{40}", workflow);
         Assert.Matches(@"actions/attest-build-provenance@[0-9a-f]{40}", workflow);
         Assert.Matches(@"actions/attest-sbom@[0-9a-f]{40}", workflow);

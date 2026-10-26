@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create and verify the immutable Windows release assets, without networking."""
+"""Create and verify immutable Windows/macOS release assets, without networking."""
 import argparse
 import hashlib
 import json
@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import tarfile
 import zipfile
 
 MANIFEST = "RELEASE_MANIFEST.txt"
@@ -44,11 +45,49 @@ def matches_bundle(name, architecture, commit):
     return match is not None and commit.startswith(match[1])
 
 
+def matches_macos_bundle(name, commit):
+    match = re.fullmatch(r"LHash-macos-arm64-cli-([0-9a-f]{7,40})\.tar\.gz", name)
+    return match is not None and commit.startswith(match[1])
+
+
+def validate_macos_bundle(bundle, commit, version):
+    root = bundle.name.removesuffix(".tar.gz")
+    expected = {f"{root}/{name}" for name in ("lhash", "BUILD_INFO.txt", "SHA256.txt", "README.txt")}
+    with tarfile.open(bundle, "r:gz") as archive:
+        members = archive.getmembers()
+        files = {}
+        for member in members:
+            if member.isdir() and member.name.rstrip("/") == root:
+                continue
+            if not member.isfile() or member.name not in expected or member.name in files:
+                raise ValueError("Unsafe, duplicate or unexpected macOS package member")
+            if member.name != f"{root}/lhash" and member.size > 65536:
+                raise ValueError("Oversized macOS package metadata")
+            files[member.name] = member
+        if set(files) != expected:
+            raise ValueError("Missing executable or metadata in macOS package")
+        info = fields(archive.extractfile(files[f"{root}/BUILD_INFO.txt"]).read().decode("ascii"))
+        required = {"commit": commit, "application_version": version,
+                    "platform": "macos-arm64", "artifact_type": "cli",
+                    "openssl_vendor_version": OPENSSL_VERSION}
+        if any(info.get(key) != value for key, value in required.items()):
+            raise ValueError("macOS build metadata disagrees with the release")
+        with archive.extractfile(files[f"{root}/lhash"]) as executable:
+            digest = hashlib.file_digest(executable, "sha256").hexdigest()
+        checksum = archive.extractfile(files[f"{root}/SHA256.txt"]).read().decode("ascii")
+        if checksum != f"{digest}  lhash\n" or info.get("sha256") != digest:
+            raise ValueError("macOS executable checksum mismatch")
+
+
 def stage(assets, output, repo, env):
     commit = env["GITHUB_SHA"]
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("Expected a full build commit SHA")
     version = application_version(repo)
+    if env["GITHUB_REF"].startswith("refs/tags/"):
+        expected_tag = "refs/tags/v" + version.removesuffix(".0")
+        if env["GITHUB_REF"] != expected_tag:
+            raise ValueError("Release tag does not match the application version")
     if output.exists() and any(output.iterdir()):
         raise ValueError("Release staging directory must be empty")
     output.mkdir(parents=True, exist_ok=True)
@@ -68,16 +107,23 @@ def stage(assets, output, repo, env):
             raise ValueError(f"Build metadata disagrees with the release: {bundle.name}")
         shutil.copyfile(bundle, output / bundle.name)
         bundles[arch] = bundle.name
+    candidates = list(assets.glob("LHash-macos-arm64-cli-*.tar.gz"))
+    if len(candidates) != 1 or not matches_macos_bundle(candidates[0].name, commit):
+        raise ValueError("Expected exactly the macOS ARM64 CLI bundle from this commit")
+    macos_bundle = candidates[0]
+    validate_macos_bundle(macos_bundle, commit, version)
+    shutil.copyfile(macos_bundle, output / macos_bundle.name)
     metadata = {
         "release_mode": "tagged-release" if env["GITHUB_REF"].startswith("refs/tags/v") else "rehearsal",
         "ref": env["GITHUB_REF"], "commit": commit, "short_sha": commit[:7],
-        "lhash_application_version": version, "frontend": "windows-mfc",
+        "lhash_application_version": version, "frontend": "windows-mfc,macos-cli",
         "openssl_vendor_version": OPENSSL_VERSION,
         "openssl_vendor_source": f"third_party/openssl/{OPENSSL_VERSION}",
         "openssl_vendor_static": "true", "openssl_vendor_policy": "pristine-upstream-source",
         "openssl_vendor_local_patches": "none",
         "workflow_run": f"{env['GITHUB_SERVER_URL']}/{env['GITHUB_REPOSITORY']}/actions/runs/{env['GITHUB_RUN_ID']}",
         "windows_x64": bundles["x64"], "windows_arm64": bundles["arm64"],
+        "macos_arm64": macos_bundle.name,
     }
     if any("\n" in value or "\r" in value for value in metadata.values()):
         raise ValueError("Release metadata must not contain line breaks")
@@ -99,6 +145,16 @@ def release_names(directory):
         names.append(name)
     if {p.name for p in directory.glob("LHash-windows-*.zip")} != set(names):
         raise ValueError("Release archives do not match the exact two-architecture manifest")
+    # Existing Windows-only releases remain verifiable without altering them.
+    macos_names = set()
+    if "macos_arm64" in info:
+        name = info["macos_arm64"]
+        if not matches_macos_bundle(name, commit):
+            raise ValueError("Invalid macOS ARM64 release asset name")
+        macos_names.add(name)
+        names.append(name)
+    if {p.name for p in directory.glob("LHash-macos-*.tar.gz")} != macos_names:
+        raise ValueError("macOS release archives do not match the manifest")
     return [*names, MANIFEST, SBOM]
 
 
@@ -108,7 +164,7 @@ def finalize(directory, scan, repo):
     sbom = json.loads(scan.read_text(encoding="utf-8"))
     if sbom.get("bomFormat") != "CycloneDX" or not str(sbom.get("specVersion", "")).startswith("1."):
         raise ValueError("Expected a CycloneDX SBOM from the release scan")
-    # PE scanners cannot reliably recover statically linked library versions.
+    # Binary scanners cannot reliably recover statically linked library versions.
     # Record the build-declared libraries explicitly, alongside scanned entries.
     components = sbom.setdefault("components", [])
     source_info = fields((repo / "third_party/openssl/OPENSSL_3_5_9_SOURCE_INFO.txt").read_text())
@@ -146,16 +202,18 @@ def verify(directory):
         if sha256(directory / match[2]) != match[1]:
             raise ValueError(f"Release checksum mismatch: {match[2]}")
     if seen != set(names):
-        raise ValueError("Checksum manifest does not cover both architectures and metadata")
+        raise ValueError("Checksum manifest does not cover all platform packages and metadata")
     sbom = json.loads((directory / SBOM).read_text(encoding="utf-8"))
     if sbom.get("bomFormat") != "CycloneDX":
         raise ValueError("Invalid release SBOM")
-    print("Verified x64, ARM64, release metadata and SBOM checksums")
+    print("Verified all declared platform packages, release metadata and SBOM checksums")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
+    command = subparsers.add_parser("version")
+    command.add_argument("--repo", type=Path, default=Path.cwd())
     command = subparsers.add_parser("stage")
     command.add_argument("--assets", type=Path, required=True)
     command.add_argument("--output", type=Path, required=True)
@@ -168,13 +226,15 @@ def main():
     command.add_argument("--directory", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "stage":
+        if args.command == "version":
+            print(application_version(args.repo))
+        elif args.command == "stage":
             stage(args.assets, args.output, args.repo, os.environ)
         elif args.command == "finalize":
             finalize(args.directory, args.scan, args.repo)
         else:
             verify(args.directory)
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile) as error:
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile, tarfile.TarError) as error:
         print(f"Release asset validation failed: {error}", file=sys.stderr)
         return 1
     return 0

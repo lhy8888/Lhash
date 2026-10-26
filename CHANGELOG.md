@@ -1,13 +1,61 @@
 # Changelog
 
-This file only records the current maintained LHash release note. Older version
-entries have been removed, and the historical upstream release log is not
-duplicated here.
+Release notes for the maintained LHash line. Earlier entries below describe
+their respective releases; the historical upstream release log is not duplicated.
 
-## Unreleased
+## 1.12.6 - 2026-10-26
 
-- Update the pristine OpenSSL vendor source to 3.5.9 for Windows x64/ARM64, with the official archive SHA-256 recorded alongside the import.
-- Align build, test and release metadata with 3.5.9; validate versioned build markers before reusing local libcrypto outputs.
+This release updates the hash library, adds the macOS Apple Silicon CLI to the
+release packages, and fixes Windows result rendering and task lifecycle issues.
+
+### Hashing and platform support
+
+- Update the pristine OpenSSL vendor source to 3.5.9, with the official archive
+  SHA-256 and per-file source manifest recorded alongside the import.
+- Enable upstream OpenSSL assembly optimizations for Windows x64/ARM64 and
+  macOS arm64. Keep an explicit `portable` mode and validate target/mode metadata
+  before reusing a built library.
+- Connect the macOS CLI to the same 18-algorithm registry as Windows, including
+  JSON output, algorithm selection, and sequential/parallel execution options.
+- Target Apple Silicon through one generic arm64 build; remove macOS Intel
+  support. The macOS package remains unsigned and unnotarized.
+
+### Windows output and task state
+
+- Fix an incremental-display regression that inserted new text at an old
+  selection, causing overdraw and file/digest order mismatches. Append at the
+  actual control end and preserve the user's selection.
+- Track updates by session and task identity so duplicate file paths retain
+  separate completion states.
+- Finalize unfinished task rows after cancellation or abnormal worker exit,
+  preserving completed results and keeping later sessions independent.
+- Avoid dialog-manager message collisions in worker notifications.
+
+### Responsiveness and error reporting
+
+- Use task-to-row indexing and incremental status counts, and deliver text
+  changes without holding the producer lock during UI updates.
+- Move folder enumeration to a worker with bounded scanning, cancellation and
+  shutdown handling that does not wait for a blocked enumeration call.
+- Measure elapsed time with a monotonic clock instead of counting timer messages.
+- Flush and check CLI stdout before returning success, including algorithm lists
+  and JSON output; return a failure status when writing fails.
+
+### Release and validation
+
+- Publish Windows x64, Windows ARM64 and macOS arm64 CLI packages under the same
+  tag, with shared checksums, a release manifest, a CycloneDX SBOM and attestations.
+- Update application metadata to `1.12.6.0`, refresh the README and synchronize
+  issue templates and release metadata checks.
+- Expand native Windows GUI coverage to 18 cases per architecture, including
+  ordered records from 128 different files and selections held during appends.
+  Add a real EDIT-control regression test with the old API behavior as a
+  negative control.
+- Exercise optimized and portable builds on native Windows x64/ARM64 and macOS
+  arm64, plus Linux/macOS sanitizer and shared engine/CLI regressions.
+
+See [audit fixes](docs/AUDIT_FIXES.md) and [testing](docs/TESTING.md) for the
+implementation details and coverage boundaries.
 
 ## 1.12.5 - 2026-05-05
 

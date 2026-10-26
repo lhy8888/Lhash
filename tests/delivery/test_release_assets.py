@@ -1,5 +1,6 @@
 """Consumer-oriented release tests. All artifacts are harmless local fixtures."""
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -26,27 +27,51 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.assets = self.root / "assets"
         self.assets.mkdir()
         self.output = self.root / "release"
-        self.env = dict(GITHUB_SHA="0123456789abcdef" * 2 + "01234567", GITHUB_REF="refs/tags/v1.12.5",
-                        GITHUB_SERVER_URL="https://github.com", GITHUB_REPOSITORY="owner/repo", GITHUB_RUN_ID="1")
         self.version = release.application_version(REPO)
+        self.env = dict(GITHUB_SHA="0123456789abcdef" * 2 + "01234567", GITHUB_REF="refs/tags/v" + self.version.removesuffix(".0"),
+                        GITHUB_SERVER_URL="https://github.com", GITHUB_REPOSITORY="owner/repo", GITHUB_RUN_ID="1")
         for arch in ("x64", "arm64"):
             with zipfile.ZipFile(self.assets / f"LHash-windows-{arch}-{self.env['GITHUB_SHA'][:7]}.zip", "w") as archive:
                 archive.writestr("LHash.exe", b"harmless binary fixture")
                 archive.writestr("BUILD_INFO.txt", f"commit={self.env['GITHUB_SHA']}\napplication_version={self.version}\nopenssl_vendor_version=3.5.9\n")
+        self.write_macos()
         self.scan = self.root / "scan.json"
         self.scan.write_text(json.dumps({"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1, "components": []}))
+
+    def write_macos(self, metadata=None, checksum=None, extra=None, omit=None):
+        root = f"LHash-macos-arm64-cli-{self.env['GITHUB_SHA'][:7]}"
+        binary = b"harmless macOS binary fixture"
+        digest = hashlib.sha256(binary).hexdigest()
+        info = {"commit": self.env["GITHUB_SHA"], "application_version": self.version,
+                "platform": "macos-arm64", "artifact_type": "cli",
+                "openssl_vendor_version": "3.5.9", "sha256": digest}
+        info.update(metadata or {})
+        contents = {"lhash": binary, "README.txt": b"local fixture\n",
+                    "BUILD_INFO.txt": "".join(f"{key}={value}\n" for key, value in info.items()).encode(),
+                    "SHA256.txt": (checksum or f"{digest}  lhash\n").encode()}
+        with tarfile.open(self.assets / (root + ".tar.gz"), "w:gz") as archive:
+            for name, data in contents.items():
+                if name == omit:
+                    continue
+                member = tarfile.TarInfo(root + "/" + name)
+                member.size = len(data)
+                member.mode = 0o755 if name == "lhash" else 0o644
+                archive.addfile(member, io.BytesIO(data))
+            if extra is not None:
+                archive.addfile(extra, io.BytesIO(b""))
 
     def build(self):
         release.stage(self.assets, self.output, REPO, self.env)
         with contextlib.redirect_stdout(io.StringIO()):
             release.finalize(self.output, self.scan, REPO)
 
-    def test_both_architectures_and_metadata_verify_from_download_directory(self):
+    def test_all_platform_packages_and_metadata_verify_from_download_directory(self):
         self.build()
         checksums = (self.output / release.CHECKSUMS).read_text()
-        self.assertEqual(len(checksums.splitlines()), 4)
+        self.assertEqual(len(checksums.splitlines()), 5)
         self.assertIn("LHash-windows-x64-", checksums)
         self.assertIn("LHash-windows-arm64-", checksums)
+        self.assertIn("LHash-macos-arm64-cli-", checksums)
         self.assertNotIn("release-assets/", checksums)
         self.assertIn(f"lhash_application_version={self.version}", (self.output / release.MANIFEST).read_text())
         consumer = self.root / "downloaded"
@@ -79,8 +104,88 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.build()
         path = self.output / release.CHECKSUMS
         path.write_text("\n".join(line for line in path.read_text().splitlines() if "arm64" not in line) + "\n")
-        with self.assertRaisesRegex(ValueError, "both architectures"):
+        with self.assertRaisesRegex(ValueError, "all platform packages"):
             release.verify(self.output)
+
+    def test_missing_macos_package_rejected(self):
+        next(self.assets.glob("*.tar.gz")).unlink()
+        with self.assertRaisesRegex(ValueError, "macOS"):
+            release.stage(self.assets, self.output, REPO, self.env)
+
+    def test_macos_package_name_must_match_commit(self):
+        current = next(self.assets.glob("*.tar.gz"))
+        current.rename(self.assets / "LHash-macos-arm64-cli-fffffff.tar.gz")
+        with self.assertRaisesRegex(ValueError, "from this commit"):
+            release.stage(self.assets, self.output, REPO, self.env)
+
+    def test_omitted_macos_checksum_rejected(self):
+        self.build()
+        path = self.output / release.CHECKSUMS
+        path.write_text("\n".join(line for line in path.read_text().splitlines()
+                                  if "LHash-macos-" not in line) + "\n")
+        with self.assertRaisesRegex(ValueError, "all platform packages"):
+            release.verify(self.output)
+
+    def test_macos_commit_version_and_platform_must_match(self):
+        for key, value in (("commit", "f" * 40), ("application_version", "0.0.0.0"),
+                           ("platform", "macos-x64"), ("openssl_vendor_version", "0.0.0")):
+            with self.subTest(key=key):
+                self.write_macos(metadata={key: value})
+                with self.assertRaisesRegex(ValueError, "metadata disagrees"):
+                    release.stage(self.assets, self.root / ("bad-" + key), REPO, self.env)
+
+    def test_macos_internal_checksum_must_match_executable(self):
+        for kind in ("text", "metadata"):
+            with self.subTest(kind=kind):
+                if kind == "text":
+                    self.write_macos(checksum="0" * 64 + "  lhash\n")
+                else:
+                    self.write_macos(metadata={"sha256": "0" * 64})
+                with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                    release.stage(self.assets, self.root / ("bad-" + kind), REPO, self.env)
+
+    def test_macos_archive_rejects_unsafe_duplicate_and_missing_members(self):
+        root = f"LHash-macos-arm64-cli-{self.env['GITHUB_SHA'][:7]}"
+        symlink = tarfile.TarInfo(root + "/escape")
+        symlink.type = tarfile.SYMTYPE
+        symlink.linkname = "../../outside"
+        extras = [tarfile.TarInfo("../outside"), tarfile.TarInfo("/absolute"),
+                  tarfile.TarInfo(root + "/BUILD_INFO.txt"), symlink]
+        for index, extra in enumerate(extras):
+            with self.subTest(member=extra.name):
+                self.write_macos(extra=extra)
+                with self.assertRaisesRegex(ValueError, "Unsafe, duplicate"):
+                    release.stage(self.assets, self.root / f"bad-member-{index}", REPO, self.env)
+        self.write_macos(omit="lhash")
+        with self.assertRaisesRegex(ValueError, "Missing executable"):
+            release.stage(self.assets, self.root / "bad-missing", REPO, self.env)
+
+    def test_modified_or_omitted_macos_package_rejected(self):
+        self.build()
+        package = next(self.output.glob("*.tar.gz"))
+        package.write_bytes(b"changed fixture")
+        with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+            release.verify(self.output)
+        package.unlink()
+        with self.assertRaisesRegex(ValueError, "macOS release archives"):
+            release.verify(self.output)
+
+    def test_release_tag_must_match_application_version(self):
+        env = dict(self.env, GITHUB_REF="refs/tags/v0.0.0")
+        with self.assertRaisesRegex(ValueError, "tag does not match"):
+            release.stage(self.assets, self.output, REPO, env)
+
+    def test_existing_windows_only_release_remains_verifiable(self):
+        self.build()
+        next(self.output.glob("*.tar.gz")).unlink()
+        manifest = self.output / release.MANIFEST
+        manifest.write_text("\n".join(line for line in manifest.read_text().splitlines()
+                                     if not line.startswith("macos_arm64=")) + "\n")
+        (self.output / release.CHECKSUMS).unlink()
+        with contextlib.redirect_stdout(io.StringIO()):
+            release.finalize(self.output, self.scan, REPO)
+            release.verify(self.output)
+        self.assertEqual(len((self.output / release.CHECKSUMS).read_text().splitlines()), 4)
 
     def test_prefixed_or_traversal_checksum_path_rejected(self):
         self.build()
@@ -147,10 +252,12 @@ class ReleaseAssetsTest(unittest.TestCase):
         executable = self.root / "lhash"
         executable.write_bytes(b"harmless package fixture")
         env = dict(os.environ, CLI_PATH=str(executable), GITHUB_SHA=self.env["GITHUB_SHA"],
+                   GITHUB_REF=self.env["GITHUB_REF"], GITHUB_WORKSPACE=str(REPO),
                    GIT_DIR=str(REPO / ".git"), GIT_WORK_TREE=str(REPO))
         result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", self.shell_step("macos-cli-build.yml", "Package")],
                                 cwd=self.root, env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        release.validate_macos_bundle(next((self.root / "dist").glob("*.tar.gz")), self.env["GITHUB_SHA"], self.version)
         downloaded = self.root / "extracted"
         downloaded.mkdir()
         with tarfile.open(next((self.root / "dist").glob("*.tar.gz"))) as archive:

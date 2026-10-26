@@ -1,197 +1,167 @@
 # LHash
 
-![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg)
+![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
+![macOS CLI Build](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6)
 
-## Trusted local verification for Windows
+LHash calculates checksums for local files. Use the Windows desktop app or the
+macOS command-line tool to calculate SHA-256, compare a downloaded file with an
+expected digest, or process a batch of files. Files are read locally; hashing
+does not require an account or uploading file contents.
 
-LHash is a security-first Windows verification tool for local files, release bundles, and repeatable integrity checks.
+## Download
 
-It is built for users who want to answer practical trust questions such as:
-
-- Did this downloaded file change?
-- Does this release bundle still match the expected artifact?
-- Can I verify files locally without uploading them anywhere?
-- Can I produce repeatable results for later review or evidence keeping?
-
-The maintained release line turns LHash from a traditional hash utility into a **trusted verification tool** with safer local defaults, clearer execution boundaries, and a more reviewable release posture.
-
-## Current release line
-
-- Current release: [`v1.12.5`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.5)
-- Download: [`GitHub Releases`](https://github.com/lhy8888/Lhash/releases)
-- Maintained branch: `future-winui-was2`
+- Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)
+- Maintained branch: `codex/openssl-3.5.9-vendor`
 - Windows UI mainline: `MFC`
-- CI: [`Windows Build workflow`](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml)
-- Core CI: [`Core Build Matrix workflow`](.github/workflows/core-m2.yml)
-- macOS Apple Silicon CLI: [`macOS CLI Build workflow`](.github/workflows/macos-cli-build.yml)
-- Core build entry point: [`docs/CORE_BUILD.md`](docs/CORE_BUILD.md)
-- macOS core support: [`docs/MACOS_CORE_SUPPORT.md`](docs/MACOS_CORE_SUPPORT.md)
-- Security policy: [SECURITY.md](SECURITY.md)
-- Code signing: [CODE_SIGNING.md](CODE_SIGNING.md)
-- Code signing policy: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)
-- License note: `GPL-2.0-only with an OpenSSL linking exception`; see [LICENSE-OPENSSL-EXCEPTION.md](LICENSE-OPENSSL-EXCEPTION.md)
 
-## Why LHash is positioned as a verification tool
+Choose the package for your operating system and processor from the release page:
 
-LHash is not only about computing digests quickly. It is built around the idea that **verification results must themselves be trustworthy**.
+| Platform | Package | Interface |
+| --- | --- | --- |
+| Windows x64 | `LHash-windows-x64-<commit>.zip` | Desktop app (`LHash.exe`) |
+| Windows ARM64 | `LHash-windows-arm64-<commit>.zip` | Native ARM64 desktop app (`LHash.exe`) |
+| macOS Apple Silicon | `LHash-macos-arm64-cli-<commit>.tar.gz` | Native arm64 CLI (`lhash`) |
 
-That means the maintained line focuses on:
+macOS uses one generic arm64 build for M-series Macs. There is no Intel build
+or macOS GUI. The macOS package is unsigned and not notarized; Windows signing
+depends on the release's recorded signature state.
 
-- safer local file handling
-- deterministic results under concurrency
-- explicit treatment of large files and overflow boundaries
-- clearer separation between UI code and verification runtime code
-- release and supply-chain metadata that can be reviewed later
+The current release includes `SHA256SUMS.txt`, `RELEASE_MANIFEST.txt` and
+`LHash-release.cyclonedx.json`. Compare the archive's SHA-256 with its entry in
+`SHA256SUMS.txt` before extracting it. For example, Windows PowerShell can use:
 
-## Security and verification documents
-
-Start here if you want the project’s trust model in a more reviewable form:
-
-- [Documentation index](docs/README.md)
-- [Threat model](docs/THREAT_MODEL.md)
-- [Security model](docs/SECURITY_MODEL.md)
-- [Release verification guide](docs/RELEASE_VERIFICATION.md)
-- [Supply-chain security](docs/SUPPLY_CHAIN_SECURITY.md)
-
-## Security model highlights
-
-### Local-first by default
-
-LHash is intended for local verification workflows.
-
-- no account requirement
-- no telemetry requirement
-- no default upload of file contents
-- no default upload of hashes to third-party services
-
-### Safer path handling
-
-By default, LHash rejects risky path types such as:
-
-- symbolic links
-- junction points
-- reparse points
-
-This reduces accidental trust mistakes, privilege surprises, and unintended traversal into sensitive paths.
-
-### Verification stability under load
-
-LHash uses:
-
-- per-task hash contexts
-- no shared mutable static hashing state
-- checked integer conversions and 64-bit file size handling
-- RAII-style resource ownership
-
-The goal is not just speed, but repeatable and reviewable results under real workloads.
-
-## What the tool is for
-
-LHash is a good fit for:
-
-- verifying downloaded software packages before use
-- checking release artifacts from GitHub Releases
-- confirming that evidence copies did not change
-- batch verification of local directories
-- comparing expected and actual digests during delivery or handover
-
-## Input limits
-
-LHash currently processes up to `8192` files per hashing session.
-
-- drag-and-drop and `WM_COPYDATA` batches above this limit are rejected with a visible warning
-- folder recursion stops at the limit and warns that additional files may not have been processed
-- the legacy multi-select file dialog warns when the returned selection may have hit the same limit
-
-## What the tool is not trying to be
-
-LHash is not presented as a complete authenticity framework by itself.
-
-A hash proves that content matches a digest. It does **not** by itself prove publisher identity.
-
-That is why this repository is also moving toward:
-
-- code-signing clarity
-- release checksum publication
-- GitHub-native artifact attestations
-- release SBOM publication
-
-Together, those make the project more useful as a trusted verification tool instead of just a fast hash calculator.
-
-## Supported algorithms
-
-### Cryptographic hashes
-
-- MD5
-- SHA-1
-
-### Modern high-performance hashes
-
-- BLAKE3-256
-- BLAKE3-512
-- BLAKE3 on macOS arm64 uses the native NEON path in the core build
-
-### OpenSSL 3.5 LTS extended algorithms
-
-- SHA-256
-- SHA-384
-- SHA-512
-- SHA3-256
-- SHA3-384
-- SHA3-512
-- BLAKE2b-512
-- BLAKE2s-256
-- SHAKE128-256
-- SHAKE256-512
-
-### Non-cryptographic checksums
-
-- XXHash3-64
-- XXHash3-128
-- CRC32C
-
-## Architecture direction
-
-The maintained line has been reworked into clearer layers:
-
-```text
-NativeCore
-- Domain
-- Runtime
-- Algorithms
-- Common
-
-Windows UI
-- WinMFC
-
-Active adapters
-- MfcBridge
-- UiBridge
-
-third_party
+```powershell
+Get-FileHash .\LHash-windows-x64-*.zip -Algorithm SHA256
 ```
 
-This makes it easier to reason about trust boundaries, execution behavior, and future interface expansion.
+On macOS:
 
-macOS support targets Apple Silicon M-series Macs through a generic arm64 build.
-This baseline-only core support contract includes Darwin-specific
-path security checks and a dedicated security regression target. It is part of
-the core bring-up, not a full macOS product line.
+```sh
+shasum -a 256 LHash-macos-arm64-cli-*.tar.gz
+```
 
-The Windows product uses the MFC desktop UI. The macOS Apple Silicon CLI uses the same 18-algorithm registry and static OpenSSL 3.5.9 backend. macOS artifacts are unsigned and unnotarized; there is no macOS GUI or Intel target.
+The [release verification guide](docs/RELEASE_VERIFICATION.md) covers complete
+checksum verification, build metadata, signing state and GitHub attestations.
 
-## Roadmap direction
+## Quick start
 
-Near-term roadmap items that reinforce the verification positioning include:
+### Windows
 
-- stronger release verification documentation
-- broader supply-chain metadata on releases
-- clearer threat-model documentation
-- deeper static analysis coverage across managed and native code
-- continued MFC mainline hardening
+1. Extract the matching Windows package and run `LHash.exe`.
+2. Open files, open a folder, or drag files into the window.
+3. Choose the algorithms you need. The defaults are SHA-256, SHA-512 and SHA3-256.
+4. Use **Verify** to find an expected digest in the results, or copy/export the
+   calculated values.
 
-## One-line positioning
+The task list shows each input separately, including repeated paths. Stop ends
+the active session and marks unfinished tasks accordingly. Folder scanning runs
+outside the UI thread so the window remains responsive while collecting files.
 
-**LHash is a Windows MFC trusted verification tool for local integrity checking, repeatable review, and safer release validation.**
+### macOS Apple Silicon
+
+Extract the macOS package, then open a terminal in the extracted directory:
+
+```sh
+# Check the extracted executable against its bundled checksum.
+shasum -a 256 -c SHA256.txt
+
+# Calculate only SHA-256 for a local file.
+./lhash -a sha256 "/path/to/file.iso"
+
+# Use the same default algorithms as Windows.
+./lhash "/path/to/file.iso"
+
+# List all available algorithms or calculate all of them.
+./lhash --list-algorithms
+./lhash --all "/path/to/file.iso"
+
+# Select multiple algorithms and write one JSON record per file.
+./lhash -a sha256 -a blake3-256 --json "first.bin" "second.bin" > hashes.jsonl
+
+# End option parsing for a filename beginning with a dash.
+./lhash -a sha256 -- -example.bin
+```
+
+`--parallel` and `--single-threaded` select the digest execution policy.
+Exit codes are **0** for success, **1** for file/runtime/output failures and
+**2** for invalid arguments. Paths must use UTF-8. See
+[macOS CLI support](docs/MACOS_CORE_SUPPORT.md) for build instructions and the
+file-handling contract.
+
+## Algorithms
+
+Release builds expose the same **18 algorithms** on Windows and macOS:
+
+| Family | Algorithms |
+| --- | --- |
+| SHA-2 | SHA-256, SHA-384, SHA-512 |
+| SHA-3 | SHA3-256, SHA3-384, SHA3-512 |
+| BLAKE2 | BLAKE2b-512, BLAKE2s-256 |
+| SHAKE | SHAKE128-256 (32 bytes), SHAKE256-512 (64 bytes) |
+| BLAKE3 | BLAKE3-256, BLAKE3-512, BLAKE3 XOF (128 bytes) |
+| Legacy hashes | MD5, SHA-1 |
+| Non-cryptographic checksums | XXH3-64, XXH3-128, CRC32C |
+
+Choose SHA-256 when comparing a published SHA-256 checksum. MD5 and SHA-1 are
+retained for compatibility; XXH3 and CRC32C are non-cryptographic checksums.
+A matching digest establishes a content match with that digest, not the
+identity of its publisher.
+
+The SHA-2, SHA-3, BLAKE2 and SHAKE implementations use statically linked
+**OpenSSL 3.5.9** from the pristine upstream source. Production builds enable
+OpenSSL's upstream assembly optimizations and runtime CPU dispatch. An explicit
+`portable` build mode remains available for compatibility checks and diagnosis;
+see [OpenSSL build modes](docs/OPENSSL_OPTIMIZATION.md). BLAKE3 uses the native
+NEON path on Apple Silicon.
+
+## What's new in 1.12.6
+
+- Upgrade the vendored OpenSSL library to 3.5.9 and enable its optimized builds
+  on Windows x64/ARM64 and macOS arm64.
+- Add the macOS Apple Silicon CLI with all 18 Windows algorithms and include its
+  package in the tagged release.
+- Fix Windows result text appearing overlapped or out of order during updates;
+  append at the actual text end while retaining the user's selection.
+- Preserve separate states for duplicate file inputs, and finish task states
+  after cancellation or abnormal worker exit.
+- Reduce task/text refresh overhead, move folder scanning off the UI thread,
+  and measure elapsed time with a monotonic clock.
+- Return a failure status when the CLI cannot write or flush its output.
+
+See the [changelog](CHANGELOG.md), [中文更新日志](CHANGELOG.zh-CN.md),
+[audit fixes](docs/AUDIT_FIXES.md) and [test coverage](docs/TESTING.md).
+
+## Limits and file handling
+
+Each hashing session accepts up to **8192 files**. Oversized file batches are
+rejected; folder scans stop at their budget and warn when results are incomplete.
+Path checks reject unsupported input types, and detectable file changes during
+reading are reported as failures. These checks do not create a filesystem
+snapshot. Details are in the [security model](docs/SECURITY_MODEL.md) and
+[macOS file contract](docs/MACOS_CORE_SUPPORT.md#file-and-platform-contract).
+
+## Build, tests and project documents
+
+- [Windows Build workflow](.github/workflows/windows-build.yml): Windows x64 and
+  native ARM64 runtime/GUI tests, packaging and tagged release publication.
+- [Core Build Matrix workflow](.github/workflows/core-m2.yml): native core smoke
+  and runtime checks on Windows and macOS.
+- [macOS CLI Build workflow](.github/workflows/macos-cli-build.yml): Apple Silicon
+  CLI build, full engine/algorithm tests and packaging.
+- [Portable Runtime Tests](.github/workflows/portable-runtime-tests.yml): Linux
+  diagnostic and macOS arm64 regressions, including sanitizer builds.
+- [Core build instructions](docs/CORE_BUILD.md), [test guide](docs/TESTING.md)
+  and [documentation index](docs/README.md).
+- [Security policy](SECURITY.md), [supply-chain metadata](docs/SUPPLY_CHAIN_SECURITY.md)
+  and [code signing](CODE_SIGNING.md).
+
+Windows GUI coverage includes real x64/ARM64 runs, record ordering across 128
+different files, and selection preservation while results arrive. Native
+macOS CI validates its hosted arm64 machine; it does not claim individual
+hardware testing of every M-series model. Linux is a diagnostic test backend,
+not a supported release target.
+
+License: **GPL-2.0-only with an OpenSSL linking exception**. See
+[LICENSE](LICENSE) and [LICENSE-OPENSSL-EXCEPTION.md](LICENSE-OPENSSL-EXCEPTION.md).

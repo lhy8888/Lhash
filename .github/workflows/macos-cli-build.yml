@@ -1,6 +1,7 @@
 name: macOS ARM64 CLI Build
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches:
@@ -87,13 +88,17 @@ jobs:
 
       - name: Package
         run: |
-          SHA=$(git rev-parse --short HEAD)
+          SHA=${GITHUB_SHA:0:7}
+          APPLICATION_VERSION=$(python3 "$GITHUB_WORKSPACE/tools/release_assets.py" version --repo "$GITHUB_WORKSPACE")
           DIR="LHash-macos-arm64-cli-${SHA}"
           mkdir -p "dist/${DIR}"
           cp "$CLI_PATH" "dist/${DIR}/"
           (cd "dist/${DIR}" && shasum -a 256 lhash > SHA256.txt)
           cat > "dist/${DIR}/README.txt" <<EOF
           LHash macOS ARM64 CLI
+
+          Version:
+          - $APPLICATION_VERSION
 
           Commit:
           - $GITHUB_SHA
@@ -109,11 +114,13 @@ jobs:
           - ./lhash --list-algorithms
           - ./lhash --all <file>
           - shasum -a 256 -c SHA256.txt
-          - This workflow artifact is unsigned and is not notarized.
+          - This package is unsigned and is not notarized.
           EOF
           cat > "dist/${DIR}/BUILD_INFO.txt" <<EOF
           commit=$GITHUB_SHA
           short_sha=$SHA
+          ref=$GITHUB_REF
+          application_version=$APPLICATION_VERSION
           platform=macos-arm64
           artifact_type=cli
           openssl_enabled=true
