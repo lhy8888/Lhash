@@ -51,10 +51,10 @@ quoted arguments, rather than shell-source interpolation.
 A manual Windows Build dispatch produces a rehearsal artifact and verifies its
 metadata without publishing a release or creating release attestations.
 
-The new app ZIP belongs to the maintained branch's future release path. The
-already published v1.12.6 release has three platform packages: Windows x64,
-Windows ARM64 and the macOS CLI. Its original checksum and attestation set is
-not rewritten to include the desktop app.
+From v1.13.0 onward, the release includes four platform packages: Windows x64,
+Windows ARM64, the macOS desktop app and the macOS CLI. The v1.12.6 release
+retains its original three-package checksum and attestation set, without the
+desktop app.
 
 ## Vendored OpenSSL integrity
 
@@ -90,17 +90,17 @@ builds also retain it as a workflow artifact. It remains unsigned and not
 notarized. Only Apple Silicon/arm64 is supported; an arm64 build is not a record
 of testing individual M-series hardware models.
 
-The maintained branch also builds `LHash-macos-arm64-app-<shortsha>.zip` as a
-separate Actions artifact. It contains `LHash.app`, package metadata, a checksum
+The macOS workflow also builds `LHash-macos-arm64-app-<shortsha>.zip`, included
+in releases from v1.13.0 onward and retained as a separate Actions artifact. It contains `LHash.app`, package metadata, a checksum
 list and license notices. The app uses the same statically linked core and
 algorithm set as the CLI. Packaging checks the arm64 executable and bundle
 version, applies a local ad-hoc signature, verifies that signature, and records
 checksums for the package files. Ad-hoc signing does not establish a Developer
-ID identity; the app is not notarized. Future tagged releases include the app
-archive in the checksum, manifest, SBOM and attestation set.
+ID identity; the app is not notarized. Tagged releases from v1.13.0 include the
+app archive in the checksum, manifest, SBOM and attestation set.
 
-See the [desktop guide](MACOS_GUI.md) for obtaining and verifying the branch
-artifact. A successful branch build is not itself a new published release.
+See the [desktop guide](MACOS_GUI.md) for obtaining and verifying the app.
+A successful branch build is not itself a new published release.
 
 ## Automation controls and limitations
 

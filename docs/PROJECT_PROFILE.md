@@ -2,7 +2,7 @@
 
 ## One-line summary
 
-LHash is a Windows **trusted local verification tool** for file integrity checking, release review, and repeatable offline verification workflows.
+LHash is a **local file checksum tool for Windows and Apple Silicon Mac**, with desktop apps for everyday verification and a Mac command-line tool for automated workflows.
 
 ## What the project does
 
@@ -29,7 +29,7 @@ Typical users may include:
 - advanced end users who verify downloaded software
 - developers and maintainers reviewing release artifacts
 - IT and infrastructure engineers doing package verification
-- reviewers who want a clearer local verification path on Windows
+- users who want a straightforward local verification workflow on Windows or Mac
 - users in higher-trust environments who prefer offline or local-only checking
 
 ## Core positioning
@@ -141,10 +141,10 @@ The project is best described as:
 
 ## Short external description
 
-LHash is a Windows trusted local verification tool that helps users review files and release artifacts with safer defaults, repeatable results, and clearer release metadata than a typical generic hash utility.
+LHash is a local file checksum tool for Windows and Apple Silicon Mac. It brings batch hashing, checksum comparison, copying and export into a straightforward desktop interface, with a Mac command-line tool for automated workflows.
 
 The Windows product uses the MFC desktop UI. The macOS Apple Silicon app and CLI
-share its 18-algorithm registry and static OpenSSL 3.5.9 backend. The maintained
-branch adds a native AppKit app, locally ad-hoc signed without Developer ID
-signing or notarization. The published v1.12.6 macOS package remains the unsigned,
-unnotarized CLI. There is no Intel target. See [macOS desktop support](MACOS_GUI.md).
+share its 18-algorithm registry and static OpenSSL 3.5.9 backend. Releases from
+v1.13.0 include the native AppKit app, locally ad-hoc signed without Developer
+ID signing or notarization. The separate CLI is unsigned and unnotarized.
+There is no Intel target. See [macOS desktop support](MACOS_GUI.md).

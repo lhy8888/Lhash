@@ -132,8 +132,8 @@ OpenSSL build instructions and command-line options. `LHASH_BUILD_CLI=ON` requir
 
 `LHASH_BUILD_MACOS_GUI=ON` adds the native AppKit app on macOS 14+ arm64 and also
 requires the vendor backend. The bundle is written to `bin/LHash.app` inside the
-build directory. See the [desktop build and usage guide](MACOS_GUI.md); the
-existing v1.12.6 release remains CLI-only on macOS until a later GUI release.
+build directory. The app is included in official releases from v1.13.0 onward.
+See the [desktop build and usage guide](MACOS_GUI.md).
 
 On Linux, add `LHASH_ENABLE_POSIX_TEST_BACKEND=ON` to run the common engine and
 CLI against the portable POSIX file backend in cloud tests. This option defaults

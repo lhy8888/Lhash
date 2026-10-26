@@ -3,33 +3,35 @@ namespace LHash.UnitTests;
 public sealed class ReleaseMetadataUnitTests
 {
     [Fact]
-    public void LegacyVersion_IsUpdatedTo_1_12_6_0_AndAboutDialogDisplays_1_12_6()
+    public void LegacyVersion_IsUpdatedTo_1_13_0_0_AndAboutDialogDisplays_1_13_0()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string aboutDialog = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\AboutDlg.cpp");
 
-        Assert.Contains("#define NUM_VERSION_LEGACY 1,12,6,0", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.6.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define NUM_VERSION_LEGACY 1,13,0,0", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.13.0.0\"", versionHeader, StringComparison.Ordinal);
         Assert.Contains("if (LHashVersion.Right(2) == _T(\".0\"))", aboutDialog, StringComparison.Ordinal);
         Assert.Contains("LHashVersion = LHashVersion.Left(LHashVersion.GetLength() - 2);", aboutDialog, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ActivePlatformVersionMetadata_IsAlignedTo_1_12_6_0()
+    public void ActivePlatformVersionMetadata_IsAlignedTo_1_13_0_0()
     {
         string versionHeader = RepositoryTestContext.ReadTextFile(@"trunk\source\WinMFC\version.h");
         string readme = RepositoryTestContext.ReadTextFile(@"README.md");
         string draft = RepositoryTestContext.ReadTextFile(@"docs\README-trusted-verification-draft.md");
 
-        Assert.Contains("#define STR_VERSION_LEGACY \"1.12.6.0\"", versionHeader, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)", readme, StringComparison.Ordinal);
-        Assert.Contains("Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)", draft, StringComparison.Ordinal);
-        Assert.Contains("Windows UI mainline: `MFC`", readme, StringComparison.Ordinal);
+        Assert.Contains("#define STR_VERSION_LEGACY \"1.13.0.0\"", versionHeader, StringComparison.Ordinal);
+        Assert.Contains("https://github.com/lhy8888/Lhash/releases/tag/v1.13.0", readme, StringComparison.Ordinal);
+        Assert.Contains("Current release: [`v1.13.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.13.0)", draft, StringComparison.Ordinal);
         Assert.Contains("Windows UI mainline: `MFC`", draft, StringComparison.Ordinal);
-        Assert.Contains("Core Build Matrix workflow", readme, StringComparison.Ordinal);
         Assert.Contains("Core Build Matrix workflow", draft, StringComparison.Ordinal);
-        Assert.Contains("macOS Build workflow", readme, StringComparison.Ordinal);
         Assert.Contains("macOS Build workflow", draft, StringComparison.Ordinal);
+        foreach (string package in new[] { "LHash-windows-x64-", "LHash-windows-arm64-", "LHash-macos-arm64-app-", "LHash-macos-arm64-cli-" })
+        {
+            Assert.Contains(package, readme, StringComparison.Ordinal);
+        }
+        Assert.Contains("docs/MACOS_GUI.md", readme, StringComparison.Ordinal);
     }
 
     [Fact]

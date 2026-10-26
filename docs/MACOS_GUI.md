@@ -1,20 +1,22 @@
 # macOS desktop app
 
-The maintained branch adds a native AppKit desktop interface for **macOS 14+
+LHash provides a native AppKit desktop interface for **macOS 14+
 on Apple Silicon**. Its layout and file-hashing actions follow the Windows
 desktop app. The interface calls the shared C++ engine directly, with the same
 18 algorithms and OpenSSL 3.5.9 backend as Windows and the macOS CLI.
 
-The current published release, **v1.12.6**, contains the macOS CLI only. The app
-is available from successful branch builds until a later release includes it.
-This does not modify the existing release's files or checksums.
+Starting with **v1.13.0**, the desktop app is included in the official release
+alongside the macOS CLI and Windows apps.
 
 ## Get the app
 
-Open the [macOS workflow](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml),
-choose a successful run for `codex/openssl-3.5.9-vendor`, and download its
-`LHash-macos-arm64-app` artifact. After extracting the artifact wrapper, extract
-`LHash-macos-arm64-app-<shortsha>.zip`.
+Open the [latest release](https://github.com/lhy8888/Lhash/releases/latest)
+and download `LHash-macos-arm64-app-<shortsha>.zip`. Check the archive against
+the release's `SHA256SUMS.txt`, then extract it.
+
+Development builds are also available as the `LHash-macos-arm64-app` artifact
+from successful [macOS workflow](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml)
+runs. These artifacts have their own source commit and package checksums.
 
 The package directory contains:
 

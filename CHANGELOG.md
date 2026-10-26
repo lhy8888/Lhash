@@ -3,6 +3,34 @@
 Release notes for the maintained LHash line. Earlier entries below describe
 their respective releases; the historical upstream release log is not duplicated.
 
+## 1.13.0 - 2026-10-26
+
+LHash comes to the Mac desktop. This release adds a native Apple Silicon app
+with the familiar Windows workflow, alongside the existing Windows apps and
+macOS command-line tool.
+
+### New macOS desktop app
+
+- Open files or folders, or drag them from Finder, and calculate checksums with
+  the same 18 algorithms available on Windows.
+- Verify an expected digest, copy results or individual hashes, and export
+  results to a text file.
+- Follow each file's status and progress, stop a batch, and keep completed
+  results for comparison.
+- Choose algorithms and letter case in Settings, with preferences saved for
+  the next launch.
+- Use a Chinese or English interface with native Mac controls and keyboard
+  shortcuts on macOS 14 or later with Apple Silicon.
+
+### Release and validation
+
+- Add `LHash-macos-arm64-app-<commit>.zip` to the release alongside Windows x64,
+  Windows ARM64 and the macOS CLI, with shared release checksums and metadata.
+- Add native Mac interface tests for file handling, verification, clipboard,
+  export, settings, drag and drop, result updates and cancellation.
+- Retain the OpenSSL 3.5.9 backend and shared algorithm set across platforms.
+- Refresh the README around features, everyday uses and getting started.
+
 ## 1.12.6 - 2026-10-26
 
 This release updates the hash library, adds the macOS Apple Silicon CLI to the

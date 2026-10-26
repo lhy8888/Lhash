@@ -6,9 +6,8 @@ backend as Windows. All **18** Windows algorithms are available; the default
 selection is also shared: SHA-256, SHA-512 and SHA3-256.
 
 The desktop app uses native AppKit controls with the same main layout and hashing
-actions as the Windows app. It is built on the maintained branch; the already
-published v1.12.6 release contains the CLI only. See the
-[desktop guide](MACOS_GUI.md) for the GUI artifact, usage and build commands.
+actions as the Windows app. It joins the official release in v1.13.0. See the
+[desktop guide](MACOS_GUI.md) for downloads, usage and build commands.
 
 ## Download
 

@@ -8,13 +8,13 @@ LHash is a local file checksum tool with Windows and macOS Apple Silicon desktop
 apps and a macOS command-line tool. Its interfaces expose the same 18 algorithms,
 including SHA-256, through the shared engine and static OpenSSL 3.5.9 backend.
 
-- Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)
+- Current release: [`v1.13.0`](https://github.com/lhy8888/Lhash/releases/tag/v1.13.0)
 - Maintained branch: `codex/openssl-3.5.9-vendor`
 - Windows UI mainline: `MFC`
 - Windows builds: x64 and ARM64.
 - macOS build: generic Apple Silicon arm64 CLI; unsigned and not notarized.
-- macOS desktop app: available from maintained-branch CI; ad-hoc signed without
-  Developer ID signing or notarization. The published v1.12.6 remains CLI-only on macOS.
+- macOS desktop app: included in v1.13.0 and later releases; ad-hoc signed
+  without Developer ID signing or notarization.
 - [Core Build Matrix workflow](../.github/workflows/core-m2.yml)
 - [macOS Build workflow](../.github/workflows/macos-cli-build.yml)
 - [Windows Build workflow](../.github/workflows/windows-build.yml)

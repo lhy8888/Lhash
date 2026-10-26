@@ -5,10 +5,10 @@
 LHash is implemented as a **local file verification tool** with a security model centered on correctness, predictable local execution, and a reviewable release posture.
 
 The Windows product uses the MFC desktop UI. The macOS Apple Silicon app and CLI
-use the same 18-algorithm registry and static OpenSSL 3.5.9 backend. The maintained
-branch adds a native AppKit app with an ad-hoc signature, without Developer ID
-signing or notarization. The already published v1.12.6 macOS package remains an
-unsigned, unnotarized CLI. There is no Intel target. See [macOS desktop support](MACOS_GUI.md).
+use the same 18-algorithm registry and static OpenSSL 3.5.9 backend. Starting
+with v1.13.0, releases include the native AppKit app with an ad-hoc signature,
+without Developer ID signing or notarization. The separate CLI is unsigned and
+unnotarized. There is no Intel target. See [macOS desktop support](MACOS_GUI.md).
 
 The maintained release line does not treat security as a single feature. Instead, it combines local-safety defaults, runtime isolation, careful file handling, and release metadata so that the verification workflow is easier to trust and easier to audit.
 

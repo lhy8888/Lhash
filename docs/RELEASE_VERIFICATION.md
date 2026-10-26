@@ -1,20 +1,20 @@
 # Release verification
 
 Download official releases from
-<https://github.com/lhy8888/Lhash/releases>. Starting with v1.12.6, expect
-`LHash-windows-x64-<shortsha>.zip`, `LHash-windows-arm64-<shortsha>.zip` and
+<https://github.com/lhy8888/Lhash/releases>. Starting with v1.13.0, expect
+`LHash-windows-x64-<shortsha>.zip`, `LHash-windows-arm64-<shortsha>.zip`,
+`LHash-macos-arm64-app-<shortsha>.zip` and
 `LHash-macos-arm64-cli-<shortsha>.tar.gz`, plus:
 
 - `RELEASE_MANIFEST.txt`
 - `SHA256SUMS.txt`
 - `LHash-release.cyclonedx.json`
-- GitHub provenance and SBOM attestations covering all three packages
+- GitHub provenance and SBOM attestations covering all four packages
 
-Historical releases may have less metadata. The maintained branch's next release
-workflow additionally requires `LHash-macos-arm64-app-<shortsha>.zip` and includes
-it in the same metadata set. The already published v1.12.6 files remain unchanged.
-The manual recovery workflows verify existing files without
-replacing them.
+Historical releases may have fewer packages or less metadata. The v1.12.6
+release contains Windows x64, Windows ARM64 and the macOS CLI; its original
+files remain unchanged. The manual recovery workflows verify existing files
+without replacing them.
 
 ## Check downloaded files
 
@@ -115,11 +115,12 @@ tooling never adds a macOS asset to an already published checksum manifest.
 
 ## Verify the macOS desktop app package
 
-The maintained branch adds `LHash-macos-arm64-app-<shortsha>.zip`. Until a future
-release includes it, obtain it from the `LHash-macos-arm64-app` artifact of a
-successful [macOS workflow](../.github/workflows/macos-cli-build.yml) run for that
-branch. Check the run's commit and compare it with `BUILD_INFO.txt`; branch
-artifacts do not inherit a different release's checksums or attestations.
+The desktop app is published as `LHash-macos-arm64-app-<shortsha>.zip` from
+v1.13.0 onward. Compare its archive checksum with the release's `SHA256SUMS.txt`
+and confirm that `BUILD_INFO.txt` records the expected version and commit.
+Development builds also provide an `LHash-macos-arm64-app` artifact from the
+[macOS workflow](../.github/workflows/macos-cli-build.yml); these have their own
+commit and do not inherit another release's checksums or attestations.
 
 After extracting the app ZIP, enter its package directory and run:
 
@@ -135,9 +136,8 @@ bundle version and recorded commit. The app is locally ad-hoc signed and is not
 notarized or Developer ID signed; successful `codesign --verify` does not prove
 an Apple-verified publisher identity. See [the desktop guide](MACOS_GUI.md).
 
-When the app ZIP appears in a tagged release, also compare its archive SHA-256
-with `SHA256SUMS.txt` and verify its GitHub attestation against the publishing
-workflow, as described above. Older release manifests remain valid without an
-app ZIP; the recovery tooling must not add one to their published metadata.
+For the tagged release, also verify the app ZIP's GitHub attestation against
+the publishing workflow, as described above. Older release manifests remain
+valid without an app ZIP; the recovery tooling must not add one to their published metadata.
 The new manifest key `macos_arm64_app` identifies the app ZIP; `macos_arm64`
 continues to identify the separate CLI tarball.

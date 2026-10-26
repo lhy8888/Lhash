@@ -1,189 +1,106 @@
+<div align="center">
+
 # LHash
 
-![Windows Build](https://github.com/lhy8888/Lhash/actions/workflows/windows-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
-![macOS Build](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml/badge.svg?branch=codex%2Fopenssl-3.5.9-vendor)
-![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
+### 拖入文件，让校验一目了然。
+
+**轻巧的本地文件校验工具 · Windows 与 Mac 原生界面 · 18 种算法**
+
+[**下载最新版本**](https://github.com/lhy8888/Lhash/releases/latest) · [查看本次更新](https://github.com/lhy8888/Lhash/releases/tag/v1.13.0) · [使用文档](docs/README.md)
+
+![Version](https://img.shields.io/badge/version-1.13.0-2563EB)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6)
+![Algorithms](https://img.shields.io/badge/algorithms-18-16A34A)
+![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)
 
-LHash calculates checksums for local files. Use the Windows desktop app, the
-macOS desktop app or its command-line tool to calculate SHA-256, compare a downloaded file with an
-expected digest, or process a batch of files. Files are read locally; hashing
-does not require an account or uploading file contents.
+</div>
 
-## Download
+下载的软件是否完整？备份和原文件是否一致？交付文件时，如何附上一份清楚的校验记录？
 
-- Current release: [`v1.12.6`](https://github.com/lhy8888/Lhash/releases/tag/v1.12.6)
-- Maintained branch: `codex/openssl-3.5.9-vendor`
-- Windows UI mainline: `MFC`
+把文件交给 **LHash**。打开或拖入文件，即可计算校验值、核对已有摘要，一键复制或导出结果。所有计算都在本机完成，无需账号，无需上传文件，离线也能使用。
 
-Choose the package for your operating system and processor from the release page:
+## v1.13.0：Mac，也有熟悉的 LHash 桌面体验
 
-| Platform | Package | Interface |
-| --- | --- | --- |
-| Windows x64 | `LHash-windows-x64-<commit>.zip` | Desktop app (`LHash.exe`) |
-| Windows ARM64 | `LHash-windows-arm64-<commit>.zip` | Native ARM64 desktop app (`LHash.exe`) |
-| macOS Apple Silicon | `LHash-macos-arm64-cli-<commit>.tar.gz` | Native arm64 CLI (`lhash`) |
+全新的 **macOS 图形界面**正式加入 LHash。沿用 Windows 版熟悉的操作布局，以 Mac 原生窗口、快捷键和拖放操作，完成从文件选择到结果导出的整个流程。
 
-The maintained branch also builds the new **macOS desktop app** as the
-`LHash-macos-arm64-app` artifact in the [macOS workflow](https://github.com/lhy8888/Lhash/actions/workflows/macos-cli-build.yml).
-Choose a successful run on `codex/openssl-3.5.9-vendor` and extract
-`LHash-macos-arm64-app-<commit>.zip`. This contains `LHash.app`; the already
-published v1.12.6 release contains the CLI only.
+- **打开就会用**：打开文件、打开文件夹、验证、全部复制、导出、设置，常用操作集中呈现。
+- **进度看得见**：文件、算法、状态与进度逐项展示，处理过程清晰可见。
+- **专为 M 系列 Mac 提供原生版本**：支持 macOS 14 及以上，提供随系统语言显示的中文与英文界面。
+- **跨平台使用同一套算法**：Mac 图形版、Mac 命令行版与 Windows 版均提供 18 种算法，换电脑也能延续熟悉的校验习惯。
 
-macOS requires macOS 14 or later on an Apple Silicon M-series Mac. It uses one
-generic arm64 build; there is no Intel build. The GUI package is ad-hoc signed,
-without a Developer ID signature or notarization. The CLI release is unsigned
-and not notarized. Windows signing depends on the recorded signature state.
+## 为日常文件校验而做
 
-The current release includes `SHA256SUMS.txt`, `RELEASE_MANIFEST.txt` and
-`LHash-release.cyclonedx.json`. Compare the archive's SHA-256 with its entry in
-`SHA256SUMS.txt` before extracting it. For example, Windows PowerShell can use:
-
-```powershell
-Get-FileHash .\LHash-windows-x64-*.zip -Algorithm SHA256
-```
-
-On macOS:
-
-```sh
-shasum -a 256 LHash-macos-arm64-cli-*.tar.gz
-```
-
-The [release verification guide](docs/RELEASE_VERIFICATION.md) covers complete
-checksum verification, build metadata, signing state and GitHub attestations.
-
-## Quick start
-
-### Windows
-
-1. Extract the matching Windows package and run `LHash.exe`.
-2. Open files, open a folder, or drag files into the window.
-3. Choose the algorithms you need. The defaults are SHA-256, SHA-512 and SHA3-256.
-4. Use **Verify** to find an expected digest in the results, or copy/export the
-   calculated values.
-
-The task list shows each input separately, including repeated paths. Stop ends
-the active session and marks unfinished tasks accordingly. Folder scanning runs
-outside the UI thread so the window remains responsive while collecting files.
-
-### macOS desktop app (maintained branch)
-
-1. Extract the app ZIP, open a terminal in its extracted directory, and check
-   its files with `shasum -a 256 -c SHA256.txt`.
-2. Copy `LHash.app` to Applications and open it.
-3. Use **Open**, **Open Folder**, or drag files/folders into the window.
-4. Choose algorithms in **Settings**. The defaults match Windows: SHA-256,
-   SHA-512 and SHA3-256. Use **Verify**, **Copy All** or **Export** for the results.
-
-The layout follows the Windows desktop app: commands above the results, a
-file/algorithm/status/progress table below, and overall progress with Stop/Clear.
-The interface supports Chinese and English, using native macOS controls.
-See the [macOS desktop guide](docs/MACOS_GUI.md) for installation, building,
-platform details and the app's signing state.
-
-### macOS command line
-
-Extract the macOS package, then open a terminal in the extracted directory:
-
-```sh
-# Check the extracted executable against its bundled checksum.
-shasum -a 256 -c SHA256.txt
-
-# Calculate only SHA-256 for a local file.
-./lhash -a sha256 "/path/to/file.iso"
-
-# Use the same default algorithms as Windows.
-./lhash "/path/to/file.iso"
-
-# List all available algorithms or calculate all of them.
-./lhash --list-algorithms
-./lhash --all "/path/to/file.iso"
-
-# Select multiple algorithms and write one JSON record per file.
-./lhash -a sha256 -a blake3-256 --json "first.bin" "second.bin" > hashes.jsonl
-
-# End option parsing for a filename beginning with a dash.
-./lhash -a sha256 -- -example.bin
-```
-
-`--parallel` and `--single-threaded` select the digest execution policy.
-Exit codes are **0** for success, **1** for file/runtime/output failures and
-**2** for invalid arguments. Paths must use UTF-8. See
-[macOS CLI support](docs/MACOS_CORE_SUPPORT.md) for build instructions and the
-file-handling contract.
-
-## Algorithms
-
-Release builds expose the same **18 algorithms** on Windows and macOS:
-
-| Family | Algorithms |
+| 特色 | 带来的便利 |
 | --- | --- |
-| SHA-2 | SHA-256, SHA-384, SHA-512 |
-| SHA-3 | SHA3-256, SHA3-384, SHA3-512 |
-| BLAKE2 | BLAKE2b-512, BLAKE2s-256 |
-| SHAKE | SHAKE128-256 (32 bytes), SHAKE256-512 (64 bytes) |
-| BLAKE3 | BLAKE3-256, BLAKE3-512, BLAKE3 XOF (128 bytes) |
-| Legacy hashes | MD5, SHA-1 |
-| Non-cryptographic checksums | XXH3-64, XXH3-128, CRC32C |
+| **本地处理，离线可用** | 软件包、工作文件和个人资料都留在自己的电脑上。 |
+| **拖放即用，支持批量** | 选择多个文件或整个文件夹，集中完成校验，省去反复操作。 |
+| **一轮计算，多种结果** | 默认生成 SHA-256、SHA-512 与 SHA3-256，也可自由组合需要的算法。 |
+| **粘贴摘要，快速核对** | 使用“验证”查找与预期校验值完全匹配的结果，减少手工逐字对照。 |
+| **复制、导出，方便分享** | 把结果带到聊天、文档或交付清单中，也可保存为文本留档。 |
+| **任务进度，清楚掌握** | 查看各文件的处理状态、总体进度、耗时与速度，按需停止当前任务。 |
 
-Choose SHA-256 when comparing a published SHA-256 checksum. MD5 and SHA-1 are
-retained for compatibility; XXH3 and CRC32C are non-cryptographic checksums.
-A matching digest establishes a content match with that digest, not the
-identity of its publisher.
+从一个安装包，到一批照片、压缩包或系统镜像，LHash 把文件校验变成顺手的一步。
 
-The SHA-2, SHA-3, BLAKE2 and SHAKE implementations use statically linked
-**OpenSSL 3.5.9** from the pristine upstream source. Production builds enable
-OpenSSL's upstream assembly optimizations and runtime CPU dispatch. An explicit
-`portable` build mode remains available for compatibility checks and diagnosis;
-see [OpenSSL build modes](docs/OPENSSL_OPTIMIZATION.md). BLAKE3 uses the native
-NEON path on Apple Silicon.
+## 下载适合你的版本
 
-## What's new in 1.12.6
+**[前往 v1.13.0 下载页面 →](https://github.com/lhy8888/Lhash/releases/tag/v1.13.0)**
 
-- Upgrade the vendored OpenSSL library to 3.5.9 and enable its optimized builds
-  on Windows x64/ARM64 and macOS arm64.
-- Add the macOS Apple Silicon CLI with all 18 Windows algorithms and include its
-  package in the tagged release.
-- Fix Windows result text appearing overlapped or out of order during updates;
-  append at the actual text end while retaining the user's selection.
-- Preserve separate states for duplicate file inputs, and finish task states
-  after cancellation or abnormal worker exit.
-- Reduce task/text refresh overhead, move folder scanning off the UI thread,
-  and measure elapsed time with a monotonic clock.
-- Return a failure status when the CLI cannot write or flush its output.
+| 你的设备 | 选择的下载包 | 使用方式 |
+| --- | --- | --- |
+| Windows，Intel / AMD 64 位电脑 | `LHash-windows-x64-*.zip` | 解压后打开 `LHash.exe` |
+| Windows，ARM64 电脑 | `LHash-windows-arm64-*.zip` | 解压后打开原生 ARM64 版 `LHash.exe` |
+| Mac，Apple Silicon M 系列 | **`LHash-macos-arm64-app-*.zip`** | 解压后将 `LHash.app` 拖入“应用程序” |
+| Mac，需要脚本或终端操作 | `LHash-macos-arm64-cli-*.tar.gz` | 解压后在终端使用 `lhash` |
 
-See the [changelog](CHANGELOG.md), [中文更新日志](CHANGELOG.zh-CN.md),
-[audit fixes](docs/AUDIT_FIXES.md) and [test coverage](docs/TESTING.md).
+Mac 版需要 **macOS 14 或更新版本，以及 Apple Silicon M 系列芯片**。首次打开应用如需系统授权，请参阅 [Mac 安装与使用指南](docs/MACOS_GUI.md#get-the-app)。
 
-## Limits and file handling
+下载页同时提供文件校验值；需要核对下载包时，可查看[下载校验指南](docs/RELEASE_VERIFICATION.md)。
 
-Each hashing session accepts up to **8192 files**. Oversized file batches are
-rejected; folder scans stop at their budget and warn when results are incomplete.
-Path checks reject unsupported input types, and detectable file changes during
-reading are reported as failures. These checks do not create a filesystem
-snapshot. Details are in the [security model](docs/SECURITY_MODEL.md) and
-[macOS file contract](docs/MACOS_CORE_SUPPORT.md#file-and-platform-contract).
+## 三步完成校验
 
-## Build, tests and project documents
+1. **加入文件**：打开 LHash，拖入文件，或使用“打开”“打开文件夹”。
+2. **获取结果**：默认即可计算三种常用摘要；需要其他算法时，在“设置”中选择。
+3. **核对或保存**：点击“验证”粘贴预期摘要，或使用“全部复制”“导出”保存计算结果。
 
-- [Windows Build workflow](.github/workflows/windows-build.yml): Windows x64 and
-  native ARM64 runtime/GUI tests, packaging and tagged release publication.
-- [Core Build Matrix workflow](.github/workflows/core-m2.yml): native core smoke
-  and runtime checks on Windows and macOS.
-- [macOS Build workflow](.github/workflows/macos-cli-build.yml): Apple Silicon
-  desktop app and CLI, engine/algorithm tests, native UI tests and packaging.
-- [Portable Runtime Tests](.github/workflows/portable-runtime-tests.yml): Linux
-  diagnostic and macOS arm64 regressions, including sanitizer builds.
-- [Core build instructions](docs/CORE_BUILD.md), [test guide](docs/TESTING.md)
-  and [documentation index](docs/README.md).
-- [Security policy](SECURITY.md), [supply-chain metadata](docs/SUPPLY_CHAIN_SECURITY.md)
-  and [code signing](CODE_SIGNING.md).
+核对下载文件时，选择与发布方给出的校验值对应的算法。例如，对方提供 SHA-256，就使用 SHA-256 结果进行比较。
 
-Windows GUI coverage includes real x64/ARM64 runs, record ordering across 128
-different files, and selection preservation while results arrive. Native
-macOS CI validates its hosted arm64 machine; it does not claim individual
-hardware testing of every M-series model. Linux is a diagnostic test backend,
-not a supported release target.
+## 18 种算法，按需选择
 
-License: **GPL-2.0-only with an OpenSSL linking exception**. See
-[LICENSE](LICENSE) and [LICENSE-OPENSSL-EXCEPTION.md](LICENSE-OPENSSL-EXCEPTION.md).
+日常下载校验、历史文件比对、批量数据处理，一套工具覆盖多种需求。Windows 与 Mac 提供一致的算法选择。
+
+| 算法系列 | 可用算法 |
+| --- | --- |
+| SHA-2 | SHA-256、SHA-384、SHA-512 |
+| SHA-3 | SHA3-256、SHA3-384、SHA3-512 |
+| BLAKE2 | BLAKE2b-512、BLAKE2s-256 |
+| BLAKE3 | BLAKE3-256、BLAKE3-512、BLAKE3 XOF（128 字节） |
+| SHAKE | SHAKE128-256、SHAKE256-512 |
+| 兼容性摘要 | MD5、SHA-1 |
+| 快速校验 | XXH3-64、XXH3-128、CRC32C |
+
+日常完整性校验推荐使用 **SHA-256**。MD5、SHA-1 适合比对已有的历史摘要；XXH3、CRC32C 用于非密码学用途的快速校验。
+
+<details>
+<summary><strong>喜欢终端？Mac 命令行版也为你准备好了。</strong></summary>
+
+在解压目录中运行，计算文件的 SHA-256：
+
+```sh
+./lhash -a sha256 "/path/to/file.iso"
+```
+
+还可批量处理多个文件、选择全部算法，或输出 JSON，方便接入自己的脚本与工作流程。更多示例见 [Mac 命令行指南](docs/MACOS_CORE_SUPPORT.md)。
+
+</details>
+
+## 开源，与大家一起打磨
+
+LHash 的源代码与更新记录公开可查。欢迎通过 [Issues](https://github.com/lhy8888/Lhash/issues) 分享使用体验、报告问题或提出建议；喜欢这个小工具，也欢迎点一个 **Star**。
+
+[更新日志](CHANGELOG.zh-CN.md) · [Mac 使用指南](docs/MACOS_GUI.md) · [完整文档](docs/README.md) · [构建指南](docs/CORE_BUILD.md) · [测试说明](docs/TESTING.md) · [安全政策](SECURITY.md)
+
+开源许可：**GPL-2.0-only with an OpenSSL linking exception**。详见 [LICENSE](LICENSE) 与 [OpenSSL 链接例外](LICENSE-OPENSSL-EXCEPTION.md)。
+
+---
+
+**让文件校验成为顺手的一步。 [下载 LHash →](https://github.com/lhy8888/Lhash/releases/latest)**
