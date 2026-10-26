@@ -82,7 +82,7 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
 @implementation LHAppController {
     std::unique_ptr<HashSession> _session;
     std::vector<Result> _results;
-    std::array<size_t, 7> _stateCounts{};
+    std::array<size_t, 7> _stateCounts;
     NSUInteger _filterMatches;
     NSUserDefaults *_defaults;
     NSMutableArray<NSString *> *_algorithmIDs;
@@ -108,6 +108,7 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
     self = [super initWithWindow:window];
     if (!self) return nil;
     _session = std::make_unique<HashSession>();
+    _stateCounts.fill(0);
     _defaults = defaults;
     _chinese = [NSLocale.preferredLanguages.firstObject hasPrefix:@"zh"];
     _uppercase = [defaults boolForKey:@"uppercaseDigests"];
@@ -413,7 +414,7 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
                 [self text:@"Completed" chinese:@"完成"], _stateCounts[static_cast<size_t>(TaskState::Completed)], (size_t)_rows.count,
                 [self text:@"Failed" chinese:@"失败"], _stateCounts[static_cast<size_t>(TaskState::Failed)],
                 [self text:@"Unfinished" chinese:@"取消/未执行"], _stateCounts[static_cast<size_t>(TaskState::Cancelled)] +
-                    _stateCounts[static_cast<size_t>(TaskState::NotRun)] + _stateCounts[static_cast<size_t>(TaskState::Aborted)]);
+                    _stateCounts[static_cast<size_t>(TaskState::NotRun)] + _stateCounts[static_cast<size_t>(TaskState::Aborted)]];
         else
             _summary.stringValue = [NSString stringWithFormat:[self text:@"Matching files: %lu" chinese:@"匹配文件数：%lu"], (unsigned long)_filterMatches];
         double speed = update.elapsedSeconds > 0 ? update.bytesProcessed / update.elapsedSeconds / (1024.0 * 1024.0) : 0;
