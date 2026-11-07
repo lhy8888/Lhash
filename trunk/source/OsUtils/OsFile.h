@@ -25,11 +25,6 @@ namespace sunjwbase
 			CLOSED = 0, OPEN_READ, OPEN_WRITE, OPEN_READWRITE
 		};
 
-		enum OsFileSeekFrom
-		{
-			OF_SEEK_BEGIN = 0, OF_SEEK_CUR, OF_SEEK_END
-		};
-
 		explicit OsFile(sunjwbase::tstring filePath);
 		~OsFile();
 
@@ -47,7 +42,6 @@ namespace sunjwbase
 		const sunjwbase::tstring& getPath() const { return _filePath; }
 
 		// Operation
-		uint64_t seek(uint64_t offset, OsFileSeekFrom from);
 		int64_t read(void *readBuffer, uint32_t bytes);
 		int64_t write(void *writeBuffer, uint32_t bytes);
 		// Verify a complete sequential read before publishing a file digest.

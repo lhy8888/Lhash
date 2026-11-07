@@ -184,7 +184,7 @@ static void TestMetadataOnly(const fs::path& root)
 
 static void TestDirectConsistency(const fs::path& root)
 {
-    for (const std::string mode : {"complete", "empty", "partial", "overwrite", "restore-mtime", "shrink", "grow", "seek", "closed"})
+    for (const std::string mode : {"complete", "empty", "partial", "overwrite", "restore-mtime", "shrink", "grow", "reopen", "closed"})
     {
         const auto path = root / "direct.bin";
         WriteFile(path, mode == "empty" ? "" : std::string(4096, 'A'));
@@ -208,12 +208,21 @@ static void TestDirectConsistency(const fs::path& root)
             Require(changed, "direct mutation failed");
             if (mode == "restore-mtime") Require(utimensat(AT_FDCWD, path.c_str(), oldTimes, 0) == 0, "restore mtime failed");
         }
-        if (mode == "seek") file.seek(0, sunjwbase::OsFile::OF_SEEK_BEGIN);
+        if (mode == "reopen")
+        {
+            const auto replacement = root / "replacement.bin";
+            WriteFile(replacement, std::string(4096, 'B'));
+            fs::rename(replacement, path);
+            Require(file.openReadScan(), "reopen after replacement failed");
+            Require(!file.validateReadConsistency(), "reopened file retained old read state");
+            Require(file.read(first, sizeof(first)) == sizeof(first), "reopened file read failed");
+            Require(std::string(first, sizeof(first)) == std::string(sizeof(first), 'B'), "reopen read the old file");
+        }
         if (mode != "partial") Drain(file);
         if (mode == "closed") file.close();
         sunjwbase::tstring error;
         const bool valid = file.validateReadConsistency(&error);
-        const bool expected = mode == "complete" || mode == "empty";
+        const bool expected = mode == "complete" || mode == "empty" || mode == "reopen";
         Require(valid == expected, "direct consistency check wrong");
         Require(valid || !error.empty(), "rejected read did not provide a reason");
         std::cout << "consistency " << mode << " PASS\n";

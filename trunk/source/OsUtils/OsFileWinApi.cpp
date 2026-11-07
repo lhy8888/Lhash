@@ -621,32 +621,6 @@ tstring OsFile::getModifiedTimeFormat()
 	return tstrLastModifiedTime;
 }
 
-uint64_t OsFile::seek(uint64_t offset, OsFileSeekFrom from)
-{
-	_readConsistency->valid = false;
-	DWORD dwMoveMethod = FILE_BEGIN;
-	switch (from)
-	{
-	case OF_SEEK_BEGIN:
-		dwMoveMethod = FILE_BEGIN;
-		break;
-	case OF_SEEK_CUR:
-		dwMoveMethod = FILE_CURRENT;
-		break;
-	case OF_SEEK_END:
-		dwMoveMethod = FILE_END;
-		break;
-	}
-
-	// Open first, we don't check here.
-	LARGE_INTEGER liDistance = { 0 };
-	liDistance.QuadPart = offset;
-	LARGE_INTEGER liNewPos = { 0 };
-	SetFilePointerEx(_osfileData, liDistance, &liNewPos, dwMoveMethod);
-
-	return liNewPos.QuadPart;
-}
-
 int64_t OsFile::read(void *readBuffer, uint32_t bytes)
 {
 	// Open first, we don't check here.

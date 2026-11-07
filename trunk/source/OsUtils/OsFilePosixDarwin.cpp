@@ -437,33 +437,6 @@ tstring OsFile::getModifiedTimeFormat()
     return tstrLastModifiedTime;
 }
 
-uint64_t OsFile::seek(uint64_t offset, OsFileSeekFrom from)
-{
-    int posixSeekFlag = SEEK_SET;
-    switch(from)
-    {
-    case OF_SEEK_BEGIN:
-        posixSeekFlag = SEEK_SET;
-        break;
-    case OF_SEEK_CUR:
-        posixSeekFlag = SEEK_CUR;
-        break;
-    case OF_SEEK_END:
-        posixSeekFlag = SEEK_END;
-        break;
-    }
-
-    int *fd = GET_FD_FROM_POINTER(_osfileData);
-    if (fd == NULL || *fd == -1)
-    {
-        return static_cast<uint64_t>(-1);
-    }
-
-    _readConsistency->valid = false;
-    off_t seekResult = ::lseek(*fd, static_cast<off_t>(offset), posixSeekFlag);
-    return seekResult == static_cast<off_t>(-1) ? static_cast<uint64_t>(-1) : static_cast<uint64_t>(seekResult);
-}
-
 int64_t OsFile::read(void *readBuffer, uint32_t bytes)
 {
     int *fd = GET_FD_FROM_POINTER(_osfileData);
