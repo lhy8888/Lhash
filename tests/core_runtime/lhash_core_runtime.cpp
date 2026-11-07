@@ -1,11 +1,14 @@
 #include "stdafx.h"
 
 #include "Common/HashEngine.h"
+#include "Common/CheckedArithmetic.h"
 #include "Common/HashResultRender.h"
 #include "Domain/HashRequest.h"
 #include "Runtime/HashExecutionContext.h"
 
 #include <algorithm>
+#include <climits>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -347,6 +350,100 @@ namespace
         Require(ProjectHashResult(legacy).meta.sizeKnown,
                 "legacy ResultData size should remain known when projected");
     }
+
+    // Independent oracle for 0 <= completed < total. Repeatedly adding the
+    // fraction's numerator avoids needing compiler-specific 128-bit integers.
+    int ReferenceProgress(uint64_t completed, uint64_t total, int maximum)
+    {
+        uint64_t remainder = 0;
+        int quotient = 0;
+        for (int i = 0; i < maximum; ++i)
+        {
+            if (remainder >= total - completed)
+            {
+                remainder -= total - completed;
+                ++quotient;
+            }
+            else
+            {
+                remainder += completed;
+            }
+        }
+        return quotient;
+    }
+
+    void ExactProgressArithmetic()
+    {
+        struct ProgressCase { uint64_t completed; uint64_t total; int maximum; int expected; };
+        // Large expected values were calculated independently with Python's
+        // arbitrary-precision integers: completed * maximum // total.
+        const ProgressCase cases[] = {
+            {191402984163246080ULL, 225179981368524800ULL, 100, 85}, // 170 / 200 PiB
+            {184467440737095516ULL, UINT64_MAX, 100, 0},
+            {184467440737095517ULL, UINT64_MAX, 100, 1},
+            {368934881474191033ULL, UINT64_MAX, 100, 2},
+            {UINT64_MAX - 1, UINT64_MAX, 100, 99},
+            {184467440737095517ULL, 184467440737095518ULL, 100, 99},
+            {UINT64_MAX / 2, UINT64_MAX, INT_MAX, 1073741823},
+            {UINT64_MAX - 1, UINT64_MAX, INT_MAX, INT_MAX - 1},
+            {8589934596ULL, UINT64_MAX, INT_MAX, 0},
+            {8589934597ULL, UINT64_MAX, INT_MAX, 1},
+            {18446744065119617018ULL, UINT64_MAX, INT_MAX, 2147483645},
+            {18446744065119617019ULL, UINT64_MAX, INT_MAX, 2147483646},
+            {UINT64_MAX / 2, UINT64_MAX, 1000, 499},
+            {UINT64_MAX / 3, UINT64_MAX, 1000, 333},
+            {2635249153387078802ULL, UINT64_MAX, 7, 0},
+            {2635249153387078803ULL, UINT64_MAX, 7, 1},
+            {1, UINT64_MAX, INT_MAX, 0},
+            {UINT64_MAX - 1, UINT64_MAX, 1, 0},
+            {UINT64_MAX - 1, UINT64_MAX, 2, 1},
+            {UINT64_MAX, UINT64_MAX, 100, 100},
+            {UINT64_MAX, 1, 100, 100}, // completed greater than total stays bounded
+            {0, 0, 100, 100},          // preserve the existing empty-total contract
+            {1, 0, INT_MAX, INT_MAX},
+            {1, 2, 0, 0},
+            {1, 0, -1, 0},
+            {UINT64_MAX, UINT64_MAX, INT_MIN, 0},
+            {1, 4, 100, 25},
+            {2, 3, 100, 66},
+            {3, 4, 100, 75},
+            {0, 2, 100, 0}
+        };
+        for (const auto& test : cases)
+        {
+            const int actual = CalculateBoundedProgressValue(test.completed, test.total, test.maximum);
+            Require(actual == test.expected,
+                "progress mismatch for completed=" + std::to_string(test.completed) +
+                ", total=" + std::to_string(test.total) + ", maximum=" + std::to_string(test.maximum) +
+                ": expected " + std::to_string(test.expected) + ", got " + std::to_string(actual));
+            Require(CalculateIndexedProgressValue(test.completed, test.total, test.maximum) == test.expected,
+                "indexed progress differs from byte progress");
+        }
+
+        // Probe many exact and inexact fractions across the full uint64 range
+        // using a deterministic generator and a separate arithmetic oracle.
+        uint64_t random = 0x243f6a8885a308d3ULL;
+        const auto next = [&random]() -> uint64_t {
+            random ^= random << 13;
+            random ^= random >> 7;
+            random ^= random << 17;
+            return random;
+        };
+        const int maxima[] = {1, 2, 7, 13, 100, 127, 1000};
+        for (int maximum : maxima)
+        {
+            for (unsigned i = 0; i < 512; ++i)
+            {
+                const uint64_t total = next() | 1;
+                const uint64_t completed = next() % total;
+                const int expected = ReferenceProgress(completed, total, maximum);
+                const int actual = CalculateBoundedProgressValue(completed, total, maximum);
+                Require(actual == expected,
+                    "full-range progress mismatch for completed=" + std::to_string(completed) +
+                    ", total=" + std::to_string(total) + ", maximum=" + std::to_string(maximum));
+            }
+        }
+    }
 }
 
 int main()
@@ -371,6 +468,7 @@ int main()
     try
     {
         const TempDirectory temporary;
+        run("exact progress arithmetic including 64-bit limits", [&] { ExactProgressArithmetic(); });
         run("unknown, empty and legacy result size presentation", [&] { ResultSizeAvailability(); });
         run("standard digest vectors and published preference", [&] { KnownAnswers(temporary); });
         const HashRequestDigestExecutionPolicy policies[] = {

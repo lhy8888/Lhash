@@ -103,20 +103,43 @@ static inline int CalculateBoundedProgressValue(uint64_t completedValue, uint64_
 	{
 		return progressMax;
 	}
-
-	uint64_t numerator = 0;
-	if (!TryMultiplyUInt64(static_cast<uint64_t>(progressMax), completedValue, &numerator))
+	if (completedValue >= totalValue)
 	{
 		return progressMax;
 	}
 
-	uint64_t progressValue = numerator / totalValue;
-	if (progressValue > static_cast<uint64_t>(progressMax))
+	uint64_t numerator = 0;
+	const uint64_t scale = static_cast<uint64_t>(progressMax);
+	if (TryMultiplyUInt64(scale, completedValue, &numerator))
 	{
-		progressValue = static_cast<uint64_t>(progressMax);
+		return static_cast<int>(numerator / totalValue);
 	}
 
-	return static_cast<int>(progressValue);
+	// Find the largest progress value whose rounded-up byte threshold has
+	// been reached. Splitting totalValue into quotient and remainder avoids
+	// multiplying a potentially 64-bit byte count by the progress scale.
+	// The scale comes from a positive 32-bit int on the supported platforms,
+	// so remainder * candidate and its rounding addition fit in uint64_t.
+	const uint64_t quotient = totalValue / scale;
+	const uint64_t remainder = totalValue % scale;
+	uint64_t lower = 0;
+	uint64_t upper = scale;
+	while (lower < upper)
+	{
+		const uint64_t candidate = lower + (upper - lower + 1) / 2;
+		const uint64_t threshold = quotient * candidate +
+			(remainder * candidate + scale - 1) / scale;
+		if (completedValue >= threshold)
+		{
+			lower = candidate;
+		}
+		else
+		{
+			upper = candidate - 1;
+		}
+	}
+
+	return static_cast<int>(lower);
 }
 
 static inline int CalculateIndexedProgressValue(uint64_t completedCount, uint64_t totalCount, int progressMax)
