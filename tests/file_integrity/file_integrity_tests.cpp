@@ -357,6 +357,23 @@ static void TestMetadataOnly(const fs::path& root)
     Require(result.state == RESULT_META && result.meta.sizeKnown && result.meta.size == 3 && result.digests.empty() && result.error.empty(), "metadata-only result changed");
 #if defined(__linux__)
     Require(readCalls == 0, "metadata-only request read file contents");
+    for (unsigned int failAt : {6u, 7u})
+    {
+        metadataFailAt = failAt; metadataFstatCalls = 0; metadataInjected = false;
+        HashJobState faultState; HashCancellationState faultCancel;
+        HashExecutionContext faultContext(nullptr, faultState, faultCancel);
+        const int status = RunHashRequest(&faultContext, request);
+        metadataFailAt = 0;
+        Require(status == 0 && metadataInjected && faultState.results.size() == 1,
+                "metadata-only fault was not exercised");
+        const auto& faultResult = faultState.results.front();
+        Require(faultResult.state == RESULT_META && faultResult.error.empty() && faultResult.digests.empty(),
+                "metadata-only query failure changed the result state");
+        Require(faultResult.meta.sizeKnown == (failAt != 7u), "metadata-only size availability is incorrect");
+        if (faultResult.meta.sizeKnown) Require(faultResult.meta.size == 3, "metadata-only size changed");
+        Require(faultResult.meta.modifiedDate.empty() == (failAt == 6u), "metadata-only time availability is incorrect");
+        Require(readCalls == 0, "metadata-only fault request read file contents");
+    }
 #endif
     injectionMode.clear();
     std::cout << "metadata-only request PASS\n";
