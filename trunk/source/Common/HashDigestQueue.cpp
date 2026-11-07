@@ -2,7 +2,6 @@
 
 #include "Common/HashEngineInternal.h"
 #include "Common/ThreadPool.h"
-#include "Common/CheckedArithmetic.h"
 
 #include <exception>
 #include <condition_variable>
@@ -34,18 +33,6 @@ namespace HashEngineInternal
 		}
 
 		return preferredLength;
-	}
-
-	uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength)
-	{
-		unsigned int bufferLength = NormalizeDigestDataBufferPreferredLength(preferredLength);
-		if (fileSize == 0)
-		{
-			return 1;
-		}
-
-		uint64_t adjustedFileSize = SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1);
-		return adjustedFileSize / bufferLength;
 	}
 
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)

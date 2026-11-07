@@ -9,12 +9,8 @@ namespace HashEngineInternal
 	{
 		InitializeFileHashing(request, executionContext, &executionState->hashContexts);
 		HashDigestRuntimePlan digestRuntimePlan = CreateHashDigestRuntimePlan(executionState->executionPlan);
-		unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);
-
 		uint64_t fsize = PrepareFileMetaResult(executionContext, result, *executionState->fileAttemptState.osFile, executionState->fileAttemptState.path,
 			isSizeCaled, fSizes, fileIndex);
-		uint64_t times = CalculateFileChunkIterations(fsize, preferredBufferLength);
-		(void)times;
 
 		bool wasStopped = ExecuteOpenedFileDigestUpdate(executionContext, digestRuntimePlan, fsize, isSizeCaled, executionState, threadPool);
 		if (CompleteOpenedFileDigestExecution(executionContext, executionState, wasStopped))

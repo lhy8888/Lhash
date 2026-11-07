@@ -23,7 +23,6 @@ namespace HashEngineInternal
 	};
 
 	unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength);
-	uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);
 	bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer);
 
 	bool ProcessOpenedFileHashingParallel(HashExecutionContext *executionContext, const DigestUpdateRequest& digestUpdateRequest, uint64_t fileSize, bool isSizeCaled,

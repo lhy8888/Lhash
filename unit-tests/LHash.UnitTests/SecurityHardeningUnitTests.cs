@@ -130,7 +130,6 @@ public sealed class SecurityHardeningUnitTests
         string executionContext = RepositoryTestContext.ReadTextFile(@"trunk\source\Runtime\HashExecutionContext.h");
         string threadAccess = RepositoryTestContext.ReadTextFile(@"trunk\source\Adapters\MfcBridge\ThreadDataExecutionAccess.h");
         string progressTracker = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashProgressTracker.cpp");
-        string digestQueue = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashDigestQueue.cpp");
         string successfulCompletion = RepositoryTestContext.ReadTextFile(@"trunk\source\Common\HashSuccessfulFileCompletionWorkflow.cpp");
 
         Assert.Contains("std::atomic<uint64_t> countedSize;", global, StringComparison.Ordinal);
@@ -153,7 +152,6 @@ public sealed class SecurityHardeningUnitTests
         Assert.Contains("countedSize.store(0, std::memory_order_relaxed);", threadAccess, StringComparison.Ordinal);
         Assert.Contains("countedSize.compare_exchange_weak(", threadAccess, StringComparison.Ordinal);
         Assert.Contains("CalculateBoundedProgressValue", progressTracker, StringComparison.Ordinal);
-        Assert.Contains("SaturatingAddUInt64(fileSize, static_cast<uint64_t>(bufferLength) - 1)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("CalculateIndexedProgressValue", successfulCompletion, StringComparison.Ordinal);
     }
 

@@ -482,7 +482,6 @@ public sealed class HashContractUnitTests
         Assert.Contains("progressState->position = 0;", fileAttemptStateOps, StringComparison.Ordinal);
         Assert.Contains("bool ProcessOpenedFileHashing(HashExecutionContext *executionContext, const HashRequest& request, HashResult& result, uint32_t fileIndex,", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("HashDigestRuntimePlan digestRuntimePlan = CreateHashDigestRuntimePlan(executionState->executionPlan);", digestPipeline, StringComparison.Ordinal);
-        Assert.Contains("unsigned int preferredBufferLength = GetHashDigestRuntimePreferredBufferLength(digestRuntimePlan);", digestPipeline, StringComparison.Ordinal);
         Assert.Contains("bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,", digestExecutionHeader, StringComparison.Ordinal);
         Assert.Contains("bool ExecuteOpenedFileDigestUpdate(HashExecutionContext *executionContext, const HashDigestRuntimePlan& digestRuntimePlan, uint64_t fsize, bool isSizeCaled,", digestExecution, StringComparison.Ordinal);
         Assert.Contains("const DigestUpdateRequest& digestUpdateRequest = GetHashDigestRuntimeUpdateRequest(digestRuntimePlan);", digestExecution, StringComparison.Ordinal);
@@ -494,7 +493,6 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool ReadDigestDataBuffer(FileExecutionState *executionState, DigestDataBuffer& dataBuffer)", digestQueue, StringComparison.Ordinal);
         Assert.Contains("unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength);", digestQueueHeader, StringComparison.Ordinal);
         Assert.Contains("unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength)", digestQueue, StringComparison.Ordinal);
-        Assert.Contains("uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength)", digestQueue, StringComparison.Ordinal);
         Assert.DoesNotContain("static unsigned int preflen;", digestQueueHeader, StringComparison.Ordinal);
         Assert.DoesNotContain("void SetDigestDataBufferPreferredLength(unsigned int preferredLength);", digestQueueHeader, StringComparison.Ordinal);
         Assert.Contains("UpdateDigestContextsParallel(digestUpdateRequest", digestQueue, StringComparison.Ordinal);

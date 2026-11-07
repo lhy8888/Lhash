@@ -90,7 +90,6 @@ namespace HashEngineInternal
     };
 
     unsigned int NormalizeDigestDataBufferPreferredLength(unsigned int preferredLength);
-    uint64_t CalculateFileChunkIterations(uint64_t fileSize, unsigned int preferredLength);
 
     inline void UpdateDigestContextsParallel(const DigestUpdateRequest&, FileHashContexts& hash,
         unsigned char* data, unsigned int count, ThreadPool*)
