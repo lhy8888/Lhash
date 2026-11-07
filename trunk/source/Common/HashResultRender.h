@@ -15,6 +15,12 @@ static inline bool HasHashResultVersion(const HashResult& result)
 
 static inline ResultSizeDisplayInfo GetHashResultSizeDisplayInfo(const HashResult& result)
 {
+	if (!result.meta.sizeKnown)
+	{
+		ResultSizeDisplayInfo unknown;
+		unknown.sizeKnown = false;
+		return unknown;
+	}
 	return GetResultSizeDisplayInfo(result.meta.size);
 }
 

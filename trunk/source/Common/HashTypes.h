@@ -102,11 +102,13 @@ struct HashDigestResult
 struct HashFileMeta
 {
 	HashFileMeta()
-		: size(0)
+		: size(0), sizeKnown(false)
 	{
 	}
 
 	uint64_t size;
+	// Zero is a valid file size; false means the size query failed.
+	bool sizeKnown;
 	sunjwbase::tstring modifiedDate;
 	sunjwbase::tstring version;
 };

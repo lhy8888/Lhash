@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "Common/HashEngine.h"
+#include "Common/HashResultRender.h"
 #include "Domain/HashRequest.h"
 #include "Runtime/HashExecutionContext.h"
 
@@ -326,6 +327,26 @@ namespace
         for (auto& worker : workers)
             worker.get();
     }
+
+    void ResultSizeAvailability()
+    {
+        HashResult result;
+        Require(!result.meta.sizeKnown, "new result must not claim an unqueried size");
+        auto unknown = GetHashResultSizeDisplayInfo(result);
+        Require(!unknown.sizeKnown && unknown.sizeText.empty() && unknown.shortSizeText.empty(),
+                "unknown result size was formatted as a number");
+        result.meta.sizeKnown = true;
+        auto empty = GetHashResultSizeDisplayInfo(result);
+        Require(empty.sizeKnown && empty.sizeText == sunjwbase::strtotstr("0"),
+                "known empty file did not retain its zero size");
+        result.meta.size = 3;
+        auto nonempty = GetHashResultSizeDisplayInfo(result);
+        Require(nonempty.sizeKnown && nonempty.sizeText == sunjwbase::strtotstr("3"),
+                "known non-empty file size changed");
+        ResultData legacy = {};
+        Require(ProjectHashResult(legacy).meta.sizeKnown,
+                "legacy ResultData size should remain known when projected");
+    }
 }
 
 int main()
@@ -350,6 +371,7 @@ int main()
     try
     {
         const TempDirectory temporary;
+        run("unknown, empty and legacy result size presentation", [&] { ResultSizeAvailability(); });
         run("standard digest vectors and published preference", [&] { KnownAnswers(temporary); });
         const HashRequestDigestExecutionPolicy policies[] = {
             HASH_REQUEST_DIGEST_EXECUTION_POLICY_AUTO,

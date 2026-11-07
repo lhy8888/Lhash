@@ -139,7 +139,7 @@ void CheckAlgorithms()
 
 void CheckDigests(const Result& result, bool uppercase)
 {
-    Require(result.error.empty() && result.size == 3 && result.digests.size() == expected.size(), "Incomplete result");
+    Require(result.error.empty() && result.sizeKnown && result.size == 3 && result.digests.size() == expected.size(), "Incomplete result");
     for (const auto& digest : result.digests)
     {
         auto value = expected.at(digest.id);
@@ -194,7 +194,21 @@ void CheckFailureContinuation()
         Require(result.index == i, "Results not in input order");
         const bool failed = i != 1 && i != 4;
         Require(failed ? (!result.error.empty() && result.digests.empty()) : result.error.empty(), "Failure result/digests inconsistent");
+        Require(result.sizeKnown != failed, "missing metadata must not be treated as a known empty file");
     }
+    Require(!capture.final.bytesProcessedKnown, "speed must be unknown when a file size was unavailable");
+}
+
+void CheckEmptyFileSize()
+{
+    TemporaryDirectory fixture;
+    const auto file = fixture.Write("empty.bin", "");
+    HashSession session;
+    Start(session, Options({file}));
+    const auto capture = Finish(session);
+    Require(capture.final.completed == 1 && capture.results.size() == 1, "empty file did not complete");
+    Require(capture.results[0].sizeKnown && capture.results[0].size == 0, "empty file size must be known zero");
+    Require(capture.final.bytesProcessedKnown, "known empty file must not mark byte count unknown");
 }
 
 void CheckFolderDiscovery()
@@ -312,6 +326,7 @@ int main()
         CheckAlgorithms();
         CheckDuplicatesAndSessions();
         CheckFailureContinuation();
+        CheckEmptyFileSize();
         CheckFolderDiscovery();
         CheckDepthLimit();
         CheckFileLimitAndCoalescing();

@@ -9,6 +9,7 @@ UIStringsZHCN::UIStringsZHCN()
 	// Global Strings
 	m_stringsMap[_T("FILE_STRING")] = _T("文件");
 	m_stringsMap[_T("BYTE_STRING")] = _T("字节");
+	m_stringsMap[_T("UNAVAILABLE_STRING")] = _T("未获取");
 	m_stringsMap[_T("HASHVALUE_STRING")] = _T("Hash 值:");
 	m_stringsMap[_T("FILENAME_STRING")] = _T("文件名:");
 	m_stringsMap[_T("FILESIZE_STRING")] = _T("文件大小:");

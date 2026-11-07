@@ -33,6 +33,8 @@ static inline HashResult ProjectHashResult(const ResultData& result)
 	projectedResult.state = GetResultState(result);
 	projectedResult.path = GetResultPath(result);
 	projectedResult.meta.size = GetResultSize(result);
+	// The legacy ResultData type has no representation for an unknown size.
+	projectedResult.meta.sizeKnown = true;
 	projectedResult.meta.modifiedDate = GetResultModifiedDate(result);
 	projectedResult.meta.version = GetResultVersion(result);
 	projectedResult.error = GetResultError(result);

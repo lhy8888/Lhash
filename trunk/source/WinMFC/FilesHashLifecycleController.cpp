@@ -272,7 +272,9 @@ void FilesHashLifecycleController::FinalizeWorkerExit()
 		sessionConsistent = m_hashProgressController->FinishTaskSession(m_sessionId, outcome);
 		if (completedNormally && sessionConsistent)
 		{
-			m_hashProgressController->FinishTiming(GetThreadDataTotalSize(*m_threadData));
+			const bool totalSizeKnown = m_uiBridgeMFC != NULL && *m_uiBridgeMFC != NULL &&
+				!(*m_uiBridgeMFC)->HasUnknownSessionSize();
+			m_hashProgressController->FinishTiming(GetThreadDataTotalSize(*m_threadData), totalSizeKnown);
 			m_hashProgressController->SetWholeProgress(99);
 		}
 		else

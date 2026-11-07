@@ -37,6 +37,7 @@ struct Task
     TaskState state = TaskState::Pending;
     int progress = 0;
     uint64_t size = 0;
+    bool sizeKnown = false;
     std::string error;
 };
 
@@ -48,6 +49,7 @@ struct Result
     uint32_t index = 0;
     std::string path;
     uint64_t size = 0;
+    bool sizeKnown = false;
     std::string modifiedDate, error;
     std::vector<Digest> digests;
 };
@@ -60,6 +62,7 @@ struct Update
     double elapsedSeconds = 0;
     // Completed bytes plus estimates from active/interrupted task progress.
     uint64_t bytesProcessed = 0;
+    bool bytesProcessedKnown = true;
     size_t taskCount = 0, completed = 0, failed = 0, cancelled = 0, notRun = 0, aborted = 0;
     // Only changed tasks; at most one update per task per Poll. Task identities
     // are (sessionId,index), never paths. The UI owns its retained history.

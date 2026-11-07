@@ -75,6 +75,8 @@ static inline ResultRenderPolicy GetResultRenderPolicy(ResultState resultState)
 
 struct ResultSizeDisplayInfo
 {
+	ResultSizeDisplayInfo() : sizeKnown(true) {}
+	bool sizeKnown;
 	sunjwbase::tstring sizeText;
 	sunjwbase::tstring shortSizeText;
 };

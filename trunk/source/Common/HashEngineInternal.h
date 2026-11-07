@@ -61,7 +61,8 @@ namespace HashEngineInternal
 			: finishedSize(0),
 			finishedSizeWhole(0),
 			position(0),
-			positionWhole(0)
+			positionWhole(0),
+			fileSizeKnown(true)
 		{
 		}
 
@@ -69,6 +70,7 @@ namespace HashEngineInternal
 		uint64_t finishedSizeWhole;
 		int position;
 		int positionWhole;
+		bool fileSizeKnown;
 	};
 
 	struct FileAttemptState

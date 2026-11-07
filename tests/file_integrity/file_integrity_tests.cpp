@@ -4,6 +4,7 @@
 #include "Runtime/HashExecutionContext.h"
 #include "OsUtils/OsFile.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cerrno>
 #include <chrono>
@@ -27,6 +28,10 @@ static dev_t targetDev = 0;
 static ino_t targetIno = 0;
 static size_t readCalls = 0, readBytes = 0;
 static bool injected = false;
+#if defined(__linux__)
+static unsigned int metadataFailAt = 0, metadataFstatCalls = 0;
+static bool metadataInjected = false;
+#endif
 
 static void Require(bool condition, const char* message)
 {
@@ -44,10 +49,23 @@ static void WriteFile(const fs::path& path, const std::string& contents)
 // Linker interposition is confined to this test executable and our fixture inode.
 extern "C" ssize_t __real_read(int, void*, size_t);
 extern "C" int __real_lstat(const char*, struct stat*);
+extern "C" int __real_fstat(int, struct stat*);
+extern "C" int __wrap_fstat(int fd, struct stat* status)
+{
+    const int result = __real_fstat(fd, status);
+    if (result == 0 && metadataFailAt != 0 && status->st_dev == targetDev && status->st_ino == targetIno &&
+        ++metadataFstatCalls == metadataFailAt)
+    {
+        metadataInjected = true;
+        errno = EIO;
+        return -1;
+    }
+    return result;
+}
 extern "C" ssize_t __wrap_read(int fd, void* bytes, size_t count)
 {
     struct stat status = {};
-    if (injectionMode.empty() || fstat(fd, &status) != 0 ||
+    if (injectionMode.empty() || __real_fstat(fd, &status) != 0 ||
         status.st_dev != targetDev || status.st_ino != targetIno)
         return __real_read(fd, bytes, count);
     ++readCalls;
@@ -157,6 +175,168 @@ static void TestEngine(const fs::path& root, const std::string& mode, bool paral
     injectionMode.clear();
 }
 
+#if defined(__linux__)
+class MetadataFailureSink final : public HashProgressSink
+{
+public:
+    explicit MetadataFailureSink(size_t watchedSize, uint32_t watchedIndex, size_t expectedFiles)
+        : watchedSize_(watchedSize), watchedIndex_(watchedIndex), expectedFiles_(expectedFiles) {}
+
+    int progressMax() override { return 100; }
+    void onProgressEvent(const ProgressEvent& event) override
+    {
+        if (event.type == PROGRESS_EVENT_FILE_CALCULATED) ++calculatedFiles;
+        if (event.type == PROGRESS_EVENT_FILE_PROGRESS && event.taskIndex == watchedIndex_ &&
+            event.value >= 100 && readBytes < watchedSize_)
+            prematureFileCompletion = true;
+        if (event.type == PROGRESS_EVENT_TOTAL_PROGRESS)
+        {
+            if (event.value < lastTotal) totalRegressed = true;
+            lastTotal = event.value;
+            totalValues.push_back(event.value);
+            if (event.value >= 100 && (readBytes < watchedSize_ || calculatedFiles < expectedFiles_))
+                prematureTotalCompletion = true;
+        }
+    }
+
+    bool prematureFileCompletion = false;
+    bool prematureTotalCompletion = false;
+    bool totalRegressed = false;
+    int lastTotal = -1;
+    size_t calculatedFiles = 0;
+    std::vector<int> totalValues;
+private:
+    size_t watchedSize_;
+    uint32_t watchedIndex_;
+    size_t expectedFiles_;
+};
+
+// The fstat wrappers affect only the chosen fixture inode and exactly one call.
+// Sequence 3 is the pre-scan length, 6 the modification time, 7 the actual
+// hashing length, and 8 the final read-consistency check.
+static void TestMetadataFailure(const fs::path& root, unsigned int failureIndex,
+                                size_t length, bool multipleFiles = false, bool largeFirst = false)
+{
+    target = (root / "metadata-fault.bin").string();
+    const std::string contents = length == 3 ? "abc" : std::string(length, 'A');
+    WriteFile(target, contents);
+    struct stat status = {};
+    Require(stat(target.c_str(), &status) == 0, "metadata fault fixture stat failed");
+    targetDev = status.st_dev; targetIno = status.st_ino;
+    readCalls = readBytes = 0; injected = metadataInjected = false;
+    metadataFstatCalls = 0; metadataFailAt = failureIndex; injectionMode = "metadata-fault";
+
+    HashRequest request;
+    if (multipleFiles)
+    {
+        const auto first = root / "metadata-first.bin";
+        WriteFile(first, largeFirst ? std::string(kFileSize, 'A') : "abc");
+        request.files.push_back(sunjwbase::strtotstrutf8(first.string()));
+    }
+    request.files.push_back(sunjwbase::strtotstrutf8(target));
+    AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr("md5"));
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
+    AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr("openssl-sha-256"));
+#endif
+    request.digestExecutionPolicy = HASH_REQUEST_DIGEST_EXECUTION_POLICY_SINGLE_THREADED;
+    HashJobState state; HashCancellationState cancel;
+    const uint32_t watchedIndex = multipleFiles ? 1 : 0;
+    MetadataFailureSink sink(length, watchedIndex, request.files.size());
+    HashExecutionContext context(&sink, state, cancel);
+    const int engineStatus = RunHashRequest(&context, request);
+    injectionMode.clear(); metadataFailAt = 0;
+    Require(engineStatus == 0, "metadata fault engine rejected request");
+    Require(metadataInjected == (failureIndex != 0), "metadata fault was not injected as requested");
+    Require(state.results.size() == (multipleFiles ? 2u : 1u), "metadata fault result count");
+    const auto& result = state.results.back();
+    const bool finalCheckFailed = failureIndex == 8;
+    Require(result.state == (finalCheckFailed ? RESULT_ERROR : RESULT_ALL), "metadata fault result state");
+    if (finalCheckFailed)
+    {
+        Require(!result.error.empty() && result.digests.empty(), "failed final check published a digest");
+    }
+    else
+    {
+        Require(result.error.empty(), "metadata query failure became a hashing failure");
+        Require(result.meta.sizeKnown == (failureIndex != 7), "unknown file size is not distinguished from a true zero");
+        if (result.meta.sizeKnown) Require(result.meta.size == length, "known metadata size differs from actual size");
+        Require(result.meta.modifiedDate.empty() == (failureIndex == 6), "modification-time failure was not preserved");
+        Require(readBytes == length, "metadata failure prevented a complete read");
+        Require(!sink.prematureFileCompletion && !sink.prematureTotalCompletion, "100% emitted before hashing was complete");
+        Require(!sink.totalRegressed && sink.lastTotal == 100, "overall progress regressed or failed to finish");
+        if (largeFirst)
+            Require(std::any_of(sink.totalValues.begin(), sink.totalValues.end(), [](int value) {
+                return value >= 90 && value < 100;
+            }), "multi-file test never reached high progress before the size failure");
+        size_t expectedDigestCount = 1;
+#if defined(LHASH_WITH_OPENSSL3_VENDOR)
+        ++expectedDigestCount;
+#endif
+        Require(result.digests.size() == expectedDigestCount, "metadata failure lost a valid digest");
+        for (const auto& digest : result.digests)
+        {
+            const auto id = sunjwbase::tstrtostr(digest.algorithmId);
+            const auto value = sunjwbase::str_lower(sunjwbase::tstrtostr(digest.value));
+            const char* expected = id == "md5" ?
+                (length == 0 ? "d41d8cd98f00b204e9800998ecf8427e" : length == 3 ? "900150983cd24fb0d6963f7d28e17f72" : "0dfee6720119110e06a886de07416ca5") :
+                id == "openssl-sha-256" ?
+                (length == 0 ? "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" : length == 3 ? "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" : "33a9cb5984cfd9047d24d5fe403698a0dd71e7636215f5cd01a861573b09d9a3") : "";
+            Require(value == expected, "metadata failure changed the digest");
+        }
+    }
+    std::cout << "metadata fstat failure " << failureIndex << " size=" << length
+              << " files=" << request.files.size() << " PASS\n";
+}
+
+static void TestEmptyFileProgress(const fs::path& root)
+{
+    const auto first = root / "metadata-empty-first.bin";
+    const auto second = root / "metadata-empty-second.bin";
+    WriteFile(first, ""); WriteFile(second, "");
+    target = first.string();
+    struct stat status = {};
+    Require(stat(target.c_str(), &status) == 0, "empty-file progress stat failed");
+    targetDev = status.st_dev; targetIno = status.st_ino;
+    readCalls = readBytes = 0; metadataFailAt = 0; injectionMode = "metadata-fault";
+    HashRequest request;
+    request.files.push_back(sunjwbase::strtotstrutf8(first.string()));
+    request.files.push_back(sunjwbase::strtotstrutf8(second.string()));
+    AppendHashRequestAlgorithmId(request, sunjwbase::strtotstr("md5"));
+    request.digestExecutionPolicy = HASH_REQUEST_DIGEST_EXECUTION_POLICY_SINGLE_THREADED;
+    HashJobState state; HashCancellationState cancel;
+    MetadataFailureSink sink(0, 0, request.files.size());
+    HashExecutionContext context(&sink, state, cancel);
+    const int engineStatus = RunHashRequest(&context, request);
+    injectionMode.clear();
+    Require(engineStatus == 0 && state.results.size() == 2, "empty-file progress request failed");
+    for (const auto& result : state.results)
+    {
+        Require(result.state == RESULT_ALL && result.meta.sizeKnown && result.meta.size == 0,
+                "empty file was not reported as a known zero-length file");
+        Require(result.digests.size() == 1 && sunjwbase::str_lower(sunjwbase::tstrtostr(result.digests[0].value)) ==
+                "d41d8cd98f00b204e9800998ecf8427e", "empty-file digest mismatch");
+    }
+    Require(!sink.totalRegressed && !sink.prematureTotalCompletion && sink.lastTotal == 100,
+            "empty-file overall progress was premature, regressed or incomplete");
+    Require(sink.totalValues.size() >= 2 && sink.totalValues[sink.totalValues.size() - 2] == 50,
+            "two empty files did not advance overall progress by file count");
+    std::cout << "two empty files progress by file count PASS\n";
+}
+
+static void TestMetadataFailures(const fs::path& root)
+{
+    TestMetadataFailure(root, 0, 0);                  // Empty file is known zero.
+    TestMetadataFailure(root, 0, kFileSize);          // Ordinary multi-chunk file.
+    TestMetadataFailure(root, 6, 3);                  // Timestamp query fails.
+    TestMetadataFailure(root, 7, kFileSize);          // Size query fails.
+    TestMetadataFailure(root, 7, kFileSize, true);    // Size query fails in a multi-file run.
+    TestMetadataFailure(root, 7, 3, true, true);      // Second file becomes unknown after 99% progress.
+    TestMetadataFailure(root, 3, kFileSize, true);    // Pre-scan fails before a multi-file run.
+    TestMetadataFailure(root, 8, 3);                  // Final validation still rejects errors.
+    TestEmptyFileProgress(root);
+}
+#endif
+
 static void Drain(sunjwbase::OsFile& file)
 {
     char buffer[137];
@@ -174,7 +354,7 @@ static void TestMetadataOnly(const fs::path& root)
     HashJobState state; HashCancellationState cancel; HashExecutionContext context(nullptr, state, cancel);
     Require(RunHashRequest(&context, request) == 0 && state.results.size() == 1, "metadata request failed");
     const auto& result = state.results.front();
-    Require(result.state == RESULT_META && result.meta.size == 3 && result.digests.empty() && result.error.empty(), "metadata-only result changed");
+    Require(result.state == RESULT_META && result.meta.sizeKnown && result.meta.size == 3 && result.digests.empty() && result.error.empty(), "metadata-only result changed");
 #if defined(__linux__)
     Require(readCalls == 0, "metadata-only request read file contents");
 #endif
@@ -294,6 +474,9 @@ int main()
 #endif
         }
         TestMetadataOnly(root); TestDirectConsistency(root); TestPaths(root); TestConcurrentTimeFormatting(root);
+#if defined(__linux__)
+        TestMetadataFailures(root);
+#endif
         fs::remove_all(root);
         return 0;
     }

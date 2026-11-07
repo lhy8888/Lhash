@@ -61,6 +61,7 @@ bool Terminal(TaskState state)
 
 uint64_t ProcessedBytes(const Task& task)
 {
+    if (!task.sizeKnown) return 0;
     if (task.state == TaskState::Completed) return task.size;
     if (task.state == TaskState::Pending || task.state == TaskState::NotRun) return 0;
     const auto progress = static_cast<unsigned>(task.progress);
@@ -88,6 +89,7 @@ struct SessionState
     size_t suppressedWarnings = 0;
     std::array<size_t, 7> counts{};
     uint64_t bytesProcessed = 0;
+    bool bytesProcessedKnown = true;
     std::string error;
 
     void Changed(size_t index)
@@ -269,6 +271,8 @@ public:
             break;
         case PROGRESS_EVENT_FILE_META_READY:
             task.size = event.result.meta.size;
+            task.sizeKnown = event.result.meta.sizeKnown;
+            if (!task.sizeKnown) state_.bytesProcessedKnown = false;
             break;
         case PROGRESS_EVENT_FILE_PROGRESS:
             task.progress = std::clamp(event.value, 0, 100);
@@ -282,6 +286,8 @@ public:
             result.index = task.index;
             result.path = task.path;
             result.size = task.size = event.result.meta.size;
+            result.sizeKnown = task.sizeKnown = event.result.meta.sizeKnown;
+            if (!task.sizeKnown) state_.bytesProcessedKnown = false;
             result.modifiedDate = Utf8(event.result.meta.modifiedDate);
             result.error = task.error = Utf8(event.result.error);
             if (!failed)
@@ -442,6 +448,7 @@ Update HashSession::Poll()
     update.totalProgress = state_->totalProgress;
     update.elapsedSeconds = std::chrono::duration<double>((state_->busy ? Clock::now() : state_->finished) - state_->started).count();
     update.bytesProcessed = state_->bytesProcessed;
+    update.bytesProcessedKnown = state_->bytesProcessedKnown;
     update.taskCount = state_->tasks.size();
     update.completed = state_->counts[static_cast<size_t>(TaskState::Completed)];
     update.failed = state_->counts[static_cast<size_t>(TaskState::Failed)];

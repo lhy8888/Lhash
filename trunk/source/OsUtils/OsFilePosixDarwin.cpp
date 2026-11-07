@@ -377,12 +377,12 @@ bool OsFile::openReadWrite(void *exception/* = NULL*/)
 
 int64_t OsFile::getLength()
 {
-    int64_t retLength = 0;
+    int64_t retLength = -1;
     string strFilePath = tstrtostr(_filePath);
     int *fd = GET_FD_FROM_POINTER(_osfileData);
 
     struct stat st;
-    if (TryGetCurrentFileStatus(fd, strFilePath, &st))
+    if (TryGetCurrentFileStatus(fd, strFilePath, &st) && st.st_size >= 0)
     {
         retLength = st.st_size;
     }
@@ -429,7 +429,10 @@ tstring OsFile::getModifiedTimeFormat()
         }
 
         char szTmBuf[1024] = {0};
-        strftime(szTmBuf, 1024, "%Y-%m-%d %H:%M", &tmModifiedTime);
+        if (strftime(szTmBuf, 1024, "%Y-%m-%d %H:%M", &tmModifiedTime) == 0)
+        {
+            return tstring();
+        }
 
         tstrLastModifiedTime = strtotstr(string(szTmBuf));
     }

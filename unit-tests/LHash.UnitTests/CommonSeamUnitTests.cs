@@ -375,8 +375,8 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("int64_t fileLength = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("return static_cast<uint64_t>(fileLength);", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("return fileLength;", preScanSizeProbe, StringComparison.Ordinal);
 
         Assert.Contains("InterlockedCompareExchange(&m_refreshPending, 1, 0) == 0", bridgeHeader, StringComparison.Ordinal);
         Assert.Contains("InterlockedExchange(&m_refreshPending, 0);", bridgeHeader, StringComparison.Ordinal);
@@ -585,6 +585,8 @@ public sealed class CommonSeamUnitTests
         Assert.Contains("return GetResultSizeDisplayInfo(GetResultSize(result));", resultRender, StringComparison.Ordinal);
         Assert.Contains("#include \"Domain/HashResult.h\"", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("GetHashResultSizeDisplayInfo(const HashResult& result)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("if (!result.meta.sizeKnown)", hashResultRender, StringComparison.Ordinal);
+        Assert.Contains("unknown.sizeKnown = false;", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("return GetResultSizeDisplayInfo(result.meta.size);", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("VisitRenderableHashResultMetaLines(const HashResult& result, TResultMetaLineVisitor visitor)", hashResultRender, StringComparison.Ordinal);
         Assert.Contains("VisitHashResultDigestDisplayValues(const HashResult& result, bool uppercase, TResultDigestDisplayVisitor visitor)", hashResultRender, StringComparison.Ordinal);

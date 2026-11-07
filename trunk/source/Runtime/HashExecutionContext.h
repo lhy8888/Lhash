@@ -34,7 +34,9 @@ struct HashExecutionContext
 		: progressSinkObserver(sink != NULL ? sink : &GetNullHashProgressSink()),
 		jobState(state),
 		cancellationState(cancellation),
-		currentTaskIndex(kInvalidHashTaskIndex)
+		currentTaskIndex(kInvalidHashTaskIndex),
+		totalSizeKnown(true),
+		lastTotalProgress(0)
 	{
 	}
 	HashProgressSink *progressSinkObserver; // Non-owning; the caller keeps the sink alive until RunHashRequest returns.
@@ -42,6 +44,9 @@ struct HashExecutionContext
 	HashCancellationState& cancellationState;
 	// Set before FILE_STARTED and unchanged until this file's digest work completes.
 	uint32_t currentTaskIndex;
+	// Written by the scheduler between files and read by its joined hash worker.
+	bool totalSizeKnown;
+	int lastTotalProgress;
 };
 
 static inline HashExecutionContext CreateHashExecutionContext(HashProgressSink *progressSink, HashJobState& jobState, HashCancellationState& cancellationState)
@@ -77,6 +82,8 @@ static inline uint64_t GetHashExecutionTotalSize(const HashExecutionContext& exe
 static inline void ResetHashExecutionTotalSize(HashExecutionContext& executionContext)
 {
 	executionContext.jobState.countedSize.store(0, std::memory_order_relaxed);
+	executionContext.totalSizeKnown = true;
+	executionContext.lastTotalProgress = 0;
 }
 
 static inline void AddHashExecutionTotalSize(HashExecutionContext& executionContext, uint64_t sizeDelta)

@@ -9,6 +9,7 @@ UIStringsBase::UIStringsBase()
 	// Global Strings
 	m_stringsMap[_T("FILE_STRING")] = _T("File");
 	m_stringsMap[_T("BYTE_STRING")] = _T("Byte(s)");
+	m_stringsMap[_T("UNAVAILABLE_STRING")] = _T("Unavailable");
 	m_stringsMap[_T("HASHVALUE_STRING")] = _T("Hash:");
 	m_stringsMap[_T("FILENAME_STRING")] = _T("Name:");
 	m_stringsMap[_T("FILESIZE_STRING")] = _T("File Size:");

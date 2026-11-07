@@ -307,11 +307,15 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
 - (NSAttributedString *)renderResult:(const Result&)result {
     NSMutableAttributedString *text = [[NSMutableAttributedString alloc] init];
     NSDictionary *normal = @{NSFontAttributeName:_resultTextView.font, NSForegroundColorAttributeName:NSColor.textColor};
-    NSString *heading = [NSString stringWithFormat:@"%@: %@\n%@: %llu %@ (%@)\n%@: %@\n",
+    NSString *sizeText = result.sizeKnown ?
+        [NSString stringWithFormat:@"%llu %@ (%@)", (unsigned long long)result.size,
+         [self text:@"bytes" chinese:@"字节"], [NSByteCountFormatter stringFromByteCount:(long long)std::min<uint64_t>(result.size, INT64_MAX) countStyle:NSByteCountFormatterCountStyleFile]] :
+        [self text:@"Unavailable" chinese:@"未获取"];
+    NSString *modifiedText = result.modifiedDate.empty() ? [self text:@"Unavailable" chinese:@"未获取"] : Visible(String(result.modifiedDate));
+    NSString *heading = [NSString stringWithFormat:@"%@: %@\n%@: %@\n%@: %@\n",
         [self text:@"File" chinese:@"文件名"], Visible(String(result.path)),
-        [self text:@"Size" chinese:@"文件大小"], (unsigned long long)result.size,
-        [self text:@"bytes" chinese:@"字节"], [NSByteCountFormatter stringFromByteCount:(long long)std::min<uint64_t>(result.size, INT64_MAX) countStyle:NSByteCountFormatterCountStyleFile],
-        [self text:@"Modified" chinese:@"修改日期"], Visible(String(result.modifiedDate))];
+        [self text:@"Size" chinese:@"文件大小"], sizeText,
+        [self text:@"Modified" chinese:@"修改日期"], modifiedText];
     [text appendAttributedString:[[NSAttributedString alloc] initWithString:heading attributes:normal]];
     if (!result.error.empty()) {
         [text appendAttributedString:[[NSAttributedString alloc] initWithString:
@@ -377,7 +381,7 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
         row[@"algorithms"] = _activeAlgorithms ?: @"";
         row[@"status"] = [self statusForTask:task];
         row[@"error"] = Visible(String(task.error));
-        row[@"progress"] = [NSString stringWithFormat:@"%d%%", task.progress];
+        row[@"progress"] = task.state == TaskState::Running && !task.sizeKnown ? @"—" : [NSString stringWithFormat:@"%d%%", task.progress];
         [changed addIndex:index.unsignedIntegerValue];
     }
     if (added) [_taskTableView noteNumberOfRowsChanged];
@@ -418,7 +422,9 @@ NSArray<NSURL *> *DroppedURLs(id<NSDraggingInfo> sender) {
         else
             _summary.stringValue = [NSString stringWithFormat:[self text:@"Matching files: %lu" chinese:@"匹配文件数：%lu"], (unsigned long)_filterMatches];
         double speed = update.elapsedSeconds > 0 ? update.bytesProcessed / update.elapsedSeconds / (1024.0 * 1024.0) : 0;
-        _timing.stringValue = [NSString stringWithFormat:@"%.2f s · %.2f MiB/s", update.elapsedSeconds, speed];
+        _timing.stringValue = update.bytesProcessedKnown ?
+            [NSString stringWithFormat:@"%.2f s · %.2f MiB/s", update.elapsedSeconds, speed] :
+            [NSString stringWithFormat:@"%.2f s · —", update.elapsedSeconds];
     }
 }
 

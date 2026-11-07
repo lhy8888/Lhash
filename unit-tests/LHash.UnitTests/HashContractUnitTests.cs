@@ -624,15 +624,17 @@ public sealed class HashContractUnitTests
         Assert.DoesNotContain("digestUpdateTasks[taskIndex].wait();", digestUpdater, StringComparison.Ordinal);
         Assert.Contains("void UpdateHashExecutionProgress(HashExecutionContext *executionContext, uint64_t fileSize, bool isSizeCaled, unsigned int dataLen,", progressTracker, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreateFileProgressEvent(positionNew, executionContext->currentTaskIndex));", progressTracker, StringComparison.Ordinal);
-        Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(progressState->positionWhole));", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("if (progressState->fileSizeKnown)", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("isSizeCaled && executionContext->totalSizeKnown", progressTracker, StringComparison.Ordinal);
+        Assert.Contains("observer->onProgressEvent(CreateTotalProgressEvent(positionWholeNew));", progressTracker, StringComparison.Ordinal);
         Assert.Contains("UpdateHashExecutionProgress(executionContext, fileSize, isSizeCaled, digestDataBuffer.datalen, &executionState->progressState);", digestQueue, StringComparison.Ordinal);
         Assert.Contains("UpdateHashExecutionProgress(executionContext, fsize, isSizeCaled, databuf.datalen, &executionState->progressState);", digestSinglePass, StringComparison.Ordinal);
 
         Assert.Contains("PrepareHashingWork(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", preparation, StringComparison.Ordinal);
         Assert.Contains("TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan", preparation, StringComparison.Ordinal);
         Assert.Contains("ShouldPreScanHashRequestFileSizes(preparationPlan, request)", preparation, StringComparison.Ordinal);
-        Assert.Contains("uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);", preScanSizeProbeHeader, StringComparison.Ordinal);
-        Assert.Contains("uint64_t ResolveHashPreScannedFileSize(const TCHAR *path)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("int64_t ResolveHashPreScannedFileSize(const TCHAR *path);", preScanSizeProbeHeader, StringComparison.Ordinal);
+        Assert.Contains("int64_t ResolveHashPreScannedFileSize(const TCHAR *path)", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("#include \"OsUtils/OsFile.h\"", preScanSizeProbe, StringComparison.Ordinal);
         Assert.DoesNotContain("#include <Windows.h>", preScanSizeProbe, StringComparison.Ordinal);
         Assert.DoesNotContain("#if defined (_WIN32)", preScanSizeProbe, StringComparison.Ordinal);
@@ -642,8 +644,8 @@ public sealed class HashContractUnitTests
         Assert.Contains("sunjwbase::OsFile osFile(path);", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("if (!osFile.openReadScan())", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("int64_t fileLength = osFile.getLength();", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
-        Assert.Contains("return static_cast<uint64_t>(fileLength);", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (fileLength <= 0)", preScanSizeProbe, StringComparison.Ordinal);
+        Assert.Contains("return fileLength;", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("osFile.close();", preScanSizeProbe, StringComparison.Ordinal);
         Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize);", preScanSizeAccountingHeader, StringComparison.Ordinal);
         Assert.Contains("uint64_t TrackHashPreScannedFileSize(HashExecutionContext *executionContext, ULLongVector& fSizes, uint32_t fileIndex, uint64_t fSize)", preScanSizeAccounting, StringComparison.Ordinal);
@@ -661,8 +663,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("bool isSizeCaled = TryPreScanSmallBatchFileSizes(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparationWorkflow, StringComparison.Ordinal);
         Assert.Contains("if (*wasCancelled)", preparationWorkflow, StringComparison.Ordinal);
         Assert.Contains("observer->onProgressEvent(CreatePreparationFinishedProgressEvent());", preparationWorkflow, StringComparison.Ordinal);
-        Assert.Contains("uint64_t fSize = ResolveHashPreScannedFileSize(path);", preparation, StringComparison.Ordinal);
-        Assert.Contains("TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);", preparation, StringComparison.Ordinal);
+        Assert.Contains("int64_t fSize = ResolveHashPreScannedFileSize(path);", preparation, StringComparison.Ordinal);
+        Assert.Contains("if (fSize < 0)", preparation, StringComparison.Ordinal);
+        Assert.Contains("executionContext->totalSizeKnown = false;", preparation, StringComparison.Ordinal);
+        Assert.Contains("fSize < 0 ? 0 : static_cast<uint64_t>(fSize)", preparation, StringComparison.Ordinal);
         Assert.Contains("RunHashPreScanVisitWorkflow(executionContext, request, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
         Assert.Contains("return ExecuteHashPreparationWorkflow(executionContext, request, preparationPlan, fSizes, wasCancelled);", preparation, StringComparison.Ordinal);
         Assert.DoesNotContain("OsFile osFile(path);", preparation, StringComparison.Ordinal);
@@ -694,7 +698,10 @@ public sealed class HashContractUnitTests
         Assert.Contains("AddHashExecutionTotalSize(*executionContext, fsize);", fileSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("ReplaceHashExecutionCountedFileSize(*executionContext, fSizes[fileIndex], fsize);", fileSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("fSizes[fileIndex] = fsize;", fileSizeAccounting, StringComparison.Ordinal);
-        Assert.Contains("return TrackHashResolvedFileSize(executionContext, isSizeCaled, fSizes, fileIndex, result, osFile.getLength());", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("const int64_t fileLength = osFile.getLength();", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("result.meta.sizeKnown = fileLength >= 0;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("executionContext->totalSizeKnown = false;", fileSizeAccounting, StringComparison.Ordinal);
+        Assert.Contains("fileLength < 0 ? 0 : static_cast<uint64_t>(fileLength)", fileSizeAccounting, StringComparison.Ordinal);
         Assert.Contains("result.meta.modifiedDate = osFile.getModifiedTimeFormat();", result, StringComparison.Ordinal);
         Assert.Contains("fsize = ResolveHashFileSizeAndTrack(executionContext, osFile, isSizeCaled, fSizes, fileIndex, result);", result, StringComparison.Ordinal);
         Assert.DoesNotContain("TryResolveWindowsPathFileMeta(path, &resolvedMeta)", result, StringComparison.Ordinal);

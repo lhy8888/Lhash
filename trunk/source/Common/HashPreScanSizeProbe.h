@@ -5,7 +5,7 @@
 
 namespace HashEngineInternal
 {
-	uint64_t ResolveHashPreScannedFileSize(const TCHAR *path);
+	int64_t ResolveHashPreScannedFileSize(const TCHAR *path);
 }
 
 #endif

@@ -36,6 +36,7 @@ namespace sunjwbase
 
 		// Attributes
 		bool isHashTargetAllowed(void *exception = NULL);
+		// Returns -1 when the size cannot be read; zero is a valid file size.
 		int64_t getLength();
 		bool getModifiedTime(void *modifiedTime);
 		sunjwbase::tstring getModifiedTimeFormat();

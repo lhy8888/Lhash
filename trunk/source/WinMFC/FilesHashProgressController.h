@@ -30,7 +30,7 @@ public:
 	void PrepareAdvTaskbar();
 	void StartTiming(LPCTSTR secondText, const HashWorkerTiming* timing);
 	void AdvanceTimeTick(LPCTSTR secondText);
-	void FinishTiming(ULONGLONG totalSize);
+	void FinishTiming(ULONGLONG totalSize, bool totalSizeKnown = true);
 	void ResetAfterStop();
 	void SetWholeProgress(UINT pos);
 	int GetTaskRowCount() const;

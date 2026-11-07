@@ -1,5 +1,6 @@
 #import <Cocoa/Cocoa.h>
 #import "AppController.h"
+#include "HashSession.h"
 
 #include <chrono>
 #include <cstdio>
@@ -10,6 +11,10 @@
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
+
+@interface LHAppController (MetadataRenderingTest)
+- (NSAttributedString *)renderResult:(const lhash::mac::Result&)result;
+@end
 
 // The production destination reads the native dragging pasteboard; no fake
 // filesystem or hashing service is substituted in this handler test.
@@ -133,6 +138,30 @@ void AssertTerminalRows(LHAppController *controller, NSInteger expected)
             ![lower containsString:@"waiting"] && ![status containsString:@"运行中"] &&
             ![status containsString:@"等待中"], "finished worker left a nonterminal task row");
     }
+}
+
+void UnknownMetadataDisplay()
+{
+    LHAppController *controller = Controller();
+    lhash::mac::Result unknown;
+    unknown.path = "unknown.bin";
+    NSString *unknownText = [controller renderResult:unknown].string;
+    const bool english = Occurrences(unknownText, @"Unavailable") == 2;
+    const bool chinese = Occurrences(unknownText, @"未获取") == 2;
+    Require(english || chinese, "unknown size and time were not both displayed as unavailable");
+    Require(![unknownText containsString:@"0 bytes"] && ![unknownText containsString:@"0 字节"],
+        "unknown size was displayed as zero bytes");
+
+    lhash::mac::Result empty;
+    empty.path = "empty.bin";
+    empty.sizeKnown = true;
+    empty.size = 0;
+    empty.modifiedDate = "2026-01-01 00:00";
+    NSString *emptyText = [controller renderResult:empty].string;
+    Require([emptyText containsString:@"0 bytes"] || [emptyText containsString:@"0 字节"],
+        "known empty file was not displayed as zero bytes");
+    Require([emptyText containsString:@"2026-01-01 00:00"], "known modification time was not displayed");
+    [controller close];
 }
 
 void Screenshot(LHAppController *controller)
@@ -462,6 +491,7 @@ int main(int argc, char **argv)
                     if ([vector[@"name"] isEqualToString:@"abc"]) abcDigests = vector[@"digests"];
                 Require(abcDigests.count == 18, "abc vector is incomplete");
                 Test("native layout, Unicode, Windows default digests", LayoutAndDefaults);
+                Test("unknown metadata and known empty file display", UnknownMetadataDisplay);
                 Test("duplicate task identity, exact verification, retained history, clear", DuplicatesAndVerification);
                 Test("all 18 algorithms, settings validation/persistence, uppercase", AllAlgorithmsAndSettings);
                 Test("real pasteboard, UTF-8 BOM export and output failure", CopyAndExport);

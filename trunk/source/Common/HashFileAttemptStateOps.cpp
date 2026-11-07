@@ -26,5 +26,6 @@ namespace HashEngineInternal
 	{
 		progressState->finishedSize = 0;
 		progressState->position = 0;
+		progressState->fileSizeKnown = true;
 	}
 }

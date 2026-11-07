@@ -207,7 +207,7 @@ void FilesHashProgressController::AdvanceTimeTick(LPCTSTR secondText)
 	UpdateSummaryText();
 }
 
-void FilesHashProgressController::FinishTiming(ULONGLONG totalSize)
+void FilesHashProgressController::FinishTiming(ULONGLONG totalSize, bool totalSizeKnown)
 {
 	if (m_parentWnd != NULL && m_timerId != 0)
 	{
@@ -217,7 +217,7 @@ void FilesHashProgressController::FinishTiming(ULONGLONG totalSize)
 
 	if (m_workerTiming != NULL) m_calculateTime = m_workerTiming->ElapsedSeconds();
 	m_workerTiming = NULL;
-	if (m_calculateTime > 0.0)
+	if (totalSizeKnown && m_calculateTime > 0.0)
 	{
 		double speed = totalSize / m_calculateTime;
 		CString speedStr;
@@ -384,6 +384,7 @@ void FilesHashProgressController::UpdateSummaryText()
 
 CString FilesHashProgressController::BuildProgressText(int progress)
 {
+	if (progress < 0) return CString(GetStringByKey(UNAVAILABLE_STRING));
 	int clampedProgress = max(0, min(100, progress));
 	const int barWidth = 24;
 	int filledWidth = (clampedProgress * barWidth) / 100;

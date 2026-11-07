@@ -9,8 +9,13 @@ namespace HashEngineInternal
 	void AccumulatePreScannedFileSize(HashExecutionContext *executionContext, const HashRequest& request, ULLongVector& fSizes, uint32_t fileIndex)
 	{
 		const TCHAR *path = GetHashRequestFileAt(request, fileIndex).c_str();
-		uint64_t fSize = ResolveHashPreScannedFileSize(path);
-		TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex, fSize);
+		int64_t fSize = ResolveHashPreScannedFileSize(path);
+		if (fSize < 0)
+		{
+			executionContext->totalSizeKnown = false;
+		}
+		TrackHashPreScannedFileSize(executionContext, fSizes, fileIndex,
+			fSize < 0 ? 0 : static_cast<uint64_t>(fSize));
 	}
 
 	bool TryPreScanSmallBatchFileSizes(HashExecutionContext *executionContext, const HashRequest& request, const HashPreparationPlan& preparationPlan, ULLongVector& fSizes, bool *wasCancelled)

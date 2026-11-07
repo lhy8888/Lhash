@@ -8,19 +8,34 @@ namespace HashEngineInternal
 	void PublishWholeProgressAfterFile(HashExecutionContext *executionContext, const HashRequest& request, bool isSizeCaled, uint32_t fileIndex)
 	{
 		HashProgressSink *observer = GetHashExecutionProgressSink(*executionContext);
-		if (!isSizeCaled)
+		const uint64_t fileCount = GetHashRequestFileCount(request);
+		if (!isSizeCaled || !executionContext->totalSizeKnown || GetHashExecutionTotalSize(*executionContext) == 0)
 		{
-			if (GetHashRequestFileCount(request) == 0)
+			if (fileCount == 0)
 			{
 				observer->onProgressEvent(CreateTotalProgressEvent(0));
 			}
 			else
 			{
 				int progressMax = observer->progressMax();
-				observer->onProgressEvent(CreateTotalProgressEvent(CalculateIndexedProgressValue(
+				int position = CalculateIndexedProgressValue(
 					static_cast<uint64_t>(fileIndex) + 1,
-					GetHashRequestFileCount(request),
-					progressMax)));
+					fileCount,
+					progressMax);
+				if (position > executionContext->lastTotalProgress)
+				{
+					executionContext->lastTotalProgress = position;
+					observer->onProgressEvent(CreateTotalProgressEvent(position));
+				}
+			}
+		}
+		else if (fileCount > 0 && static_cast<uint64_t>(fileIndex) + 1 == fileCount)
+		{
+			int progressMax = observer->progressMax();
+			if (progressMax > executionContext->lastTotalProgress)
+			{
+				executionContext->lastTotalProgress = progressMax;
+				observer->onProgressEvent(CreateTotalProgressEvent(progressMax));
 			}
 		}
 	}

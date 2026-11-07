@@ -6,7 +6,7 @@ if (UNIX)
     target_include_directories(lhash_file_integrity BEFORE PRIVATE
         "${PROJECT_SOURCE_DIR}/cmake/posix-stubs")
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        target_link_options(lhash_file_integrity PRIVATE "-Wl,--wrap=read" "-Wl,--wrap=lstat")
+        target_link_options(lhash_file_integrity PRIVATE "-Wl,--wrap=read" "-Wl,--wrap=lstat" "-Wl,--wrap=fstat")
     endif()
     add_test(NAME lhash_file_integrity COMMAND lhash_file_integrity)
     set_tests_properties(lhash_file_integrity PROPERTIES TIMEOUT 60)

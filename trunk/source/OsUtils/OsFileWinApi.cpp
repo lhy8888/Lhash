@@ -545,7 +545,7 @@ bool OsFile::openReadWrite(void *exception/* = NULL*/)
 
 int64_t OsFile::getLength()
 {
-	int64_t retLength = 0;
+	int64_t retLength = -1;
 
 	bool needClose = false;
 
@@ -558,7 +558,7 @@ int64_t OsFile::getLength()
 	if (_fileStatus != CLOSED)
 	{
 		LARGE_INTEGER liSize = { 0 };
-		if (GetFileSizeEx(_osfileData, &liSize))
+		if (GetFileSizeEx(_osfileData, &liSize) && liSize.QuadPart >= 0)
 		{
 			retLength = liSize.QuadPart;
 		}
@@ -574,6 +574,10 @@ int64_t OsFile::getLength()
 
 bool OsFile::getModifiedTime(void *modifiedTime)
 {
+	if (modifiedTime == NULL)
+	{
+		return false;
+	}
 	FILETIME *lpFtWrite = (FILETIME *)modifiedTime;
 
 	bool needClose = false;
@@ -606,15 +610,21 @@ tstring OsFile::getModifiedTimeFormat()
 	if (this->getModifiedTime((void*)&ftWrite))
 	{
 		// Convert the last-write time to local time.
-		SYSTEMTIME stUTC, stLocal;
-		FileTimeToSystemTime(&ftWrite, &stUTC);
-		SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &stLocal);
+		SYSTEMTIME stUTC = {}, stLocal = {};
+		if (!FileTimeToSystemTime(&ftWrite, &stUTC) ||
+			!SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &stLocal))
+		{
+			return tstring();
+		}
 
 		TCHAR tzTmBuf[1024] = { 0 };
-		StringCchPrintf(tzTmBuf, 1024,
+		if (FAILED(StringCchPrintf(tzTmBuf, 1024,
 			TEXT("%d-%02d-%02d %02d:%02d"),
 			stLocal.wYear, stLocal.wMonth, stLocal.wDay,
-			stLocal.wHour, stLocal.wMinute);
+			stLocal.wHour, stLocal.wMinute)))
+		{
+			return tstring();
+		}
 		tstrLastModifiedTime = tzTmBuf;
 	}
 

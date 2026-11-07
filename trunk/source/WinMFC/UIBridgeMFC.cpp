@@ -110,18 +110,20 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 		break;
 	case PROGRESS_EVENT_FILE_META_READY:
 		{
+			if (!result.meta.sizeKnown) m_sessionHasUnknownSize = true;
 			FilesHashTaskUpdate taskUpdate;
 			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
 			taskUpdate.status = GetStringByKey(MAINDLG_TASK_STATUS_META);
 			taskUpdate.state = FILES_HASH_TASK_RUNNING;
-			taskUpdate.progress = max(5, m_fileProgressDispatchState.lastValue);
+			taskUpdate.progress = result.meta.sizeKnown ? max(5, m_fileProgressDispatchState.lastValue) : -1;
 			PostTaskUpdate(taskUpdate);
 		}
 		AppendResultSectionAndRefresh(result, RESULT_RENDER_SECTION_META, false);
 		break;
 	case PROGRESS_EVENT_FILE_HASH_READY:
 		{
+			if (!result.meta.sizeKnown) m_sessionHasUnknownSize = true;
 			FilesHashTaskUpdate taskUpdate;
 			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
@@ -135,6 +137,7 @@ void UIBridgeMFC::handleFileResultProgressEvent(const HashResult& result,
 		break;
 	case PROGRESS_EVENT_FILE_FAILED:
 		{
+			if (!result.meta.sizeKnown) m_sessionHasUnknownSize = true;
 			FilesHashTaskUpdate taskUpdate;
 			taskUpdate.id = {m_sessionId, result.taskIndex};
 			taskUpdate.path = result.path;
@@ -213,6 +216,7 @@ void UIBridgeMFC::BeginTaskSession(uint64_t sessionId)
 {
 	// UI thread only, before launch and after the previous worker's exit barrier.
 	m_sessionId = sessionId;
+	m_sessionHasUnknownSize = false;
 	m_currentTaskIndex = kInvalidHashTaskIndex;
 	m_currentTaskPath.clear();
 }
@@ -322,6 +326,7 @@ UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetResultMetaLineDisplayInfo
 	{
 		metaLineDisplayInfo.label = GetStringByKey(MODIFYTIME_STRING);
 		metaLineDisplayInfo.value = GetResultModifiedDate(result);
+		if (metaLineDisplayInfo.value.empty()) metaLineDisplayInfo.value = GetStringByKey(UNAVAILABLE_STRING);
 	}, [&]()
 	{
 		metaLineDisplayInfo.label = GetStringByKey(VERSION_STRING);
@@ -338,9 +343,13 @@ UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetHashResultMetaLineDisplay
 
 	DispatchResultMetaLineByType(metaLine, [&]()
 	{
-		ResultSizeDisplayInfo resultSizeDisplayInfo = GetHashResultSizeDisplayInfo(result);
-
 		metaLineDisplayInfo.label = GetStringByKey(FILESIZE_STRING);
+		if (!result.meta.sizeKnown)
+		{
+			metaLineDisplayInfo.value = GetStringByKey(UNAVAILABLE_STRING);
+			return;
+		}
+		ResultSizeDisplayInfo resultSizeDisplayInfo = GetHashResultSizeDisplayInfo(result);
 		metaLineDisplayInfo.value = resultSizeDisplayInfo.sizeText;
 		metaLineDisplayInfo.suffix = _T(" ");
 		metaLineDisplayInfo.suffix += GetStringByKey(BYTE_STRING);
@@ -354,6 +363,7 @@ UIBridgeMFC::ResultMetaLineDisplayInfo UIBridgeMFC::GetHashResultMetaLineDisplay
 	{
 		metaLineDisplayInfo.label = GetStringByKey(MODIFYTIME_STRING);
 		metaLineDisplayInfo.value = result.meta.modifiedDate;
+		if (metaLineDisplayInfo.value.empty()) metaLineDisplayInfo.value = GetStringByKey(UNAVAILABLE_STRING);
 	}, [&]()
 	{
 		metaLineDisplayInfo.label = GetStringByKey(VERSION_STRING);

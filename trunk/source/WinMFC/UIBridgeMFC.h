@@ -82,6 +82,8 @@ public:
 		InterlockedExchange(&m_taskUpdatePending, 0);
 	}
 	void BeginTaskSession(uint64_t sessionId);
+	// Read after the worker has exited and its updates have been drained.
+	bool HasUnknownSessionSize() const { return m_sessionHasUnknownSize; }
 	void DrainPendingTaskUpdates(std::vector<FilesHashTaskUpdate>& taskUpdates);
 
 	static void AppendLineBreakToHyperEdit(CHyperEditHash *hyerEdit);
@@ -229,6 +231,7 @@ private:
 	LONG m_refreshPending;
 	LONG m_taskUpdatePending;
 	uint64_t m_sessionId = 0;
+	bool m_sessionHasUnknownSize = false;
 	uint32_t m_currentTaskIndex = kInvalidHashTaskIndex;
 	FilesHashTaskUpdateQueue m_taskUpdates;
 };
