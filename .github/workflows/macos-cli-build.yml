@@ -14,11 +14,12 @@ permissions:
 
 jobs:
   build-macos-arm64-cli:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
     env:
       LHASH_UI_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/mac-cli/gui
       OPENSSL_ROOT_DIR: ${{ github.workspace }}/build/openssl-install
+      MACOSX_DEPLOYMENT_TARGET: '14.0'
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -31,7 +32,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/openssl-install
-          key: openssl-3.5.9-macos-cli-arm64-optimized-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py') }}
+          key: openssl-3.5.9-macos-cli-arm64-optimized-min${{ env.MACOSX_DEPLOYMENT_TARGET }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py') }}
 
       - name: Build static OpenSSL 3.5.9
         if: steps.openssl-cache.outputs.cache-hit != 'true'
@@ -40,6 +41,8 @@ jobs:
       - name: Verify optimized OpenSSL configuration
         run: |
           python3 tools/verify_openssl_install.py "$OPENSSL_ROOT_DIR" optimized darwin64-arm64-cc
+          identity=$(cat "$OPENSSL_ROOT_DIR/lhash-openssl-build-identity.txt")
+          case "$identity" in *"|$MACOSX_DEPLOYMENT_TARGET") ;; *) echo 'OpenSSL deployment target mismatch' >&2; exit 1 ;; esac
           mkdir -p artifacts/mac-cli
           cp "$OPENSSL_ROOT_DIR/lhash-openssl-build-config.json" artifacts/mac-cli/
 
@@ -69,6 +72,18 @@ jobs:
             echo "lhash executable not found" && exit 1
           fi
           echo "CLI_PATH=${CLI_PATH}" >> "$GITHUB_ENV"
+
+      - name: Verify Apple Silicon and macOS 14 deployment targets
+        run: |
+          python3 - "$CLI_PATH" build/macos-cli/bin/LHash.app/Contents/MacOS/LHash <<'PY'
+          from pathlib import Path
+          import sys
+          from tools.release_assets import validate_macos_app_binary
+
+          for path in map(Path, sys.argv[1:]):
+              validate_macos_app_binary(path.read_bytes())
+              print(f"Verified arm64 and macOS 14 deployment target: {path}")
+          PY
 
       - name: Test engine, CLI algorithms and native AppKit interface
         run: |

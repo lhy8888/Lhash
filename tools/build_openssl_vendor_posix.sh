@@ -10,7 +10,11 @@ if [[ $# -gt 2 || ( "$assembly_mode" != optimized && "$assembly_mode" != portabl
 fi
 case "$prefix" in /*) ;; *) echo 'Install root must be absolute' >&2; exit 2 ;; esac
 case "$(uname -s)-$(uname -m)" in
-  Darwin-arm64) target=darwin64-arm64-cc ;;
+  Darwin-arm64)
+    target=darwin64-arm64-cc
+    # Keep the static library compatible with the app's default minimum OS.
+    export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-14.0}"
+    ;;
   Linux-x86_64) target=linux-x86_64 ;;
   *) echo 'Unsupported test host' >&2; exit 2 ;;
 esac
@@ -35,4 +39,4 @@ make install_dev
 cp lhash-openssl-build-config.json "$prefix/lhash-openssl-build-config.json"
 script_hash="$(perl -MDigest::SHA -e 'local $/; open my $f, "<", $ARGV[0] or die $!; print Digest::SHA::sha256_hex(<$f>);' "$repo_root/tools/build_openssl_vendor_posix.sh")"
 validator_hash="$(perl -MDigest::SHA -e 'local $/; open my $f, "<", $ARGV[0] or die $!; print Digest::SHA::sha256_hex(<$f>);' "$validator")"
-printf '%s\n' "openssl-3.5.9|$target|$assembly_mode|$script_hash|$validator_hash|${CC:-}|${CFLAGS:-}|${LDFLAGS:-}" > "$prefix/lhash-openssl-build-identity.txt"
+printf '%s\n' "openssl-3.5.9|$target|$assembly_mode|$script_hash|$validator_hash|${CC:-}|${CFLAGS:-}|${LDFLAGS:-}|${MACOSX_DEPLOYMENT_TARGET:-}" > "$prefix/lhash-openssl-build-identity.txt"

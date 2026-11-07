@@ -33,11 +33,11 @@ jobs:
             sanitizer: true
             assembly_mode: optimized
           - name: macos-arm64
-            os: macos-14
+            os: macos-15
             sanitizer: false
             assembly_mode: optimized
           - name: macos-arm64-sanitizers
-            os: macos-14
+            os: macos-15
             sanitizer: true
             assembly_mode: optimized
           - name: linux-x64-portable
@@ -45,7 +45,7 @@ jobs:
             sanitizer: false
             assembly_mode: portable
           - name: macos-arm64-portable
-            os: macos-14
+            os: macos-15
             sanitizer: false
             assembly_mode: portable
     defaults:
@@ -78,6 +78,9 @@ jobs:
         run: |
           mkdir -p artifacts/portable
           echo "OPENSSL_ROOT_DIR=$GITHUB_WORKSPACE/build/openssl-install" >> "$GITHUB_ENV"
+          if [[ '${{ runner.os }}' == 'macOS' ]]; then
+            echo 'MACOSX_DEPLOYMENT_TARGET=14.0' >> "$GITHUB_ENV"
+          fi
           if [[ '${{ matrix.sanitizer }}' == 'true' ]]; then
             echo 'CFLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' >> "$GITHUB_ENV"
             echo 'CXXFLAGS=-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' >> "$GITHUB_ENV"
@@ -92,7 +95,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: build/openssl-install
-          key: openssl-3.5.9-${{ matrix.name }}-${{ matrix.assembly_mode }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', '.github/workflows/portable-runtime-tests.yml') }}
+          key: openssl-3.5.9-${{ matrix.name }}-${{ matrix.assembly_mode }}-${{ env.MACOSX_DEPLOYMENT_TARGET || 'native' }}-${{ hashFiles('third_party/openssl/3.5.9/**', 'third_party/openssl/OPENSSL_3_5_9_FILES.sha256', 'tools/build_openssl_vendor_posix.sh', 'tools/verify_openssl_build_config.pl', 'tools/verify_openssl_install.py', '.github/workflows/portable-runtime-tests.yml') }}
 
       - name: Build vendored OpenSSL 3.5.9
         if: steps.openssl-cache.outputs.cache-hit != 'true'
@@ -103,7 +106,11 @@ jobs:
       - name: Verify restored or built OpenSSL assembly configuration
         run: |
           target=linux-x86_64
-          if [[ "$RUNNER_OS" == 'macOS' ]]; then target=darwin64-arm64-cc; fi
+          if [[ "$RUNNER_OS" == 'macOS' ]]; then
+            target=darwin64-arm64-cc
+            identity=$(cat "$OPENSSL_ROOT_DIR/lhash-openssl-build-identity.txt")
+            case "$identity" in *"|$MACOSX_DEPLOYMENT_TARGET") ;; *) echo 'OpenSSL deployment target mismatch' >&2; exit 1 ;; esac
+          fi
           python3 tools/verify_openssl_install.py "$OPENSSL_ROOT_DIR" '${{ matrix.assembly_mode }}' "$target"
           cp "$OPENSSL_ROOT_DIR/lhash-openssl-build-config.json" artifacts/portable/
 

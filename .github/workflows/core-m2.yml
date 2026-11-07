@@ -39,7 +39,7 @@ jobs:
             run_smoke: true
             run_security: false
           - name: macos-arm64
-            os: macos-14
+            os: macos-15
             generator: Xcode
             configure_args: -DCMAKE_OSX_ARCHITECTURES=arm64
             build_dir: build/core/macos-arm64

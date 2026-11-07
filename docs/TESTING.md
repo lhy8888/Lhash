@@ -9,8 +9,8 @@ API替身、原生执行和GUI交互是不同的证据。
 | --- | --- | --- |
 | Windows x64 | windows-2022 / VS2022 | MFC产品构建、原生engine、OpenSSL、完整CMake回归、真实worker handle及18例真实窗口退出/任务状态/文本测试 |
 | Windows ARM64 | windows-11-arm / VS2026 | 原生执行engine/provider/queue/CMake回归；MFC发布目标由x64 runner交叉编译，成品再在原生ARM64执行18例窗口退出/任务状态/文本测试 |
-| macOS ARM64 | macos-14 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测；维护分支增加AppKit界面及后台会话回归 |
-| macOS ARM64 ASan/UBSan | macos-14 | 插桩重编OpenSSL、engine、CLI及回归测试 |
+| macOS ARM64 | macos-15 | 真实OpenSSL完整engine、18算法CLI、Darwin文件策略和变化检测；维护分支增加AppKit界面及后台会话回归 |
+| macOS ARM64 ASan/UBSan | macos-15 | 插桩重编OpenSSL、engine、CLI及回归测试 |
 | Linux x64与ASan/UBSan | ubuntu-24.04 | 显式POSIX测试后端的完整engine/CLI、故障注入、可移植回归和源码检查 |
 
 工作流：[Core Build Matrix](../.github/workflows/core-m2.yml)、
